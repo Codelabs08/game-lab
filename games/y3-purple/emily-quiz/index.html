@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Emily Quiz - Stone Age Boy</title>
+    <!-- Tailwind CSS for utility styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Canvas Confetti for victory celebrations -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <!-- Google Fonts for playful typography -->
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Quicksand:wght@500;700&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Fredoka', sans-serif;
+            background: linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%);
+            touch-action: manipulation;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        .rainbow-text {
+            background: linear-gradient(to right, #ff2a6d, #ffb703, #06d6a0, #118ab2, #9d4edd);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .rainbow-border {
+            border-image: linear-gradient(to right, #ff2a6d, #ffb703, #06d6a0, #118ab2) 1;
+        }
+
+        .btn-bounce {
+            transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s;
+        }
+        .btn-bounce:active {
+            transform: scale(0.92);
+        }
+
+        @keyframes floatSlow {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-12px) rotate(3deg); }
+        }
+
+        .floating {
+            animation: floatSlow 4s ease-in-out infinite;
+        }
+
+        /* Pulse animation for feedback icons */
+        @keyframes popIn {
+            0% { transform: scale(0.5); opacity: 0; }
+            70% { transform: scale(1.1); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .pop-in {
+            animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        canvas {
+            touch-action: none;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-center p-3 sm:p-6 overflow-x-hidden">
+
+    <!-- Background Decorative Elements -->
+    <div class="fixed top-4 left-4 text-4xl floating opacity-60 pointer-events-none">⭐</div>
+    <div class="fixed top-12 right-8 text-5xl floating opacity-60 pointer-events-none" style="animation-delay: 1s;">🌈</div>
+    <div class="fixed bottom-6 left-10 text-5xl floating opacity-60 pointer-events-none" style="animation-delay: 2s;">🦴</div>
+    <div class="fixed bottom-8 right-6 text-4xl floating opacity-60 pointer-events-none" style="animation-delay: 1.5s;">🌟</div>
+
+    <!-- Main Game Container Card -->
+    <main class="w-full max-w-2xl bg-white/90 backdrop-blur-md rounded-3xl shadow-2xl border-4 border-white p-4 sm:p-8 relative z-10 my-auto">
+        
+        <!-- Header Info Bar -->
+        <header class="flex flex-wrap items-center justify-between gap-2 mb-6 pb-4 border-b-2 border-dashed border-sky-200">
+            <div class="flex items-center space-x-2">
+                <span class="text-3xl">👧</span>
+                <h1 class="text-2xl sm:text-3xl font-bold rainbow-text tracking-wide">Emily Quiz</h1>
+            </div>
+            <div class="flex items-center gap-3">
+                <div class="bg-amber-100 text-amber-800 font-bold px-3 py-1.5 rounded-full text-sm sm:text-base flex items-center gap-1 shadow-sm">
+                    <span>⭐ Stars:</span>
+                    <span id="star-count" class="text-lg text-amber-600">0</span>
+                </div>
+                <div class="bg-indigo-100 text-indigo-800 font-bold px-3 py-1.5 rounded-full text-sm sm:text-base shadow-sm">
+                    Level <span id="level-display">1</span>/10
+                </div>
+            </div>
+        </header>
+
+        <!-- SCREEN 1: START SCREEN -->
+        <section id="screen-start" class="text-center py-6 space-y-6">
+            <div class="text-6xl sm:text-7xl floating my-4">🏕️ 🦴 🎨</div>
+            <h2 class="text-2xl sm:text-4xl font-extrabold text-sky-800">Stone Age Boy Adventure!</h2>
+            <p class="text-gray-600 text-lg sm:text-xl max-w-md mx-auto font-medium">
+                Answer fun questions about the story, earn stars, and play the <strong>Asteroid Shooter</strong> reward game!
+            </p>
+            <button id="start-btn" class="btn-bounce bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 text-white text-xl sm:text-2xl font-bold px-10 py-4 rounded-2xl shadow-lg hover:brightness-110 active:scale-95 w-full sm:w-auto transition-all">
+                🚀 Start Playing!
+            </button>
+        </section>
+
+        <!-- SCREEN 2: QUIZ SCREEN -->
+        <section id="screen-quiz" class="hidden space-y-6">
+            <!-- Progress Bar -->
+            <div class="space-y-1">
+                <div class="flex justify-between text-xs sm:text-sm font-bold text-gray-500">
+                    <span>Question <span id="q-num">1</span> of 3 in Level <span id="q-level">1</span></span>
+                    <span id="progress-percent">0%</span>
+                </div>
+                <div class="w-full bg-gray-200 h-4 rounded-full overflow-hidden p-0.5 border border-gray-100 shadow-inner">
+                    <div id="progress-bar" class="bg-gradient-to-r from-emerald-400 to-cyan-500 h-full rounded-full transition-all duration-300 w-0"></div>
+                </div>
+            </div>
+
+            <!-- Question Card -->
+            <div class="bg-gradient-to-br from-amber-50 to-orange-50 p-5 sm:p-6 rounded-2xl border-2 border-amber-200 shadow-sm min-h-[120px] flex items-center justify-center text-center">
+                <h2 id="question-text" class="text-xl sm:text-2xl font-bold text-gray-800 leading-snug">
+                    Loading question...
+                </h2>
+            </div>
+
+            <!-- Choices Grid -->
+            <div id="choices-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                <!-- Buttons will be dynamically inserted here -->
+            </div>
+
+            <!-- Feedback Box -->
+            <div id="feedback-box" class="hidden p-4 rounded-2xl text-center space-y-2 pop-in">
+                <div id="feedback-title" class="text-xl font-bold flex items-center justify-center gap-2"></div>
+                <p id="feedback-detail" class="text-base text-gray-700 font-medium"></p>
+                <button id="next-btn" class="btn-bounce mt-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-8 py-3 rounded-xl shadow-md transition-all text-lg">
+                    Next Question ➔
+                </button>
+            </div>
+        </section>
+
+        <!-- SCREEN 3: ASTEROID SHOOTER REWARD GAME -->
+        <section id="screen-game" class="hidden text-center space-y-4">
+            <div class="flex justify-between items-center bg-purple-100 p-3 rounded-xl">
+                <div class="text-left">
+                    <span class="text-xs uppercase tracking-wider text-purple-600 font-bold block">Reward Round!</span>
+                    <h2 class="text-lg sm:text-xl font-extrabold text-purple-900">⭐ Asteroid Shooter</h2>
+                </div>
+                <div class="bg-white px-3 py-1 rounded-lg text-purple-800 font-bold text-sm shadow-sm">
+                    ⏱️ Time: <span id="game-timer" class="text-red-500 text-base">20</span>s
+                </div>
+            </div>
+
+            <!-- Canvas Container -->
+            <div class="relative w-full aspect-[4/3] max-h-[380px] bg-slate-900 rounded-2xl overflow-hidden border-4 border-purple-300 shadow-inner">
+                <canvas id="game-canvas" class="w-full h-full block cursor-crosshair"></canvas>
+                
+                <!-- Game Start Overlay inside canvas -->
+                <div id="game-intro-overlay" class="absolute inset-0 bg-slate-900/80 backdrop-blur-sm flex flex-col items-center justify-center p-4 text-white space-y-3">
+                    <p class="text-3xl">🚀✨</p>
+                    <h3 class="text-xl sm:text-2xl font-bold text-yellow-300">Level Cleared! Reward Time!</h3>
+                    <p class="text-sm sm:text-base text-slate-200 max-w-xs">Tap or click the friendly floating space gems and asteroids to collect bonus stars!</p>
+                    <button id="start-minigame-btn" class="btn-bounce bg-emerald-500 hover:bg-emerald-600 text-white font-bold px-6 py-2.5 rounded-xl text-lg shadow-lg">
+                        Tap Space Gems!
+                    </button>
+                </div>
+            </div>
+
+            <button id="skip-game-btn" class="btn-bounce bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold px-6 py-2.5 rounded-xl text-sm transition-all">
+                Continue to Level <span id="next-lvl-num">2</span> ➔
+            </button>
+        </section>
+
+        <!-- SCREEN 4: FINAL VICTORY SCREEN -->
+        <section id="screen-victory" class="hidden text-center py-6 space-y-6">
+            <div class="text-7xl floating my-2">🏆👑🎉</div>
+            <h2 class="text-3xl sm:text-4xl font-extrabold rainbow-text">Super Job, Emily!</h2>
+            <p class="text-xl text-gray-700 font-medium">
+                You completed all 10 levels of the <strong>Stone Age Boy</strong> challenge!
+            </p>
+            <div class="bg-amber-50 border-2 border-amber-300 p-6 rounded-2xl max-w-sm mx-auto shadow-sm">
+                <p class="text-gray-600 font-bold text-lg">Total Stars Collected:</p>
+                <p class="text-5xl font-black text-amber-500 my-2" id="final-stars">0</p>
+                <p class="text-sm text-amber-800 font-semibold">You are a Stone Age Master Reader! 📜</p>
+            </div>
+            <button id="restart-btn" class="btn-bounce bg-gradient-to-r from-emerald-400 to-cyan-500 text-white text-xl font-bold px-10 py-4 rounded-2xl shadow-lg transition-all">
+                🔄 Play Again
+            </button>
+        </section>
+
+    </main>
+
+    <script>
+        // Core Question Pool based on "Stone Age Boy" by Satoshi Kitamura
+        const QUESTION_POOL = [
+            {
+                q: "What happened to the boy when he fell into the deep hole?",
+                options: ["He went to the future", "He woke up in the Stone Age", "He found a pirate treasure", "He stayed in his garden"],
+                answer: 1,
+                hint: "He travelled thousands of years back in time!"
+            },
+            {
+                q: "What was the name of the Stone Age girl he met?",
+                options: ["Lucy", "Om", "Maya", "Sara"],
+                answer: 1,
+                hint: "Her name was very short: Om!"
+            },
+            {
+                q: "What material were Stone Age tools mostly made from?",
+                options: ["Plastic", "Flint and stone", "Steel", "Glass"],
+                answer: 1,
+                hint: "People made sharp knives and spearheads from hard stone called flint."
+            },
+            {
+                q: "Where did Om and her tribe live during the cold season?",
+                options: ["In a wooden house", "In a cave", "In a brick castle", "In a tent on the beach"],
+                answer: 1,
+                hint: "Caves kept them warm and safe from wild animals!"
+            },
+            {
+                q: "What did Om and the boy draw on the cave walls?",
+                options: ["Cars and buses", "Animals like mammoths and deer", "Space rockets", "Superheroes"],
+                answer: 1,
+                hint: "They painted pictures of wild animals using natural rocks and charcoal."
+            },
+            {
+                q: "How did the tribe make fire in the Stone Age?",
+                options: ["With a matchbox", "By striking flint stones together", "Using an electric heater", "With a lighter"],
+                answer: 1,
+                hint: "Sparks were made by hitting flint rocks together onto dry grass!"
+            },
+            {
+                q: "What did the tribe use animal skins and fur for?",
+                options: ["Making warm clothes and shelters", "Making paper", "Making shoes for horses", "Making toys"],
+                answer: 0,
+                hint: "Animal fur kept everyone cozy in winter!"
+            },
+            {
+                q: "Which giant animal with large curved tusks did they see?",
+                options: ["A dinosaur", "A Woolly Mammoth", "A giraffe", "A blue whale"],
+                answer: 1,
+                hint: "Woolly Mammoths had big curved tusks and thick shaggy hair!"
+            },
+            {
+                q: "What does the word 'spear' mean in the story?",
+                options: ["A soft pillow", "A long wooden stick with a sharp point for hunting", "A delicious fruit", "A stone cup"],
+                answer: 1,
+                hint: "A spear was used by hunters to catch food."
+            },
+            {
+                q: "How did the boy feel when he first met Om?",
+                options: ["Angry", "Curious and amazed", "Bored", "Sleepy"],
+                answer: 1,
+                hint: "Everything around him was exciting and strange!"
+            },
+            {
+                q: "What delicious food did Om teach the boy to gather?",
+                options: ["Pizza and chips", "Wild berries and nuts", "Ice cream", "Chocolate bars"],
+                answer: 1,
+                hint: "They picked fresh wild berries and edible plants!"
+            },
+            {
+                q: "What happened when a dangerous cave bear appeared?",
+                options: ["The hunters chased it away together", "It asked for cake", "The boy took a photo", "They went to sleep"],
+                answer: 0,
+                hint: "The brave tribe members worked together to protect everyone!"
+            },
+            {
+                q: "What does 'tanner' or 'scraping hides' mean?",
+                options: ["Cleaning and preparing animal skins", "Planting flowers", "Building boats", "Cooking soup"],
+                answer: 0,
+                hint: "It means making animal skins soft and clean for clothing."
+            },
+            {
+                q: "How did the boy return to his own modern home?",
+                options: ["He flew in a plane", "He fell into a dark cave hole again", "He took a bus", "He sailed a boat"],
+                answer: 1,
+                hint: "He slipped inside a dark cave and woke up back in his own time."
+            },
+            {
+                q: "When the boy grew up, what did he become?",
+                options: ["An astronaut", "An archaeologist who studies the past", "A chef", "A bus driver"],
+                answer: 1,
+                hint: "He loved history so much he grew up to dig up ancient treasures!"
+            }
+        ];
+
+        // Simple Web Audio API Synthesizer (No external media files needed)
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        let audioCtx = null;
+
+        function playSound(type) {
+            try {
+                if (!audioCtx) audioCtx = new AudioCtx();
+                if (audioCtx.state === 'suspended') audioCtx.resume();
+
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+
+                const now = audioCtx.currentTime;
+
+                if (type === 'correct') {
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(523.25, now); // C5
+                    osc.frequency.exponentialRampToValueAtTime(659.25, now + 0.1); // E5
+                    osc.frequency.exponentialRampToValueAtTime(783.99, now + 0.2); // G5
+                    gain.gain.setValueAtTime(0.3, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.35);
+                    osc.start(now);
+                    osc.stop(now + 0.35);
+                } else if (type === 'wrong') {
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(220, now); // A3
+                    osc.frequency.exponentialRampToValueAtTime(174.61, now + 0.2); // F3
+                    gain.gain.setValueAtTime(0.25, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+                    osc.start(now);
+                    osc.stop(now + 0.3);
+                } else if (type === 'pop') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(400, now);
+                    osc.frequency.exponentialRampToValueAtTime(800, now + 0.08);
+                    gain.gain.setValueAtTime(0.2, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.08);
+                    osc.start(now);
+                    osc.stop(now + 0.08);
+                }
+            } catch (e) {
+                // Audio gracefully ignored if restricted by browser
+            }
+        }
+
+        // State variables
+        let currentLevel = 1;
+        let currentQuestionInLevel = 0; // 0, 1, or 2
+        let totalStars = 0;
+        let levelQuestions = [];
+        let canAnswer = true;
+
+        // DOM elements
+        const screenStart = document.getElementById('screen-start');
+        const screenQuiz = document.getElementById('screen-quiz');
+        const screenGame = document.getElementById('screen-game');
+        const screenVictory = document.getElementById('screen-victory');
+
+        const startBtn = document.getElementById('start-btn');
+        const nextBtn = document.getElementById('next-btn');
+        const restartBtn = document.getElementById('restart-btn');
+        const skipGameBtn = document.getElementById('skip-game-btn');
+        const startMinigameBtn = document.getElementById('start-minigame-btn');
+
+        const starCountEl = document.getElementById('star-count');
+        const levelDisplayEl = document.getElementById('level-display');
+        const qNumEl = document.getElementById('q-num');
+        const qLevelEl = document.getElementById('q-level');
+        const progressBar = document.getElementById('progress-bar');
+        const progressPercent = document.getElementById('progress-percent');
+        const questionText = document.getElementById('question-text');
+        const choicesGrid = document.getElementById('choices-grid');
+        const feedbackBox = document.getElementById('feedback-box');
+        const feedbackTitle = document.getElementById('feedback-title');
+        const feedbackDetail = document.getElementById('feedback-detail');
+
+        function showScreen(screen) {
+            [screenStart, screenQuiz, screenGame, screenVictory].forEach(s => s.classList.add('hidden'));
+            screen.classList.remove('hidden');
+        }
+
+        function startQuiz() {
+            currentLevel = 1;
+            totalStars = 0;
+            starCountEl.textContent = totalStars;
+            startLevel(currentLevel);
+        }
+
+        function startLevel(lvl) {
+            currentLevel = lvl;
+            currentQuestionInLevel = 0;
+            levelDisplayEl.textContent = currentLevel;
+
+            // Pick 3 questions for this level using structured rotation to ensure all 15 questions are covered
+            const startIndex = ((lvl - 1) * 3) % QUESTION_POOL.length;
+            levelQuestions = [
+                QUESTION_POOL[startIndex % QUESTION_POOL.length],
+                QUESTION_POOL[(startIndex + 1) % QUESTION_POOL.length],
+                QUESTION_POOL[(startIndex + 2) % QUESTION_POOL.length]
+            ];
+
+            showScreen(screenQuiz);
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            canAnswer = true;
+            feedbackBox.classList.add('hidden');
+            
+            const qData = levelQuestions[currentQuestionInLevel];
+            
+            // Update UI Counters
+            qNumEl.textContent = currentQuestionInLevel + 1;
+            qLevelEl.textContent = currentLevel;
+            const progress = Math.round(((currentQuestionInLevel) / 3) * 100);
+            progressBar.style.width = `${progress}%`;
+            progressPercent.textContent = `${progress}%`;
+
+            questionText.textContent = qData.q;
+            choicesGrid.innerHTML = '';
+
+            const badgeColors = [
+                'bg-rose-50 border-rose-200 text-rose-700 hover:bg-rose-100',
+                'bg-sky-50 border-sky-200 text-sky-700 hover:bg-sky-100',
+                'bg-emerald-50 border-emerald-200 text-emerald-700 hover:bg-emerald-100',
+                'bg-amber-50 border-amber-200 text-amber-700 hover:bg-amber-100'
+            ];
+            const labels = ['A', 'B', 'C', 'D'];
+
+            qData.options.forEach((optText, idx) => {
+                const btn = document.createElement('button');
+                btn.className = `btn-bounce w-full p-4 rounded-2xl border-2 text-left font-bold text-base sm:text-lg flex items-center space-x-3 shadow-sm transition-all ${badgeColors[idx]}`;
+                btn.innerHTML = `
+                    <span class="w-8 h-8 rounded-xl bg-white/80 border border-current flex items-center justify-center text-sm font-extrabold shrink-0">${labels[idx]}</span>
+                    <span class="flex-grow">${optText}</span>
+                `;
+                btn.onclick = () => handleChoice(idx, btn);
+                choicesGrid.appendChild(btn);
+            });
+        }
+
+        function handleChoice(chosenIdx, btnElement) {
+            if (!canAnswer) return;
+            canAnswer = false;
+
+            const qData = levelQuestions[currentQuestionInLevel];
+            const isCorrect = chosenIdx === qData.answer;
+
+            // Disable all option buttons
+            Array.from(choicesGrid.children).forEach(b => b.classList.add('opacity-60', 'pointer-events-none'));
+            btnElement.classList.remove('opacity-60');
+
+            if (isCorrect) {
+                playSound('correct');
+                totalStars += 10;
+                starCountEl.textContent = totalStars;
+
+                btnElement.classList.remove('bg-rose-50', 'bg-sky-50', 'bg-emerald-50', 'bg-amber-50');
+                btnElement.classList.add('bg-emerald-500', 'text-white', 'border-emerald-600');
+
+                feedbackTitle.innerHTML = `<span class="text-emerald-600 text-2xl">🌟 Fantastic, Emily!</span>`;
+                feedbackDetail.textContent = `Great reading! You earned +10 Stars!`;
+                feedbackBox.className = "p-4 rounded-2xl text-center space-y-2 pop-in bg-emerald-100 border-2 border-emerald-300";
+
+                // Confetti burst for correct answer
+                confetti({
+                    particleCount: 35,
+                    spread: 60,
+                    origin: { y: 0.7 }
+                });
+            } else {
+                playSound('wrong');
+                btnElement.classList.add('bg-rose-400', 'text-white', 'border-rose-500');
+
+                // Highlight correct option
+                const correctBtn = choicesGrid.children[qData.answer];
+                if (correctBtn) {
+                    correctBtn.classList.remove('opacity-60');
+                    correctBtn.classList.add('ring-4', 'ring-emerald-400', 'bg-emerald-100');
+                }
+
+                feedbackTitle.innerHTML = `<span class="text-amber-700 text-2xl">💪 Nice try!</span>`;
+                feedbackDetail.innerHTML = `The right answer was: <strong>"${qData.options[qData.answer]}"</strong>.<br><span class="text-xs text-gray-600">${qData.hint}</span>`;
+                feedbackBox.className = "p-4 rounded-2xl text-center space-y-2 pop-in bg-amber-100 border-2 border-amber-300";
+            }
+
+            feedbackBox.classList.remove('hidden');
+        }
+
+        function advanceQuestion() {
+            currentQuestionInLevel++;
+            if (currentQuestionInLevel < 3) {
+                loadQuestion();
+            } else {
+                // Completed 3 questions level!
+                progressBar.style.width = '100%';
+                progressPercent.textContent = '100%';
+                setTimeout(() => {
+                    openRewardGame();
+                }, 400);
+            }
+        }
+
+        // Asteroid Shooter Mini-Game Engine
+        const canvas = document.getElementById('game-canvas');
+        const ctx = canvas.getContext('2d');
+        const gameTimerEl = document.getElementById('game-timer');
+        const gameIntroOverlay = document.getElementById('game-intro-overlay');
+        const nextLvlNumEl = document.getElementById('next-lvl-num');
+
+        let gameActive = false;
+        let gameTimeLeft = 20;
+        let timerInterval = null;
+        let targets = [];
+        let particles = [];
+        let animFrameId = null;
+
+        function resizeCanvas() {
+            const rect = canvas.parentElement.getBoundingClientRect();
+            canvas.width = rect.width;
+            canvas.height = rect.height;
+        }
+
+        function openRewardGame() {
+            showScreen(screenGame);
+            nextLvlNumEl.textContent = currentLevel + 1;
+            gameIntroOverlay.classList.remove('hidden');
+            resizeCanvas();
+            drawCanvasBackground();
+        }
+
+        function startMinigame() {
+            gameIntroOverlay.classList.add('hidden');
+            gameActive = true;
+            gameTimeLeft = 20;
+            gameTimerEl.textContent = gameTimeLeft;
+            targets = [];
+            particles = [];
+
+            // Spawn initial targets
+            for (let i = 0; i < 6; i++) {
+                spawnTarget();
+            }
+
+            clearInterval(timerInterval);
+            timerInterval = setInterval(() => {
+                gameTimeLeft--;
+                gameTimerEl.textContent = gameTimeLeft;
+                if (gameTimeLeft <= 0) {
+                    endMinigame();
+                }
+            }, 1000);
+
+            cancelAnimationFrame(animFrameId);
+            gameLoop();
+        }
+
+        function spawnTarget() {
+            const radius = Math.random() * 16 + 22;
+            const colors = ['#ff4d6d', '#ffb703', '#06d6a0', '#4cc9f0', '#7209b7'];
+            targets.push({
+                x: Math.random() * (canvas.width - radius * 2) + radius,
+                y: canvas.height + radius + Math.random() * 50,
+                radius: radius,
+                vx: (Math.random() - 0.5) * 2.5,
+                vy: -(Math.random() * 2 + 1.8),
+                color: colors[Math.floor(Math.random() * colors.length)],
+                rotation: Math.random() * Math.PI * 2,
+                vRot: (Math.random() - 0.5) * 0.05,
+                points: 5,
+                type: Math.random() > 0.3 ? 'gem' : 'star'
+            });
+        }
+
+        function createParticles(x, y, color) {
+            for (let i = 0; i < 12; i++) {
+                const angle = Math.random() * Math.PI * 2;
+                const speed = Math.random() * 5 + 1;
+                particles.push({
+                    x: x,
+                    y: y,
+                    vx: Math.cos(angle) * speed,
+                    vy: Math.sin(angle) * speed,
+                    radius: Math.random() * 4 + 2,
+                    color: color,
+                    alpha: 1,
+                    life: 0.04
+                });
+            }
+        }
+
+        function drawCanvasBackground() {
+            ctx.fillStyle = '#0f172a';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Draw friendly distant stars
+            ctx.fillStyle = '#ffffff';
+            for (let i = 0; i < 30; i++) {
+                const sx = (i * 37) % canvas.width;
+                const sy = (i * 91) % canvas.height;
+                ctx.beginPath();
+                ctx.arc(sx, sy, (i % 3) + 1, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        function gameLoop() {
+            if (!gameActive) return;
+
+            drawCanvasBackground();
+
+            // Spawn new targets periodically
+            if (targets.length < 7 && Math.random() < 0.04) {
+                spawnTarget();
+            }
+
+            // Update & draw targets
+            for (let i = targets.length - 1; i >= 0; i--) {
+                const t = targets[i];
+                t.x += t.vx;
+                t.y += t.vy;
+                t.rotation += t.vRot;
+
+                // Bounce off walls
+                if (t.x - t.radius < 0 || t.x + t.radius > canvas.width) t.vx *= -1;
+
+                // Remove if off top
+                if (t.y + t.radius < -20) {
+                    targets.splice(i, 1);
+                    continue;
+                }
+
+                ctx.save();
+                ctx.translate(t.x, t.y);
+                ctx.rotate(t.rotation);
+
+                if (t.type === 'gem') {
+                    // Draw friendly rounded gemstone asteroid
+                    ctx.fillStyle = t.color;
+                    ctx.strokeStyle = '#ffffff';
+                    ctx.lineWidth = 3;
+                    ctx.beginPath();
+                    ctx.roundRect(-t.radius, -t.radius, t.radius * 2, t.radius * 2, 8);
+                    ctx.fill();
+                    ctx.stroke();
+
+                    // Cute eyes
+                    ctx.fillStyle = '#ffffff';
+                    ctx.beginPath();
+                    ctx.arc(-t.radius * 0.3, -t.radius * 0.2, 4, 0, Math.PI * 2);
+                    ctx.arc(t.radius * 0.3, -t.radius * 0.2, 4, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.fillStyle = '#000000';
+                    ctx.beginPath();
+                    ctx.arc(-t.radius * 0.3, -t.radius * 0.2, 2, 0, Math.PI * 2);
+                    ctx.arc(t.radius * 0.3, -t.radius * 0.2, 2, 0, Math.PI * 2);
+                    ctx.fill();
+                } else {
+                    // Draw friendly glowing star target
+                    ctx.fillStyle = '#ffb703';
+                    ctx.strokeStyle = '#ffffff';
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    for (let s = 0; s < 5; s++) {
+                        ctx.lineTo(Math.cos((18 + s * 72) * Math.PI / 180) * t.radius, -Math.sin((18 + s * 72) * Math.PI / 180) * t.radius);
+                        ctx.lineTo(Math.cos((54 + s * 72) * Math.PI / 180) * (t.radius / 2), -Math.sin((54 + s * 72) * Math.PI / 180) * (t.radius / 2));
+                    }
+                    ctx.closePath();
+                    ctx.fill();
+                    ctx.stroke();
+                }
+
+                ctx.restore();
+            }
+
+            // Update & draw burst particles
+            for (let i = particles.length - 1; i >= 0; i--) {
+                const p = particles[i];
+                p.x += p.vx;
+                p.y += p.vy;
+                p.alpha -= p.life;
+
+                if (p.alpha <= 0) {
+                    particles.splice(i, 1);
+                    continue;
+                }
+
+                ctx.save();
+                ctx.globalAlpha = Math.max(0, p.alpha);
+                ctx.fillStyle = p.color;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            }
+
+            animFrameId = requestAnimationFrame(gameLoop);
+        }
+
+        // Tap/Click interaction for Asteroid game
+        function handleCanvasTap(e) {
+            if (!gameActive) return;
+
+            const rect = canvas.getBoundingClientRect();
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+            
+            const tapX = (clientX - rect.left) * (canvas.width / rect.width);
+            const tapY = (clientY - rect.top) * (canvas.height / rect.height);
+
+            for (let i = targets.length - 1; i >= 0; i--) {
+                const t = targets[i];
+                const dist = Math.hypot(tapX - t.x, tapY - t.y);
+
+                if (dist < t.radius + 15) { // Generous hit area for children
+                    playSound('pop');
+                    totalStars += 2;
+                    starCountEl.textContent = totalStars;
+
+                    createParticles(t.x, t.y, t.color);
+                    targets.splice(i, 1);
+                    spawnTarget();
+                    break;
+                }
+            }
+        }
+
+        function endMinigame() {
+            gameActive = false;
+            clearInterval(timerInterval);
+            cancelAnimationFrame(animFrameId);
+
+            // Show completion popup inside canvas container
+            gameIntroOverlay.innerHTML = `
+                <p class="text-4xl">🌟🎉</p>
+                <h3 class="text-2xl font-bold text-yellow-300">Space Round Complete!</h3>
+                <p class="text-slate-200">You earned awesome bonus stars!</p>
+                <button id="resume-quiz-btn" class="btn-bounce bg-indigo-500 hover:bg-indigo-600 text-white font-bold px-8 py-3 rounded-xl text-lg shadow-lg">
+                    ${currentLevel >= 10 ? 'See Final Score 🏆' : `Go to Level ${currentLevel + 1} ➔`}
+                </button>
+            `;
+            gameIntroOverlay.classList.remove('hidden');
+
+            document.getElementById('resume-quiz-btn').onclick = finishRewardRound;
+        }
+
+        function finishRewardRound() {
+            if (currentLevel >= 10) {
+                // Game completed!
+                document.getElementById('final-stars').textContent = totalStars;
+                showScreen(screenVictory);
+                confetti({
+                    particleCount: 100,
+                    spread: 80,
+                    origin: { y: 0.6 }
+                });
+            } else {
+                startLevel(currentLevel + 1);
+            }
+        }
+
+        // Attach Event Listeners
+        startBtn.addEventListener('click', () => {
+            playSound('pop');
+            startQuiz();
+        });
+
+        nextBtn.addEventListener('click', () => {
+            playSound('pop');
+            advanceQuestion();
+        });
+
+        startMinigameBtn.addEventListener('click', () => {
+            playSound('pop');
+            startMinigame();
+        });
+
+        skipGameBtn.addEventListener('click', () => {
+            playSound('pop');
+            finishRewardRound();
+        });
+
+        restartBtn.addEventListener('click', () => {
+            playSound('pop');
+            startQuiz();
+        });
+
+        canvas.addEventListener('mousedown', handleCanvasTap);
+        canvas.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            handleCanvasTap(e);
+        }, { passive: false });
+
+        window.addEventListener('resize', () => {
+            if (!screenGame.classList.contains('hidden')) {
+                resizeCanvas();
+            }
+        });
+    </script>
+</body>
+</html>

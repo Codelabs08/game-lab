@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Play Me Today - Stone Age Adventure</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Poppins & Fredoka for friendly child typography -->
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600&family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        fredoka: ['Fredoka', 'sans-serif'],
+                        poppins: ['Poppins', 'sans-serif'],
+                    },
+                    colors: {
+                        brandBlue: '#818cf8',
+                        brandPink: '#f472b6',
+                        brandPurple: '#c084fc',
+                        brandDarkPurple: '#581c87',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #e0e7ff 0%, #fae8ff 50%, #fce7f3 100%);
+            min-height: 100vh;
+        }
+        .title-font {
+            font-family: 'Fredoka', cursive;
+        }
+        /* Custom bouncy animations */
+        @keyframes bounce-slow {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
+        }
+        .animate-bounce-slow {
+            animation: bounce-slow 2.5s ease-in-out infinite;
+        }
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 15px rgba(192, 132, 252, 0.4); }
+            50% { box-shadow: 0 0 30px rgba(244, 114, 182, 0.7); }
+        }
+        .glow-box {
+            animation: pulse-glow 3s infinite;
+        }
+    </style>
+</head>
+<body class="text-slate-800 flex flex-col min-h-screen justify-between select-none">
+
+    <header class="w-full py-4 px-6 bg-white/70 backdrop-blur-md shadow-sm border-b border-purple-100 flex items-center justify-between">
+        <div class="flex items-center space-x-3">
+            <span class="text-3xl">🪨🦣</span>
+            <h1 class="title-font text-2xl md:text-3xl bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 bg-clip-text text-transparent font-bold">
+                Play Me Today
+            </h1>
+        </div>
+        <div id="score-badge" class="hidden items-center bg-purple-100 text-purple-700 px-4 py-2 rounded-full font-semibold text-sm shadow-inner">
+            ⭐ Stars: <span id="star-count" class="ml-1 text-lg">0</span> / 15
+        </div>
+    </header>
+
+    <main class="flex-grow flex items-center justify-center p-4 md:p-6">
+        
+        <!-- Welcome Screen -->
+        <div id="screen-welcome" class="w-full max-w-xl bg-white/90 backdrop-blur-lg rounded-3xl p-6 md:p-10 shadow-2xl border-4 border-purple-200 text-center animate-bounce-slow">
+            <div class="text-6xl mb-4">🛖🦖✨</div>
+            <h2 class="title-font text-3xl md:text-4xl text-purple-800 mb-3">The Stone Age Adventure!</h2>
+            <p class="text-slate-600 text-base md:text-lg mb-6 leading-relaxed">
+                Step back in time! Discover ancient cave paintings, woolly mammoths, stone tools, and cozy round huts across 5 fun levels!
+            </p>
+            <div class="flex flex-col sm:flex-row justify-center gap-4">
+                <button onclick="startGame()" class="title-font text-xl bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-bold py-4 px-8 rounded-2xl shadow-lg transform active:scale-95 transition-all cursor-pointer">
+                    🚀 Start Playing!
+                </button>
+            </div>
+        </div>
+
+        <!-- Level Map / Indicator Screen -->
+        <div id="screen-map" class="hidden w-full max-w-2xl bg-white/90 backdrop-blur-lg rounded-3xl p-6 md:p-8 shadow-2xl border-4 border-indigo-200">
+            <div class="text-center mb-6">
+                <h2 class="title-font text-3xl text-indigo-800">🗺️ Choose Your Level</h2>
+                <p class="text-slate-600 text-sm md:text-base mt-1">Complete all 5 levels to unlock the super fun Dress-Up reward!</p>
+            </div>
+            
+            <div id="level-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+                <!-- Populated dynamically via JS -->
+            </div>
+
+            <div class="text-center">
+                <button onclick="openDressUp()" id="btn-dressup-shortcut" class="hidden title-font bg-gradient-to-r from-pink-500 to-purple-500 text-white font-bold py-3 px-6 rounded-2xl shadow-md animate-pulse">
+                    🎨 Play Dress My Quizmaster!
+                </button>
+            </div>
+        </div>
+
+        <!-- Quiz Gameplay Screen -->
+        <div id="screen-quiz" class="hidden w-full max-w-xl bg-white/90 backdrop-blur-lg rounded-3xl p-6 md:p-8 shadow-2xl border-4 border-pink-200 relative">
+            <div class="flex justify-between items-center mb-4">
+                <button onclick="returnToMap()" class="text-sm font-semibold bg-slate-100 hover:bg-slate-200 text-slate-600 px-3 py-1.5 rounded-xl transition">
+                    ⬅️ Map
+                </button>
+                <div id="level-title-badge" class="title-font text-purple-700 bg-purple-100 px-4 py-1.5 rounded-full text-sm font-bold">
+                    Level 1
+                </div>
+                <div class="text-sm font-bold text-pink-600">
+                    Question <span id="current-q-num">1</span> / 3
+                </div>
+            </div>
+
+            <!-- Question Box -->
+            <div class="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-2xl p-5 md:p-6 mb-6 border border-purple-100 text-center">
+                <div id="question-emoji" class="text-4xl mb-2">🪨</div>
+                <h3 id="question-text" class="title-font text-xl md:text-2xl text-purple-900 leading-snug">
+                    Question goes here?
+                </h3>
+            </div>
+
+            <!-- Options Grid -->
+            <div id="options-container" class="grid grid-cols-1 gap-3 mb-4">
+                <!-- Populated dynamically -->
+            </div>
+
+            <!-- Encouraging Feedback Box -->
+            <div id="feedback-box" class="hidden rounded-2xl p-4 text-center font-bold text-lg transition-all animate-bounce">
+                Feedback text
+            </div>
+
+            <div class="mt-4 flex justify-end">
+                <button id="btn-next-q" onclick="nextQuestion()" class="hidden title-font bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold py-3 px-6 rounded-2xl shadow-md hover:opacity-90 transition">
+                    Next Question ➡️
+                </button>
+            </div>
+        </div>
+
+        <!-- Level Completed Celebration Screen -->
+        <div id="screen-level-complete" class="hidden w-full max-w-lg bg-white/90 backdrop-blur-lg rounded-3xl p-8 shadow-2xl border-4 border-purple-300 text-center">
+            <div class="text-6xl mb-3 animate-bounce">🎉🏆</div>
+            <h2 id="complete-heading" class="title-font text-3xl text-purple-800 mb-2">Level Completed!</h2>
+            <p id="complete-subtext" class="text-slate-600 text-base mb-6">Fantastic job! You earned stars for your clever answers.</p>
+            <div class="flex justify-center gap-4">
+                <button onclick="returnToMap()" class="title-font bg-gradient-to-r from-purple-500 to-indigo-500 text-white font-bold py-3 px-6 rounded-2xl shadow-md hover:opacity-90">
+                    🗺️ Back to Map
+                </button>
+            </div>
+        </div>
+
+        <!-- Reward Minigame: Dress My Quizmaster Screen -->
+        <div id="screen-reward" class="hidden w-full max-w-3xl bg-white/90 backdrop-blur-lg rounded-3xl p-6 md:p-8 shadow-2xl border-4 border-pink-300">
+            <div class="flex justify-between items-center mb-4">
+                <button onclick="returnToMap()" class="text-sm font-semibold bg-slate-100 hover:bg-slate-200 text-slate-600 px-3 py-1.5 rounded-xl transition">
+                    ⬅️ Back to Map
+                </button>
+                <h2 class="title-font text-2xl md:text-3xl text-pink-600 text-center flex-grow">🎨 Dress My Quizmaster!</h2>
+                <div class="w-16"></div>
+            </div>
+            <p class="text-center text-slate-600 text-sm mb-6">Customize your friendly Stone Age buddy with fun hats, glasses, and colorful outfits!</p>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+                <!-- Character Preview Stage -->
+                <div class="bg-gradient-to-b from-indigo-50 via-purple-50 to-pink-50 rounded-3xl p-8 flex flex-col items-center justify-center relative min-h-[320px] border-2 border-purple-100 shadow-inner">
+                    <!-- Character Avatar Container -->
+                    <div class="relative flex flex-col items-center">
+                        <!-- Hat -->
+                        <div id="avatar-hat" class="text-6xl mb-[-15px] z-20 transition-all transform hover:scale-110">👑</div>
+                        <!-- Glasses -->
+                        <div id="avatar-glasses" class="text-4xl my-[-5px] z-20 transition-all">🕶️</div>
+                        <!-- Face/Head -->
+                        <div class="text-8xl z-10 filter drop-shadow-md">🧒</div>
+                        <!-- Outfit Body -->
+                        <div id="avatar-outfit" class="text-6xl mt-[-20px] z-10">🦖</div>
+                        <!-- Accessory -->
+                        <div id="avatar-accessory" class="text-5xl mt-2 z-20">🦴</div>
+                    </div>
+                    <div class="mt-4 text-xs font-semibold text-purple-700 bg-white/80 px-3 py-1 rounded-full shadow-sm">
+                        ✨ Your Awesome Quizmaster ✨
+                    </div>
+                </div>
+
+                <!-- Customization Controls -->
+                <div class="flex flex-col space-y-4">
+                    <!-- Hat Selector -->
+                    <div>
+                        <label class="block title-font text-sm text-purple-800 mb-1">🎩 Choose Hat:</label>
+                        <div id="selector-hat" class="grid grid-cols-4 gap-2">
+                            <!-- Populated by JS -->
+                        </div>
+                    </div>
+
+                    <!-- Glasses Selector -->
+                    <div>
+                        <label class="block title-font text-sm text-purple-800 mb-1">👓 Choose Glasses:</label>
+                        <div id="selector-glasses" class="grid grid-cols-4 gap-2">
+                            <!-- Populated by JS -->
+                        </div>
+                    </div>
+
+                    <!-- Outfit Selector -->
+                    <div>
+                        <label class="block title-font text-sm text-purple-800 mb-1">👕 Choose Outfit:</label>
+                        <div id="selector-outfit" class="grid grid-cols-4 gap-2">
+                            <!-- Populated by JS -->
+                        </div>
+                    </div>
+
+                    <!-- Accessory Selector -->
+                    <div>
+                        <label class="block title-font text-sm text-purple-800 mb-1">🧸 Choose Accessory:</label>
+                        <div id="selector-accessory" class="grid grid-cols-4 gap-2">
+                            <!-- Populated by JS -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-6 text-center">
+                <button onclick="returnToMap()" class="title-font bg-gradient-to-r from-purple-600 to-pink-500 text-white font-bold py-3 px-8 rounded-2xl shadow-md hover:opacity-95">
+                    ✨ Save & Return to Map
+                </button>
+            </div>
+        </div>
+
+    </main>
+
+    <footer class="w-full py-3 text-center text-xs text-slate-500 bg-white/50 border-t border-purple-100">
+        Play Me Today • History Explorer for Year 3 🪨
+    </footer>
+
+    <script>
+        const quizData = [
+            {
+                levelId: 1,
+                levelName: "Level 1: Stone Age Basics",
+                emoji: "🪨",
+                questions: [
+                    {
+                        q: "What do we call people who lived a very long time ago in the Stone Age?",
+                        emoji: "🦴",
+                        options: ["Hunter-gatherers", "Astronauts", "Superheroes", "Robot builders"],
+                        correct: 0,
+                        feedback: "Awesome job! Stone Age people hunted animals and gathered wild plants to eat! 🌟"
+                    },
+                    {
+                        q: "Why is this time called the 'Stone Age'?",
+                        emoji: "🔨",
+                        options: ["Houses were made of pillows", "Tools and weapons were made from stone", "People only ate round stones", "The sun was made of stone"],
+                        correct: 1,
+                        feedback: "Spot on! They crafted clever tools, axes, and spearheads out of hard stone! 🛠️"
+                    },
+                    {
+                        q: "What huge furry animal lived during the Stone Age and was hunted for food and fur?",
+                        emoji: "🦣",
+                        options: ["T-Rex dinosaur", "Woolly mammoth", "Pink flamingo", "Jungle tiger"],
+                        correct: 1,
+                        feedback: "You're a star! Woolly mammoths had massive tusks and thick fur coats! 🦣"
+                    }
+                ]
+            },
+            {
+                levelId: 2,
+                levelName: "Level 2: Fire & Cooking",
+                emoji: "🔥",
+                questions: [
+                    {
+                        q: "How did Stone Age people discover how to make fire easily?",
+                        emoji: "🪵",
+                        options: ["Rubbing two sticks together or striking stones", "Turning on a light switch", "Using a box of matches", "Rubbing leaves together"],
+                        correct: 0,
+                        feedback: "Brilliant! Striking flints or rubbing sticks created sparkling sparks! 🔥"
+                    },
+                    {
+                        q: "Why was discovering fire so important for ancient people?",
+                        emoji: "🍖",
+                        options: ["To cook food and stay warm at night", "To watch TV in the dark", "To melt plastic toys", "To bake birthday cakes"],
+                        correct: 0,
+                        feedback: "Correct! Fire kept them warm against the cold and cooked delicious meals! ✨"
+                    },
+                    {
+                        q: "Where did many Stone Age people find shelter from cold weather and rain?",
+                        emoji: "⛰️",
+                        options: ["Skyscrapers", "Caves and rock shelters", "Glass greenhouses", "Treehouses"],
+                        correct: 1,
+                        feedback: "Amazing! Natural caves kept them safe and dry from chilly winds! 🦇"
+                    }
+                ]
+            },
+            {
+                levelId: 3,
+                levelName: "Level 3: Amazing Cave Art",
+                emoji: "🎨",
+                questions: [
+                    {
+                        q: "What did Stone Age artists paint on the walls of dark caves?",
+                        emoji: "🐂",
+                        options: ["Spaceships and rockets", "Animals like deer, horses, and mammoths", "Funny cartoons", "Road signs"],
+                        correct: 1,
+                        feedback: "Fantastic! They painted wonderful pictures of the animals they saw outside! 🖌️"
+                    },
+                    {
+                        q: "What natural things did they use to make bright paint colors?",
+                        emoji: "🍂",
+                        options: ["Crayons and felt tips", "Colored pencils", "Coloured rocks, charcoal, and plant juices", "Glitter glue"],
+                        correct: 2,
+                        feedback: "You got it! Crushed minerals and charcoal made wonderful red, brown, and black paint! 🎨"
+                    },
+                    {
+                        q: "How did they light up the dark caves while painting?",
+                        emoji: "🕯️",
+                        options: ["Electric light bulbs", "Small stone lamps burning animal fat with a wick", "Flashlights", "Neon glow sticks"],
+                        correct: 1,
+                        feedback: "Super smart! Stone lamps with animal fat and moss gave them bright, cozy light! 🌟"
+                    }
+                ]
+            },
+            {
+                levelId: 4,
+                levelName: "Level 4: Clever Stone Tools",
+                emoji: "⛏️",
+                questions: [
+                    {
+                        q: "What sharp stone was very popular for making arrowheads and knives?",
+                        emoji: "🗡️",
+                        options: ["Flint", "Bubblegum", "Chocolate", "Sponge"],
+                        correct: 0,
+                        feedback: "Brilliant! Flint could be chipped into super sharp edges for cutting! ⛏️"
+                    },
+                    {
+                        q: "How did they attach stone axe heads to wooden handles?",
+                        emoji: "🪢",
+                        options: ["Sticky tape", "Tough animal tendon, plant fibers, and sticky tree resin", "Metal screws", "Plastic clips"],
+                        correct: 1,
+                        feedback: "Awesome! Natural twine and resin held their heavy hunting tools together tightly! 🌿"
+                    },
+                    {
+                        q: "What animal bones were often carved into needles for sewing warm animal-skin clothes?",
+                        emoji: "🪡",
+                        options: ["Bird and fish bones", "Rubber bones", "Glass sticks", "Paper straws"],
+                        correct: 0,
+                        feedback: "Spot on! Sharp animal bones made wonderful needles to stitch warm winter clothes! 🧥"
+                    }
+                ]
+            },
+            {
+                levelId: 5,
+                levelName: "Level 5: Cozy Round Houses",
+                emoji: "🛖",
+                questions: [
+                    {
+                        q: "In the later Stone Age, people built wonderful stone villages like Skara Brae. What shape were their houses?",
+                        emoji: "🏠",
+                        options: ["Square with sharp corners", "Round with stone walls", "Tall triangle towers", "Long tunnels"],
+                        correct: 1,
+                        feedback: "Fantastic! Round houses kept them cozy against strong winds! 🛖"
+                    },
+                    {
+                        q: "What did they use to make the cozy roofs of their round stone houses?",
+                        emoji: "🌾",
+                        options: ["Metal sheets", "Thatch made from dried reeds or turf", "Plastic roof tiles", "Glass panes"],
+                        correct: 1,
+                        feedback: "You're a star! Thatch made from thick straw and turf kept the rain right out! 🌧️"
+                    },
+                    {
+                        q: "What was right in the very middle of a Stone Age round house floor?",
+                        emoji: "🔥",
+                        options: ["A swimming pool", "A cozy hearth fire for cooking and warmth", "A giant television", "An indoor slide"],
+                        correct: 1,
+                        feedback: "Wonderful! The hearth fire kept the family warm and cooked yummy stews! 🍲"
+                    }
+                ]
+            }
+        ];
+
+        let currentLevelIndex = 0;
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let levelProgress = [false, false, false, false, false]; // Tracks completed levels
+
+        // Dress-up items collection
+        const dressUpItems = {
+            hats: ["👑", "🎩", "🧢", "👒", "🪖", "🦄", "🦁", "⭐"],
+            glasses: ["🕶️", "👓", "🥸", "🥽", "🌟", "🐱", "🦊", "💎"],
+            outfits: ["🦖", "👕", "🧥", "🧶", "🦸‍♂️", "👗", "🦁", "🌸"],
+            accessories: ["🦴", "🪵", "🎨", "🍖", "⭐", "🍓", "🏀", "🧸"]
+        };
+
+        let currentOutfit = {
+            hat: "👑",
+            glasses: "🕶️",
+            outfit: "🦖",
+            accessory: "🦴"
+        };
+
+        // DOM Elements
+        const screenWelcome = document.getElementById('screen-welcome');
+        const screenMap = document.getElementById('screen-map');
+        const screenQuiz = document.getElementById('screen-quiz');
+        const screenLevelComplete = document.getElementById('screen-level-complete');
+        const screenReward = document.getElementById('screen-reward');
+        const scoreBadge = document.getElementById('score-badge');
+        const starCount = document.getElementById('star-count');
+        const levelGrid = document.getElementById('level-grid');
+
+        function showScreen(screen) {
+            screenWelcome.classList.add('hidden');
+            screenMap.classList.add('hidden');
+            screenQuiz.classList.add('hidden');
+            screenLevelComplete.classList.add('hidden');
+            screenReward.classList.add('hidden');
+            screen.classList.remove('hidden');
+        }
+
+        function startGame() {
+            scoreBadge.classList.remove('hidden');
+            scoreBadge.classList.add('flex');
+            renderLevelMap();
+            showScreen(screenMap);
+        }
+
+        function renderLevelMap() {
+            levelGrid.innerHTML = '';
+            let allCompleted = true;
+
+            quizData.forEach((level, index) => {
+                const isUnlocked = index === 0 || levelProgress[index - 1];
+                const isCompleted = levelProgress[index];
+
+                const card = document.createElement('div');
+                card.className = `p-5 rounded-2xl border-2 flex items-center justify-between transition-all ${
+                    isUnlocked 
+                        ? 'bg-gradient-to-r from-purple-50 to-pink-50 border-purple-300 shadow-md cursor-pointer hover:scale-[1.02]' 
+                        : 'bg-slate-100 border-slate-200 opacity-60 cursor-not-allowed'
+                }`;
+
+                card.innerHTML = `
+                    <div class="flex items-center space-x-4">
+                        <span class="text-4xl">${level.emoji}</span>
+                        <div>
+                            <h4 class="title-font text-lg text-purple-900 font-bold">${level.levelName}</h4>
+                            <p class="text-xs text-slate-500">${isCompleted ? '✅ Completed!' : (isUnlocked ? '▶️ Ready to Play!' : '🔒 Locked')}</p>
+                        </div>
+                    </div>
+                    <div>
+                        ${isCompleted ? '<span class="text-2xl">⭐</span>' : (isUnlocked ? '<span class="bg-purple-600 text-white px-3 py-1.5 rounded-xl text-sm font-bold">Play</span>' : '<span class="text-xl">🔒</span>')}
+                    </div>
+                `;
+
+                if (isUnlocked) {
+                    card.onclick = () => startLevel(index);
+                }
+
+                levelGrid.appendChild(card);
+
+                if (!isCompleted) allCompleted = false;
+            });
+
+            // Check if all levels are completed to show dressup shortcut
+            const dressupShortcut = document.getElementById('btn-dressup-shortcut');
+            if (levelProgress.every(val => val === true)) {
+                dressupShortcut.classList.remove('hidden');
+            } else {
+                dressupShortcut.classList.add('hidden');
+            }
+        }
+
+        function startLevel(levelIdx) {
+            currentLevelIndex = levelIdx;
+            currentQuestionIndex = 0;
+            loadQuestion();
+            showScreen(screenQuiz);
+        }
+
+        function loadQuestion() {
+            const level = quizData[currentLevelIndex];
+            const q = level.questions[currentQuestionIndex];
+
+            document.getElementById('level-title-badge').innerText = level.levelName;
+            document.getElementById('current-q-num').innerText = currentQuestionIndex + 1;
+            document.getElementById('question-emoji').innerText = q.emoji;
+            document.getElementById('question-text').innerText = q.q;
+
+            const optionsContainer = document.getElementById('options-container');
+            optionsContainer.innerHTML = '';
+
+            const feedbackBox = document.getElementById('feedback-box');
+            feedbackBox.classList.add('hidden');
+            document.getElementById('btn-next-q').classList.add('hidden');
+
+            q.options.forEach((opt, idx) => {
+                const btn = document.createElement('button');
+                btn.className = "w-full text-left p-4 rounded-2xl border-2 border-purple-200 bg-white hover:bg-purple-50 active:scale-[0.99] transition font-medium text-slate-700 text-base md:text-lg shadow-sm flex items-center justify-between";
+                btn.innerHTML = `<span>${opt}</span> <span class="text-xl">🔵</span>`;
+                btn.onclick = () => handleAnswer(idx, btn);
+                optionsContainer.appendChild(btn);
+            });
+        }
+
+        function handleAnswer(selectedIndex, clickedBtn) {
+            const level = quizData[currentLevelIndex];
+            const q = level.questions[currentQuestionIndex];
+            const optionsContainer = document.getElementById('options-container');
+            const allButtons = optionsContainer.getElementsByTagName('button');
+
+            // Disable all option buttons after click
+            for (let b of allButtons) {
+                b.disabled = true;
+                b.classList.remove('hover:bg-purple-50');
+            }
+
+            const feedbackBox = document.getElementById('feedback-box');
+            feedbackBox.classList.remove('hidden');
+
+            if (selectedIndex === q.correct) {
+                clickedBtn.classList.remove('bg-white', 'border-purple-200');
+                clickedBtn.classList.add('bg-emerald-100', 'border-emerald-500', 'text-emerald-900');
+                
+                feedbackBox.className = "rounded-2xl p-4 text-center font-bold text-lg bg-emerald-100 text-emerald-800 border-2 border-emerald-300 animate-bounce";
+                feedbackBox.innerText = q.feedback;
+                
+                score++;
+                starCount.innerText = score;
+            } else {
+                clickedBtn.classList.remove('bg-white', 'border-purple-200');
+                clickedBtn.classList.add('bg-rose-100', 'border-rose-400', 'text-rose-900');
+
+                // Highlight correct one gently
+                allButtons[q.correct].classList.remove('bg-white', 'border-purple-200');
+                allButtons[q.correct].classList.add('bg-emerald-50', 'border-emerald-400', 'text-emerald-900');
+
+                feedbackBox.className = "rounded-2xl p-4 text-center font-bold text-lg bg-amber-50 text-amber-800 border-2 border-amber-200";
+                feedbackBox.innerText = "Nice try! Let's remember this one for next time! ✨ " + q.feedback;
+            }
+
+            document.getElementById('btn-next-q').classList.remove('hidden');
+        }
+
+        function nextQuestion() {
+            currentQuestionIndex++;
+            const level = quizData[currentLevelIndex];
+            if (currentQuestionIndex < level.questions.length) {
+                loadQuestion();
+            } else {
+                // Level finished!
+                levelProgress[currentLevelIndex] = true;
+                
+                // Check if all levels completed
+                if (levelProgress.every(val => val === true)) {
+                    showRewardUnlockModal();
+                } else {
+                    document.getElementById('complete-heading').innerText = `${level.levelName} Completed! 🎉`;
+                    document.getElementById('complete-subtext').innerText = `Amazing work! You've unlocked the next level on the map!`;
+                    showScreen(screenLevelComplete);
+                }
+            }
+        }
+
+        function showRewardUnlockModal() {
+            document.getElementById('complete-heading').innerText = "🏆 ALL 5 LEVELS COMPLETED! 🏆";
+            document.getElementById('complete-subtext').innerText = "You are a true Stone Age History Expert! You've unlocked 'Dress My Quizmaster'!";
+            
+            // Add custom button to go straight to reward
+            const completeContainer = screenLevelComplete.querySelector('.flex');
+            completeContainer.innerHTML = `
+                <button onclick="openDressUp()" class="title-font bg-gradient-to-r from-pink-500 to-purple-600 text-white font-bold py-3 px-8 rounded-2xl shadow-lg animate-bounce">
+                    🎨 Play Dress My Quizmaster!
+                </button>
+            `;
+            showScreen(screenLevelComplete);
+        }
+
+        function returnToMap() {
+            renderLevelMap();
+            showScreen(screenMap);
+        }
+
+        function openDressUp() {
+            initDressUpSelectors();
+            updateAvatar();
+            showScreen(screenReward);
+        }
+
+        function initDressUpSelectors() {
+            setupSelector('selector-hat', dressUpItems.hats, 'hat');
+            setupSelector('selector-glasses', dressUpItems.glasses, 'glasses');
+            setupSelector('selector-outfit', dressUpItems.outfits, 'outfit');
+            setupSelector('selector-accessory', dressUpItems.accessories, 'accessory');
+        }
+
+        function setupSelector(containerId, items, category) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = '';
+            items.forEach(item => {
+                const btn = document.createElement('button');
+                btn.className = `p-2 rounded-xl text-2xl bg-white border-2 hover:bg-purple-50 transition shadow-sm flex items-center justify-center ${
+                    currentOutfit[category] === item ? 'border-pink-500 bg-pink-50 ring-2 ring-pink-300' : 'border-purple-200'
+                }`;
+                btn.innerText = item;
+                btn.onclick = () => {
+                    currentOutfit[category] = item;
+                    initDressUpSelectors(); // refresh highlights
+                    updateAvatar();
+                };
+                container.appendChild(btn);
+            });
+        }
+
+        function updateAvatar() {
+            document.getElementById('avatar-hat').innerText = currentOutfit.hat;
+            document.getElementById('avatar-glasses').innerText = currentOutfit.glasses;
+            document.getElementById('avatar-outfit').innerText = currentOutfit.outfit;
+            document.getElementById('avatar-accessory').innerText = currentOutfit.accessory;
+        }
+
+        // Initialize selectors on load
+        window.onload = function() {
+            initDressUpSelectors();
+        };
+    </script>
+</body>
+</html>

@@ -1,0 +1,1112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Quiz Star - Science: Animals & Humans</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        jungle: {
+                            50: '#f0fdf4',
+                            100: '#dcfce7',
+                            300: '#86efac',
+                            500: '#22c55e',
+                            700: '#15803d',
+                            800: '#166534',
+                            900: '#14532d',
+                        },
+                        safari: {
+                            gold: '#f59e0b',
+                            wood: '#854d0e',
+                            woodLight: '#a16207',
+                            accent: '#f97316'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Comic Sans MS', 'Chalkboard SE', 'Fredoka', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- FontAwesome Icons for clean SVG-based icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        @keyframes float {
+            0% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-8px) rotate(1deg); }
+            100% { transform: translateY(0px) rotate(0deg); }
+        }
+        @keyframes pulse-star {
+            0%, 100% { transform: scale(1); filter: drop-shadow(0 0 5px #fbbf24); }
+            50% { transform: scale(1.15); filter: drop-shadow(0 0 15px #f59e0b); }
+        }
+        @keyframes bounce-gentle {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        .animate-float {
+            animation: float 4s ease-in-out infinite;
+        }
+        .animate-pulse-star {
+            animation: pulse-star 2s infinite;
+        }
+        .animate-bounce-gentle {
+            animation: bounce-gentle 1.5s infinite;
+        }
+        /* Custom Wooden Texture Borders */
+        .wood-card {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            border: 6px solid #854d0e;
+            box-shadow: 0 10px 0 #3f2203, inset 0 2px 4px rgba(255,255,255,0.8);
+            border-radius: 24px;
+        }
+        .wood-button {
+            background: linear-gradient(180deg, #f59e0b 0%, #d97706 100%);
+            border: 4px solid #78350f;
+            box-shadow: 0 6px 0 #451a03;
+            transition: all 0.1s ease;
+        }
+        .wood-button:active {
+            transform: translateY(4px);
+            box-shadow: 0 2px 0 #451a03;
+        }
+        .option-btn {
+            background: linear-gradient(180deg, #ffffff 0%, #f3f4f6 100%);
+            border: 3px solid #166534;
+            box-shadow: 0 5px 0 #14532d;
+            transition: all 0.15s ease;
+        }
+        .option-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            background: #dcfce7;
+        }
+        .option-btn:active:not(:disabled) {
+            transform: translateY(3px);
+            box-shadow: 0 2px 0 #14532d;
+        }
+        canvas {
+            touch-action: none;
+        }
+    </style>
+</head>
+<body class="bg-jungle-900 font-sans min-h-screen text-slate-800 flex flex-col justify-between select-none overflow-x-hidden" style="background-image: radial-gradient(#15803d 15%, transparent 16%), radial-gradient(#166534 15%, transparent 16%); background-size: 60px 60px; background-position: 0 0, 30px 30px;">
+
+    <header class="w-full max-w-4xl mx-auto p-3 flex justify-between items-center z-20">
+        <div class="flex items-center gap-2 bg-jungle-800/90 text-white px-4 py-2 rounded-full border-2 border-jungle-500 shadow-lg">
+            <span class="text-2xl">🌿</span>
+            <span class="font-bold text-lg tracking-wide text-amber-300">QUIZ STAR</span>
+        </div>
+
+        <div class="flex items-center gap-3">
+            <!-- Total Stars Display -->
+            <div class="flex items-center gap-1.5 bg-amber-100 text-amber-900 font-bold px-4 py-1.5 rounded-full border-2 border-amber-500 shadow-md">
+                <i class="fa-solid fa-star text-amber-500 text-xl animate-pulse-star"></i>
+                <span id="global-stars" class="text-xl">0</span>
+            </div>
+            
+            <!-- Total Score Display -->
+            <div class="flex items-center gap-1 bg-emerald-100 text-emerald-900 font-bold px-3 py-1.5 rounded-full border-2 border-emerald-500 shadow-md">
+                <i class="fa-solid fa-trophy text-emerald-600 text-lg"></i>
+                <span id="global-score" class="text-lg">0</span>
+            </div>
+
+            <!-- Sound Toggle Button -->
+            <button id="sound-btn" onclick="toggleSound()" class="bg-amber-500 text-white w-10 h-10 rounded-full flex items-center justify-center border-2 border-amber-800 shadow-md active:scale-95 transition">
+                <i id="sound-icon" class="fa-solid fa-volume-high text-lg"></i>
+            </button>
+        </div>
+    </header>
+
+    <main class="w-full max-w-4xl mx-auto p-4 flex-grow flex flex-col justify-center items-center z-10 relative">
+
+        <!-- SCREEN 1: WELCOME / START SCREEN -->
+        <section id="screen-welcome" class="wood-card w-full p-6 sm:p-8 text-center my-auto animate-float">
+            <div class="text-5xl sm:text-6xl mb-3">🦁 🦒 🐘</div>
+            <h1 class="text-3xl sm:text-5xl font-black text-amber-900 tracking-wide mb-2 drop-shadow">
+                QUIZ STAR!
+            </h1>
+            <p class="text-lg sm:text-xl font-bold text-jungle-800 mb-6">
+                Year 3 Science Explorer: Animals & Humans
+            </p>
+
+            <div class="bg-amber-50 rounded-2xl p-4 border-2 border-amber-300 mb-6 text-left text-amber-900 text-sm sm:text-base space-y-2">
+                <div class="flex items-center gap-2 font-bold text-emerald-800">
+                    <i class="fa-solid fa-compass text-lg"></i>
+                    <span>Your Jungle Safari Mission:</span>
+                </div>
+                <ul class="list-disc list-inside space-y-1 text-slate-700">
+                    <li>Complete <b>5 Fun Levels</b> with 15 Science questions!</li>
+                    <li>Earn up to <b>3 Stars</b> on every level.</li>
+                    <li>Play <b>Car Dodger</b> after each level to collect bonus points!</li>
+                    <li>Become the ultimate <b>Jungle Quiz Star</b>!</li>
+                </ul>
+            </div>
+
+            <button onclick="startGame()" class="wood-button text-white text-2xl font-black px-8 py-4 rounded-2xl w-full sm:w-auto tracking-wider cursor-pointer">
+                🚀 START ADVENTURE
+            </button>
+        </section>
+
+        <!-- SCREEN 2: LEVEL SELECT SCREEN -->
+        <section id="screen-level-select" class="wood-card w-full p-6 text-center hidden">
+            <h2 class="text-2xl sm:text-3xl font-black text-amber-900 mb-2">🗺️ Choose Your Safari Level</h2>
+            <p class="text-slate-700 text-sm sm:text-base font-bold mb-6">Complete levels to unlock new jungle trails!</p>
+
+            <div id="levels-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+                <!-- Level Cards will be dynamically inserted here -->
+            </div>
+
+            <button onclick="showScreen('screen-welcome')" class="bg-amber-200 hover:bg-amber-300 text-amber-900 font-bold px-6 py-2.5 rounded-xl border-2 border-amber-600 transition">
+                ⬅️ Back to Menu
+            </button>
+        </section>
+
+        <!-- SCREEN 3: QUIZ QUESTION SCREEN -->
+        <section id="screen-quiz" class="wood-card w-full p-5 sm:p-7 hidden relative">
+            <!-- Level & Progress Bar -->
+            <div class="flex justify-between items-center mb-4">
+                <div class="flex items-center gap-2">
+                    <span id="quiz-level-badge" class="bg-jungle-700 text-amber-200 text-xs sm:text-sm font-black px-3 py-1 rounded-full border border-jungle-500">
+                        LEVEL 1
+                    </span>
+                    <span id="quiz-progress-text" class="text-amber-900 font-bold text-sm">
+                        Question 1/3
+                    </span>
+                </div>
+                <div class="w-32 sm:w-48 bg-amber-200 h-4 rounded-full border-2 border-amber-600 overflow-hidden">
+                    <div id="quiz-progress-bar" class="bg-emerald-500 h-full w-1/3 transition-all duration-300"></div>
+                </div>
+            </div>
+
+            <!-- Question Box -->
+            <div class="bg-amber-50/90 border-2 border-amber-300 rounded-2xl p-4 sm:p-6 mb-5 text-center min-h-[110px] flex items-center justify-center shadow-inner">
+                <h3 id="quiz-question" class="text-lg sm:text-2xl font-bold text-slate-800 leading-snug">
+                    Loading question...
+                </h3>
+            </div>
+
+            <!-- Answer Options -->
+            <div id="quiz-options" class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-5">
+                <!-- Buttons generated dynamically -->
+            </div>
+
+            <!-- Feedback / Explanation Message Banner -->
+            <div id="quiz-feedback" class="hidden p-3.5 rounded-xl text-center font-bold text-base sm:text-lg transition-all duration-300">
+            </div>
+        </section>
+
+        <!-- SCREEN 4: LEVEL COMPLETED SUMMARY -->
+        <section id="screen-level-complete" class="wood-card w-full p-6 sm:p-8 text-center hidden">
+            <div class="text-5xl mb-2 animate-bounce-gentle">🎉</div>
+            <h2 class="text-3xl font-black text-amber-900 mb-1">LEVEL COMPLETED!</h2>
+            <p id="level-title-done" class="text-jungle-800 font-bold mb-4 text-lg">Animal Diets & Groups</p>
+
+            <!-- Star Rating Display -->
+            <div id="stars-display" class="flex justify-center gap-3 text-4xl sm:text-5xl mb-6">
+                <i class="fa-solid fa-star text-slate-300"></i>
+                <i class="fa-solid fa-star text-slate-300"></i>
+                <i class="fa-solid fa-star text-slate-300"></i>
+            </div>
+
+            <div class="bg-amber-100 rounded-xl p-4 border-2 border-amber-400 mb-6 max-w-md mx-auto space-y-2">
+                <p class="text-slate-800 font-bold text-base sm:text-lg">
+                    Level Score: <span id="level-score-val" class="text-emerald-700 text-xl font-black">0</span>
+                </p>
+                <p id="level-praise" class="text-amber-900 font-medium italic text-sm sm:text-base">
+                    Fantastic work explorer!
+                </p>
+            </div>
+
+            <button onclick="startMiniGame()" class="wood-button text-white text-xl font-black px-8 py-3.5 rounded-2xl animate-pulse">
+                🏎️ PLAY CAR DODGER MINI-GAME!
+            </button>
+        </section>
+
+        <!-- SCREEN 5: CAR DODGER MINI-GAME SCREEN -->
+        <section id="screen-minigame" class="wood-card w-full p-4 sm:p-6 text-center hidden flex flex-col items-center">
+            <!-- HUD -->
+            <div class="w-full flex justify-between items-center bg-jungle-800 text-white px-4 py-2 rounded-xl mb-3 border border-jungle-600">
+                <div class="flex items-center gap-2 font-bold text-amber-300 text-sm sm:text-base">
+                    <span>⏱️ Time:</span>
+                    <span id="mg-timer" class="text-xl text-white">20</span>s
+                </div>
+                <div class="text-amber-300 font-bold text-sm sm:text-base">
+                    🍌 Stars/Bananas: <span id="mg-stars" class="text-xl text-yellow-300">0</span>
+                </div>
+            </div>
+
+            <!-- Canvas Container -->
+            <div class="relative w-full max-w-[360px] sm:max-w-[420px] aspect-[3/4] bg-emerald-900 rounded-2xl overflow-hidden border-4 border-amber-800 shadow-2xl">
+                <canvas id="gameCanvas" class="w-full h-full block"></canvas>
+                
+                <!-- On-Screen Instructions overlay -->
+                <div id="mg-start-overlay" class="absolute inset-0 bg-black/60 backdrop-blur-sm flex flex-col items-center justify-center p-4 text-white">
+                    <div class="text-4xl mb-2">🚗💨</div>
+                    <h3 class="text-2xl font-black text-amber-400 mb-2">Jungle Car Dodger!</h3>
+                    <p class="text-sm mb-4 text-center">Steer left & right to dodge logs & mud while collecting yellow stars!</p>
+                    <button onclick="runMiniGameEngine()" class="wood-button text-white text-lg font-bold px-6 py-2.5 rounded-xl">
+                        GO! 🚦
+                    </button>
+                </div>
+            </div>
+
+            <!-- Touch / Mobile On-Screen Controls -->
+            <div class="flex gap-4 mt-4 w-full max-w-[360px] sm:max-w-[420px] justify-between">
+                <button id="btn-left" class="wood-button flex-1 py-3 text-2xl font-black text-white rounded-xl active:bg-amber-700">
+                    ⬅️ LEFT
+                </button>
+                <button id="btn-right" class="wood-button flex-1 py-3 text-2xl font-black text-white rounded-xl active:bg-amber-700">
+                    RIGHT ➡️
+                </button>
+            </div>
+        </section>
+
+        <!-- SCREEN 6: GRAND CHAMPION TROPHY CELEBRATION -->
+        <section id="screen-grand-trophy" class="wood-card w-full p-6 sm:p-8 text-center hidden">
+            <div class="text-6xl sm:text-7xl mb-3 animate-pulse-star">🏆</div>
+            <h2 class="text-3xl sm:text-5xl font-black text-amber-900 mb-2">QUIZ STAR CHAMPION!</h2>
+            <p class="text-jungle-800 font-bold text-lg sm:text-xl mb-6">You completed all 5 Science Safari Levels!</p>
+
+            <div class="bg-amber-100 rounded-2xl p-5 border-2 border-amber-400 max-w-md mx-auto mb-6 text-left space-y-3">
+                <div class="flex justify-between items-center border-b border-amber-300 pb-2">
+                    <span class="font-bold text-amber-900">Total Safari Stars:</span>
+                    <span id="final-stars" class="text-2xl font-black text-amber-600">⭐ 15/15</span>
+                </div>
+                <div class="flex justify-between items-center border-b border-amber-300 pb-2">
+                    <span class="font-bold text-amber-900">Total Science Score:</span>
+                    <span id="final-score" class="text-2xl font-black text-emerald-700">1500 pts</span>
+                </div>
+                <p class="text-center font-bold text-emerald-800 text-sm sm:text-base pt-1">
+                    🌟 You are a true Science Expert on Animals and Humans! 🌟
+                </p>
+            </div>
+
+            <button onclick="resetWholeGame()" class="wood-button text-white text-xl font-black px-8 py-4 rounded-2xl cursor-pointer">
+                🔄 PLAY AGAIN
+            </button>
+        </section>
+
+    </main>
+
+    <footer class="w-full text-center p-3 text-xs sm:text-sm font-bold text-emerald-200 z-20">
+        Quiz Star • UK Year 3 Science Explorer • Safe & Safe Educational Fun
+    </footer>
+
+    <script>
+        const LEVELS_DATA = [
+            {
+                id: 1,
+                title: "Animal Diets & Groups",
+                icon: "🦁",
+                desc: "Carnivores, Herbivores, Omnivores & Teeth",
+                questions: [
+                    {
+                        q: "What do we call animals that ONLY eat plants?",
+                        options: ["Carnivores", "Herbivores", "Omnivores", "Insectivores"],
+                        correct: 1,
+                        explain: "Herbivores eat plants, leaves, and fruits, like cows and rabbits!"
+                    },
+                    {
+                        q: "Which type of tooth is sharp and pointed to tear meat?",
+                        options: ["Molars", "Incisors", "Canines", "Milk teeth"],
+                        correct: 2,
+                        explain: "Canines are sharp, pointed teeth used for tearing food!"
+                    },
+                    {
+                        q: "Humans eat both plants and meat. What diet group are humans?",
+                        options: ["Herbivores", "Carnivores", "Omnivores", "Vegetarians"],
+                        correct: 2,
+                        explain: "Omnivores eat both plants and animals!"
+                    }
+                ]
+            },
+            {
+                id: 2,
+                title: "Skeletons & Bones",
+                icon: "🦴",
+                desc: "Support, Protection, Movement & Vertebrates",
+                questions: [
+                    {
+                        q: "Which main set of bones protects our brain?",
+                        options: ["Ribcage", "Skull", "Spine", "Pelvis"],
+                        correct: 1,
+                        explain: "The hard skull bone acts like a helmet for your brain!"
+                    },
+                    {
+                        q: "What do we call animals that HAVE a backbone inside their body?",
+                        options: ["Invertebrates", "Vertebrates", "Insects", "Molluscs"],
+                        correct: 1,
+                        explain: "Vertebrates (like humans, dogs, and birds) have a backbone!"
+                    },
+                    {
+                        q: "What is the main job of our ribcage?",
+                        options: ["To digest food", "To protect our heart and lungs", "To help us hear", "To make us taller"],
+                        correct: 1,
+                        explain: "Ribs curve around to protect our heart and lungs inside!"
+                    }
+                ]
+            },
+            {
+                id: 3,
+                title: "Muscles & Movement",
+                icon: "💪",
+                desc: "How muscles work in pairs to pull bones",
+                questions: [
+                    {
+                        q: "How do muscles move our bones?",
+                        options: ["By pushing bones", "By pulling bones", "By blowing air", "By floating"],
+                        correct: 1,
+                        explain: "Muscles can only PULL bones; they cannot push them!"
+                    },
+                    {
+                        q: "When a muscle works to move a bone, what happens to it?",
+                        options: ["It contracts (gets shorter)", "It disappears", "It turns into bone", "It relaxes"],
+                        correct: 0,
+                        explain: "Muscles contract (tighten & shorten) when pulling a bone!"
+                    },
+                    {
+                        q: "Muscles work together in pairs. When one contracts, the other...",
+                        options: ["Contracts too", "Relaxes (gets longer)", "Breaks", "Falls off"],
+                        correct: 1,
+                        explain: "Muscles work in pairs: while one contracts, its partner relaxes!"
+                    }
+                ]
+            },
+            {
+                id: 4,
+                title: "Human Nutrition & Food Groups",
+                icon: "🍎",
+                desc: "Carbohydrates, Proteins, Vitamins & Water",
+                questions: [
+                    {
+                        q: "Which food group gives our body lots of energy for moving and playing?",
+                        options: ["Proteins", "Carbohydrates", "Water", "Calcium"],
+                        correct: 1,
+                        explain: "Carbohydrates (bread, pasta, rice) give us steady energy!"
+                    },
+                    {
+                        q: "Why do we need Protein in our diet (like beans, fish, and eggs)?",
+                        options: ["To grow and repair our body", "To give shiny skin", "To make teeth yellow", "To help us sleep"],
+                        correct: 0,
+                        explain: "Protein helps our muscles and organs grow and repair!"
+                    },
+                    {
+                        q: "Why is drinking plenty of water important for humans?",
+                        options: ["It cleans our hair", "It keeps our body hydrated and healthy", "It gives us sugar", "It turns into blood"],
+                        correct: 1,
+                        explain: "Water keeps every cell in our body hydrated and healthy!"
+                    }
+                ]
+            },
+            {
+                id: 5,
+                title: "Animal Homes & Healthy Living",
+                icon: "🌿",
+                desc: "Exercise, Healthy Bodies & Growth",
+                questions: [
+                    {
+                        q: "Which of these is essential for keeping our heart and muscles healthy?",
+                        options: ["Regular physical exercise", "Watching TV all day", "Eating lots of sweets", "Staying awake late"],
+                        correct: 0,
+                        explain: "Exercise makes your heart, lungs, and muscles strong!"
+                    },
+                    {
+                        q: "What is a baby frog called when it hatches from an egg?",
+                        options: ["Caterpillar", "Tadpole", "Calf", "Puppy"],
+                        correct: 1,
+                        explain: "Baby frogs hatch into swimming tadpoles before growing legs!"
+                    },
+                    {
+                        q: "What 3 things do ALL animals need to survive and stay healthy?",
+                        options: ["Food, Water, and Air", "Toys, Clothes, and TV", "Soda, Candy, and Chips", "Sand, Rocks, and Sun"],
+                        correct: 0,
+                        explain: "All animals need food, water, and oxygen (air) to survive!"
+                    }
+                ]
+            }
+        ];
+
+        let gameState = {
+            unlockedLevel: 1,
+            currentLevelIdx: 0,
+            currentQuestionIdx: 0,
+            levelScores: [0, 0, 0, 0, 0],
+            levelStars: [0, 0, 0, 0, 0],
+            totalStars: 0,
+            totalScore: 0,
+            soundEnabled: true
+        };
+
+        let audioCtx = null;
+
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        }
+
+        function playSound(type) {
+            if (!gameState.soundEnabled) return;
+            try {
+                initAudio();
+                const now = audioCtx.currentTime;
+
+                if (type === 'correct') {
+                    // Cheerful arpeggio tone
+                    [523.25, 659.25, 783.99, 1046.50].forEach((freq, idx) => {
+                        const osc = audioCtx.createOscillator();
+                        const gain = audioCtx.createGain();
+                        osc.type = 'triangle';
+                        osc.frequency.value = freq;
+                        gain.gain.setValueAtTime(0.15, now + idx * 0.08);
+                        gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.08 + 0.2);
+                        osc.connect(gain);
+                        gain.connect(audioCtx.destination);
+                        osc.start(now + idx * 0.08);
+                        osc.stop(now + idx * 0.08 + 0.25);
+                    });
+                } else if (type === 'wrong') {
+                    // Soft low boop
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(220, now);
+                    osc.frequency.exponentialRampToValueAtTime(110, now + 0.25);
+                    gain.gain.setValueAtTime(0.2, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.start(now);
+                    osc.stop(now + 0.25);
+                } else if (type === 'coin') {
+                    // Star pick up chime
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(880, now);
+                    osc.frequency.exponentialRampToValueAtTime(1760, now + 0.12);
+                    gain.gain.setValueAtTime(0.15, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.12);
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.start(now);
+                    osc.stop(now + 0.12);
+                } else if (type === 'bump') {
+                    // Soft bump sound
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = 'square';
+                    osc.frequency.setValueAtTime(150, now);
+                    osc.frequency.exponentialRampToValueAtTime(60, now + 0.15);
+                    gain.gain.setValueAtTime(0.1, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.start(now);
+                    osc.stop(now + 0.15);
+                } else if (type === 'fanfare') {
+                    // Level victory fanfare
+                    const notes = [440, 554.37, 659.25, 880];
+                    notes.forEach((freq, idx) => {
+                        const osc = audioCtx.createOscillator();
+                        const gain = audioCtx.createGain();
+                        osc.type = 'triangle';
+                        osc.frequency.value = freq;
+                        gain.gain.setValueAtTime(0.2, now + idx * 0.12);
+                        gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.12 + 0.4);
+                        osc.connect(gain);
+                        gain.connect(audioCtx.destination);
+                        osc.start(now + idx * 0.12);
+                        osc.stop(now + idx * 0.12 + 0.45);
+                    });
+                }
+            } catch(e) {
+                console.log("Audio playback note:", e);
+            }
+        }
+
+        function toggleSound() {
+            gameState.soundEnabled = !gameState.soundEnabled;
+            const icon = document.getElementById('sound-icon');
+            if (gameState.soundEnabled) {
+                icon.className = 'fa-solid fa-volume-high text-lg';
+            } else {
+                icon.className = 'fa-solid fa-volume-xmark text-lg';
+            }
+        }
+
+        function showScreen(screenId) {
+            const screens = [
+                'screen-welcome', 
+                'screen-level-select', 
+                'screen-quiz', 
+                'screen-level-complete', 
+                'screen-minigame', 
+                'screen-grand-trophy'
+            ];
+            screens.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.classList.add('hidden');
+            });
+            document.getElementById(screenId).classList.remove('hidden');
+        }
+
+        function startGame() {
+            initAudio();
+            renderLevelSelect();
+            showScreen('screen-level-select');
+        }
+
+        function renderLevelSelect() {
+            const grid = document.getElementById('levels-grid');
+            grid.innerHTML = '';
+
+            LEVELS_DATA.forEach((lvl, idx) => {
+                const isUnlocked = (idx + 1) <= gameState.unlockedLevel;
+                const stars = gameState.levelStars[idx] || 0;
+
+                const card = document.createElement('div');
+                card.className = `p-4 rounded-2xl border-4 text-left transition ${
+                    isUnlocked 
+                    ? 'bg-amber-100/90 border-amber-600 hover:scale-105 cursor-pointer shadow-md' 
+                    : 'bg-slate-200/80 border-slate-400 opacity-70 cursor-not-allowed'
+                }`;
+
+                let starsHTML = '';
+                for (let i = 1; i <= 3; i++) {
+                    if (i <= stars) {
+                        starsHTML += '<i class="fa-solid fa-star text-amber-500 text-lg"></i>';
+                    } else {
+                        starsHTML += '<i class="fa-solid fa-star text-slate-300 text-lg"></i>';
+                    }
+                }
+
+                card.innerHTML = `
+                    <div class="flex justify-between items-start mb-1">
+                        <span class="text-3xl">${lvl.icon}</span>
+                        <div class="flex gap-1">${isUnlocked ? starsHTML : '🔒'}</div>
+                    </div>
+                    <h4 class="font-black text-amber-900 text-lg">Level ${lvl.id}: ${lvl.title}</h4>
+                    <p class="text-xs font-bold text-slate-600">${lvl.desc}</p>
+                `;
+
+                if (isUnlocked) {
+                    card.onclick = () => startLevel(idx);
+                }
+
+                grid.appendChild(card);
+            });
+        }
+
+        function startLevel(levelIdx) {
+            gameState.currentLevelIdx = levelIdx;
+            gameState.currentQuestionIdx = 0;
+            gameState.levelScores[levelIdx] = 0;
+            loadQuestion();
+            showScreen('screen-quiz');
+        }
+
+        function loadQuestion() {
+            const level = LEVELS_DATA[gameState.currentLevelIdx];
+            const qData = level.questions[gameState.currentQuestionIdx];
+
+            // Update Level Header
+            document.getElementById('quiz-level-badge').innerText = `LEVEL ${level.id}: ${level.title.toUpperCase()}`;
+            document.getElementById('quiz-progress-text').innerText = `Question ${gameState.currentQuestionIdx + 1}/${level.questions.length}`;
+            
+            const pct = ((gameState.currentQuestionIdx + 1) / level.questions.length) * 100;
+            document.getElementById('quiz-progress-bar').style.width = `${pct}%`;
+
+            // Display Question
+            document.getElementById('quiz-question').innerText = qData.q;
+
+            // Reset feedback banner
+            const feedback = document.getElementById('quiz-feedback');
+            feedback.className = 'hidden p-3.5 rounded-xl text-center font-bold text-base sm:text-lg transition-all duration-300';
+            feedback.innerText = '';
+
+            // Render Options
+            const optionsContainer = document.getElementById('quiz-options');
+            optionsContainer.innerHTML = '';
+
+            qData.options.forEach((optText, optIdx) => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn p-3.5 sm:p-4 rounded-xl text-slate-800 font-bold text-base sm:text-lg text-left flex items-center gap-3 w-full';
+                btn.innerHTML = `
+                    <span class="w-8 h-8 rounded-full bg-amber-200 text-amber-900 flex items-center justify-center font-black shrink-0 border border-amber-400">
+                        ${String.fromCharCode(65 + optIdx)}
+                    </span>
+                    <span>${optText}</span>
+                `;
+                btn.onclick = () => handleAnswer(optIdx, btn);
+                optionsContainer.appendChild(btn);
+            });
+        }
+
+        function handleAnswer(selectedIdx, selectedBtn) {
+            const level = LEVELS_DATA[gameState.currentLevelIdx];
+            const qData = level.questions[gameState.currentQuestionIdx];
+            const optionsContainer = document.getElementById('quiz-options');
+            const allButtons = optionsContainer.querySelectorAll('button');
+            const feedback = document.getElementById('quiz-feedback');
+
+            // Disable all buttons to prevent multiple clicks
+            allButtons.forEach(btn => btn.disabled = true);
+
+            if (selectedIdx === qData.correct) {
+                // Correct Answer
+                playSound('correct');
+                selectedBtn.classList.remove('option-btn');
+                selectedBtn.classList.add('bg-emerald-500', 'text-white', 'border-4', 'border-emerald-700', 'shadow-lg');
+                
+                gameState.levelScores[gameState.currentLevelIdx] += 100;
+                
+                feedback.className = 'block bg-emerald-100 text-emerald-900 border-2 border-emerald-400 p-3.5 rounded-xl text-center font-bold text-sm sm:text-base animate-bounce-gentle';
+                feedback.innerHTML = `🌟 <b>Spot on!</b> ${qData.explain}`;
+            } else {
+                // Incorrect Answer
+                playSound('wrong');
+                selectedBtn.classList.remove('option-btn');
+                selectedBtn.classList.add('bg-rose-400', 'text-white', 'border-4', 'border-rose-600');
+
+                // Highlight correct button gently
+                const correctBtn = allButtons[qData.correct];
+                correctBtn.classList.remove('option-btn');
+                correctBtn.classList.add('bg-emerald-200', 'text-emerald-900', 'border-2', 'border-emerald-500');
+
+                feedback.className = 'block bg-amber-100 text-amber-900 border-2 border-amber-400 p-3.5 rounded-xl text-center font-bold text-sm sm:text-base';
+                feedback.innerHTML = `💡 <b>Good try!</b> ${qData.explain}`;
+            }
+
+            // Move to next question after a brief delay
+            setTimeout(() => {
+                gameState.currentQuestionIdx++;
+                if (gameState.currentQuestionIdx < level.questions.length) {
+                    loadQuestion();
+                } else {
+                    finishQuizLevel();
+                }
+            }, 2600);
+        }
+
+        function finishQuizLevel() {
+            playSound('fanfare');
+            const score = gameState.levelScores[gameState.currentLevelIdx];
+            let stars = 1;
+            if (score >= 300) stars = 3;
+            else if (score >= 200) stars = 2;
+
+            gameState.levelStars[gameState.currentLevelIdx] = stars;
+
+            // Unlock next level if available
+            if (gameState.currentLevelIdx + 1 > gameState.unlockedLevel - 1 && gameState.unlockedLevel < 5) {
+                gameState.unlockedLevel = gameState.currentLevelIdx + 2;
+            }
+
+            updateGlobalStats();
+
+            // Populate Level Complete Screen
+            const level = LEVELS_DATA[gameState.currentLevelIdx];
+            document.getElementById('level-title-done').innerText = `Level ${level.id}: ${level.title}`;
+            document.getElementById('level-score-val').innerText = `${score} / 300 pts`;
+
+            // Star icons display
+            const starContainer = document.getElementById('stars-display');
+            starContainer.innerHTML = '';
+            for (let i = 1; i <= 3; i++) {
+                if (i <= stars) {
+                    starContainer.innerHTML += '<i class="fa-solid fa-star text-amber-500 animate-pulse-star"></i>';
+                } else {
+                    starContainer.innerHTML += '<i class="fa-solid fa-star text-slate-300"></i>';
+                }
+            }
+
+            // Praise message
+            let praise = "Awesome effort explorer!";
+            if (stars === 3) praise = "🌟 PERFECT SCORE! You are a Science Genius! 🌟";
+            else if (stars === 2) praise = "Great job! You really know your science!";
+            document.getElementById('level-praise').innerText = praise;
+
+            showScreen('screen-level-complete');
+        }
+
+        function updateGlobalStats() {
+            const totalStars = gameState.levelStars.reduce((a, b) => a + b, 0);
+            const totalScore = gameState.levelScores.reduce((a, b) => a + b, 0);
+
+            gameState.totalStars = totalStars;
+            gameState.totalScore = totalScore;
+
+            document.getElementById('global-stars').innerText = totalStars;
+            document.getElementById('global-score').innerText = totalScore;
+        }
+
+        let mgCanvas, mgCtx;
+        let mgTimerInterval, mgAnimFrame;
+        let mgTimeLeft = 20;
+        let mgStarsCollected = 0;
+
+        let playerCar = {
+            x: 0,
+            y: 0,
+            w: 44,
+            h: 70,
+            speed: 6
+        };
+
+        let mgObstacles = [];
+        let mgStarCollectibles = [];
+        let mgParticles = [];
+        let keysState = { left: false, right: false };
+
+        function startMiniGame() {
+            showScreen('screen-minigame');
+            document.getElementById('mg-start-overlay').classList.remove('hidden');
+            
+            mgCanvas = document.getElementById('gameCanvas');
+            mgCtx = mgCanvas.getContext('2d');
+
+            // Responsive Canvas internal resolution
+            mgCanvas.width = 360;
+            mgCanvas.height = 480;
+
+            playerCar.x = mgCanvas.width / 2 - playerCar.w / 2;
+            playerCar.y = mgCanvas.height - playerCar.h - 20;
+
+            setupControlListeners();
+        }
+
+        function setupControlListeners() {
+            // Keyboard Listeners
+            window.onkeydown = (e) => {
+                if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') keysState.left = true;
+                if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') keysState.right = true;
+            };
+            window.onkeyup = (e) => {
+                if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') keysState.left = false;
+                if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') keysState.right = false;
+            };
+
+            // Touch / On-Screen Buttons
+            const btnLeft = document.getElementById('btn-left');
+            const btnRight = document.getElementById('btn-right');
+
+            const setLeft = (val) => keysState.left = val;
+            const setRight = (val) => keysState.right = val;
+
+            btnLeft.onpointerdown = (e) => { e.preventDefault(); setLeft(true); };
+            btnLeft.onpointerup = (e) => { e.preventDefault(); setLeft(false); };
+            btnLeft.onpointerleave = (e) => setLeft(false);
+
+            btnRight.onpointerdown = (e) => { e.preventDefault(); setRight(true); };
+            btnRight.onpointerup = (e) => { e.preventDefault(); setRight(false); };
+            btnRight.onpointerleave = (e) => setRight(false);
+        }
+
+        function runMiniGameEngine() {
+            document.getElementById('mg-start-overlay').classList.add('hidden');
+
+            mgTimeLeft = 20;
+            mgStarsCollected = 0;
+            mgObstacles = [];
+            mgStarCollectibles = [];
+            mgParticles = [];
+
+            document.getElementById('mg-timer').innerText = mgTimeLeft;
+            document.getElementById('mg-stars').innerText = mgStarsCollected;
+
+            clearInterval(mgTimerInterval);
+            cancelAnimationFrame(mgAnimFrame);
+
+            // Timer countdown
+            mgTimerInterval = setInterval(() => {
+                mgTimeLeft--;
+                document.getElementById('mg-timer').innerText = mgTimeLeft;
+                if (mgTimeLeft <= 0) {
+                    endMiniGame();
+                }
+            }, 1000);
+
+            let spawnCounter = 0;
+
+            function gameLoop() {
+                // Update Logic
+                if (keysState.left && playerCar.x > 35) playerCar.x -= playerCar.speed;
+                if (keysState.right && playerCar.x < mgCanvas.width - 35 - playerCar.w) playerCar.x += playerCar.speed;
+
+                // Spawning Obstacles & Stars
+                spawnCounter++;
+                if (spawnCounter % 40 === 0) {
+                    // Spawn Obstacle (Log or Boulder or Mud)
+                    const laneX = 45 + Math.random() * (mgCanvas.width - 90 - 40);
+                    const types = ['log', 'boulder', 'mud'];
+                    mgObstacles.push({
+                        x: laneX,
+                        y: -50,
+                        w: 38,
+                        h: 38,
+                        speed: 3 + Math.random() * 2,
+                        type: types[Math.floor(Math.random() * types.length)]
+                    });
+                }
+
+                if (spawnCounter % 65 === 0) {
+                    // Spawn Collectible Star/Banana
+                    const laneX = 50 + Math.random() * (mgCanvas.width - 100);
+                    mgStarCollectibles.push({
+                        x: laneX,
+                        y: -30,
+                        w: 28,
+                        h: 28,
+                        speed: 3.5
+                    });
+                }
+
+                // Move Obstacles
+                for (let i = mgObstacles.length - 1; i >= 0; i--) {
+                    let obs = mgObstacles[i];
+                    obs.y += obs.speed;
+
+                    // Check Collision with Jeep
+                    if (isColliding(playerCar, obs)) {
+                        playSound('bump');
+                        createParticles(obs.x + obs.w/2, obs.y + obs.h/2, '#854d0e');
+                        mgObstacles.splice(i, 1);
+                        continue;
+                    }
+
+                    if (obs.y > mgCanvas.height) {
+                        mgObstacles.splice(i, 1);
+                    }
+                }
+
+                // Move Stars
+                for (let i = mgStarCollectibles.length - 1; i >= 0; i--) {
+                    let star = mgStarCollectibles[i];
+                    star.y += star.speed;
+
+                    // Collect Star
+                    if (isColliding(playerCar, star)) {
+                        playSound('coin');
+                        mgStarsCollected++;
+                        document.getElementById('mg-stars').innerText = mgStarsCollected;
+                        createParticles(star.x + star.w/2, star.y + star.h/2, '#f59e0b');
+                        mgStarCollectibles.splice(i, 1);
+                        continue;
+                    }
+
+                    if (star.y > mgCanvas.height) {
+                        mgStarCollectibles.splice(i, 1);
+                    }
+                }
+
+                // Move Particles
+                for (let i = mgParticles.length - 1; i >= 0; i--) {
+                    let p = mgParticles[i];
+                    p.x += p.vx;
+                    p.y += p.vy;
+                    p.life -= 0.05;
+                    if (p.life <= 0) mgParticles.splice(i, 1);
+                }
+
+                // RENDER
+                drawMiniGameScene();
+
+                if (mgTimeLeft > 0) {
+                    mgAnimFrame = requestAnimationFrame(gameLoop);
+                }
+            }
+
+            gameLoop();
+        }
+
+        function isColliding(rect1, rect2) {
+            return rect1.x < rect2.x + rect2.w &&
+                   rect1.x + rect1.w > rect2.x &&
+                   rect1.y < rect2.y + rect2.h &&
+                   rect1.y + rect1.h > rect2.y;
+        }
+
+        function createParticles(x, y, color) {
+            for (let i = 0; i < 8; i++) {
+                mgParticles.push({
+                    x: x,
+                    y: y,
+                    vx: (Math.random() - 0.5) * 6,
+                    vy: (Math.random() - 0.5) * 6,
+                    color: color,
+                    life: 1.0
+                });
+            }
+        }
+
+        function drawMiniGameScene() {
+            // Jungle Road Background
+            mgCtx.fillStyle = '#14532d'; // Dark Green Grass margins
+            mgCtx.fillRect(0, 0, mgCanvas.width, mgCanvas.height);
+
+            // Mud/Dirt Trail Road
+            mgCtx.fillStyle = '#78350f';
+            mgCtx.fillRect(30, 0, mgCanvas.width - 60, mgCanvas.height);
+
+            // Road border grass lines
+            mgCtx.fillStyle = '#22c55e';
+            mgCtx.fillRect(25, 0, 5, mgCanvas.height);
+            mgCtx.fillRect(mgCanvas.width - 30, 0, 5, mgCanvas.height);
+
+            // Animated Road Dashes
+            mgCtx.strokeStyle = '#fef3c7';
+            mgCtx.lineWidth = 4;
+            mgCtx.setLineDash([15, 15]);
+            mgCtx.lineDashOffset = -Date.now() / 20;
+            mgCtx.beginPath();
+            mgCtx.moveTo(mgCanvas.width / 2, 0);
+            mgCtx.lineTo(mgCanvas.width / 2, mgCanvas.height);
+            mgCtx.stroke();
+            mgCtx.setLineDash([]); // reset
+
+            // Draw Safari Jeep Car
+            mgCtx.save();
+            mgCtx.translate(playerCar.x, playerCar.y);
+
+            // Wheels
+            mgCtx.fillStyle = '#1e293b';
+            mgCtx.fillRect(-3, 8, 6, 16);
+            mgCtx.fillRect(playerCar.w - 3, 8, 6, 16);
+            mgCtx.fillRect(-3, playerCar.h - 24, 6, 16);
+            mgCtx.fillRect(playerCar.w - 3, playerCar.h - 24, 6, 16);
+
+            // Body (Safari Yellow/Orange)
+            mgCtx.fillStyle = '#f59e0b';
+            mgCtx.beginPath();
+            mgCtx.roundRect(0, 0, playerCar.w, playerCar.h, 8);
+            mgCtx.fill();
+            mgCtx.strokeStyle = '#78350f';
+            mgCtx.lineWidth = 3;
+            mgCtx.stroke();
+
+            // Windshield
+            mgCtx.fillStyle = '#93c5fd';
+            mgCtx.fillRect(6, 18, playerCar.w - 12, 14);
+
+            // Headlights
+            mgCtx.fillStyle = '#fef08a';
+            mgCtx.fillRect(4, 2, 8, 6);
+            mgCtx.fillRect(playerCar.w - 12, 2, 8, 6);
+
+            mgCtx.restore();
+
+            // Draw Obstacles
+            mgObstacles.forEach(obs => {
+                mgCtx.save();
+                mgCtx.translate(obs.x, obs.y);
+
+                if (obs.type === 'log') {
+                    // Wooden Log
+                    mgCtx.fillStyle = '#854d0e';
+                    mgCtx.beginPath();
+                    mgCtx.roundRect(0, 5, obs.w, obs.h - 10, 6);
+                    mgCtx.fill();
+                    mgCtx.fillStyle = '#fde68a';
+                    mgCtx.beginPath();
+                    mgCtx.arc(6, obs.h/2, 6, 0, Math.PI * 2);
+                    mgCtx.fill();
+                } else if (obs.type === 'boulder') {
+                    // Gray Rock
+                    mgCtx.fillStyle = '#64748b';
+                    mgCtx.beginPath();
+                    mgCtx.arc(obs.w/2, obs.h/2, obs.w/2, 0, Math.PI * 2);
+                    mgCtx.fill();
+                    mgCtx.fillStyle = '#94a3b8';
+                    mgCtx.beginPath();
+                    mgCtx.arc(obs.w/2 - 3, obs.h/2 - 3, obs.w/4, 0, Math.PI * 2);
+                    mgCtx.fill();
+                } else {
+                    // Mud Patch
+                    mgCtx.fillStyle = '#451a03';
+                    mgCtx.beginPath();
+                    mgCtx.ellipse(obs.w/2, obs.h/2, obs.w/2, obs.h/3, 0, 0, Math.PI * 2);
+                    mgCtx.fill();
+                }
+                mgCtx.restore();
+            });
+
+            // Draw Star Collectibles
+            mgStarCollectibles.forEach(star => {
+                mgCtx.save();
+                mgCtx.translate(star.x + star.w/2, star.y + star.h/2);
+                
+                // Draw Star Shape
+                mgCtx.fillStyle = '#f59e0b';
+                mgCtx.beginPath();
+                for (let i = 0; i < 5; i++) {
+                    mgCtx.lineTo(Math.cos((18 + i * 72) * Math.PI / 180) * 12, -Math.sin((18 + i * 72) * Math.PI / 180) * 12);
+                    mgCtx.lineTo(Math.cos((54 + i * 72) * Math.PI / 180) * 5, -Math.sin((54 + i * 72) * Math.PI / 180) * 5);
+                }
+                mgCtx.closePath();
+                mgCtx.fill();
+                mgCtx.strokeStyle = '#ffffff';
+                mgCtx.lineWidth = 1.5;
+                mgCtx.stroke();
+
+                mgCtx.restore();
+            });
+
+            // Draw Particles
+            mgParticles.forEach(p => {
+                mgCtx.save();
+                mgCtx.globalAlpha = p.life;
+                mgCtx.fillStyle = p.color;
+                mgCtx.beginPath();
+                mgCtx.arc(p.x, p.y, 4, 0, Math.PI * 2);
+                mgCtx.fill();
+                mgCtx.restore();
+            });
+        }
+
+        function endMiniGame() {
+            clearInterval(mgTimerInterval);
+            cancelAnimationFrame(mgAnimFrame);
+
+            // Add Bonus score for stars collected
+            const bonusScore = mgStarsCollected * 50;
+            gameState.levelScores[gameState.currentLevelIdx] += bonusScore;
+            updateGlobalStats();
+
+            playSound('fanfare');
+
+            // Check if game completely finished
+            if (gameState.currentLevelIdx >= 4) {
+                // Show Grand Celebration Screen
+                document.getElementById('final-stars').innerText = `⭐ ${gameState.totalStars} / 15`;
+                document.getElementById('final-score').innerText = `${gameState.totalScore} pts`;
+                showScreen('screen-grand-trophy');
+            } else {
+                // Next level prompt
+                renderLevelSelect();
+                showScreen('screen-level-select');
+            }
+        }
+
+        function resetWholeGame() {
+            gameState.unlockedLevel = 1;
+            gameState.currentLevelIdx = 0;
+            gameState.currentQuestionIdx = 0;
+            gameState.levelScores = [0, 0, 0, 0, 0];
+            gameState.levelStars = [0, 0, 0, 0, 0];
+            updateGlobalStats();
+            startGame();
+        }
+
+        // Initialize display stats
+        updateGlobalStats();
+    </script>
+</body>
+</html>

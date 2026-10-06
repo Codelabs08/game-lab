@@ -1,0 +1,962 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Dubai Heights Academy - 10 Times Table Fun!</title>
+    <!-- Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts for Playful Typography -->
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Outfit:wght@500;700;800&display=swap" rel="stylesheet">
+    <!-- Canvas Confetti for Celebrations -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brandBlue: '#1E64B7',
+                        brandLightBlue: '#4A90E2',
+                        brandRed: '#E63946',
+                        brandPink: '#FF6B8B',
+                        brandYellow: '#FFD166',
+                        brandBg: '#EBF4FF'
+                    },
+                    fontFamily: {
+                        fredoka: ['Fredoka', 'sans-serif'],
+                        outfit: ['Outfit', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            font-family: 'Fredoka', sans-serif;
+            background-color: #EBF4FF;
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: manipulation;
+        }
+
+        /* Custom Bounce & Wobble Animations */
+        @keyframes gentle-bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
+        }
+        .animate-bounce-gentle {
+            animation: gentle-bounce 2s infinite ease-in-out;
+        }
+
+        @keyframes star-pop {
+            0% { transform: scale(0.5) rotate(-20deg); opacity: 0; }
+            50% { transform: scale(1.3) rotate(10deg); }
+            100% { transform: scale(1) rotate(0deg); opacity: 1; }
+        }
+        .animate-star-pop {
+            animation: star-pop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        .btn-shadow-red {
+            box-shadow: 0 8px 0 #9E1C27, 0 12px 15px rgba(0,0,0,0.15);
+        }
+        .btn-shadow-red:active {
+            transform: translateY(4px);
+            box-shadow: 0 4px 0 #9E1C27, 0 6px 10px rgba(0,0,0,0.15);
+        }
+
+        .btn-shadow-blue {
+            box-shadow: 0 8px 0 #123C70, 0 12px 15px rgba(0,0,0,0.15);
+        }
+        .btn-shadow-blue:active {
+            transform: translateY(4px);
+            box-shadow: 0 4px 0 #123C70, 0 6px 10px rgba(0,0,0,0.15);
+        }
+
+        .btn-shadow-pink {
+            box-shadow: 0 8px 0 #C43D59, 0 12px 15px rgba(0,0,0,0.15);
+        }
+        .btn-shadow-pink:active {
+            transform: translateY(4px);
+            box-shadow: 0 4px 0 #C43D59, 0 6px 10px rgba(0,0,0,0.15);
+        }
+
+        .card-shadow {
+            box-shadow: 0 10px 25px -5px rgba(30, 100, 183, 0.15), 0 8px 10px -6px rgba(30, 100, 183, 0.1);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-between p-2 sm:p-4 text-slate-800">
+
+    <!-- Header Bar -->
+    <header class="w-full max-w-2xl flex items-center justify-between bg-white px-4 py-3 rounded-3xl border-4 border-brandBlue card-shadow mb-3">
+        <div class="flex items-center space-x-2">
+            <div class="w-10 h-10 sm:w-12 sm:h-12 bg-brandRed rounded-2xl flex items-center justify-center text-white text-xl sm:text-2xl shadow-md transform -rotate-6">
+                <i class="fa-solid fa-graduation-cap"></i>
+            </div>
+            <div>
+                <h1 class="text-lg sm:text-2xl font-bold text-brandBlue tracking-wide leading-tight">Dubai Heights Academy</h1>
+                <p class="text-xs sm:text-sm text-brandPink font-semibold">10 Times Table Challenge 🌟</p>
+            </div>
+        </div>
+
+        <div class="flex items-center space-x-3">
+            <!-- Sound Toggle -->
+            <button id="soundToggleBtn" onclick="toggleSound()" class="w-10 h-10 sm:w-11 sm:h-11 bg-blue-100 hover:bg-blue-200 text-brandBlue rounded-2xl flex items-center justify-center text-lg transition duration-200">
+                <i id="soundIcon" class="fa-solid fa-volume-high"></i>
+            </button>
+            <!-- Score & Stars -->
+            <div class="flex items-center space-x-1 bg-amber-100 border-2 border-amber-300 px-3 py-1.5 rounded-2xl">
+                <i class="fa-solid fa-star text-amber-500 text-lg animate-bounce-gentle"></i>
+                <span id="starCount" class="font-extrabold text-amber-700 text-base sm:text-lg">0</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Container -->
+    <main class="w-full max-w-2xl flex-grow flex flex-col items-center justify-center relative">
+
+        <!-- START SCREEN -->
+        <div id="startScreen" class="w-full bg-white rounded-3xl p-6 sm:p-8 border-4 border-brandPink card-shadow text-center flex flex-col items-center">
+            <div class="relative mb-4">
+                <div class="w-24 h-24 sm:w-32 sm:h-32 bg-pink-100 rounded-full flex items-center justify-center text-brandPink text-5xl sm:text-6xl border-4 border-brandPink animate-bounce-gentle">
+                    <i class="fa-solid fa-car-side"></i>
+                </div>
+                <span class="absolute -top-2 -right-2 bg-brandYellow text-amber-900 font-bold text-xs px-3 py-1 rounded-full border-2 border-amber-400">Year 3 Maths</span>
+            </div>
+
+            <h2 class="text-2xl sm:text-4xl font-extrabold text-brandBlue mb-2">Ready to Master 10x?</h2>
+            <p class="text-slate-600 text-sm sm:text-base mb-6 max-w-md">
+                Answer 3 maths questions per level to unlock the exciting <b>Car Dodger Minigame</b>! Earn stars and become the DHA Maths Champion! 🏆
+            </p>
+
+            <div class="w-full max-w-xs space-y-3 mb-6">
+                <div class="flex items-center justify-center space-x-2 text-xs sm:text-sm font-semibold text-slate-500 bg-slate-100 py-2 rounded-xl">
+                    <i class="fa-solid fa-layer-group text-brandBlue"></i>
+                    <span>5 Progressive Levels (15 Questions)</span>
+                </div>
+                <div class="flex items-center justify-center space-x-2 text-xs sm:text-sm font-semibold text-slate-500 bg-slate-100 py-2 rounded-xl">
+                    <i class="fa-solid fa-gamepad text-brandRed"></i>
+                    <span>Fun Car Dodger Bonus Rounds</span>
+                </div>
+            </div>
+
+            <button onclick="startGame()" class="w-full max-w-xs bg-brandRed hover:bg-red-500 text-white text-xl sm:text-2xl font-extrabold py-4 px-8 rounded-2xl btn-shadow-red transition duration-150 transform active:scale-95 flex items-center justify-center space-x-3">
+                <span>START QUIZ</span>
+                <i class="fa-solid fa-play"></i>
+            </button>
+        </div>
+
+        <!-- QUIZ SCREEN -->
+        <div id="quizScreen" class="hidden w-full bg-white rounded-3xl p-5 sm:p-7 border-4 border-brandBlue card-shadow flex flex-col">
+            <!-- Progress & Level Info -->
+            <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center space-x-2">
+                    <span id="levelBadge" class="bg-brandBlue text-white font-bold text-xs sm:text-sm px-3 py-1 rounded-full">Level 1</span>
+                    <span id="questionTracker" class="text-slate-500 font-semibold text-xs sm:text-sm">Question 1 of 3</span>
+                </div>
+                <div class="w-28 sm:w-36 bg-slate-200 h-3 rounded-full overflow-hidden">
+                    <div id="levelProgressBar" class="bg-brandPink h-full w-1/3 transition-all duration-300"></div>
+                </div>
+            </div>
+
+            <!-- Question Card -->
+            <div class="bg-blue-50 border-2 border-blue-200 rounded-2xl p-6 mb-6 text-center min-h-[140px] flex flex-col items-center justify-center relative">
+                <span id="questionTag" class="text-xs font-bold uppercase tracking-wider text-brandLightBlue mb-1">Maths Question</span>
+                <h3 id="questionText" class="text-2xl sm:text-4xl font-extrabold text-brandBlue tracking-wide">10 × 5 = ?</h3>
+            </div>
+
+            <!-- Answers Grid -->
+            <div id="optionsGrid" class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mb-4">
+                <!-- Buttons injected dynamically -->
+            </div>
+
+            <!-- Feedback Display Container -->
+            <div id="feedbackBox" class="hidden rounded-2xl p-4 text-center border-2 transition-all duration-300">
+                <div id="feedbackIcon" class="text-3xl mb-1"></div>
+                <h4 id="feedbackTitle" class="text-xl font-extrabold mb-1"></h4>
+                <p id="feedbackText" class="text-sm sm:text-base font-medium mb-3"></p>
+                <button id="nextBtn" onclick="handleNextStep()" class="bg-brandBlue text-white font-bold px-6 py-2.5 rounded-xl btn-shadow-blue text-base hover:bg-blue-600 transition">
+                    Continue <i class="fa-solid fa-arrow-right ml-1"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- CAR DODGER MINIGAME SCREEN -->
+        <div id="minigameScreen" class="hidden w-full bg-white rounded-3xl p-4 sm:p-6 border-4 border-brandRed card-shadow flex flex-col items-center">
+            <div class="flex items-center justify-between w-full mb-3">
+                <div class="flex items-center space-x-2">
+                    <span class="bg-brandRed text-white text-xs sm:text-sm font-bold px-3 py-1 rounded-full">Bonus Round!</span>
+                    <span class="text-slate-600 text-xs sm:text-sm font-bold">Dodge the Cars! 🚗</span>
+                </div>
+                <div class="flex items-center space-x-2 bg-pink-100 px-3 py-1 rounded-full border border-pink-300">
+                    <i class="fa-solid fa-clock text-brandPink text-sm"></i>
+                    <span id="timerDisplay" class="font-extrabold text-brandPink text-base">15s</span>
+                </div>
+            </div>
+
+            <!-- Canvas for Car Dodger -->
+            <div class="relative w-full max-w-[360px] h-[340px] bg-slate-700 rounded-2xl overflow-hidden border-4 border-slate-800 shadow-inner flex justify-center">
+                <canvas id="gameCanvas" width="340" height="340" class="block"></canvas>
+                
+                <!-- On-canvas overlay count down -->
+                <div id="minigameOverlay" class="absolute inset-0 bg-slate-900/80 backdrop-blur-sm flex flex-col items-center justify-center text-white p-4 text-center">
+                    <div class="w-16 h-16 bg-brandRed rounded-full flex items-center justify-center text-3xl mb-2 animate-bounce-gentle">
+                        <i class="fa-solid fa-flag-checkered"></i>
+                    </div>
+                    <h3 class="text-2xl font-extrabold text-amber-300">Car Dodger Bonus!</h3>
+                    <p class="text-xs sm:text-sm text-slate-200 mt-1 mb-4">Steer your pink car to dodge other vehicles and pick up stars!</p>
+                    <button onclick="startCarDodgerMinigame()" class="bg-brandPink hover:bg-pink-500 text-white font-extrabold text-lg px-6 py-3 rounded-xl btn-shadow-pink">
+                        DRIVE NOW! 🚀
+                    </button>
+                </div>
+            </div>
+
+            <!-- Touch Controls for Mobile/Tablet -->
+            <div class="flex items-center justify-center space-x-6 mt-4 w-full max-w-[340px]">
+                <button id="leftTouchBtn" class="flex-1 bg-brandBlue hover:bg-blue-600 text-white font-bold py-3.5 rounded-2xl text-2xl btn-shadow-blue active:scale-95 touch-none">
+                    <i class="fa-solid fa-arrow-left"></i> Left
+                </button>
+                <button id="rightTouchBtn" class="flex-1 bg-brandBlue hover:bg-blue-600 text-white font-bold py-3.5 rounded-2xl text-2xl btn-shadow-blue active:scale-95 touch-none">
+                    Right <i class="fa-solid fa-arrow-right"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- END CELEBRATION SCREEN -->
+        <div id="endScreen" class="hidden w-full bg-white rounded-3xl p-6 sm:p-8 border-4 border-amber-400 card-shadow text-center flex flex-col items-center">
+            <div class="w-24 h-24 sm:w-28 sm:h-28 bg-amber-100 rounded-full flex items-center justify-center text-amber-500 text-5xl sm:text-6xl border-4 border-amber-400 mb-4 animate-bounce-gentle">
+                <i class="fa-solid fa-trophy"></i>
+            </div>
+
+            <h2 class="text-3xl sm:text-4xl font-extrabold text-brandBlue mb-1">SUPERSTAR! 🎉</h2>
+            <p class="text-brandPink font-bold text-base sm:text-lg mb-4">You Mastered the 10 Times Table!</p>
+
+            <!-- Results Summary Card -->
+            <div class="w-full bg-amber-50 border-2 border-amber-200 rounded-2xl p-4 mb-6 grid grid-cols-2 gap-4 text-center">
+                <div class="bg-white p-3 rounded-xl border border-amber-200">
+                    <span class="text-xs text-slate-500 font-bold block">TOTAL SCORE</span>
+                    <span id="finalScore" class="text-2xl sm:text-3xl font-extrabold text-brandBlue">0</span>
+                </div>
+                <div class="bg-white p-3 rounded-xl border border-amber-200">
+                    <span class="text-xs text-slate-500 font-bold block">STARS COLLECTED</span>
+                    <div class="flex items-center justify-center space-x-1 mt-1">
+                        <i class="fa-solid fa-star text-amber-500 text-xl"></i>
+                        <span id="finalStars" class="text-2xl sm:text-3xl font-extrabold text-amber-600">0</span>
+                    </div>
+                </div>
+            </div>
+
+            <p class="text-slate-600 text-xs sm:text-sm mb-6">
+                Dubai Heights Academy is super proud of your amazing maths skills today! Keep practicing! 🏫⭐
+            </p>
+
+            <button onclick="startGame()" class="w-full max-w-xs bg-brandRed hover:bg-red-500 text-white text-xl font-extrabold py-4 px-8 rounded-2xl btn-shadow-red transition duration-150 transform active:scale-95 flex items-center justify-center space-x-2">
+                <i class="fa-solid fa-rotate-right"></i>
+                <span>PLAY AGAIN</span>
+            </button>
+        </div>
+    </main>
+
+    <footer class="mt-4 text-center text-slate-500 text-xs font-semibold">
+        Dubai Heights Academy • Year 3 Maths Challenge • 100% Safe & Fun
+    </footer>
+
+    <script>
+        /* --------------------------------------------------
+         * WEB AUDIO SYNTHESIZER (No External Sound Files)
+         * -------------------------------------------------- */
+        let audioCtx = null;
+        let soundMuted = false;
+
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }
+
+        function toggleSound() {
+            soundMuted = !soundMuted;
+            const icon = document.getElementById('soundIcon');
+            if (soundMuted) {
+                icon.className = 'fa-solid fa-volume-xmark text-slate-400';
+            } else {
+                icon.className = 'fa-solid fa-volume-high text-brandBlue';
+                playSound('click');
+            }
+        }
+
+        function playSound(type) {
+            if (soundMuted) return;
+            initAudio();
+            if (!audioCtx) return;
+
+            const now = audioCtx.currentTime;
+
+            if (type === 'click') {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(400, now);
+                osc.frequency.exponentialRampToValueAtTime(800, now + 0.05);
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.linearRampToValueAtTime(0.01, now + 0.05);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start(now);
+                osc.stop(now + 0.05);
+            } 
+            else if (type === 'correct') {
+                // Happy Two-Tone Chime
+                const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+                notes.forEach((freq, idx) => {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(freq, now + idx * 0.08);
+                    gain.gain.setValueAtTime(0.25, now + idx * 0.08);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.08 + 0.2);
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.start(now + idx * 0.08);
+                    osc.stop(now + idx * 0.08 + 0.2);
+                });
+            } 
+            else if (type === 'wrong') {
+                // Gentle Soft Beep for Mistakes
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(280, now);
+                osc.frequency.linearRampToValueAtTime(220, now + 0.25);
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.linearRampToValueAtTime(0.01, now + 0.25);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start(now);
+                osc.stop(now + 0.25);
+            }
+            else if (type === 'star') {
+                // High pitch star shimmer
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(987.77, now); // B5
+                osc.frequency.exponentialRampToValueAtTime(1318.51, now + 0.12); // E6
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.linearRampToValueAtTime(0.01, now + 0.12);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start(now);
+                osc.stop(now + 0.12);
+            }
+            else if (type === 'victory') {
+                // Fanfare Arpeggio
+                const fanfare = [440, 554.37, 659.25, 880, 1108.73];
+                fanfare.forEach((freq, idx) => {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(freq, now + idx * 0.1);
+                    gain.gain.setValueAtTime(0.3, now + idx * 0.1);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.1 + 0.35);
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.start(now + idx * 0.1);
+                    osc.stop(now + idx * 0.1 + 0.35);
+                });
+            }
+        }
+
+        /* --------------------------------------------------
+         * GAME DATA & QUESTION BANK
+         * 15 Questions total split across 5 Levels
+         * -------------------------------------------------- */
+        const quizData = [
+            // LEVEL 1: Starter (1x10 to 5x10)
+            {
+                level: 1,
+                tag: "Level 1 • Easy Start",
+                question: "10 × 2 = ?",
+                correct: "20",
+                options: ["12", "20", "25", "10"],
+                explanation: "10 × 2 means 2 groups of 10, which is 20!"
+            },
+            {
+                level: 1,
+                tag: "Level 1 • Easy Start",
+                question: "10 × 4 = ?",
+                correct: "40",
+                options: ["14", "30", "40", "44"],
+                explanation: "Great job! 10 × 4 equals 40!"
+            },
+            {
+                level: 1,
+                tag: "Level 1 • Easy Start",
+                question: "10 × 5 = ?",
+                correct: "50",
+                options: ["50", "15", "55", "45"],
+                explanation: "5 tens give us 50!"
+            },
+
+            // LEVEL 2: Building Mastery (6x10 to 10x10)
+            {
+                level: 2,
+                tag: "Level 2 • Stepping Up",
+                question: "10 × 7 = ?",
+                correct: "70",
+                options: ["17", "60", "70", "77"],
+                explanation: "7 tens equal 70!"
+            },
+            {
+                level: 2,
+                tag: "Level 2 • Stepping Up",
+                question: "10 × 9 = ?",
+                correct: "90",
+                options: ["80", "90", "19", "99"],
+                explanation: "Awesome! 10 × 9 is 90!"
+            },
+            {
+                level: 2,
+                tag: "Level 2 • Stepping Up",
+                question: "10 × 10 = ?",
+                correct: "100",
+                options: ["100", "20", "110", "90"],
+                explanation: "10 tens make 100!"
+            },
+
+            // LEVEL 3: Missing Factors & Division
+            {
+                level: 3,
+                tag: "Level 3 • Missing Numbers",
+                question: "__ × 10 = 60",
+                correct: "6",
+                options: ["5", "6", "60", "16"],
+                explanation: "6 × 10 = 60!"
+            },
+            {
+                level: 3,
+                tag: "Level 3 • Division Fun",
+                question: "80 ÷ 10 = ?",
+                correct: "8",
+                options: ["8", "80", "18", "7"],
+                explanation: "80 divided into tens gives 8!"
+            },
+            {
+                level: 3,
+                tag: "Level 3 • Missing Numbers",
+                question: "__ × 10 = 30",
+                correct: "3",
+                options: ["30", "13", "3", "4"],
+                explanation: "3 × 10 = 30!"
+            },
+
+            // LEVEL 4: Real-Life Word Problems
+            {
+                level: 4,
+                tag: "Level 4 • Word Story",
+                question: "5 cars have 10 wheels each. How many wheels in total?",
+                correct: "50",
+                options: ["15", "50", "40", "55"],
+                explanation: "5 cars × 10 wheels = 50 wheels!"
+            },
+            {
+                level: 4,
+                tag: "Level 4 • Word Story",
+                question: "A teacher has 10 boxes with 8 pencils in each. How many pencils?",
+                correct: "80",
+                options: ["18", "88", "80", "70"],
+                explanation: "10 boxes × 8 pencils = 80 pencils!"
+            },
+            {
+                level: 4,
+                tag: "Level 4 • Word Story",
+                question: "Dubai Heights Academy has 10 buses with 10 kids in each. Total kids?",
+                correct: "100",
+                options: ["20", "100", "90", "110"],
+                explanation: "10 buses × 10 kids = 100 kids!"
+            },
+
+            // LEVEL 5: Super Speed Challenge (up to 12x10)
+            {
+                level: 5,
+                tag: "Level 5 • Grand Finale",
+                question: "11 × 10 = ?",
+                correct: "110",
+                options: ["111", "101", "110", "120"],
+                explanation: "Super work! 11 × 10 = 110!"
+            },
+            {
+                level: 5,
+                tag: "Level 5 • Grand Finale",
+                question: "12 × 10 = ?",
+                correct: "120",
+                options: ["120", "112", "100", "130"],
+                explanation: "12 × 10 = 120! Magnificent!"
+            },
+            {
+                level: 5,
+                tag: "Level 5 • Final Question",
+                question: "10 × 0 = ?",
+                correct: "0",
+                options: ["10", "1", "0", "100"],
+                explanation: "Anything multiplied by 0 is always 0!"
+            }
+        ];
+
+        /* --------------------------------------------------
+         * GAME STATE VARIABLES
+         * -------------------------------------------------- */
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let stars = 0;
+        let currentLevel = 1;
+        let canAnswer = true;
+
+        /* --------------------------------------------------
+         * QUIZ LOGIC FUNCTIONS
+         * -------------------------------------------------- */
+        function startGame() {
+            initAudio();
+            playSound('click');
+            currentQuestionIndex = 0;
+            score = 0;
+            stars = 0;
+            currentLevel = 1;
+
+            updateGlobalCounters();
+
+            document.getElementById('startScreen').classList.add('hidden');
+            document.getElementById('endScreen').classList.add('hidden');
+            document.getElementById('minigameScreen').classList.add('hidden');
+            document.getElementById('quizScreen').classList.remove('hidden');
+
+            loadQuestion();
+        }
+
+        function updateGlobalCounters() {
+            document.getElementById('starCount').innerText = stars;
+        }
+
+        function loadQuestion() {
+            canAnswer = true;
+            const q = quizData[currentQuestionIndex];
+            currentLevel = q.level;
+
+            // Reset UI
+            document.getElementById('feedbackBox').classList.add('hidden');
+            document.getElementById('levelBadge').innerText = `Level ${q.level}`;
+            document.getElementById('questionTag').innerText = q.tag;
+            document.getElementById('questionText').innerText = q.question;
+
+            // Calculate question position within current level (1, 2, or 3)
+            const levelQNum = (currentQuestionIndex % 3) + 1;
+            document.getElementById('questionTracker').innerText = `Question ${levelQNum} of 3`;
+            document.getElementById('levelProgressBar').style.width = `${(levelQNum / 3) * 100}%`;
+
+            // Options setup
+            const optionsGrid = document.getElementById('optionsGrid');
+            optionsGrid.innerHTML = '';
+
+            // Shuffle display options slightly so position isn't fixed
+            const shuffledOptions = [...q.options].sort(() => Math.random() - 0.5);
+
+            shuffledOptions.forEach(opt => {
+                const btn = document.createElement('button');
+                btn.className = 'bg-blue-100 hover:bg-blue-200 border-2 border-blue-300 text-brandBlue font-extrabold text-2xl py-4 px-6 rounded-2xl btn-shadow-blue transition duration-150 transform active:scale-95 text-center flex items-center justify-center';
+                btn.innerText = opt;
+                btn.onclick = () => checkAnswer(opt, btn);
+                optionsGrid.appendChild(btn);
+            });
+        }
+
+        function checkAnswer(selectedOpt, btnElement) {
+            if (!canAnswer) return;
+            canAnswer = false;
+
+            const q = quizData[currentQuestionIndex];
+            const feedbackBox = document.getElementById('feedbackBox');
+            const feedbackIcon = document.getElementById('feedbackIcon');
+            const feedbackTitle = document.getElementById('feedbackTitle');
+            const feedbackText = document.getElementById('feedbackText');
+
+            feedbackBox.classList.remove('hidden');
+
+            if (selectedOpt === q.correct) {
+                // Correct Answer!
+                playSound('correct');
+                score += 100;
+                stars += 1;
+                updateGlobalCounters();
+
+                btnElement.className = btnElement.className.replace('bg-blue-100', 'bg-emerald-400 text-white border-emerald-600');
+
+                feedbackBox.className = 'rounded-2xl p-4 text-center border-2 border-emerald-300 bg-emerald-50 text-emerald-900 animate-star-pop';
+                feedbackIcon.innerHTML = '🌟';
+                feedbackTitle.innerText = 'Well done! Superstar!';
+                feedbackText.innerText = q.explanation;
+
+                // Little local confetti burst
+                if (window.confetti) {
+                    confetti({ particleCount: 35, spread: 60, origin: { y: 0.7 } });
+                }
+            } else {
+                // Incorrect Answer Gentle Feedback
+                playSound('wrong');
+                btnElement.className = btnElement.className.replace('bg-blue-100', 'bg-rose-300 text-rose-900 border-rose-400');
+
+                feedbackBox.className = 'rounded-2xl p-4 text-center border-2 border-amber-300 bg-amber-50 text-amber-900';
+                feedbackIcon.innerHTML = '💛';
+                feedbackTitle.innerText = 'Good Try!';
+                feedbackText.innerText = `The correct answer is ${q.correct}. ${q.explanation}`;
+            }
+        }
+
+        function handleNextStep() {
+            playSound('click');
+            currentQuestionIndex++;
+
+            // Check if level finished (every 3 questions)
+            if (currentQuestionIndex > 0 && currentQuestionIndex % 3 === 0) {
+                // Trigger Car Dodger Bonus Minigame before next level or end!
+                showMinigame();
+            } else if (currentQuestionIndex < quizData.length) {
+                loadQuestion();
+            } else {
+                showEndScreen();
+            }
+        }
+
+        /* --------------------------------------------------
+         * CAR DODGER MINIGAME CANVAS & LOGIC
+         * -------------------------------------------------- */
+        let canvas, ctx;
+        let gameLoopReq = null;
+        let minigameTimeLeft = 15;
+        let minigameTimerInterval = null;
+
+        // Player car state
+        const playerCar = {
+            x: 145,
+            y: 260,
+            width: 44,
+            height: 65,
+            speed: 6,
+            dx: 0
+        };
+
+        let obstacles = [];
+        let collectibleStars = [];
+        let roadOffset = 0;
+        let isMinigameActive = false;
+
+        function showMinigame() {
+            document.getElementById('quizScreen').classList.add('hidden');
+            document.getElementById('minigameScreen').classList.remove('hidden');
+            document.getElementById('minigameOverlay').classList.remove('hidden');
+
+            canvas = document.getElementById('gameCanvas');
+            ctx = canvas.getContext('2d');
+
+            playerCar.x = canvas.width / 2 - playerCar.width / 2;
+            playerCar.dx = 0;
+            obstacles = [];
+            collectibleStars = [];
+
+            drawMinigameInitialState();
+            setupTouchControls();
+        }
+
+        function startCarDodgerMinigame() {
+            initAudio();
+            playSound('click');
+            document.getElementById('minigameOverlay').classList.add('hidden');
+
+            minigameTimeLeft = 15;
+            document.getElementById('timerDisplay').innerText = `${minigameTimeLeft}s`;
+            isMinigameActive = true;
+
+            // Timer Interval
+            clearInterval(minigameTimerInterval);
+            minigameTimerInterval = setInterval(() => {
+                minigameTimeLeft--;
+                document.getElementById('timerDisplay').innerText = `${minigameTimeLeft}s`;
+
+                if (minigameTimeLeft <= 0) {
+                    endMinigame(true);
+                }
+            }, 1000);
+
+            lastSpawnTime = Date.now();
+            requestAnimationFrame(updateMinigame);
+        }
+
+        let lastSpawnTime = 0;
+
+        function updateMinigame() {
+            if (!isMinigameActive) return;
+
+            // Clear Canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // 1. Draw Road
+            roadOffset = (roadOffset + 5) % 30;
+            ctx.fillStyle = '#334155'; // Dark Asphalt
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Grass edges
+            ctx.fillStyle = '#22c55e';
+            ctx.fillRect(0, 0, 30, canvas.height);
+            ctx.fillRect(canvas.width - 30, 30, canvas.width, canvas.height);
+
+            // Dashed center lines
+            ctx.strokeStyle = '#ffffff';
+            ctx.setLineDash([15, 15]);
+            ctx.lineDashOffset = -roadOffset;
+            ctx.lineWidth = 4;
+            ctx.beginPath();
+            ctx.moveTo(canvas.width / 2, 0);
+            ctx.lineTo(canvas.width / 2, canvas.height);
+            ctx.stroke();
+
+            // 2. Move Player
+            playerCar.x += playerCar.dx;
+            // Keep within road bounds
+            if (playerCar.x < 35) playerCar.x = 35;
+            if (playerCar.x > canvas.width - 35 - playerCar.width) {
+                playerCar.x = canvas.width - 35 - playerCar.width;
+            }
+
+            // Draw Player Car (Bright Pink / Red Toy Car)
+            drawCar(playerCar.x, playerCar.y, playerCar.width, playerCar.height, '#FF6B8B', true);
+
+            // 3. Spawn Obstacles & Stars
+            const now = Date.now();
+            if (now - lastSpawnTime > 900) {
+                lastSpawnTime = now;
+                
+                // Spawn Obstacle Car
+                const lanes = [45, 125, 205, 260];
+                const laneX = lanes[Math.floor(Math.random() * lanes.length)];
+                const colors = ['#1E64B7', '#E63946', '#FFD166', '#8B5CF6'];
+                const randomColor = colors[Math.floor(Math.random() * colors.length)];
+
+                obstacles.push({
+                    x: laneX,
+                    y: -70,
+                    width: 42,
+                    height: 60,
+                    speed: 3.5 + Math.random() * 2,
+                    color: randomColor
+                });
+
+                // Chance to spawn star
+                if (Math.random() > 0.4) {
+                    const starLaneX = lanes[Math.floor(Math.random() * lanes.length)] + 10;
+                    collectibleStars.push({
+                        x: starLaneX,
+                        y: -120,
+                        size: 20,
+                        speed: 3.5
+                    });
+                }
+            }
+
+            // 4. Update & Draw Obstacles
+            for (let i = obstacles.length - 1; i >= 0; i--) {
+                const obs = obstacles[i];
+                obs.y += obs.speed;
+                drawCar(obs.x, obs.y, obs.width, obs.height, obs.color, false);
+
+                // Collision Detection with Player
+                if (checkRectCollision(playerCar, obs)) {
+                    // Forgiving hit: Soft knockback & sound effect
+                    playSound('wrong');
+                    obstacles.splice(i, 1);
+                    // Flash effect
+                    ctx.fillStyle = 'rgba(239, 68, 68, 0.3)';
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                } else if (obs.y > canvas.height) {
+                    obstacles.splice(i, 1);
+                }
+            }
+
+            // 5. Update & Draw Collectible Stars
+            for (let i = collectibleStars.length - 1; i >= 0; i--) {
+                const starItem = collectibleStars[i];
+                starItem.y += starItem.speed;
+
+                // Draw Star Icon
+                ctx.fillStyle = '#FFD166';
+                ctx.font = '22px Fredoka';
+                ctx.fillText('⭐', starItem.x, starItem.y);
+
+                // Star Pickup Collision
+                if (
+                    playerCar.x < starItem.x + 20 &&
+                    playerCar.x + playerCar.width > starItem.x &&
+                    playerCar.y < starItem.y &&
+                    playerCar.y + playerCar.height > starItem.y - 20
+                ) {
+                    playSound('star');
+                    stars += 1;
+                    score += 50;
+                    updateGlobalCounters();
+                    collectibleStars.splice(i, 1);
+                } else if (starItem.y > canvas.height) {
+                    collectibleStars.splice(i, 1);
+                }
+            }
+
+            gameLoopReq = requestAnimationFrame(updateMinigame);
+        }
+
+        function drawCar(x, y, w, h, color, isPlayer) {
+            ctx.save();
+            // Car Body
+            ctx.fillStyle = color;
+            ctx.beginPath();
+            ctx.roundRect(x, y, w, h, 10);
+            ctx.fill();
+            ctx.lineWidth = 2;
+            ctx.strokeStyle = '#0f172a';
+            ctx.stroke();
+
+            // Windshield
+            ctx.fillStyle = '#94a3b8';
+            if (isPlayer) {
+                ctx.fillRect(x + 6, y + 12, w - 12, 16); // facing up
+            } else {
+                ctx.fillRect(x + 6, y + h - 28, w - 12, 16); // facing down
+            }
+
+            // Wheels
+            ctx.fillStyle = '#1e293b';
+            ctx.fillRect(x - 3, y + 8, 4, 14);
+            ctx.fillRect(x + w - 1, y + 8, 4, 14);
+            ctx.fillRect(x - 3, y + h - 20, 4, 14);
+            ctx.fillRect(x + w - 1, y + h - 20, 4, 14);
+
+            ctx.restore();
+        }
+
+        function checkRectCollision(r1, r2) {
+            return !(
+                r2.x > r1.x + r1.width - 4 ||
+                r2.x + r2.width < r1.x + 4 ||
+                r2.y > r1.y + r1.height - 4 ||
+                r2.y + r2.height < r1.y + 4
+            );
+        }
+
+        function drawMinigameInitialState() {
+            ctx.fillStyle = '#334155';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#22c55e';
+            ctx.fillRect(0, 0, 30, canvas.height);
+            ctx.fillRect(canvas.width - 30, 30, canvas.width, canvas.height);
+            drawCar(playerCar.x, playerCar.y, playerCar.width, playerCar.height, '#FF6B8B', true);
+        }
+
+        function endMinigame(isSuccess) {
+            isMinigameActive = false;
+            clearInterval(minigameTimerInterval);
+            if (gameLoopReq) cancelAnimationFrame(gameLoopReq);
+
+            playSound('victory');
+            if (window.confetti) {
+                confetti({ particleCount: 50, spread: 70, origin: { y: 0.6 } });
+            }
+
+            setTimeout(() => {
+                document.getElementById('minigameScreen').classList.add('hidden');
+
+                if (currentQuestionIndex < quizData.length) {
+                    document.getElementById('quizScreen').classList.remove('hidden');
+                    loadQuestion();
+                } else {
+                    showEndScreen();
+                }
+            }, 1000);
+        }
+
+        // Controls (Keyboard & Touch)
+        document.addEventListener('keydown', (e) => {
+            if (!isMinigameActive) return;
+            if (e.key === 'ArrowLeft' || e.key === 'a') playerCar.dx = -playerCar.speed;
+            if (e.key === 'ArrowRight' || e.key === 'd') playerCar.dx = playerCar.speed;
+        });
+
+        document.addEventListener('keyup', (e) => {
+            if (['ArrowLeft', 'ArrowRight', 'a', 'd'].includes(e.key)) {
+                playerCar.dx = 0;
+            }
+        });
+
+        function setupTouchControls() {
+            const leftBtn = document.getElementById('leftTouchBtn');
+            const rightBtn = document.getElementById('rightTouchBtn');
+
+            const startLeft = (e) => { e.preventDefault(); playerCar.dx = -playerCar.speed; };
+            const startRight = (e) => { e.preventDefault(); playerCar.dx = playerCar.speed; };
+            const stop = (e) => { e.preventDefault(); playerCar.dx = 0; };
+
+            leftBtn.onmousedown = startLeft;
+            leftBtn.ontouchstart = startLeft;
+            leftBtn.onmouseup = stop;
+            leftBtn.ontouchend = stop;
+
+            rightBtn.onmousedown = startRight;
+            rightBtn.ontouchstart = startRight;
+            rightBtn.onmouseup = stop;
+            rightBtn.ontouchend = stop;
+        }
+
+        /* --------------------------------------------------
+         * END CELEBRATION SCREEN
+         * -------------------------------------------------- */
+        function showEndScreen() {
+            playSound('victory');
+
+            document.getElementById('quizScreen').classList.add('hidden');
+            document.getElementById('minigameScreen').classList.add('hidden');
+            document.getElementById('endScreen').classList.remove('hidden');
+
+            document.getElementById('finalScore').innerText = score;
+            document.getElementById('finalStars').innerText = stars;
+
+            // Trigger Fireworks celebration
+            if (window.confetti) {
+                const duration = 2.5 * 1000;
+                const end = Date.now() + duration;
+
+                (function frame() {
+                    confetti({
+                        particleCount: 4,
+                        angle: 60,
+                        spread: 55,
+                        origin: { x: 0 }
+                    });
+                    confetti({
+                        particleCount: 4,
+                        angle: 120,
+                        spread: 55,
+                        origin: { x: 1 }
+                    });
+
+                    if (Date.now() < end) {
+                        requestAnimationFrame(frame);
+                    }
+                }());
+            }
+        }
+    </script>
+</body>
+</html>

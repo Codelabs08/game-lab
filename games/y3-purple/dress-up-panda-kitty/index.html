@@ -1,0 +1,1125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dress Up Panda & Kitty - Stone Age Boy Quiz</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Quicksand:wght@500;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        fredoka: ['"Fredoka One"', 'cursive'],
+                        quicksand: ['Quicksand', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Quicksand', sans-serif;
+            background: linear-gradient(135deg, #FF9A9E 0%, #FECFEF 25%, #A1C4FD 65%, #E0C3FC 100%);
+            min-height: 100vh;
+            user-select: none;
+        }
+
+        .title-font {
+            font-family: 'Fredoka One', cursive;
+        }
+
+        @keyframes gentle-bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-7px); }
+        }
+        .animate-bounce-gentle {
+            animation: gentle-bounce 2.5s infinite ease-in-out;
+        }
+
+        @keyframes ear-twitch {
+            0%, 90%, 100% { transform: rotate(0deg); }
+            93% { transform: rotate(-8deg); }
+            96% { transform: rotate(8deg); }
+        }
+        .ear-twitch-left {
+            transform-origin: 60px 65px;
+            animation: ear-twitch 4s infinite ease-in-out;
+        }
+        .ear-twitch-right {
+            transform-origin: 140px 65px;
+            animation: ear-twitch 4.5s infinite ease-in-out 0.5s;
+        }
+
+        @keyframes pulse-glow {
+            0%, 100% { filter: drop-shadow(0 0 10px rgba(255, 223, 0, 0.8)); }
+            50% { filter: drop-shadow(0 0 25px rgba(255, 105, 180, 0.9)); }
+        }
+        .aura-glow {
+            animation: pulse-glow 2s infinite ease-in-out;
+        }
+
+        @keyframes popIn {
+            0% { transform: scale(0.85); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .pop-in {
+            animation: popIn 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        #confetti-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 50;
+        }
+    </style>
+</head>
+<body class="p-2 sm:p-4 text-slate-800 flex flex-col items-center justify-between min-h-screen">
+
+    <canvas id="confetti-canvas"></canvas>
+
+    <header class="w-full max-w-5xl flex flex-wrap justify-between items-center bg-white/90 backdrop-blur-md rounded-3xl p-3 sm:p-4 shadow-lg border-4 border-white mb-3">
+        <div class="flex items-center space-x-3">
+            <span class="text-3xl sm:text-4xl">🐱</span>
+            <div>
+                <h1 class="title-font text-xl sm:text-2xl md:text-3xl bg-clip-text text-transparent bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500">
+                    Panda & Kitty: Stone Age Boy Quiz!
+                </h1>
+                <p class="text-xs sm:text-sm font-bold text-pink-600">Year 3 English Dress-Up Adventure</p>
+            </div>
+        </div>
+
+        <div class="flex items-center space-x-3 mt-2 sm:mt-0">
+            <!-- Stars Counter -->
+            <div class="flex items-center bg-amber-100 border-2 border-amber-300 px-3 py-1 sm:py-1.5 rounded-full shadow-sm">
+                <span class="text-xl sm:text-2xl mr-1">⭐</span>
+                <span id="score-display" class="title-font text-lg sm:text-xl text-amber-800">0</span>
+            </div>
+
+            <!-- Level Indicator -->
+            <div class="bg-purple-100 border-2 border-purple-300 px-3 py-1 sm:py-1.5 rounded-full shadow-sm">
+                <span class="title-font text-purple-700 text-xs sm:text-sm" id="level-badge">Level 1 / 5</span>
+            </div>
+        </div>
+    </header>
+
+    <main class="w-full max-w-5xl grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-5 items-start my-auto">
+
+        <!-- LEFT PANEL: Avatar & Wardrobe Studio -->
+        <section class="lg:col-span-5 flex flex-col items-center bg-white/90 backdrop-blur-md rounded-3xl p-3 sm:p-4 shadow-xl border-4 border-pink-200 w-full">
+            
+            <!-- Character Selector Toggle -->
+            <div class="flex justify-between items-center w-full mb-2 bg-pink-50 p-1.5 rounded-2xl border border-pink-200">
+                <span class="title-font text-sm text-purple-700 pl-2">Choose Buddy:</span>
+                <div class="flex gap-1">
+                    <button id="btn-char-kitty" onclick="game.switchCharacter('kitty')" class="px-3 py-1 rounded-xl title-font text-xs bg-pink-500 text-white shadow transition-all flex items-center gap-1">
+                        <span>🐱</span> Cute Kitty
+                    </button>
+                    <button id="btn-char-panda" onclick="game.switchCharacter('panda')" class="px-3 py-1 rounded-xl title-font text-xs text-purple-700 hover:bg-pink-200 transition-all flex items-center gap-1">
+                        <span>🐼</span> Panda
+                    </button>
+                </div>
+            </div>
+
+            <!-- SVG Avatar Container -->
+            <div class="relative w-64 h-64 sm:w-72 sm:h-72 bg-gradient-to-b from-sky-100 via-pink-50 to-amber-50 rounded-2xl border-4 border-yellow-200 flex items-center justify-center shadow-inner overflow-hidden my-1">
+                
+                <!-- Dynamic Aura Sparkles -->
+                <div id="character-aura" class="absolute inset-0 hidden aura-glow bg-radial from-yellow-200/60 via-pink-200/40 to-transparent"></div>
+
+                <!-- MAIN VECTOR SVG AVATAR -->
+                <svg id="avatar-svg" viewBox="0 0 200 200" class="w-full h-full animate-bounce-gentle relative z-10">
+                    
+                    <!-- Aura Stars Layer -->
+                    <g id="layer-aura" class="hidden">
+                        <circle cx="25" cy="35" r="4" fill="#FFD700" />
+                        <circle cx="175" cy="45" r="5" fill="#FF69B4" />
+                        <circle cx="165" cy="155" r="4" fill="#00FFFF" />
+                        <circle cx="35" cy="165" r="5" fill="#FFD700" />
+                        <path d="M 100 12 L 103 19 L 110 20 L 105 25 L 106 32 L 100 28 L 94 32 L 95 25 L 90 20 L 97 19 Z" fill="#FFF" />
+                    </g>
+
+                    <!-- DYNAMIC BASE CHARACTER BODY (KITTY / PANDA) -->
+                    <g id="layer-body">
+                        <!-- Rendered dynamically in JavaScript -->
+                    </g>
+
+                    <!-- DRESS & OUTFIT LAYER -->
+                    <g id="layer-dress"></g>
+
+                    <!-- SHOES LAYER -->
+                    <g id="layer-shoes"></g>
+
+                    <!-- HATS & BOWS LAYER -->
+                    <g id="layer-hat"></g>
+
+                    <!-- ACCESSORIES LAYER -->
+                    <g id="layer-accessory"></g>
+                </svg>
+            </div>
+
+            <div class="w-full mt-2">
+                <!-- Wardrobe Category Tabs -->
+                <div class="flex justify-between bg-purple-50 p-1 rounded-2xl border border-purple-200 mb-2 gap-1 text-[11px] sm:text-xs font-bold">
+                    <button onclick="game.selectTab('dress')" id="tab-dress" class="flex-1 py-1.5 rounded-xl bg-purple-600 text-white shadow transition-all">👗 Dresses</button>
+                    <button onclick="game.selectTab('hat')" id="tab-hat" class="flex-1 py-1.5 rounded-xl text-purple-700 hover:bg-purple-200 transition-all">🎀 Bows/Hats</button>
+                    <button onclick="game.selectTab('shoes')" id="tab-shoes" class="flex-1 py-1.5 rounded-xl text-purple-700 hover:bg-purple-200 transition-all">👟 Shoes</button>
+                    <button onclick="game.selectTab('accessory')" id="tab-accessory" class="flex-1 py-1.5 rounded-xl text-purple-700 hover:bg-purple-200 transition-all">🪄 Extra</button>
+                </div>
+
+                <!-- Scrollable Item Box -->
+                <div id="wardrobe-items" class="flex gap-2 overflow-x-auto pb-2 px-1 no-scrollbar min-h-[92px] items-center">
+                    <!-- Items generated by JS -->
+                </div>
+            </div>
+        </section>
+
+        <!-- RIGHT PANEL: Quiz & Level Progress Area -->
+        <section class="lg:col-span-7 flex flex-col justify-between bg-white/90 backdrop-blur-md rounded-3xl p-4 sm:p-6 shadow-xl border-4 border-indigo-200 min-h-[450px] w-full">
+            
+            <!-- Quiz Active Area -->
+            <div id="quiz-container" class="flex flex-col justify-between h-full">
+                
+                <!-- Progress Header -->
+                <div>
+                    <div class="flex justify-between items-center text-xs sm:text-sm font-bold text-purple-600 mb-1">
+                        <span id="question-tracker">Question 1 of 3</span>
+                        <span id="level-title" class="text-pink-600">Level 1: Falling into the Past</span>
+                    </div>
+
+                    <!-- Progress Bar -->
+                    <div class="w-full bg-slate-100 rounded-full h-3.5 border-2 border-slate-200 overflow-hidden mb-3.5">
+                        <div id="progress-bar" class="bg-gradient-to-r from-pink-400 via-purple-400 to-indigo-400 h-full w-1/3 transition-all duration-500 rounded-full"></div>
+                    </div>
+
+                    <!-- Question Card -->
+                    <div class="bg-gradient-to-r from-indigo-50 to-purple-50 p-4 sm:p-5 rounded-2xl border-2 border-indigo-100 shadow-sm mb-3.5">
+                        <h3 id="question-text" class="title-font text-base sm:text-xl text-indigo-900 leading-snug">
+                            Loading question...
+                        </h3>
+                    </div>
+
+                    <!-- Options -->
+                    <div id="options-container" class="grid grid-cols-1 gap-2.5">
+                        <!-- Option buttons rendered here -->
+                    </div>
+                </div>
+
+                <!-- Interactive Feedback Message Box -->
+                <div id="feedback-box" class="mt-3 p-3 rounded-2xl text-center font-bold text-sm sm:text-base hidden pop-in">
+                    <p id="feedback-text"></p>
+                </div>
+            </div>
+
+            <!-- Level Complete Screen -->
+            <div id="level-complete-container" class="hidden flex-col items-center justify-center text-center py-6 pop-in">
+                <div class="text-6xl mb-3">🎉 👗 🐱</div>
+                <h2 class="title-font text-2xl sm:text-3xl text-purple-700 mb-2">Awesome Reading, Superstar!</h2>
+                <p id="reward-announcement" class="text-sm sm:text-base font-semibold text-slate-700 mb-6 max-w-md">
+                    You beat this level! You unlocked brand new dresses and adorable accessories for Kitty & Panda!
+                </p>
+                <button id="next-level-btn" onclick="game.nextLevel()" class="title-font text-lg bg-gradient-to-r from-green-400 to-emerald-500 hover:from-green-500 hover:to-emerald-600 text-white px-8 py-3.5 rounded-full shadow-lg transform active:scale-95 transition-all flex items-center gap-2">
+                    <span>Play Next Level</span> ➔
+                </button>
+            </div>
+
+            <!-- Game Finish Screen -->
+            <div id="game-finish-container" class="hidden flex-col items-center justify-center text-center py-4 pop-in">
+                <div class="text-6xl mb-2">👑 🐱 🐼 ✨</div>
+                <h2 class="title-font text-3xl text-pink-600 mb-2">Stone Age Hero Champion!</h2>
+                <p class="text-slate-700 font-semibold text-sm sm:text-base mb-4 max-w-md">
+                    You answered all 15 questions correctly and unlocked all the prettiest dresses and bows in the entire closet!
+                </p>
+                <div class="bg-yellow-50 border-2 border-yellow-300 rounded-2xl p-4 mb-5 w-full max-w-md">
+                    <p class="title-font text-yellow-800 text-xl">Final Score: <span id="final-score">0</span> / 15 Stars ⭐</p>
+                    <p class="text-xs text-yellow-700 mt-1">Kitty and Panda are super happy and dressed in style!</p>
+                </div>
+                <button onclick="location.reload()" class="title-font text-lg bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 text-white px-8 py-3.5 rounded-full shadow-lg transform active:scale-95 transition-all">
+                    🔄 Play Again!
+                </button>
+            </div>
+
+        </section>
+    </main>
+
+    <footer class="w-full max-w-5xl text-center text-xs text-slate-600 font-bold mt-2 py-1">
+        Based on <span class="italic">Stone Age Boy</span> by Satoshi Kitamura • Safe, Child-Friendly Learning Fun!
+    </footer>
+
+    <script>
+        // --- 1. QUESTION BANK (Year 3 Reading Level based on Satoshi Kitamura's Stone Age Boy) ---
+        const gameData = [
+            {
+                level: 1,
+                levelTitle: "Level 1: Falling into the Past",
+                questions: [
+                    {
+                        q: "How did the boy accidentally travel back to the Stone Age?",
+                        options: [
+                            "He tripped and fell down a deep dark hole",
+                            "He caught a red double-decker bus",
+                            "He stepped inside a shiny space rocket"
+                        ],
+                        correct: 0
+                    },
+                    {
+                        q: "Who was the friendly Stone Age girl that helped him up?",
+                        options: [
+                            "Sarah",
+                            "Om",
+                            "Lucy"
+                        ],
+                        correct: 1
+                    },
+                    {
+                        q: "What hard, sharp stone was used to make Stone Age tools?",
+                        options: [
+                            "Flint",
+                            "Soft Wood",
+                            "Colorful Plastic"
+                        ],
+                        correct: 0
+                    }
+                ]
+            },
+            {
+                level: 2,
+                levelTitle: "Level 2: Life in the Camp & Cave",
+                questions: [
+                    {
+                        q: "Where did Om and her tribe make their warm home?",
+                        options: [
+                            "Inside a cozy natural cave",
+                            "In a brick apartment",
+                            "In a tall wooden castle"
+                        ],
+                        correct: 0
+                    },
+                    {
+                        q: "What tasty wild food did Om and the boy gather in the forest?",
+                        options: [
+                            "Sweet wild berries and nuts",
+                            "Chocolate bars and candy",
+                            "Hot potato chips"
+                        ],
+                        correct: 0
+                    },
+                    {
+                        q: "What were Stone Age clothes made from?",
+                        options: [
+                            "Soft animal skins and warm furs",
+                            "Cotton t-shirts from a shop",
+                            "Bright plastic raincoats"
+                        ],
+                        correct: 0
+                    }
+                ]
+            },
+            {
+                level: 3,
+                levelTitle: "Level 3: Tribe Survival Skills",
+                questions: [
+                    {
+                        q: "How did the tribe catch fish in the rushing river?",
+                        options: [
+                            "Using sharp wooden spears",
+                            "Using a plastic fishing rod",
+                            "Buying fish at a supermarket"
+                        ],
+                        correct: 0
+                    },
+                    {
+                        q: "What did Stone Age people paint on cave walls?",
+                        options: [
+                            "Wild animals like deer and mammoths",
+                            "Fast cars and red buses",
+                            "Computers and tablets"
+                        ],
+                        correct: 0
+                    },
+                    {
+                        q: "How did they start a fire without any matches?",
+                        options: [
+                            "By striking flint stones to make hot sparks",
+                            "By turning on a light switch",
+                            "By pressing a button"
+                        ],
+                        correct: 0
+                    }
+                ]
+            },
+            {
+                level: 4,
+                levelTitle: "Level 4: Hunting & Wild Animals",
+                questions: [
+                    {
+                        q: "What giant hairy creature with curved tusks did the tribe track?",
+                        options: [
+                            "A Woolly Mammoth",
+                            "A Blue Whale",
+                            "A Playful Dolphin"
+                        ],
+                        correct: 0
+                    },
+                    {
+                        q: "What wild animal did the boy encounter near the dark cave?",
+                        options: [
+                            "A fierce Cave Bear",
+                            "A tiny garden snail",
+                            "A noisy parrot"
+                        ],
+                        correct: 0
+                    },
+                    {
+                        q: "What did they mix to make rich paints for cave artwork?",
+                        options: [
+                            "Crushed rocks, charcoal, and animal fat",
+                            "Milk and food colouring",
+                            "Paint boxes from school"
+                        ],
+                        correct: 0
+                    }
+                ]
+            },
+            {
+                level: 5,
+                levelTitle: "Level 5: Returning Home",
+                questions: [
+                    {
+                        q: "How did the boy get back to his modern family?",
+                        options: [
+                            "He fell in a dark cave and woke up back home",
+                            "He flew home on an airplane",
+                            "He rode a bicycle back home"
+                        ],
+                        correct: 0
+                    },
+                    {
+                        q: "What special job did the boy grow up to do?",
+                        options: [
+                            "An archaeologist who studies the ancient past!",
+                            "A train driver",
+                            "A chef in a pizza shop"
+                        ],
+                        correct: 0
+                    },
+                    {
+                        q: "Did the boy ever forget his Stone Age friend Om?",
+                        options: [
+                            "No, he remembered his adventure forever!",
+                            "Yes, he forgot her the next morning",
+                            "He couldn't remember"
+                        ],
+                        correct: 0
+                    }
+                ]
+            }
+        ];
+
+        // --- 2. EXPANDED WARDROBE ITEMS DATA (Lots of cute dresses, bows, shoes & accessories) ---
+        const wardrobeItems = {
+            dress: [
+                { id: 'dress-none', name: 'None', levelReq: 0, icon: '❌', svg: '' },
+                { 
+                    id: 'dress-fairy', 
+                    name: 'Fairy Dress', 
+                    levelReq: 1, 
+                    icon: '🧚‍♀️', 
+                    svg: `
+                        <path d="M 48 118 C 18 95, 18 145, 56 138 Z" fill="#F8BBD0" opacity="0.85"/>
+                        <path d="M 152 118 C 182 95, 182 145, 144 138 Z" fill="#F8BBD0" opacity="0.85"/>
+                        <path d="M 64 112 Q 100 118 136 112 L 145 168 Q 100 176 55 168 Z" fill="#FF80AB" stroke="#C2185B" stroke-width="2"/>
+                        <path d="M 55 168 Q 70 155 85 168 Q 100 155 115 168 Q 130 155 145 168 Z" fill="#F48FB1"/>
+                    `
+                },
+                { 
+                    id: 'dress-stone', 
+                    name: 'Stone Fur', 
+                    levelReq: 1, 
+                    icon: '🦴', 
+                    svg: `
+                        <path d="M 60 110 Q 100 115 140 110 L 144 165 Q 100 172 56 165 Z" fill="#C67D5A" stroke="#5C2C16" stroke-width="2"/>
+                        <polygon points="60,110 72,125 82,110 92,125 102,110 112,125 122,110 140,110" fill="#FFF"/>
+                        <circle cx="100" cy="135" r="4" fill="#FFF"/>
+                        <circle cx="100" cy="148" r="4" fill="#FFF"/>
+                    `
+                },
+                { 
+                    id: 'dress-princess', 
+                    name: 'Princess Gown', 
+                    levelReq: 2, 
+                    icon: '👑', 
+                    svg: `
+                        <path d="M 62 112 Q 100 118 138 112 L 148 172 Q 100 180 52 172 Z" fill="#9C27B0" stroke="#4A148C" stroke-width="2"/>
+                        <path d="M 80 112 L 100 176 L 120 112 Z" fill="#E1BEE7"/>
+                        <circle cx="100" cy="125" r="4" fill="#FFD700"/>
+                        <circle cx="100" cy="142" r="4" fill="#FFD700"/>
+                        <circle cx="100" cy="158" r="4" fill="#FFD700"/>
+                    `
+                },
+                { 
+                    id: 'dress-floral', 
+                    name: 'Floral Dress', 
+                    levelReq: 2, 
+                    icon: '🌸', 
+                    svg: `
+                        <path d="M 64 112 Q 100 116 136 112 L 142 166 Q 100 172 58 166 Z" fill="#81C784" stroke="#2E7D32" stroke-width="2"/>
+                        <circle cx="78" cy="135" r="5" fill="#FF80AB"/><circle cx="78" cy="135" r="2" fill="#FFF"/>
+                        <circle cx="120" cy="140" r="5" fill="#FFD54F"/><circle cx="120" cy="140" r="2" fill="#FFF"/>
+                        <circle cx="95" cy="155" r="5" fill="#80D8FF"/><circle cx="95" cy="155" r="2" fill="#FFF"/>
+                    `
+                },
+                { 
+                    id: 'dress-rainbow', 
+                    name: 'Rainbow Sparkle', 
+                    levelReq: 3, 
+                    icon: '🌈', 
+                    svg: `
+                        <path d="M 62 112 Q 100 116 138 112 L 144 168 Q 100 175 56 168 Z" fill="#FF4081" stroke="#C2185B" stroke-width="2"/>
+                        <rect x="61" y="125" width="78" height="8" fill="#FFEB3B"/>
+                        <rect x="59" y="133" width="82" height="8" fill="#00E676"/>
+                        <rect x="57" y="141" width="86" height="8" fill="#00B0FF"/>
+                        <polygon points="100,120 103,127 110,127 104,131 106,138 100,134 94,138 96,131 90,127 97,127" fill="#FFF"/>
+                    `
+                },
+                { 
+                    id: 'dress-tutu', 
+                    name: 'Ballerina Tutu', 
+                    levelReq: 3, 
+                    icon: '🩰', 
+                    svg: `
+                        <path d="M 68 112 Q 100 118 132 112 L 134 138 Q 100 142 66 138 Z" fill="#F48FB1" stroke="#C2185B" stroke-width="2"/>
+                        <ellipse cx="100" cy="142" rx="46" ry="12" fill="#FF80AB" opacity="0.9"/>
+                        <ellipse cx="100" cy="146" rx="52" ry="12" fill="#F8BBD0" opacity="0.7"/>
+                    `
+                },
+                { 
+                    id: 'dress-strawberry', 
+                    name: 'Strawberry Sundae', 
+                    levelReq: 4, 
+                    icon: '🍓', 
+                    svg: `
+                        <path d="M 62 112 Q 100 116 138 112 L 144 168 Q 100 175 56 168 Z" fill="#E53935" stroke="#B71C1C" stroke-width="2"/>
+                        <ellipse cx="100" cy="112" rx="38" ry="8" fill="#FFF"/>
+                        <circle cx="75" cy="132" r="2.5" fill="#FFEB3B"/>
+                        <circle cx="125" cy="135" r="2.5" fill="#FFEB3B"/>
+                        <circle cx="100" cy="148" r="2.5" fill="#FFEB3B"/>
+                        <circle cx="80" cy="158" r="2.5" fill="#FFEB3B"/>
+                        <circle cx="120" cy="158" r="2.5" fill="#FFEB3B"/>
+                    `
+                },
+                { 
+                    id: 'dress-velvet', 
+                    name: 'Royal Velvet', 
+                    levelReq: 5, 
+                    icon: '✨', 
+                    svg: `
+                        <path d="M 62 112 Q 100 116 138 112 L 146 170 Q 100 178 54 170 Z" fill="#4A148C" stroke="#311B92" stroke-width="2"/>
+                        <path d="M 62 112 Q 100 125 138 112 L 130 172 Q 100 178 70 172 Z" fill="#7B1FA2"/>
+                        <circle cx="100" cy="130" r="5" fill="#FFD700"/>
+                        <circle cx="100" cy="148" r="5" fill="#FFD700"/>
+                    `
+                }
+            ],
+            hat: [
+                { id: 'hat-none', name: 'None', levelReq: 0, icon: '❌', svg: '' },
+                { 
+                    id: 'hat-bow', 
+                    name: 'Giant Pink Bow', 
+                    levelReq: 1, 
+                    icon: '🎀', 
+                    svg: `
+                        <g transform="translate(122, 45)">
+                            <polygon points="0,0 -18,-12 -18,12" fill="#FF4081" stroke="#C2185B" stroke-width="2"/>
+                            <polygon points="0,0 18,-12 18,12" fill="#FF4081" stroke="#C2185B" stroke-width="2"/>
+                            <circle cx="0" cy="0" r="6" fill="#FFEB3B"/>
+                        </g>
+                    `
+                },
+                { 
+                    id: 'hat-crown', 
+                    name: 'Gold Tiara', 
+                    levelReq: 1, 
+                    icon: '👑', 
+                    svg: `
+                        <polygon points="70,56 75,30 87,46 100,26 113,46 125,30 130,56" fill="#FFD700" stroke="#FFA000" stroke-width="2"/>
+                        <circle cx="75" cy="30" r="3" fill="#E91E63"/>
+                        <circle cx="100" cy="26" r="3.5" fill="#2196F3"/>
+                        <circle cx="125" cy="30" r="3" fill="#E91E63"/>
+                    `
+                },
+                { 
+                    id: 'hat-flower', 
+                    name: 'Flower Crown', 
+                    levelReq: 2, 
+                    icon: '🌸', 
+                    svg: `
+                        <path d="M 58 60 Q 100 48 142 60" stroke="#81C784" stroke-width="4" fill="none"/>
+                        <circle cx="72" cy="56" r="6" fill="#FF80AB"/><circle cx="72" cy="56" r="2" fill="#FFF"/>
+                        <circle cx="100" cy="50" r="8" fill="#FFD54F"/><circle cx="100" cy="50" r="3" fill="#FFF"/>
+                        <circle cx="128" cy="56" r="6" fill="#80D8FF"/><circle cx="128" cy="56" r="2" fill="#FFF"/>
+                    `
+                },
+                { 
+                    id: 'hat-leaf', 
+                    name: 'Stone Wreath', 
+                    levelReq: 3, 
+                    icon: '🌿', 
+                    svg: `
+                        <path d="M 58 60 Q 100 48 142 60 Q 100 68 58 60 Z" fill="#4CAF50" stroke="#2E7D32" stroke-width="2"/>
+                        <circle cx="78" cy="54" r="6" fill="#81C784"/>
+                        <circle cx="100" cy="50" r="8" fill="#66BB6A"/>
+                        <circle cx="122" cy="54" r="6" fill="#81C784"/>
+                    `
+                },
+                { 
+                    id: 'hat-party', 
+                    name: 'Party Cone', 
+                    levelReq: 4, 
+                    icon: '🥳', 
+                    svg: `
+                        <polygon points="100,16 78,56 122,56" fill="#FF4081" stroke="#C2185B" stroke-width="2"/>
+                        <circle cx="100" cy="14" r="5" fill="#FFEB3B"/>
+                        <circle cx="92" cy="40" r="3" fill="#00E676"/>
+                        <circle cx="108" cy="48" r="3.5" fill="#00B0FF"/>
+                    `
+                },
+                { 
+                    id: 'hat-cap', 
+                    name: 'Cute Cap', 
+                    levelReq: 5, 
+                    icon: '🧢', 
+                    svg: `
+                        <path d="M 65 60 C 65 36, 135 36, 135 60 Z" fill="#29B6F6" stroke="#0288D1" stroke-width="2"/>
+                        <path d="M 60 60 Q 100 58 150 66" stroke="#0288D1" stroke-width="5" fill="none" stroke-linecap="round"/>
+                        <circle cx="100" cy="40" r="4" fill="#FFF"/>
+                    `
+                }
+            ],
+            shoes: [
+                { id: 'shoes-none', name: 'None', levelReq: 0, icon: '❌', svg: '' },
+                { 
+                    id: 'shoes-bunny', 
+                    name: 'Bunny Slippers', 
+                    levelReq: 1, 
+                    icon: '🐰', 
+                    svg: `
+                        <ellipse cx="72" cy="176" rx="18" ry="13" fill="#FFF" stroke="#FF80AB" stroke-width="2"/>
+                        <ellipse cx="128" cy="176" rx="18" ry="13" fill="#FFF" stroke="#FF80AB" stroke-width="2"/>
+                        <ellipse cx="65" cy="164" rx="4" ry="9" fill="#FFF" stroke="#FF80AB"/>
+                        <ellipse cx="79" cy="164" rx="4" ry="9" fill="#FFF" stroke="#FF80AB"/>
+                        <ellipse cx="121" cy="164" rx="4" ry="9" fill="#FFF" stroke="#FF80AB"/>
+                        <ellipse cx="135" cy="164" rx="4" ry="9" fill="#FFF" stroke="#FF80AB"/>
+                    `
+                },
+                { 
+                    id: 'shoes-ruby', 
+                    name: 'Ruby Shoes', 
+                    levelReq: 2, 
+                    icon: '👠', 
+                    svg: `
+                        <ellipse cx="72" cy="176" rx="17" ry="11" fill="#E91E63" stroke="#880E4F" stroke-width="2"/>
+                        <ellipse cx="128" cy="176" rx="17" ry="11" fill="#E91E63" stroke="#880E4F" stroke-width="2"/>
+                        <polygon points="72,170 75,175 69,175" fill="#FFD700"/>
+                        <polygon points="128,170 131,175 125,175" fill="#FFD700"/>
+                    `
+                },
+                { 
+                    id: 'shoes-boots', 
+                    name: 'Stone Boots', 
+                    levelReq: 3, 
+                    icon: '🥾', 
+                    svg: `
+                        <ellipse cx="72" cy="176" rx="18" ry="13" fill="#8D6E63" stroke="#4E342E" stroke-width="2"/>
+                        <ellipse cx="128" cy="176" rx="18" ry="13" fill="#8D6E63" stroke="#4E342E" stroke-width="2"/>
+                        <path d="M 60 172 L 84 172" stroke="#FFF" stroke-width="2"/>
+                        <path d="M 116 172 L 140 172" stroke="#FFF" stroke-width="2"/>
+                    `
+                },
+                { 
+                    id: 'shoes-sneakers', 
+                    name: 'Sneakers', 
+                    levelReq: 4, 
+                    icon: '👟', 
+                    svg: `
+                        <ellipse cx="72" cy="176" rx="18" ry="12" fill="#00E676" stroke="#00A152" stroke-width="2"/>
+                        <ellipse cx="128" cy="176" rx="18" ry="12" fill="#00E676" stroke="#00A152" stroke-width="2"/>
+                        <rect x="56" y="180" width="32" height="5" rx="2" fill="#FFF"/>
+                        <rect x="112" y="180" width="32" height="5" rx="2" fill="#FFF"/>
+                    `
+                }
+            ],
+            accessory: [
+                { id: 'acc-none', name: 'None', levelReq: 0, icon: '❌', svg: '' },
+                { 
+                    id: 'acc-wand', 
+                    name: 'Star Wand', 
+                    levelReq: 1, 
+                    icon: '🪄', 
+                    svg: `
+                        <path d="M 148 132 L 176 98" stroke="#8D6E63" stroke-width="4" stroke-linecap="round"/>
+                        <polygon points="176,90 179,97 186,97 180,101 182,108 176,104 170,108 172,101 166,97 173,97" fill="#FFD700" stroke="#FFA000" stroke-width="1"/>
+                    `
+                },
+                { 
+                    id: 'acc-fish', 
+                    name: 'Cute Fishy', 
+                    levelReq: 1, 
+                    icon: '🐟', 
+                    svg: `
+                        <g transform="translate(142, 126)">
+                            <ellipse cx="15" cy="10" rx="12" ry="8" fill="#FF9800" stroke="#F57C00" stroke-width="1.5"/>
+                            <polygon points="25,10 34,4 34,16" fill="#FF9800" stroke="#F57C00" stroke-width="1.5"/>
+                            <circle cx="8" cy="8" r="2" fill="#FFF"/>
+                            <circle cx="7.5" cy="8" r="1" fill="#000"/>
+                        </g>
+                    `
+                },
+                { 
+                    id: 'acc-shades', 
+                    name: 'Cool Glasses', 
+                    levelReq: 2, 
+                    icon: '🕶️️', 
+                    svg: `
+                        <rect x="68" y="84" width="26" height="15" rx="4" fill="#212121"/>
+                        <rect x="106" y="84" width="26" height="15" rx="4" fill="#212121"/>
+                        <line x1="94" y1="89" x2="106" y2="89" stroke="#212121" stroke-width="3"/>
+                        <line x1="70" y1="87" x2="80" y2="95" stroke="#FFF" stroke-width="1.5" opacity="0.6"/>
+                        <line x1="108" y1="87" x2="118" y2="95" stroke="#FFF" stroke-width="1.5" opacity="0.6"/>
+                    `
+                },
+                { 
+                    id: 'acc-mammoth', 
+                    name: 'Toy Mammoth', 
+                    levelReq: 3, 
+                    icon: '🦣', 
+                    svg: `
+                        <g transform="translate(138, 126) scale(0.68)">
+                            <ellipse cx="20" cy="20" rx="15" ry="12" fill="#8D6E63"/>
+                            <circle cx="10" cy="12" r="10" fill="#8D6E63"/>
+                            <path d="M 5 15 Q 0 25 8 28" stroke="#FFF" stroke-width="3" fill="none"/>
+                            <rect x="10" y="28" width="4" height="10" fill="#5D4037"/>
+                            <rect x="22" y="28" width="4" height="10" fill="#5D4037"/>
+                        </g>
+                    `
+                },
+                { 
+                    id: 'acc-teacup', 
+                    name: 'Tea Cup', 
+                    levelReq: 4, 
+                    icon: '☕', 
+                    svg: `
+                        <g transform="translate(144, 128)">
+                            <path d="M 4 8 L 20 8 L 18 22 L 6 22 Z" fill="#E0F7FA" stroke="#00ACC1" stroke-width="1.5"/>
+                            <path d="M 20 10 Q 25 15 20 20" stroke="#00ACC1" stroke-width="2" fill="none"/>
+                        </g>
+                    `
+                },
+                { 
+                    id: 'aura-sparkles', 
+                    name: 'Magic Stars', 
+                    levelReq: 5, 
+                    icon: '✨', 
+                    svg: '' 
+                }
+            ]
+        };
+
+        // --- 3. VECTOR SVG CHARACTER BASE TEMPLATES (KITTY & PANDA) ---
+        const characterSVGs = {
+            kitty: `
+                <!-- CUTEST KITTY BASE -->
+                <!-- Ears with Twitching Animation -->
+                <g class="ear-twitch-left">
+                    <polygon points="42,75 58,25 82,60" fill="#FFA726" stroke="#FB8C00" stroke-width="2"/>
+                    <polygon points="48,70 60,34 76,60" fill="#FFCC80"/>
+                </g>
+                <g class="ear-twitch-right">
+                    <polygon points="158,75 142,25 118,60" fill="#FFA726" stroke="#FB8C00" stroke-width="2"/>
+                    <polygon points="152,70 140,34 124,60" fill="#FFCC80"/>
+                </g>
+
+                <!-- Feet Base -->
+                <ellipse cx="72" cy="176" rx="16" ry="12" fill="#FFA726" />
+                <ellipse cx="128" cy="176" rx="16" ry="12" fill="#FFA726" />
+                <circle cx="72" cy="176" r="5" fill="#FFF"/>
+                <circle cx="128" cy="176" r="5" fill="#FFF"/>
+
+                <!-- Body -->
+                <ellipse cx="100" cy="136" rx="42" ry="40" fill="#FFB74D" stroke="#FB8C00" stroke-width="2"/>
+                <ellipse cx="100" cy="138" rx="28" ry="26" fill="#FFF3E0"/>
+
+                <!-- Arms -->
+                <ellipse cx="54" cy="132" rx="12" ry="20" fill="#FFA726" transform="rotate(20 54 132)"/>
+                <ellipse cx="146" cy="132" rx="12" ry="20" fill="#FFA726" transform="rotate(-20 146 132)"/>
+
+                <!-- Tail -->
+                <path d="M 140 150 Q 180 140 170 110" stroke="#FB8C00" stroke-width="8" fill="none" stroke-linecap="round"/>
+
+                <!-- Head -->
+                <circle cx="100" cy="94" r="42" fill="#FFB74D" stroke="#FB8C00" stroke-width="2"/>
+
+                <!-- Whiskers -->
+                <line x1="45" y1="92" x2="70" y2="94" stroke="#5D4037" stroke-width="2" stroke-linecap="round"/>
+                <line x1="43" y1="100" x2="68" y2="98" stroke="#5D4037" stroke-width="2" stroke-linecap="round"/>
+                <line x1="155" y1="92" x2="130" y2="94" stroke="#5D4037" stroke-width="2" stroke-linecap="round"/>
+                <line x1="157" y1="100" x2="132" y2="98" stroke="#5D4037" stroke-width="2" stroke-linecap="round"/>
+
+                <!-- Big Sparkling Eyes -->
+                <circle cx="78" cy="90" r="8" fill="#212121"/>
+                <circle cx="122" cy="90" r="8" fill="#212121"/>
+                <circle cx="76" cy="87" r="3.5" fill="#FFF"/>
+                <circle cx="120" cy="87" r="3.5" fill="#FFF"/>
+                <circle cx="80" cy="92" r="1.5" fill="#FFF"/>
+                <circle cx="124" cy="92" r="1.5" fill="#FFF"/>
+
+                <!-- Cute Pink Nose & Mouth -->
+                <polygon points="100,98 96,94 104,94" fill="#FF4081"/>
+                <path d="M 100 98 L 100 102 M 96 102 Q 100 106 104 102" stroke="#5D4037" stroke-width="2" fill="none" stroke-linecap="round"/>
+
+                <!-- Blushing Cheeks -->
+                <ellipse cx="68" cy="102" rx="8" ry="5" fill="#FF80AB" opacity="0.6"/>
+                <ellipse cx="132" cy="102" rx="8" ry="5" fill="#FF80AB" opacity="0.6"/>
+            `,
+            panda: `
+                <!-- CUTEST PANDA BASE -->
+                <!-- Ears -->
+                <circle cx="58" cy="62" r="22" fill="#2D3748"/>
+                <circle cx="58" cy="62" r="12" fill="#FF80AB" opacity="0.4"/>
+                <circle cx="142" cy="62" r="22" fill="#2D3748"/>
+                <circle cx="142" cy="62" r="12" fill="#FF80AB" opacity="0.4"/>
+
+                <!-- Feet Base -->
+                <ellipse cx="72" cy="176" rx="16" ry="12" fill="#2D3748" />
+                <ellipse cx="128" cy="176" rx="16" ry="12" fill="#2D3748" />
+                <circle cx="72" cy="176" r="6" fill="#CBD5E0"/>
+                <circle cx="128" cy="176" r="6" fill="#CBD5E0"/>
+
+                <!-- Body -->
+                <ellipse cx="100" cy="136" rx="42" ry="40" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="2"/>
+                <ellipse cx="100" cy="138" rx="30" ry="26" fill="#F7FAFC"/>
+
+                <!-- Arms -->
+                <ellipse cx="54" cy="132" rx="13" ry="22" fill="#2D3748" transform="rotate(22 54 132)"/>
+                <ellipse cx="146" cy="132" rx="13" ry="22" fill="#2D3748" transform="rotate(-22 146 132)"/>
+
+                <!-- Head -->
+                <circle cx="100" cy="94" r="40" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="2"/>
+
+                <!-- Eye Patches -->
+                <ellipse cx="80" cy="92" rx="14" ry="17" fill="#2D3748" transform="rotate(-15 80 92)"/>
+                <ellipse cx="120" cy="92" rx="14" ry="17" fill="#2D3748" transform="rotate(15 120 92)"/>
+
+                <!-- Eyes -->
+                <circle cx="82" cy="90" r="5" fill="#FFF"/>
+                <circle cx="118" cy="90" r="5" fill="#FFF"/>
+                <circle cx="83" cy="90" r="3" fill="#1A202C"/>
+                <circle cx="117" cy="90" r="3" fill="#1A202C"/>
+                <circle cx="81.5" cy="88.5" r="1.5" fill="#FFF"/>
+                <circle cx="115.5" cy="88.5" r="1.5" fill="#FFF"/>
+
+                <!-- Snout & Nose -->
+                <ellipse cx="100" cy="104" rx="12" ry="9" fill="#F7FAFC"/>
+                <ellipse cx="100" cy="100" rx="6" ry="4" fill="#2D3748"/>
+                <path d="M 100 104 L 100 108 M 96 107 Q 100 111 104 107" stroke="#2D3748" stroke-width="2" fill="none" stroke-linecap="round"/>
+
+                <!-- Blushing Cheeks -->
+                <ellipse cx="68" cy="104" rx="7" ry="5" fill="#FF80AB" opacity="0.6"/>
+                <ellipse cx="132" cy="104" rx="7" ry="5" fill="#FF80AB" opacity="0.6"/>
+            `
+        };
+
+        // --- 4. GAME ENGINE CLASS ---
+        class GameEngine {
+            constructor() {
+                this.currentCharacter = 'kitty'; // Default character: Kitty
+                this.currentLevelIdx = 0;
+                this.currentQuestionIdx = 0;
+                this.score = 0;
+                this.activeTab = 'dress';
+
+                this.equipped = {
+                    dress: 'dress-none',
+                    hat: 'hat-none',
+                    shoes: 'shoes-none',
+                    accessory: 'acc-none'
+                };
+
+                this.initUI();
+                this.renderCharacterBase();
+                this.loadQuestion();
+                this.renderWardrobe();
+            }
+
+            initUI() {
+                this.scoreDisplay = document.getElementById('score-display');
+                this.levelBadge = document.getElementById('level-badge');
+                this.questionTracker = document.getElementById('question-tracker');
+                this.levelTitle = document.getElementById('level-title');
+                this.progressBar = document.getElementById('progress-bar');
+                this.questionText = document.getElementById('question-text');
+                this.optionsContainer = document.getElementById('options-container');
+                this.feedbackBox = document.getElementById('feedback-box');
+                this.feedbackText = document.getElementById('feedback-text');
+                
+                this.quizContainer = document.getElementById('quiz-container');
+                this.levelCompleteContainer = document.getElementById('level-complete-container');
+                this.gameFinishContainer = document.getElementById('game-finish-container');
+            }
+
+            switchCharacter(char) {
+                if (this.currentCharacter === char) return;
+                this.currentCharacter = char;
+
+                const btnKitty = document.getElementById('btn-char-kitty');
+                const btnPanda = document.getElementById('btn-char-panda');
+
+                if (char === 'kitty') {
+                    btnKitty.className = "px-3 py-1 rounded-xl title-font text-xs bg-pink-500 text-white shadow transition-all flex items-center gap-1";
+                    btnPanda.className = "px-3 py-1 rounded-xl title-font text-xs text-purple-700 hover:bg-pink-200 transition-all flex items-center gap-1";
+                } else {
+                    btnPanda.className = "px-3 py-1 rounded-xl title-font text-xs bg-pink-500 text-white shadow transition-all flex items-center gap-1";
+                    btnKitty.className = "px-3 py-1 rounded-xl title-font text-xs text-purple-700 hover:bg-pink-200 transition-all flex items-center gap-1";
+                }
+
+                this.renderCharacterBase();
+            }
+
+            renderCharacterBase() {
+                const bodyGroup = document.getElementById('layer-body');
+                bodyGroup.innerHTML = characterSVGs[this.currentCharacter];
+            }
+
+            selectTab(tab) {
+                this.activeTab = tab;
+                const tabs = ['dress', 'hat', 'shoes', 'accessory'];
+                tabs.forEach(t => {
+                    const btn = document.getElementById(`tab-${t}`);
+                    if (t === tab) {
+                        btn.className = "flex-1 py-1.5 rounded-xl bg-purple-600 text-white shadow transition-all";
+                    } else {
+                        btn.className = "flex-1 py-1.5 rounded-xl text-purple-700 hover:bg-purple-200 transition-all";
+                    }
+                });
+                this.renderWardrobe();
+            }
+
+            loadQuestion() {
+                const currentLevel = gameData[this.currentLevelIdx];
+                const currentQ = currentLevel.questions[this.currentQuestionIdx];
+
+                this.levelBadge.textContent = `Level ${this.currentLevelIdx + 1} / 5`;
+                this.levelTitle.textContent = currentLevel.levelTitle;
+                this.questionTracker.textContent = `Question ${this.currentQuestionIdx + 1} of 3`;
+                
+                const progressPct = ((this.currentQuestionIdx + 1) / 3) * 100;
+                this.progressBar.style.width = `${progressPct}%`;
+
+                this.questionText.textContent = currentQ.q;
+                this.feedbackBox.classList.add('hidden');
+
+                this.optionsContainer.innerHTML = '';
+                currentQ.options.forEach((optText, idx) => {
+                    const btn = document.createElement('button');
+                    btn.className = "w-full text-left bg-white hover:bg-indigo-50 border-3 border-indigo-200 hover:border-indigo-400 p-3 sm:p-3.5 rounded-2xl font-bold text-slate-700 hover:text-indigo-900 transition-all shadow-sm active:scale-98 flex items-center justify-between group";
+                    btn.innerHTML = `
+                        <span class="text-xs sm:text-sm md:text-base">${optText}</span>
+                        <span class="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-indigo-100 group-hover:bg-indigo-300 text-indigo-700 flex items-center justify-center title-font text-xs sm:text-sm flex-shrink-0 ml-2">
+                            ${['A', 'B', 'C'][idx]}
+                        </span>
+                    `;
+                    btn.onclick = () => this.checkAnswer(idx, btn);
+                    this.optionsContainer.appendChild(btn);
+                });
+            }
+
+            checkAnswer(selectedIndex, btnElement) {
+                const currentQ = gameData[this.currentLevelIdx].questions[this.currentQuestionIdx];
+
+                if (selectedIndex === currentQ.correct) {
+                    btnElement.className = btnElement.className.replace('border-indigo-200', 'border-green-400 bg-green-100 text-green-900');
+                    this.showFeedback("🎉 Great reading, superstar! That is correct!", true);
+                    this.score += 1;
+                    this.scoreDisplay.textContent = this.score;
+
+                    const buttons = this.optionsContainer.querySelectorAll('button');
+                    buttons.forEach(b => b.disabled = true);
+
+                    launchConfetti();
+
+                    setTimeout(() => {
+                        this.currentQuestionIdx++;
+                        if (this.currentQuestionIdx < 3) {
+                            this.loadQuestion();
+                        } else {
+                            this.completeLevel();
+                        }
+                    }, 1400);
+
+                } else {
+                    btnElement.className = btnElement.className.replace('border-indigo-200', 'border-pink-300 bg-pink-50 text-pink-900');
+                    this.showFeedback("🌟 Almost! Try again, you can do it!", false);
+                    btnElement.disabled = true;
+                }
+            }
+
+            showFeedback(text, isSuccess) {
+                this.feedbackBox.classList.remove('hidden', 'bg-green-100', 'text-green-800', 'bg-pink-100', 'text-pink-800');
+                if (isSuccess) {
+                    this.feedbackBox.classList.add('bg-green-100', 'text-green-800');
+                } else {
+                    this.feedbackBox.classList.add('bg-pink-100', 'text-pink-800');
+                }
+                this.feedbackText.textContent = text;
+            }
+
+            completeLevel() {
+                this.quizContainer.classList.add('hidden');
+                
+                if (this.currentLevelIdx < 4) {
+                    this.levelCompleteContainer.classList.remove('hidden');
+                    this.levelCompleteContainer.classList.add('flex');
+                    launchConfetti();
+                } else {
+                    document.getElementById('final-score').textContent = this.score;
+                    this.gameFinishContainer.classList.remove('hidden');
+                    this.gameFinishContainer.classList.add('flex');
+                    launchConfetti();
+                }
+
+                this.renderWardrobe();
+            }
+
+            nextLevel() {
+                this.currentLevelIdx++;
+                this.currentQuestionIdx = 0;
+                this.levelCompleteContainer.classList.add('hidden');
+                this.levelCompleteContainer.classList.remove('flex');
+                this.quizContainer.classList.remove('hidden');
+                this.loadQuestion();
+            }
+
+            renderWardrobe() {
+                const container = document.getElementById('wardrobe-items');
+                container.innerHTML = '';
+
+                const currentUnlocksMax = this.currentLevelIdx + 1;
+                const currentCategoryItems = wardrobeItems[this.activeTab] || [];
+
+                currentCategoryItems.forEach(item => {
+                    const isUnlocked = item.levelReq <= currentUnlocksMax;
+                    const isEquipped = this.equipped[this.activeTab] === item.id;
+
+                    const card = document.createElement('div');
+                    card.className = `flex-shrink-0 w-20 h-22 p-1.5 rounded-2xl border-2 flex flex-col items-center justify-between cursor-pointer transition-all ${
+                        isEquipped 
+                            ? 'bg-pink-100 border-pink-500 shadow-md scale-105' 
+                            : isUnlocked 
+                                ? 'bg-white border-slate-200 hover:border-purple-300 hover:bg-purple-50' 
+                                : 'bg-slate-100 border-slate-200 opacity-50 cursor-not-allowed'
+                    }`;
+
+                    card.innerHTML = `
+                        <span class="text-2xl">${item.icon}</span>
+                        <span class="text-[10px] font-bold text-center leading-tight ${isUnlocked ? 'text-slate-700' : 'text-slate-400'}">
+                            ${item.name}
+                        </span>
+                        ${!isUnlocked ? `<span class="text-[9px] text-pink-500 font-bold">Lvl ${item.levelReq}</span>` : ''}
+                    `;
+
+                    if (isUnlocked) {
+                        card.onclick = () => this.equipItem(this.activeTab, item);
+                    }
+
+                    container.appendChild(card);
+                });
+            }
+
+            equipItem(category, item) {
+                this.equipped[category] = item.id;
+
+                if (item.id === 'aura-sparkles') {
+                    document.getElementById('character-aura').classList.remove('hidden');
+                    document.getElementById('layer-aura').classList.remove('hidden');
+                } else if (category === 'accessory' && item.id !== 'aura-sparkles') {
+                    document.getElementById('character-aura').classList.add('hidden');
+                    document.getElementById('layer-aura').classList.add('hidden');
+                }
+
+                const layerGroup = document.getElementById(`layer-${category}`);
+                if (layerGroup) {
+                    layerGroup.innerHTML = item.svg || '';
+                }
+
+                this.renderWardrobe();
+            }
+        }
+
+        // --- 5. CONFETTI ANIMATION SYSTEM ---
+        function launchConfetti() {
+            const canvas = document.getElementById('confetti-canvas');
+            const ctx = canvas.getContext('2d');
+            
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+
+            const particles = [];
+            const colors = ['#FF4081', '#FFEB3B', '#00E676', '#00B0FF', '#7C4DFF', '#FF80AB'];
+
+            for (let i = 0; i < 70; i++) {
+                particles.push({
+                    x: canvas.width / 2,
+                    y: canvas.height / 2,
+                    vx: (Math.random() - 0.5) * 15,
+                    vy: (Math.random() - 0.7) * 16,
+                    size: Math.random() * 8 + 4,
+                    color: colors[Math.floor(Math.random() * colors.length)],
+                    life: 100
+                });
+            }
+
+            function animate() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                let alive = false;
+
+                particles.forEach(p => {
+                    if (p.life > 0) {
+                        alive = true;
+                        p.x += p.vx;
+                        p.y += p.vy;
+                        p.vy += 0.38;
+                        p.life -= 2;
+
+                        ctx.fillStyle = p.color;
+                        ctx.beginPath();
+                        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                });
+
+                if (alive) {
+                    requestAnimationFrame(animate);
+                } else {
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                }
+            }
+
+            animate();
+        }
+
+        // Window Load Handler
+        let game;
+        window.onload = function() {
+            game = new GameEngine();
+        };
+    </script>
+</body>
+</html>

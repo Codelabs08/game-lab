@@ -1,0 +1,10 @@
+{
+  "title": "Game Lab",
+  "tagline": "Games made by our Year 3 classes",
+  "subjects": {
+    "y3-purple": { "name": "Y3 Purple", "emoji": "💜", "colour": "#7c3aed" },
+    "y3-yellow": { "name": "Y3 Yellow", "emoji": "💛", "colour": "#ca8a04" },
+    "y3-aqua":   { "name": "Y3 Aqua",   "emoji": "🩵", "colour": "#0891b2" },
+    "y3-green":  { "name": "Y3 Green",  "emoji": "💚", "colour": "#16a34a" }
+  }
+}

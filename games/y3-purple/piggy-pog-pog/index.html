@@ -1,0 +1,830 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Piggy Pog Pog - Year 3 Spelling Space Adventure</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Comic+Neue:wght@700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Fredoka', cursive, sans-serif;
+            background-color: #0b0d2b;
+            color: #ffffff;
+            overflow-x: hidden;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        /* Custom Starry Background */
+        .space-bg {
+            background: radial-gradient(ellipse at bottom, #1b2735 0%, #090a0f 100%);
+            min-height: 100vh;
+            position: relative;
+        }
+
+        .star {
+            position: absolute;
+            background-color: #ffffff;
+            border-radius: 50%;
+            animation: twinkle 2s infinite ease-in-out;
+        }
+
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.3; transform: scale(0.8); }
+            50% { opacity: 1; transform: scale(1.2); }
+        }
+
+        /* Glowing Button Effects */
+        .btn-glow {
+            box-shadow: 0 6px 0px rgba(0,0,0,0.3), 0 0 15px rgba(255, 215, 0, 0.4);
+            transition: all 0.15s ease-in-out;
+        }
+        .btn-glow:active {
+            transform: translateY(4px);
+            box-shadow: 0 2px 0px rgba(0,0,0,0.3), 0 0 5px rgba(255, 215, 0, 0.4);
+        }
+
+        .letter-bubble {
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            box-shadow: 0 4px 0 #1e3a8a, 0 0 10px rgba(59, 130, 246, 0.5);
+            transition: transform 0.1s, background-color 0.2s;
+        }
+        .letter-bubble:hover {
+            transform: scale(1.08);
+        }
+        .letter-bubble:active {
+            transform: scale(0.95);
+        }
+
+        /* Custom Bounce Animation */
+        .bounce-gentle {
+            animation: bounce 2s infinite ease-in-out;
+        }
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        /* Floating Planet */
+        .planet {
+            position: absolute;
+            border-radius: 50%;
+            opacity: 0.8;
+            pointer-events: none;
+        }
+
+        /* Custom Canvas Styling */
+        canvas {
+            touch-action: none;
+            background-color: #050716;
+            border: 4px solid #3b82f6;
+            border-radius: 1rem;
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.5);
+        }
+    </style>
+</head>
+<body class="space-bg min-h-screen flex flex-col items-center justify-between p-4 relative overflow-y-auto">
+
+    <div id="stars-container" class="absolute inset-0 overflow-hidden pointer-events-none"></div>
+
+    <!-- Decorative Planets -->
+    <div class="planet w-20 h-20 bg-purple-600 top-10 left-5 rounded-full blur-xs shadow-lg opacity-40"></div>
+    <div class="planet w-32 h-32 bg-pink-500 bottom-10 right-5 rounded-full blur-xs shadow-lg opacity-30"></div>
+
+    <!-- Header Section -->
+    <header class="w-full max-w-2xl flex justify-between items-center z-10 my-2 bg-slate-900/80 p-3 rounded-2xl border-2 border-indigo-500/50 backdrop-blur-md">
+        <div class="flex items-center gap-3">
+            <!-- Piggy Pog Pog Small Avatar -->
+            <div class="w-12 h-12 bg-pink-400 rounded-full border-2 border-white flex items-center justify-center shadow-md relative">
+                <span class="text-2xl">🐷</span>
+                <span class="absolute -top-1 -right-1 text-xs">🚀</span>
+            </div>
+            <div>
+                <h1 class="text-xl font-bold text-yellow-300 tracking-wide">Piggy Pog Pog</h1>
+                <p class="text-xs text-indigo-200">Year 3 Space Spelling</p>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-4">
+            <!-- Level Indicator -->
+            <div class="bg-indigo-950 px-3 py-1 rounded-xl border border-indigo-400 text-center">
+                <span class="text-xs text-indigo-300 block font-semibold">LEVEL</span>
+                <span id="level-display" class="text-lg font-bold text-pink-400">1 / 5</span>
+            </div>
+            <!-- Rocket Fuel / Stars Score -->
+            <div class="bg-indigo-950 px-3 py-1 rounded-xl border border-amber-400 text-center flex items-center gap-1">
+                <span class="text-xl">🚀</span>
+                <div>
+                    <span class="text-xs text-amber-300 block font-semibold">FUEL</span>
+                    <span id="fuel-count" class="text-lg font-bold text-yellow-300">0</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="w-full max-w-2xl flex-1 flex flex-col justify-center items-center z-10 py-2">
+
+        <!-- SCREEN 1: WELCOME / START SCREEN -->
+        <div id="welcome-screen" class="w-full text-center flex flex-col items-center gap-6 bg-slate-900/90 p-6 md:p-8 rounded-3xl border-4 border-indigo-500 shadow-2xl">
+            <div class="relative bounce-gentle my-2">
+                <!-- SVG Piggy Mascot with Astronaut Helmet -->
+                <svg width="140" height="140" viewBox="0 0 100 100" class="drop-shadow-lg">
+                    <!-- Helmet Bubble -->
+                    <circle cx="50" cy="50" r="46" fill="rgba(147, 197, 253, 0.3)" stroke="#93c5fd" stroke-width="3"/>
+                    <!-- Pig Head -->
+                    <circle cx="50" cy="52" r="32" fill="#f472b6"/>
+                    <!-- Ears -->
+                    <polygon points="25,28 35,38 20,40" fill="#ec4899"/>
+                    <polygon points="75,28 65,38 80,40" fill="#ec4899"/>
+                    <!-- Eyes -->
+                    <circle cx="40" cy="48" r="4" fill="#1e1b4b"/>
+                    <circle cx="60" cy="48" r="4" fill="#1e1b4b"/>
+                    <circle cx="42" cy="46" r="1.5" fill="#ffffff"/>
+                    <circle cx="62" cy="46" r="1.5" fill="#ffffff"/>
+                    <!-- Snout -->
+                    <ellipse cx="50" cy="58" rx="10" ry="7" fill="#f43f5e"/>
+                    <circle cx="46" cy="58" r="2" fill="#881337"/>
+                    <circle cx="54" cy="58" r="2" fill="#881337"/>
+                    <!-- Cheeks -->
+                    <circle cx="32" cy="55" r="4" fill="#f43f5e" opacity="0.4"/>
+                    <circle cx="68" cy="55" r="4" fill="#f43f5e" opacity="0.4"/>
+                    <!-- Helmet Shine -->
+                    <path d="M 20,35 A 35,35 0 0,1 50,12" fill="none" stroke="#ffffff" stroke-width="3" stroke-linecap="round" opacity="0.6"/>
+                </svg>
+            </div>
+
+            <div>
+                <h2 class="text-3xl md:text-4xl font-extrabold text-yellow-300 drop-shadow">Welcome Astronaut! 🌟</h2>
+                <p class="text-slate-200 mt-2 text-base md:text-lg">
+                    Help Piggy Pog Pog collect rocket fuel by spelling words correctly, then blast off in the <strong>Asteroid Shooter</strong> mini-game!
+                </p>
+            </div>
+
+            <button id="start-btn" onclick="startGame()" class="btn-glow bg-gradient-to-r from-emerald-400 to-green-600 hover:from-emerald-500 hover:to-green-700 text-slate-950 font-extrabold text-2xl py-4 px-10 rounded-2xl tracking-wider transform transition hover:scale-105 active:scale-95">
+                START ADVENTURE 🚀
+            </button>
+        </div>
+
+        <!-- SCREEN 2: QUIZ CARD SCREEN -->
+        <div id="quiz-screen" class="w-full hidden flex-col items-center gap-4 bg-slate-900/90 p-5 md:p-6 rounded-3xl border-4 border-indigo-500 shadow-2xl">
+            
+            <!-- Question Progress Header -->
+            <div class="w-full flex justify-between items-center text-sm font-semibold text-indigo-300 border-b border-indigo-800/80 pb-3">
+                <span id="level-title" class="text-yellow-400 font-bold text-lg">Level 1: Early Words</span>
+                <span id="question-progress" class="bg-indigo-950 px-3 py-1 rounded-full text-indigo-200 border border-indigo-700">Question 1 of 3</span>
+            </div>
+
+            <!-- Speech Audio Button & Clue -->
+            <div class="flex flex-col items-center gap-2 my-1">
+                <button onclick="speakCurrentWord()" class="btn-glow bg-gradient-to-r from-amber-400 to-orange-500 text-slate-950 font-bold py-3 px-6 rounded-full flex items-center gap-2 text-lg hover:brightness-110 active:scale-95 transition">
+                    <span class="text-2xl">🔊</span> HEAR WORD
+                </button>
+                <p id="clue-text" class="text-slate-300 text-center italic text-sm md:text-base mt-1">
+                    "Clue goes here..."
+                </p>
+            </div>
+
+            <!-- Target Word Display / Letter Slots -->
+            <div id="word-slots-container" class="flex flex-wrap justify-center gap-2 my-3 min-h-[60px] items-center">
+                <!-- Dynamic Letter Slots populated by JS -->
+            </div>
+
+            <!-- Scrambled Letter Bubbles Choice Area -->
+            <div id="letter-options-container" class="flex flex-wrap justify-center gap-2 my-2 min-h-[70px] bg-slate-950/50 p-4 rounded-2xl border border-indigo-900/60 w-full">
+                <!-- Dynamic Options Buttons populated by JS -->
+            </div>
+
+            <!-- Action Controls -->
+            <div class="flex justify-center gap-4 w-full mt-2">
+                <button onclick="resetCurrentAnswer()" class="bg-slate-700 hover:bg-slate-600 text-slate-200 font-bold py-2 px-5 rounded-xl text-sm transition">
+                    🔄 Clear
+                </button>
+                <button id="check-btn" onclick="checkAnswer()" class="btn-glow bg-gradient-to-r from-green-500 to-emerald-600 text-white font-extrabold text-lg py-2 px-8 rounded-xl transition">
+                    Check Answer ⭐
+                </button>
+            </div>
+
+            <!-- Feedback Modal / Box -->
+            <div id="feedback-box" class="w-full text-center py-2 px-4 rounded-xl hidden text-base font-bold animate-pulse">
+                <!-- Dynamic feedback text -->
+            </div>
+        </div>
+
+        <!-- SCREEN 3: ASTEROID SHOOTER MINI-GAME SCREEN -->
+        <div id="minigame-screen" class="w-full hidden flex-col items-center gap-3 bg-slate-900/95 p-4 rounded-3xl border-4 border-amber-500 shadow-2xl relative">
+            <div class="w-full flex justify-between items-center px-2">
+                <div class="flex items-center gap-2">
+                    <span class="text-xl">🚀</span>
+                    <h3 class="text-xl font-bold text-amber-300">Asteroid Shooter!</h3>
+                </div>
+                <div class="text-right">
+                    <span class="text-xs text-slate-300 block">SCORE</span>
+                    <span id="game-score" class="text-xl font-bold text-yellow-300">0</span>
+                </div>
+            </div>
+
+            <!-- Canvas for Game -->
+            <div class="relative w-full flex justify-center">
+                <canvas id="gameCanvas" width="400" height="350" class="max-w-full h-auto"></canvas>
+                
+                <!-- Game Over Overlay -->
+                <div id="minigame-overlay" class="absolute inset-0 bg-slate-950/80 rounded-2xl flex flex-col justify-center items-center gap-4 hidden p-4 text-center">
+                    <h4 class="text-2xl font-bold text-yellow-300">Great Shooting, Astronaut! 🌟</h4>
+                    <p id="minigame-summary-text" class="text-slate-200 text-sm">You blasted lots of space rocks!</p>
+                    <button onclick="returnToQuizFromMinigame()" class="btn-glow bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-bold text-lg py-3 px-8 rounded-2xl">
+                        Continue Mission 🚀
+                    </button>
+                </div>
+            </div>
+
+            <!-- Mobile Touch Controls -->
+            <div class="w-full flex justify-between items-center gap-2 max-w-xs mt-1">
+                <button id="btn-left" class="bg-indigo-800/80 active:bg-indigo-600 text-white font-bold text-2xl py-3 px-6 rounded-2xl border border-indigo-400 select-none">
+                    ◀
+                </button>
+                <button id="btn-fire" class="btn-glow bg-red-500 active:bg-red-600 text-white font-bold text-lg py-3 px-8 rounded-2xl flex-1 select-none">
+                    🔥 FIRE
+                </button>
+                <button id="btn-right" class="bg-indigo-800/80 active:bg-indigo-600 text-white font-bold text-2xl py-3 px-6 rounded-2xl border border-indigo-400 select-none">
+                    ▶
+                </button>
+            </div>
+            <p class="text-xs text-slate-400">Controls: Use Left/Right buttons or Arrow Keys to move, tap Fire or Spacebar to shoot!</p>
+        </div>
+
+        <!-- SCREEN 4: LEVEL UP / REWARD PROMPT -->
+        <div id="reward-screen" class="w-full hidden flex-col items-center gap-6 bg-slate-900/90 p-6 md:p-8 rounded-3xl border-4 border-yellow-400 text-center shadow-2xl">
+            <div class="text-5xl bounce-gentle">🏆</div>
+            <h2 class="text-3xl font-extrabold text-yellow-300">Level Complete!</h2>
+            <p id="reward-message" class="text-slate-200 text-lg">
+                Awesome spelling! You earned rocket fuel for your spaceship!
+            </p>
+            <div class="flex flex-col sm:flex-row gap-4 w-full justify-center">
+                <button onclick="startMinigame()" class="btn-glow bg-gradient-to-r from-amber-400 to-orange-500 text-slate-950 font-extrabold text-xl py-4 px-8 rounded-2xl transform transition hover:scale-105 active:scale-95">
+                    Play Asteroid Shooter! 👾
+                </button>
+                <button onclick="nextLevelDirect()" class="bg-indigo-800 hover:bg-indigo-700 text-white font-bold text-lg py-4 px-8 rounded-2xl border border-indigo-500">
+                    Next Spelling Level ➡
+                </button>
+            </div>
+        </div>
+
+        <!-- SCREEN 5: FINAL CELEBRATION / DIPLOMA -->
+        <div id="victory-screen" class="w-full hidden flex-col items-center gap-6 bg-slate-900/90 p-6 md:p-8 rounded-3xl border-4 border-emerald-400 text-center shadow-2xl">
+            <div class="text-6xl animate-bounce">🌌 🚀 🏅</div>
+            <h2 class="text-3xl md:text-4xl font-extrabold text-emerald-300">SUPER STAR SPELLER!</h2>
+            <p class="text-slate-200 text-lg">
+                Congratulations! You completed all 15 spelling challenges and helped Piggy Pog Pog explore the galaxy!
+            </p>
+            <div class="bg-indigo-950/80 p-4 rounded-2xl border border-yellow-500/50 w-full max-w-md">
+                <h3 class="text-yellow-400 font-bold text-xl mb-1">Official Year 3 Space Badge 🎓</h3>
+                <p class="text-xs text-indigo-300">Mastered Prefixes, Suffixes, Homophones & Tricky Words!</p>
+            </div>
+            <button onclick="startGame()" class="btn-glow bg-gradient-to-r from-emerald-400 to-green-600 text-slate-950 font-extrabold text-2xl py-4 px-10 rounded-2xl hover:scale-105 active:scale-95 transition">
+                PLAY AGAIN 🔄
+            </button>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="w-full text-center py-2 text-xs text-indigo-300/70 z-10">
+        Piggy Pog Pog • Year 3 Educational Spelling Game • Safe & Friendly
+    </footer>
+
+    <script>
+        /* --- QUESTION DATABASE (15 Questions, 5 Levels) --- */
+        const quizLevels = [
+            {
+                levelName: "Level 1: Early Year 3 Words",
+                questions: [
+                    { word: "disagree", clue: "When you do not have the same opinion as someone else." },
+                    { word: "misplace", clue: "To lose something by putting it in the wrong spot." },
+                    { word: "recycle", clue: "To turn used rubbish into fresh new things." }
+                ]
+            },
+            {
+                levelName: "Level 2: Prefixes & Suffixes",
+                questions: [
+                    { word: "subheading", clue: "A small title that helps organize a page of writing." },
+                    { word: "supermarket", clue: "A big store where you buy groceries and delicious food." },
+                    { word: "teleport", clue: "To instantly travel from one space place to another!" }
+                ]
+            },
+            {
+                levelName: "Level 3: -ation & -ly Words",
+                questions: [
+                    { word: "information", clue: "Facts or details about a specific topic." },
+                    { word: "sensation", clue: "A cool physical feeling or exciting event." },
+                    { word: "gently", clue: "To do something in a very soft, quiet, and careful way." }
+                ]
+            },
+            {
+                levelName: "Level 4: Homophones & Tricky Words",
+                questions: [
+                    { word: "accept", clue: "To gladly welcome or receive a gift or idea." },
+                    { word: "centre", clue: "The middle point or core of something." },
+                    { word: "effect", clue: "A change or result caused by an action." }
+                ]
+            },
+            {
+                levelName: "Level 5: Challenge Year 3 Words",
+                questions: [
+                    { word: "bicycle", clue: "A vehicle with two wheels that you pedal with your feet." },
+                    { word: "disappear", clue: "To vanish from sight like magic!" },
+                    { word: "earth", clue: "Our beautiful blue home planet in solar space." }
+                ]
+            }
+        ];
+
+        /* Game State Variables */
+        let currentLevelIdx = 0;
+        let currentQuestionIdx = 0;
+        let totalFuel = 0;
+        let currentAnswer = [];
+        let targetWord = "";
+        let audioCtx = null;
+
+        /* Initialize Sound Effects via Web Audio API */
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        }
+
+        function playSound(type) {
+            if (!audioCtx) return;
+            try {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+
+                const now = audioCtx.currentTime;
+
+                if (type === 'click') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(400, now);
+                    osc.frequency.exponentialRampToValueAtTime(800, now + 0.08);
+                    gain.gain.setValueAtTime(0.15, now);
+                    gain.gain.linearRampToValueAtTime(0.01, now + 0.08);
+                    osc.start(now);
+                    osc.stop(now + 0.08);
+                } else if (type === 'correct') {
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(523.25, now); // C5
+                    osc.frequency.setValueAtTime(659.25, now + 0.1); // E5
+                    osc.frequency.setValueAtTime(783.99, now + 0.2); // G5
+                    gain.gain.setValueAtTime(0.2, now);
+                    gain.gain.linearRampToValueAtTime(0.01, now + 0.35);
+                    osc.start(now);
+                    osc.stop(now + 0.35);
+                } else if (type === 'wrong') {
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(220, now);
+                    osc.frequency.linearRampToValueAtTime(180, now + 0.2);
+                    gain.gain.setValueAtTime(0.15, now);
+                    gain.gain.linearRampToValueAtTime(0.01, now + 0.2);
+                    osc.start(now);
+                    osc.stop(now + 0.2);
+                } else if (type === 'pew') {
+                    osc.type = 'square';
+                    osc.frequency.setValueAtTime(800, now);
+                    osc.frequency.exponentialRampToValueAtTime(150, now + 0.12);
+                    gain.gain.setValueAtTime(0.1, now);
+                    gain.gain.linearRampToValueAtTime(0.01, now + 0.12);
+                    osc.start(now);
+                    osc.stop(now + 0.12);
+                } else if (type === 'boom') {
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(120, now);
+                    osc.frequency.exponentialRampToValueAtTime(30, now + 0.25);
+                    gain.gain.setValueAtTime(0.25, now);
+                    gain.gain.linearRampToValueAtTime(0.01, now + 0.25);
+                    osc.start(now);
+                    osc.stop(now + 0.25);
+                }
+            } catch (e) {
+                console.log("Audio play error:", e);
+            }
+        }
+
+        /* Speech Synthesis for "Hear Word" */
+        function speakCurrentWord() {
+            initAudio();
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel(); // Clear queued speech
+                const utterance = new SpeechSynthesisUtterance(targetWord);
+                utterance.rate = 0.85; // Slightly slower speech for clarity
+                utterance.pitch = 1.1; // Friendly tone
+                utterance.lang = 'en-GB';
+                window.speechSynthesis.speak(utterance);
+            } else {
+                alert("Speech synthesis is not supported on this browser.");
+            }
+        }
+
+        function showScreen(screenId) {
+            const screens = ['welcome-screen', 'quiz-screen', 'minigame-screen', 'reward-screen', 'victory-screen'];
+            screens.forEach(id => {
+                const el = document.getElementById(id);
+                if (id === screenId) {
+                    el.classList.remove('hidden');
+                    el.classList.add('flex');
+                } else {
+                    el.classList.add('hidden');
+                    el.classList.remove('flex');
+                }
+            });
+        }
+
+        function startGame() {
+            initAudio();
+            playSound('click');
+            currentLevelIdx = 0;
+            currentQuestionIdx = 0;
+            totalFuel = 0;
+            updateHeaderData();
+            loadQuestion();
+            showScreen('quiz-screen');
+        }
+
+        function updateHeaderData() {
+            document.getElementById('level-display').innerText = `${currentLevelIdx + 1} / 5`;
+            document.getElementById('fuel-count').innerText = totalFuel;
+        }
+
+        function loadQuestion() {
+            const levelData = quizLevels[currentLevelIdx];
+            const qData = levelData.questions[currentQuestionIdx];
+            targetWord = qData.word.toLowerCase();
+
+            document.getElementById('level-title').innerText = levelData.levelName;
+            document.getElementById('question-progress').innerText = `Question ${currentQuestionIdx + 1} of 3`;
+            document.getElementById('clue-text').innerText = `💡 "${qData.clue}"`;
+
+            // Reset state
+            currentAnswer = [];
+            hideFeedback();
+
+            // Speak word automatically on question start
+            setTimeout(() => { speakCurrentWord(); }, 400);
+
+            // Render Empty Slots
+            renderSlots();
+
+            // Render Scrambled Letters (Original word letters + 2 random decoy letters)
+            renderLetterBubbles();
+        }
+
+        function renderSlots() {
+            const container = document.getElementById('word-slots-container');
+            container.innerHTML = '';
+
+            for (let i = 0; i < targetWord.length; i++) {
+                const slot = document.createElement('div');
+                slot.className = 'w-10 h-12 md:w-12 md:h-14 border-b-4 border-indigo-400 bg-slate-950/70 rounded-lg flex items-center justify-center text-2xl md:text-3xl font-extrabold text-yellow-300 shadow-inner uppercase transition-all';
+                
+                if (currentAnswer[i]) {
+                    slot.innerText = currentAnswer[i];
+                    slot.classList.add('border-yellow-400', 'bg-indigo-900/50');
+                } else {
+                    slot.innerText = '_';
+                    slot.classList.add('text-indigo-600/40');
+                }
+                container.appendChild(slot);
+            }
+        }
+
+        function renderLetterBubbles() {
+            const container = document.getElementById('letter-options-container');
+            container.innerHTML = '';
+
+            // Generate scrambled letters
+            let lettersArr = targetWord.split('');
+            // Add decoy letters for fun challenge
+            const decoys = ['e', 'a', 's', 'r', 't', 'i', 'o', 'n', 'l'];
+            for (let i = 0; i < 2; i++) {
+                lettersArr.push(decoys[Math.floor(Math.random() * decoys.length)]);
+            }
+
+            // Shuffle letters
+            lettersArr.sort(() => Math.random() - 0.5);
+
+            lettersArr.forEach((char, index) => {
+                const btn = document.createElement('button');
+                btn.className = 'letter-bubble w-12 h-12 md:w-14 md:h-14 rounded-2xl text-white font-extrabold text-2xl uppercase flex items-center justify-center cursor-pointer border-2 border-indigo-300';
+                btn.innerText = char;
+                btn.dataset.char = char;
+                btn.onclick = () => selectLetter(char, btn);
+                container.appendChild(btn);
+            });
+        }
+
+        function selectLetter(char, btnEl) {
+            if (currentAnswer.length < targetWord.length) {
+                playSound('click');
+                currentAnswer.push(char);
+                btnEl.style.visibility = 'hidden'; // Hide chosen bubble
+                btnEl.dataset.usedIndex = currentAnswer.length - 1;
+                renderSlots();
+            }
+        }
+
+        function resetCurrentAnswer() {
+            playSound('click');
+            currentAnswer = [];
+            renderSlots();
+            // Restore visibility of options
+            const buttons = document.querySelectorAll('#letter-options-container button');
+            buttons.forEach(btn => btn.style.visibility = 'visible');
+            hideFeedback();
+        }
+
+        function checkAnswer() {
+            const userStr = currentAnswer.join('');
+            if (userStr.length < targetWord.length) {
+                showFeedback("Spell the full word before checking! You can do it!", "bg-amber-500/30 text-amber-200 border border-amber-500");
+                return;
+            }
+
+            if (userStr === targetWord) {
+                playSound('correct');
+                totalFuel += 10;
+                updateHeaderData();
+                showFeedback("✨ WOW! Fantastic Spelling! ✨", "bg-emerald-500/30 text-emerald-200 border border-emerald-500");
+
+                setTimeout(() => {
+                    currentQuestionIdx++;
+                    if (currentQuestionIdx >= 3) {
+                        // Level Completed!
+                        currentQuestionIdx = 0;
+                        currentLevelIdx++;
+                        if (currentLevelIdx >= quizLevels.length) {
+                            showScreen('victory-screen');
+                        } else {
+                            document.getElementById('reward-message').innerText = `You completed Level ${currentLevelIdx}! You earned extra rocket fuel!`;
+                            showScreen('reward-screen');
+                        }
+                    } else {
+                        loadQuestion();
+                    }
+                }, 1300);
+            } else {
+                playSound('wrong');
+                showFeedback("Oopsie! Let's try that again! You've got this! 💪", "bg-pink-500/30 text-pink-200 border border-pink-500");
+            }
+        }
+
+        function showFeedback(msg, cssClasses) {
+            const fb = document.getElementById('feedback-box');
+            fb.className = `w-full text-center py-3 px-4 rounded-xl text-base font-bold my-2 ${cssClasses}`;
+            fb.innerText = msg;
+            fb.classList.remove('hidden');
+        }
+
+        function hideFeedback() {
+            document.getElementById('feedback-box').classList.add('hidden');
+        }
+
+        function nextLevelDirect() {
+            playSound('click');
+            updateHeaderData();
+            loadQuestion();
+            showScreen('quiz-screen');
+        }
+
+        let canvas, ctx;
+        let gameAnimationId = null;
+        let player = { x: 180, y: 280, width: 40, height: 40, speed: 5 };
+        let bullets = [];
+        let asteroids = [];
+        let stars = [];
+        let score = 0;
+        let isMovingLeft = false;
+        let isMovingRight = false;
+        let lastShootTime = 0;
+
+        function initCanvasGame() {
+            canvas = document.getElementById('gameCanvas');
+            ctx = canvas.getContext('2d');
+
+            // Setup stars background for minigame
+            stars = [];
+            for (let i = 0; i < 40; i++) {
+                stars.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height,
+                    size: Math.random() * 2 + 1,
+                    speed: Math.random() * 1.5 + 0.5
+                });
+            }
+
+            // Mobile button handlers
+            const btnLeft = document.getElementById('btn-left');
+            const btnRight = document.getElementById('btn-right');
+            const btnFire = document.getElementById('btn-fire');
+
+            btnLeft.onpointerdown = (e) => { e.preventDefault(); isMovingLeft = true; };
+            btnLeft.onpointerup = (e) => { e.preventDefault(); isMovingLeft = false; };
+            btnRight.onpointerdown = (e) => { e.preventDefault(); isMovingRight = true; };
+            btnRight.onpointerup = (e) => { e.preventDefault(); isMovingRight = false; };
+            btnFire.onpointerdown = (e) => { e.preventDefault(); shootBullet(); };
+
+            window.onkeydown = (e) => {
+                if (e.key === 'ArrowLeft' || e.key === 'a') isMovingLeft = true;
+                if (e.key === 'ArrowRight' || e.key === 'd') isMovingRight = true;
+                if (e.key === ' ' || e.key === 'Spacebar') { shootBullet(); e.preventDefault(); }
+            };
+            window.onkeyup = (e) => {
+                if (e.key === 'ArrowLeft' || e.key === 'a') isMovingLeft = false;
+                if (e.key === 'ArrowRight' || e.key === 'd') isMovingRight = false;
+            };
+        }
+
+        function startMinigame() {
+            playSound('click');
+            showScreen('minigame-screen');
+            document.getElementById('minigame-overlay').classList.add('hidden');
+
+            if (!canvas) initCanvasGame();
+
+            // Reset Game Variables
+            player.x = canvas.width / 2 - 20;
+            player.y = canvas.height - 50;
+            bullets = [];
+            asteroids = [];
+            score = 0;
+            document.getElementById('game-score').innerText = score;
+
+            // Spawn asteroids periodically
+            if (window.asteroidSpawner) clearInterval(window.asteroidSpawner);
+            window.asteroidSpawner = setInterval(spawnAsteroid, 1200);
+
+            // Timer to end mini-game after 20 seconds of fun!
+            setTimeout(() => {
+                endMinigame();
+            }, 20000);
+
+            if (gameAnimationId) cancelAnimationFrame(gameAnimationId);
+            gameLoop();
+        }
+
+        function spawnAsteroid() {
+            const size = Math.random() * 20 + 25; // 25 to 45px
+            asteroids.push({
+                x: Math.random() * (canvas.width - size),
+                y: -size,
+                size: size,
+                speed: Math.random() * 1.5 + 1.2,
+                color: ['#f59e0b', '#ec4899', '#a855f7', '#3b82f6'][Math.floor(Math.random() * 4)]
+            });
+        }
+
+        function shootBullet() {
+            const now = Date.now();
+            if (now - lastShootTime > 200) { // Limit firing rate
+                playSound('pew');
+                bullets.push({
+                    x: player.x + player.width / 2 - 3,
+                    y: player.y,
+                    width: 6,
+                    height: 14,
+                    speed: 7
+                });
+                lastShootTime = now;
+            }
+        }
+
+        function gameLoop() {
+            // Update Positions
+            if (isMovingLeft && player.x > 0) player.x -= player.speed;
+            if (isMovingRight && player.x < canvas.width - player.width) player.x += player.speed;
+
+            // Move Bullets
+            bullets.forEach((b, index) => {
+                b.y -= b.speed;
+                if (b.y < -10) bullets.splice(index, 1);
+            });
+
+            // Move Asteroids
+            asteroids.forEach((ast, index) => {
+                ast.y += ast.speed;
+                if (ast.y > canvas.height + 50) asteroids.splice(index, 1);
+            });
+
+            // Move Background Stars
+            stars.forEach(s => {
+                s.y += s.speed;
+                if (s.y > canvas.height) s.y = 0;
+            });
+
+            // Bullet-Asteroid Collision Check
+            bullets.forEach((b, bIdx) => {
+                asteroids.forEach((ast, aIdx) => {
+                    if (b.x < ast.x + ast.size &&
+                        b.x + b.width > ast.x &&
+                        b.y < ast.y + ast.size &&
+                        b.y + b.height > ast.y) {
+                        
+                        // Collision!
+                        playSound('boom');
+                        bullets.splice(bIdx, 1);
+                        asteroids.splice(aIdx, 1);
+                        score += 10;
+                        document.getElementById('game-score').innerText = score;
+                    }
+                });
+            });
+
+            // RENDER GRAPHICS
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Render Stars
+            ctx.fillStyle = '#ffffff';
+            stars.forEach(s => {
+                ctx.fillRect(s.x, s.y, s.size, s.size);
+            });
+
+            // Render Player Rocket (Piggy Spacecraft)
+            ctx.save();
+            ctx.translate(player.x, player.y);
+            // Rocket body
+            ctx.fillStyle = '#f472b6'; // Pig Pink
+            ctx.beginPath();
+            ctx.moveTo(20, 0);
+            ctx.lineTo(40, 35);
+            ctx.lineTo(0, 35);
+            ctx.closePath();
+            ctx.fill();
+            // Rocket Wings
+            ctx.fillStyle = '#3b82f6';
+            ctx.fillRect(-5, 25, 10, 12);
+            ctx.fillRect(35, 25, 10, 12);
+            // Cute Pig Nose Window
+            ctx.fillStyle = '#f43f5e';
+            ctx.beginPath();
+            ctx.arc(20, 20, 7, 0, Math.PI * 2);
+            ctx.fill();
+            // Engine Flame
+            ctx.fillStyle = '#f59e0b';
+            ctx.beginPath();
+            ctx.moveTo(12, 35);
+            ctx.lineTo(20, 45 + Math.random() * 5);
+            ctx.lineTo(28, 35);
+            ctx.fill();
+            ctx.restore();
+
+            // Render Bullets
+            ctx.fillStyle = '#facc15';
+            bullets.forEach(b => {
+                ctx.fillRect(b.x, b.y, b.width, b.height);
+            });
+
+            // Render Cartoon Asteroids
+            asteroids.forEach(ast => {
+                ctx.fillStyle = ast.color;
+                ctx.beginPath();
+                ctx.arc(ast.x + ast.size / 2, ast.y + ast.size / 2, ast.size / 2, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.strokeStyle = '#ffffff';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+            });
+
+            gameAnimationId = requestAnimationFrame(gameLoop);
+        }
+
+        function endMinigame() {
+            if (window.asteroidSpawner) clearInterval(window.asteroidSpawner);
+            if (gameAnimationId) cancelAnimationFrame(gameAnimationId);
+
+            document.getElementById('minigame-summary-text').innerText = `Super job! You scored ${score} points and blasted space asteroids!`;
+            document.getElementById('minigame-overlay').classList.remove('hidden');
+        }
+
+        function returnToQuizFromMinigame() {
+            playSound('click');
+            updateHeaderData();
+            loadQuestion();
+            showScreen('quiz-screen');
+        }
+
+        window.onload = function() {
+            const container = document.getElementById('stars-container');
+            const numStars = 60;
+            for (let i = 0; i < numStars; i++) {
+                const star = document.createElement('div');
+                star.className = 'star';
+                star.style.width = `${Math.random() * 3 + 1}px`;
+                star.style.height = star.style.width;
+                star.style.left = `${Math.random() * 100}%`;
+                star.style.top = `${Math.random() * 100}%`;
+                star.style.animationDelay = `${Math.random() * 2}s`;
+                container.appendChild(star);
+            }
+        };
+    </script>
+</body>
+</html>

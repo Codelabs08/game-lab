@@ -1,0 +1,1162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Game Quiz - Year 3 Maths Adventure & Mega Avatar Shop</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        fredoka: ['Fredoka', 'sans-serif'],
+                    },
+                    colors: {
+                        rainbowRed: '#FF5964',
+                        rainbowOrange: '#FF9F1C',
+                        rainbowYellow: '#FFBF00',
+                        rainbowGreen: '#2EC4B6',
+                        rainbowBlue: '#3A86FF',
+                        rainbowPurple: '#8338EC',
+                        pastelBg: '#F4F7FE'
+                    },
+                    keyframes: {
+                        bounceSlow: {
+                            '0%, 100%': { transform: 'translateY(-5%)' },
+                            '50%': { transform: 'translateY(5%)' },
+                        },
+                        popIn: {
+                            '0%': { transform: 'scale(0.8)', opacity: '0' },
+                            '100%': { transform: 'scale(1)', opacity: '1' },
+                        },
+                        pulseGlow: {
+                            '0%, 100%': { boxShadow: '0 0 15px rgba(255, 159, 28, 0.6)' },
+                            '50%': { boxShadow: '0 0 30px rgba(255, 159, 28, 1)' }
+                        },
+                        coinPop: {
+                            '0%': { transform: 'scale(1)' },
+                            '50%': { transform: 'scale(1.4) rotate(15deg)' },
+                            '100%': { transform: 'scale(1)' }
+                        },
+                        floatUp: {
+                            '0%': { opacity: '1', transform: 'translateY(0) scale(1)' },
+                            '100%': { opacity: '0', transform: 'translateY(-40px) scale(1.3)' }
+                        }
+                    },
+                    animation: {
+                        'bounce-slow': 'bounceSlow 3s infinite ease-in-out',
+                        'pop-in': 'popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards',
+                        'pulse-glow': 'pulseGlow 2s infinite ease-in-out',
+                        'coin-pop': 'coinPop 0.4s ease-out',
+                        'float-up': 'floatUp 0.9s ease-out forwards'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Fredoka', sans-serif;
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: manipulation;
+            background: linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%);
+            min-height: 100vh;
+        }
+        
+        .rainbow-text {
+            background: linear-gradient(90deg, #FF5964, #FF9F1C, #2EC4B6, #3A86FF, #8338EC);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .rainbow-btn {
+            background: linear-gradient(135deg, #FF9F1C, #FF5964);
+            transition: all 0.2s ease;
+            box-shadow: 0 6px 0 #b33939;
+        }
+        .rainbow-btn:active {
+            transform: translateY(4px);
+            box-shadow: 0 2px 0 #b33939;
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.92);
+            backdrop-filter: blur(12px);
+            border: 4px solid rgba(255, 255, 255, 0.8);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+        }
+
+        .option-btn {
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+            box-shadow: 0 6px 0 rgba(0,0,0,0.15);
+        }
+        .option-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 9px 0 rgba(0,0,0,0.15);
+        }
+        .option-btn:active {
+            transform: translateY(3px);
+            box-shadow: 0 2px 0 rgba(0,0,0,0.15);
+        }
+
+        .category-tab-active {
+            background: #8338EC !important;
+            color: #ffffff !important;
+            box-shadow: 0 4px 10px rgba(131, 56, 236, 0.4);
+        }
+
+        canvas {
+            touch-action: none;
+        }
+    </style>
+</head>
+<body class="flex flex-col min-h-screen text-slate-800 antialiased justify-between items-center p-3 sm:p-6 overflow-x-hidden relative">
+
+    <!-- Floating Coin Reward Animation Container -->
+    <div id="floatingCoinsContainer" class="pointer-events-none fixed inset-0 z-50"></div>
+
+    <!-- HEADER / NAVIGATION WITH COINS & AVATAR -->
+    <header class="w-full max-w-3xl flex justify-between items-center mb-3 sm:mb-6 glass-card rounded-2xl px-3 sm:px-5 py-3">
+        <div class="flex items-center space-x-2 sm:space-x-3">
+            <button onclick="openAvatarShop()" class="relative bg-amber-100 hover:bg-amber-200 border-2 border-amber-300 w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center text-2xl sm:text-3xl shadow-md transition transform active:scale-95 group" title="Open Avatar Shop">
+                <span id="currentAvatarDisplay">🤖</span>
+                <span class="absolute -bottom-1 -right-1 bg-purple-600 text-white text-[10px] sm:text-xs font-bold px-1.5 py-0.5 rounded-full border border-white shadow">Shop</span>
+            </button>
+            <div>
+                <h1 class="text-xl sm:text-3xl font-bold rainbow-text leading-none">Game Quiz</h1>
+                <p class="text-[11px] sm:text-xs text-slate-600 font-semibold">Year 3 Maths Adventure</p>
+            </div>
+        </div>
+
+        <div class="flex items-center space-x-2 sm:space-x-3">
+            <!-- Coin Counter Display -->
+            <div id="coinBox" class="flex items-center bg-amber-400/20 border-2 border-amber-400 px-3 py-1.5 rounded-xl font-extrabold text-amber-800 text-sm sm:text-lg space-x-1.5 shadow-sm">
+                <span class="text-xl sm:text-2xl animate-bounce-slow">🪙</span>
+                <span id="coinCountDisplay">0</span>
+            </div>
+
+            <!-- Sound Toggle -->
+            <button id="soundToggleBtn" onclick="toggleAudio()" class="bg-indigo-100 hover:bg-indigo-200 text-indigo-700 font-bold px-2.5 py-2 sm:px-3.5 sm:py-2 rounded-xl text-xs sm:text-sm flex items-center space-x-1.5 transition">
+                <span id="soundIcon">🔊</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- MAIN CONTAINER -->
+    <main class="w-full max-w-3xl flex-grow flex flex-col justify-center items-center relative">
+
+        <!-- START SCREEN -->
+        <div id="startScreen" class="w-full glass-card rounded-3xl p-6 sm:p-10 text-center animate-pop-in flex flex-col items-center">
+            <div id="mainHeroAvatar" class="text-6xl sm:text-8xl mb-3 animate-bounce-slow cursor-pointer hover:scale-110 transition" onclick="openAvatarShop()" title="Click to Customize Avatar">🤖</div>
+            <h2 class="text-3xl sm:text-5xl font-extrabold text-slate-800 mb-2">Welcome Math Explorer!</h2>
+            <p class="text-base sm:text-lg text-slate-600 mb-6 max-w-md">
+                Earn <b>🪙 10 coins</b> for every correct answer to unlock <b>28 Amazing Avatars</b> and play <b>Brick Breaker</b>!
+            </p>
+
+            <!-- Level Map Overview -->
+            <div class="grid grid-cols-5 gap-1.5 sm:gap-2 w-full max-w-md mb-6">
+                <div class="bg-blue-100 border-2 border-blue-400 rounded-xl p-2 text-center text-xs font-bold text-blue-800">
+                    <div>Lvl 1</div>
+                    <div class="text-sm">2,5,10x</div>
+                </div>
+                <div class="bg-teal-100 border-2 border-teal-400 rounded-xl p-2 text-center text-xs font-bold text-teal-800">
+                    <div>Lvl 2</div>
+                    <div class="text-sm">3,4x</div>
+                </div>
+                <div class="bg-amber-100 border-2 border-amber-400 rounded-xl p-2 text-center text-xs font-bold text-amber-800">
+                    <div>Lvl 3</div>
+                    <div class="text-sm">8x Intro</div>
+                </div>
+                <div class="bg-purple-100 border-2 border-purple-400 rounded-xl p-2 text-center text-xs font-bold text-purple-800">
+                    <div>Lvl 4</div>
+                    <div class="text-sm">Puzzles</div>
+                </div>
+                <div class="bg-rose-100 border-2 border-rose-400 rounded-xl p-2 text-center text-xs font-bold text-rose-800">
+                    <div>Lvl 5</div>
+                    <div class="text-sm">Master</div>
+                </div>
+            </div>
+
+            <div class="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-4 w-full sm:w-auto">
+                <button onclick="startQuiz()" class="rainbow-btn text-white text-2xl font-bold px-10 py-4 rounded-2xl animate-pulse-glow">
+                    Start Playing! 🎮
+                </button>
+                <button onclick="openAvatarShop()" class="bg-purple-600 hover:bg-purple-700 text-white text-xl font-bold px-8 py-4 rounded-2xl shadow-lg transition active:scale-95 flex items-center justify-center space-x-2">
+                    <span>Avatar Shop (28)</span>
+                    <span>🛍️</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- QUIZ SCREEN -->
+        <div id="quizScreen" class="w-full glass-card rounded-3xl p-4 sm:p-8 animate-pop-in hidden flex flex-col">
+            <!-- Progress Bar & Mascot Banner -->
+            <div class="flex justify-between items-center mb-4">
+                <div class="flex items-center space-x-2">
+                    <span id="levelBadge" class="bg-purple-600 text-white font-extrabold px-3 py-1 rounded-xl text-sm sm:text-base">
+                        Level 1
+                    </span>
+                    <span id="questionCount" class="text-slate-600 font-bold text-sm sm:text-base">
+                        Question 1/3
+                    </span>
+                </div>
+                <div class="flex items-center space-x-3">
+                    <div class="flex items-center space-x-1 text-amber-500 font-bold text-base sm:text-lg" id="starContainer">
+                        <span>⭐</span><span id="starScore">0</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Visual Progress Bar -->
+            <div class="w-full bg-slate-200 h-3 rounded-full mb-6 overflow-hidden">
+                <div id="progressBar" class="bg-gradient-to-r from-teal-400 to-blue-500 h-full w-0 transition-all duration-500"></div>
+            </div>
+
+            <!-- Question Box with Custom Avatar Companion -->
+            <div class="flex flex-col sm:flex-row items-center bg-gradient-to-r from-amber-50 to-orange-50 border-2 border-amber-200 rounded-2xl p-4 sm:p-6 mb-6">
+                <div class="text-5xl sm:text-6xl mb-2 sm:mb-0 sm:mr-6 animate-bounce-slow" id="quizMascotIcon">
+                    🤖
+                </div>
+                <div class="text-center sm:text-left flex-grow">
+                    <div class="text-xs font-bold uppercase tracking-wider text-amber-700 mb-1" id="levelTopicTitle">Topic: 2x, 5x, 10x Tables</div>
+                    <h2 id="questionText" class="text-2xl sm:text-4xl font-extrabold text-slate-800">
+                        2 x 5 = ?
+                    </h2>
+                </div>
+            </div>
+
+            <!-- 4 Multiple Choice Option Buttons -->
+            <div id="optionsGrid" class="grid grid-cols-2 gap-3 sm:gap-4 mb-4">
+                <!-- Javascript injects 4 buttons here -->
+            </div>
+
+            <!-- Feedback Message Banner -->
+            <div id="feedbackBanner" class="hidden rounded-2xl p-4 text-center font-bold text-lg sm:text-xl transition-all">
+                <span id="feedbackText">Great Job!</span>
+            </div>
+        </div>
+
+        <!-- CELEBRATION SCREEN -->
+        <div id="celebrationScreen" class="w-full glass-card rounded-3xl p-6 sm:p-10 text-center animate-pop-in hidden flex flex-col items-center">
+            <div class="text-6xl sm:text-8xl mb-3">🌟</div>
+            <h2 class="text-3xl sm:text-5xl font-extrabold text-slate-800 mb-2">Level Completed!</h2>
+            <p id="celebrationSubtext" class="text-lg sm:text-xl text-slate-600 mb-4">You smashed those math questions!</p>
+            
+            <div class="bg-amber-100 border-2 border-amber-300 rounded-2xl p-4 mb-6 w-full max-w-sm flex justify-around items-center">
+                <div>
+                    <div class="text-xs uppercase text-amber-700 font-bold">Level Reached</div>
+                    <div id="summaryLevelText" class="text-xl font-extrabold text-amber-900">Level 1</div>
+                </div>
+                <div class="h-8 w-px bg-amber-300"></div>
+                <div>
+                    <div class="text-xs uppercase text-amber-700 font-bold">Level Bonus</div>
+                    <div class="text-xl font-extrabold text-amber-900">+50 Coins 🪙</div>
+                </div>
+            </div>
+
+            <button onclick="startBrickBreakerReward()" class="rainbow-btn text-white text-2xl font-bold px-8 py-4 rounded-2xl w-full sm:w-auto animate-pulse-glow">
+                Play Brick Breaker Mini-Game 🚀
+            </button>
+        </div>
+
+        <!-- REWARD MINI-GAME SCREEN -->
+        <div id="rewardGameScreen" class="w-full glass-card rounded-3xl p-4 sm:p-6 animate-pop-in hidden flex flex-col items-center">
+            <div class="w-full flex justify-between items-center mb-3">
+                <div class="flex items-center space-x-2">
+                    <span class="bg-rose-500 text-white font-extrabold px-3 py-1 rounded-xl text-xs sm:text-sm">
+                        Mini-Game Reward
+                    </span>
+                    <span class="text-slate-600 font-bold text-xs sm:text-sm hidden sm:inline" id="gameInstructions">
+                        Swipe/Drag or Arrow Keys to Move Paddle!
+                    </span>
+                </div>
+                <div class="text-slate-800 font-extrabold text-sm sm:text-base">
+                    Score: <span id="gameScore" class="text-purple-600">0</span>
+                </div>
+            </div>
+
+            <!-- Canvas Container -->
+            <div class="relative w-full flex justify-center items-center bg-slate-900 rounded-2xl overflow-hidden shadow-inner border-4 border-slate-700">
+                <canvas id="brickCanvas" width="600" height="400" class="w-full max-w-full h-auto max-h-[50vh] object-contain"></canvas>
+                
+                <div id="gameOverlay" class="absolute inset-0 bg-slate-900/80 backdrop-blur-sm flex flex-col justify-center items-center text-white p-4">
+                    <h3 id="overlayTitle" class="text-3xl font-extrabold mb-2 text-amber-400">Smash all Rainbow Bricks!</h3>
+                    <p id="overlaySubtitle" class="text-slate-200 text-center mb-6 max-w-xs">Use the paddle to bounce the ball!</p>
+                    <button id="startGameBtn" onclick="launchBall()" class="bg-emerald-500 hover:bg-emerald-600 text-white text-xl font-bold px-8 py-3 rounded-2xl shadow-lg transition transform active:scale-95">
+                        Launch Ball ⚾
+                    </button>
+                </div>
+            </div>
+
+            <!-- Mobile Touch Controls -->
+            <div class="flex justify-between w-full max-w-md mt-4 sm:hidden">
+                <button id="btnLeft" class="bg-indigo-500 text-white font-bold text-xl px-8 py-3 rounded-2xl active:bg-indigo-700 shadow-md">
+                    ◀ Left
+                </button>
+                <button id="btnRight" class="bg-indigo-500 text-white font-bold text-xl px-8 py-3 rounded-2xl active:bg-indigo-700 shadow-md">
+                    Right ▶
+                </button>
+            </div>
+
+            <button id="nextLevelBtn" onclick="proceedToNextLevel()" class="hidden rainbow-btn text-white text-xl sm:text-2xl font-bold px-8 py-3 rounded-2xl mt-4 animate-pulse-glow">
+                Continue To Next Quiz Level ➡️
+            </button>
+        </div>
+
+        <!-- GRAND VICTORY SCREEN -->
+        <div id="victoryScreen" class="w-full glass-card rounded-3xl p-6 sm:p-10 text-center animate-pop-in hidden flex flex-col items-center">
+            <div class="text-7xl sm:text-9xl mb-4">🏆</div>
+            <h2 class="text-3xl sm:text-5xl font-extrabold text-slate-800 mb-2">Grand Champion!</h2>
+            <p class="text-lg sm:text-xl text-slate-600 mb-6">You completed all 5 levels of Times Tables & Mini-Games!</p>
+            
+            <div class="bg-emerald-100 border-2 border-emerald-300 rounded-2xl p-6 mb-8 w-full max-w-sm">
+                <div class="text-sm font-bold text-emerald-800 uppercase mb-1">Total Stars Earned</div>
+                <div class="text-5xl font-extrabold text-emerald-600 mb-3">15 / 15 ⭐</div>
+                <div class="text-xs font-bold text-emerald-800 uppercase mb-1">Coins Mastered</div>
+                <div id="finalCoinDisplay" class="text-3xl font-extrabold text-amber-600">🪙 400 Coins</div>
+            </div>
+
+            <div class="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-4 w-full sm:w-auto">
+                <button onclick="resetGame()" class="rainbow-btn text-white text-2xl font-bold px-10 py-4 rounded-2xl w-full sm:w-auto">
+                    Play Again 🔄
+                </button>
+                <button onclick="openAvatarShop()" class="bg-purple-600 hover:bg-purple-700 text-white text-2xl font-bold px-8 py-4 rounded-2xl shadow-lg">
+                    Visit Shop 🛍️️
+                </button>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- EXPANDED AVATAR CUSTOMIZATION SHOP OVERLAY MODAL -->
+    <div id="shopModal" class="fixed inset-0 bg-slate-900/70 backdrop-blur-md z-50 hidden flex items-center justify-center p-3 sm:p-6 overflow-y-auto">
+        <div class="glass-card w-full max-w-3xl rounded-3xl p-4 sm:p-8 flex flex-col max-h-[92vh] my-auto animate-pop-in">
+            <!-- Modal Header -->
+            <div class="flex justify-between items-center mb-3 border-b pb-3">
+                <div class="flex items-center space-x-2">
+                    <span class="text-3xl">🛍️</span>
+                    <div>
+                        <h3 class="text-2xl sm:text-3xl font-extrabold text-slate-800 leading-tight">Mega Avatar Shop</h3>
+                        <p class="text-xs sm:text-sm text-slate-600 font-medium">Earn coins by answering math questions!</p>
+                    </div>
+                </div>
+                <button onclick="closeAvatarShop()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 text-xl font-bold w-10 h-10 rounded-full flex items-center justify-center">
+                    ✕
+                </button>
+            </div>
+
+            <!-- Category Filter Tabs -->
+            <div class="flex space-x-1.5 sm:space-x-2 overflow-x-auto pb-2 mb-2 scrollbar-none">
+                <button id="tab-all" onclick="filterAvatarCategory('all')" class="category-tab-active bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold text-xs sm:text-sm px-3.5 py-2 rounded-xl transition whitespace-nowrap">
+                    🌟 All (28)
+                </button>
+                <button id="tab-animals" onclick="filterAvatarCategory('animals')" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold text-xs sm:text-sm px-3.5 py-2 rounded-xl transition whitespace-nowrap">
+                    🐾 Animals
+                </button>
+                <button id="tab-fantasy" onclick="filterAvatarCategory('fantasy')" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold text-xs sm:text-sm px-3.5 py-2 rounded-xl transition whitespace-nowrap">
+                    ✨ Fantasy
+                </button>
+                <button id="tab-scifi" onclick="filterAvatarCategory('scifi')" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold text-xs sm:text-sm px-3.5 py-2 rounded-xl transition whitespace-nowrap">
+                    🚀 Sci-Fi & Heroes
+                </button>
+                <button id="tab-cool" onclick="filterAvatarCategory('cool')" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold text-xs sm:text-sm px-3.5 py-2 rounded-xl transition whitespace-nowrap">
+                    😎 Cool Characters
+                </button>
+            </div>
+
+            <!-- Avatar Grid -->
+            <div id="avatarShopGrid" class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3.5 overflow-y-auto p-1 my-1 flex-grow max-h-[50vh]">
+                <!-- Injected dynamically via JavaScript -->
+            </div>
+
+            <!-- Shop Modal Footer -->
+            <div class="mt-3 pt-3 border-t flex justify-between items-center">
+                <div class="text-sm sm:text-base font-bold text-slate-700">
+                    Your Coins: <span id="shopCoinDisplay" class="text-amber-600 font-extrabold text-lg sm:text-xl">🪙 0</span>
+                </div>
+                <button onclick="closeAvatarShop()" class="bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-base px-6 py-2.5 rounded-xl shadow-md">
+                    Done ➔
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <footer class="mt-4 text-center text-xs text-slate-500 font-medium">
+        Year 3 Educational Game Quiz • Safe & Child-Friendly • Built for UAE Curriculum Standards
+    </footer>
+
+    <script>
+        /* ------------------------------------------------------------------
+           1. AUDIO SYNTHESIZER (Web Audio API - Friendly Chimes & SFX)
+           ------------------------------------------------------------------ */
+        let audioCtx = null;
+        let soundEnabled = true;
+
+        function initAudio() {
+            if (!audioCtx) {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                if (AudioContext) {
+                    audioCtx = new AudioContext();
+                }
+            }
+        }
+
+        function toggleAudio() {
+            soundEnabled = !soundEnabled;
+            document.getElementById('soundIcon').innerText = soundEnabled ? '🔊' : '🔇';
+            if (soundEnabled) playSound('correct');
+        }
+
+        function playSound(type) {
+            if (!soundEnabled) return;
+            initAudio();
+            if (!audioCtx) return;
+
+            const now = audioCtx.currentTime;
+
+            if (type === 'correct') {
+                [523.25, 659.25, 783.99, 1046.50].forEach((freq, idx) => {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(freq, now + idx * 0.08);
+                    gain.gain.setValueAtTime(0.15, now + idx * 0.08);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.08 + 0.25);
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.start(now + idx * 0.08);
+                    osc.stop(now + idx * 0.08 + 0.25);
+                });
+            } else if (type === 'coin') {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(987.77, now);
+                osc.frequency.setValueAtTime(1318.51, now + 0.08);
+                gain.gain.setValueAtTime(0.15, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start(now);
+                osc.stop(now + 0.3);
+            } else if (type === 'wrong') {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(220, now);
+                osc.frequency.exponentialRampToValueAtTime(160, now + 0.2);
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start(now);
+                osc.stop(now + 0.25);
+            } else if (type === 'bounce') {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(400, now);
+                osc.frequency.exponentialRampToValueAtTime(600, now + 0.05);
+                gain.gain.setValueAtTime(0.1, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start(now);
+                osc.stop(now + 0.08);
+            } else if (type === 'pop') {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(300 + Math.random() * 200, now);
+                gain.gain.setValueAtTime(0.08, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start(now);
+                osc.stop(now + 0.1);
+            } else if (type === 'celebration') {
+                const notes = [440, 554.37, 659.25, 880];
+                notes.forEach((freq, i) => {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(freq, now + i * 0.12);
+                    gain.gain.setValueAtTime(0.2, now + i * 0.12);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.12 + 0.4);
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.start(now + i * 0.12);
+                    osc.stop(now + i * 0.12 + 0.4);
+                });
+            }
+        }
+
+        /* ------------------------------------------------------------------
+           2. EXPANDED AVATAR SHOP DATA & STATE (28 Unique Avatars)
+           ------------------------------------------------------------------ */
+        const AVATARS_DATA = [
+            // --- ANIMALS ---
+            { id: 'kitten', emoji: '🐱', name: 'Kitty', category: 'animals', price: 0 },
+            { id: 'puppy', emoji: '🐶', name: 'Puppy', category: 'animals', price: 0 },
+            { id: 'tiger', emoji: '🐯', name: 'Tigger', category: 'animals', price: 20 },
+            { id: 'panda', emoji: '🐼', name: 'Panda', category: 'animals', price: 30 },
+            { id: 'koala', emoji: '🐨', name: 'Koala', category: 'animals', price: 40 },
+            { id: 'bunny', emoji: '🐰', name: 'Bunny', category: 'animals', price: 40 },
+            { id: 'owl', emoji: '🦉', name: 'Wise Owl', category: 'animals', price: 60 },
+            { id: 'fox', emoji: '🦊', name: 'Foxy', category: 'animals', price: 80 },
+
+            // --- FANTASY & MAGIC ---
+            { id: 'unicorn', emoji: '🦄', name: 'Sparkle', category: 'fantasy', price: 20 },
+            { id: 'dragon', emoji: '🐉', name: 'Draco', category: 'fantasy', price: 80 },
+            { id: 'wizard', emoji: '🧙', name: 'Merlin', category: 'fantasy', price: 60 },
+            { id: 'fairy', emoji: '🧚', name: 'Twinkle', category: 'fantasy', price: 50 },
+            { id: 'princess', emoji: '👸', name: 'Royal', category: 'fantasy', price: 60 },
+            { id: 'mermaid', emoji: '🧜‍♀️', name: 'Sea Gem', category: 'fantasy', price: 100 },
+            { id: 'monster', emoji: '👾', name: 'Giggles', category: 'fantasy', price: 120 },
+
+            // --- SCI-FI & HEROES ---
+            { id: 'robot', emoji: '🤖', name: 'Beep Bot', category: 'scifi', price: 0 },
+            { id: 'astronaut', emoji: '👨‍🚀', name: 'Astro', category: 'scifi', price: 30 },
+            { id: 'superhero', emoji: '🦸', name: 'Hero', category: 'scifi', price: 40 },
+            { id: 'alien', emoji: '👽', name: 'Zorblax', category: 'scifi', price: 150 },
+            { id: 'ninja', emoji: '🥷', name: 'Shadow', category: 'scifi', price: 70 },
+            { id: 'pirate', emoji: '🏴‍☠️', name: 'Ahoy', category: 'scifi', price: 60 },
+            { id: 'detective', emoji: '🕵️', name: 'Sleuth', category: 'scifi', price: 50 },
+
+            // --- COOL CHARACTERS ---
+            { id: 'gamer', emoji: '🎮', name: 'Pixel', category: 'cool', price: 50 },
+            { id: 'rockstar', emoji: '🎸', name: 'Rocker', category: 'cool', price: 80 },
+            { id: 'chef', emoji: '🧑‍🍳', name: 'Chef Champ', category: 'cool', price: 40 },
+            { id: 'explorer', emoji: '🤠', name: 'Safari', category: 'cool', price: 60 },
+            { id: 'sports', emoji: '⚽', name: 'Ace', category: 'cool', price: 30 },
+            { id: 'racer', emoji: '🏎️', name: 'Speedy', category: 'cool', price: 100 }
+        ];
+
+        let playerCoins = 0;
+        let currentAvatarId = 'robot';
+        let unlockedAvatars = ['robot', 'kitten', 'puppy'];
+        let selectedCategoryFilter = 'all';
+
+        function loadPlayerProfile() {
+            try {
+                const savedCoins = localStorage.getItem('gq_coins');
+                if (savedCoins !== null) playerCoins = parseInt(savedCoins, 10) || 0;
+
+                const savedAvatar = localStorage.getItem('gq_current_avatar');
+                if (savedAvatar) currentAvatarId = savedAvatar;
+
+                const savedUnlocked = localStorage.getItem('gq_unlocked_avatars');
+                if (savedUnlocked) unlockedAvatars = JSON.parse(savedUnlocked);
+            } catch(e) {
+                console.log('LocalStorage unavailable, using session state.');
+            }
+            updateCoinDisplays();
+            updateAvatarDisplays();
+        }
+
+        function savePlayerProfile() {
+            try {
+                localStorage.setItem('gq_coins', playerCoins);
+                localStorage.setItem('gq_current_avatar', currentAvatarId);
+                localStorage.setItem('gq_unlocked_avatars', JSON.stringify(unlockedAvatars));
+            } catch(e) {}
+        }
+
+        function addCoins(amount) {
+            playerCoins += amount;
+            savePlayerProfile();
+            updateCoinDisplays();
+            playSound('coin');
+
+            // Trigger floating coin particle effect
+            showFloatingCoinText(`+${amount} 🪙`);
+
+            // Visual pop animation on header coin box
+            const coinBox = document.getElementById('coinBox');
+            coinBox.classList.remove('animate-coin-pop');
+            void coinBox.offsetWidth;
+            coinBox.classList.add('animate-coin-pop');
+        }
+
+        function showFloatingCoinText(text) {
+            const container = document.getElementById('floatingCoinsContainer');
+            const el = document.createElement('div');
+            el.className = 'fixed text-2xl font-extrabold text-amber-400 drop-shadow-md animate-float-up pointer-events-none z-50';
+            el.innerText = text;
+            el.style.left = `${50 + (Math.random() * 20 - 10)}%`;
+            el.style.top = `45%`;
+            container.appendChild(el);
+            setTimeout(() => el.remove(), 950);
+        }
+
+        function updateCoinDisplays() {
+            document.getElementById('coinCountDisplay').innerText = playerCoins;
+            document.getElementById('shopCoinDisplay').innerText = `🪙 ${playerCoins}`;
+            document.getElementById('finalCoinDisplay').innerText = `🪙 ${playerCoins} Coins`;
+        }
+
+        function getActiveAvatarEmoji() {
+            const item = AVATARS_DATA.find(a => a.id === currentAvatarId);
+            return item ? item.emoji : '🤖';
+        }
+
+        function updateAvatarDisplays() {
+            const activeEmoji = getActiveAvatarEmoji();
+            document.getElementById('currentAvatarDisplay').innerText = activeEmoji;
+            document.getElementById('mainHeroAvatar').innerText = activeEmoji;
+            document.getElementById('quizMascotIcon').innerText = activeEmoji;
+        }
+
+        function openAvatarShop() {
+            initAudio();
+            renderAvatarShop();
+            document.getElementById('shopModal').classList.remove('hidden');
+        }
+
+        function closeAvatarShop() {
+            document.getElementById('shopModal').classList.add('hidden');
+        }
+
+        function filterAvatarCategory(cat) {
+            selectedCategoryFilter = cat;
+            ['all', 'animals', 'fantasy', 'scifi', 'cool'].forEach(t => {
+                const btn = document.getElementById(`tab-${t}`);
+                if (btn) {
+                    if (t === cat) {
+                        btn.className = 'category-tab-active bg-purple-600 text-white font-bold text-xs sm:text-sm px-3.5 py-2 rounded-xl transition whitespace-nowrap shadow-md';
+                    } else {
+                        btn.className = 'bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold text-xs sm:text-sm px-3.5 py-2 rounded-xl transition whitespace-nowrap';
+                    }
+                }
+            });
+            renderAvatarShop();
+            playSound('pop');
+        }
+
+        function renderAvatarShop() {
+            const grid = document.getElementById('avatarShopGrid');
+            grid.innerHTML = '';
+
+            const filtered = AVATARS_DATA.filter(a => {
+                if (selectedCategoryFilter === 'all') return true;
+                return a.category === selectedCategoryFilter;
+            });
+
+            filtered.forEach(avatar => {
+                const isUnlocked = unlockedAvatars.includes(avatar.id);
+                const isEquipped = currentAvatarId === avatar.id;
+
+                const card = document.createElement('div');
+                card.className = `flex flex-col items-center justify-between p-2.5 rounded-2xl border-2 transition ${
+                    isEquipped 
+                        ? 'bg-amber-100/90 border-amber-400 shadow-md ring-2 ring-amber-400' 
+                        : isUnlocked 
+                        ? 'bg-white border-slate-200 hover:border-slate-300' 
+                        : 'bg-slate-100/80 border-slate-200 opacity-90'
+                }`;
+
+                let buttonHTML = '';
+                if (isEquipped) {
+                    buttonHTML = `<span class="bg-amber-500 text-white font-bold text-xs px-2 py-1 rounded-xl w-full text-center shadow-sm">Equipped ✨</span>`;
+                } else if (isUnlocked) {
+                    buttonHTML = `<button onclick="equipAvatar('${avatar.id}')" class="bg-teal-500 hover:bg-teal-600 text-white font-bold text-xs px-2 py-1 rounded-xl w-full transition active:scale-95 shadow-sm">Equip</button>`;
+                } else {
+                    const canAfford = playerCoins >= avatar.price;
+                    buttonHTML = `<button onclick="buyAvatar('${avatar.id}', ${avatar.price})" class="${canAfford ? 'bg-indigo-500 hover:bg-indigo-600 active:scale-95' : 'bg-slate-400 cursor-not-allowed'} text-white font-bold text-xs px-1.5 py-1 rounded-xl w-full flex items-center justify-center space-x-1 transition shadow-sm">
+                        <span>Buy</span>
+                        <span>🪙${avatar.price}</span>
+                    </button>`;
+                }
+
+                card.innerHTML = `
+                    <div class="text-3xl sm:text-4xl my-1 animate-bounce-slow">${avatar.emoji}</div>
+                    <div class="font-bold text-slate-800 text-xs sm:text-sm text-center line-clamp-1 mb-1.5">${avatar.name}</div>
+                    ${buttonHTML}
+                `;
+
+                grid.appendChild(card);
+            });
+
+            updateCoinDisplays();
+        }
+
+        function equipAvatar(avatarId) {
+            currentAvatarId = avatarId;
+            savePlayerProfile();
+            updateAvatarDisplays();
+            renderAvatarShop();
+            playSound('bounce');
+        }
+
+        function buyAvatar(avatarId, price) {
+            if (playerCoins >= price && !unlockedAvatars.includes(avatarId)) {
+                playerCoins -= price;
+                unlockedAvatars.push(avatarId);
+                currentAvatarId = avatarId;
+                savePlayerProfile();
+                updateCoinDisplays();
+                updateAvatarDisplays();
+                renderAvatarShop();
+                playSound('celebration');
+                confetti({ particleCount: 40, spread: 60, origin: { y: 0.6 } });
+            } else if (playerCoins < price) {
+                playSound('wrong');
+            }
+        }
+
+        /* ------------------------------------------------------------------
+           3. QUESTION DATA BANK (5 Levels x 3 Questions = 15 total)
+           ------------------------------------------------------------------ */
+        const quizData = [
+            // LEVEL 1: 2x, 5x, 10x
+            {
+                level: 1,
+                topic: "2x, 5x, 10x Basics",
+                questions: [
+                    { q: "2 x 5 = ?", options: [10, 8, 12, 15], answer: 10, hint: "Double 5!" },
+                    { q: "5 x 4 = ?", options: [15, 25, 20, 18], answer: 20, hint: "Count by 5s four times!" },
+                    { q: "10 x 3 = ?", options: [30, 20, 40, 35], answer: 30, hint: "3 tens equal..." }
+                ]
+            },
+            // LEVEL 2: 3x and 4x tables
+            {
+                level: 2,
+                topic: "3x and 4x Tables Intro",
+                questions: [
+                    { q: "3 x 4 = ?", options: [9, 12, 15, 16], answer: 12, hint: "3 groups of 4 is 12!" },
+                    { q: "4 x 4 = ?", options: [12, 14, 16, 20], answer: 16, hint: "Double 4 is 8, double it again!" },
+                    { q: "3 x 6 = ?", options: [18, 15, 21, 12], answer: 18, hint: "6, 12, and 6 more!" }
+                ]
+            },
+            // LEVEL 3: 8x intro and mixed 3x, 4x, 5x
+            {
+                level: 3,
+                topic: "8x Table Intro & Mixed Tables",
+                questions: [
+                    { q: "8 x 2 = ?", options: [14, 16, 18, 12], answer: 16, hint: "Double 8!" },
+                    { q: "4 x 5 = ?", options: [20, 25, 15, 24], answer: 20, hint: "Count by 5s four times!" },
+                    { q: "8 x 3 = ?", options: [21, 27, 24, 32], answer: 24, hint: "8 + 8 + 8 = ?" }
+                ]
+            },
+            // LEVEL 4: Missing numbers & problem solving
+            {
+                level: 4,
+                topic: "Missing Numbers & Word Problems",
+                questions: [
+                    { q: "? x 4 = 24", options: [5, 6, 7, 8], answer: 6, hint: "How many 4s make 24?" },
+                    { q: "3 x ? = 27", options: [8, 7, 9, 10], answer: 9, hint: "Count by 3s up to 27!" },
+                    { q: "If 1 cat has 4 legs, how many legs do 8 cats have?", options: [28, 32, 36, 24], answer: 32, hint: "Calculate 8 x 4!" }
+                ]
+            },
+            // LEVEL 5: Master Challenge
+            {
+                level: 5,
+                topic: "Master Challenge (up to 10x10)",
+                questions: [
+                    { q: "8 x 5 = ?", options: [35, 40, 45, 48], answer: 40, hint: "Count by 5s eight times!" },
+                    { q: "4 x 8 = ?", options: [28, 32, 36, 40], answer: 32, hint: "Double 8 is 16, double 16 is..." },
+                    { q: "9 x 10 = ?", options: [80, 85, 90, 100], answer: 90, hint: "9 tens!" }
+                ]
+            }
+        ];
+
+        /* ------------------------------------------------------------------
+           4. GAME FLOW STATE MANAGEMENT
+           ------------------------------------------------------------------ */
+        let currentLevelIndex = 0;
+        let currentQuestionIndex = 0;
+        let totalStars = 0;
+        let isAnsweringLocked = false;
+
+        const optionColors = [
+            'bg-rose-500 hover:bg-rose-600 text-white',
+            'bg-amber-500 hover:bg-amber-600 text-white',
+            'bg-teal-500 hover:bg-teal-600 text-white',
+            'bg-indigo-500 hover:bg-indigo-600 text-white'
+        ];
+
+        function hideAllScreens() {
+            document.getElementById('startScreen').classList.add('hidden');
+            document.getElementById('quizScreen').classList.add('hidden');
+            document.getElementById('celebrationScreen').classList.add('hidden');
+            document.getElementById('rewardGameScreen').classList.add('hidden');
+            document.getElementById('victoryScreen').classList.add('hidden');
+        }
+
+        function startQuiz() {
+            initAudio();
+            currentLevelIndex = 0;
+            currentQuestionIndex = 0;
+            totalStars = 0;
+            document.getElementById('starScore').innerText = totalStars;
+            showLevelQuestion();
+        }
+
+        function showLevelQuestion() {
+            hideAllScreens();
+            document.getElementById('quizScreen').classList.remove('hidden');
+
+            const currentLevelData = quizData[currentLevelIndex];
+            const currentQuestion = currentLevelData.questions[currentQuestionIndex];
+
+            document.getElementById('levelBadge').innerText = `Level ${currentLevelIndex + 1}`;
+            document.getElementById('questionCount').innerText = `Question ${currentQuestionIndex + 1}/3`;
+            document.getElementById('levelTopicTitle').innerText = `Topic: ${currentLevelData.topic}`;
+            
+            const progressPercent = ((currentQuestionIndex) / 3) * 100;
+            document.getElementById('progressBar').style.width = `${progressPercent}%`;
+
+            document.getElementById('questionText').innerText = currentQuestion.q;
+            document.getElementById('quizMascotIcon').innerText = getActiveAvatarEmoji();
+
+            const feedbackBanner = document.getElementById('feedbackBanner');
+            feedbackBanner.className = 'hidden rounded-2xl p-4 text-center font-bold text-lg sm:text-xl transition-all';
+
+            const optionsGrid = document.getElementById('optionsGrid');
+            optionsGrid.innerHTML = '';
+            isAnsweringLocked = false;
+
+            currentQuestion.options.forEach((optValue, idx) => {
+                const btn = document.createElement('button');
+                btn.className = `option-btn ${optionColors[idx % optionColors.length]} text-3xl font-extrabold py-5 rounded-2xl w-full flex items-center justify-center border-2 border-white/40`;
+                btn.innerText = optValue;
+                btn.onclick = () => handleAnswer(optValue, currentQuestion.answer, currentQuestion.hint);
+                optionsGrid.appendChild(btn);
+            });
+        }
+
+        function handleAnswer(selected, correct, hint) {
+            if (isAnsweringLocked) return;
+            isAnsweringLocked = true;
+
+            const feedbackBanner = document.getElementById('feedbackBanner');
+            feedbackBanner.classList.remove('hidden');
+
+            if (selected === correct) {
+                playSound('correct');
+                totalStars++;
+                document.getElementById('starScore').innerText = totalStars;
+
+                // AWARD +10 COINS FOR CORRECT ANSWER
+                addCoins(10);
+
+                feedbackBanner.className = 'bg-emerald-100 border-2 border-emerald-400 text-emerald-800 rounded-2xl p-4 text-center font-bold text-lg sm:text-xl animate-bounce-slow';
+                feedbackBanner.innerHTML = '✨ Correct! +10 Coins 🪙 ⭐';
+
+                confetti({ particleCount: 30, spread: 60, origin: { y: 0.7 } });
+
+                setTimeout(() => {
+                    currentQuestionIndex++;
+                    if (currentQuestionIndex < 3) {
+                        showLevelQuestion();
+                    } else {
+                        showLevelCelebration();
+                    }
+                }, 1300);
+
+            } else {
+                playSound('wrong');
+                feedbackBanner.className = 'bg-amber-100 border-2 border-amber-400 text-amber-800 rounded-2xl p-4 text-center font-bold text-lg sm:text-xl';
+                feedbackBanner.innerHTML = `💡 Nice try! Hint: ${hint}`;
+
+                setTimeout(() => {
+                    isAnsweringLocked = false;
+                }, 1600);
+            }
+        }
+
+        function showLevelCelebration() {
+            hideAllScreens();
+            playSound('celebration');
+
+            // BONUS +50 COINS FOR LEVEL COMPLETION
+            addCoins(50);
+
+            document.getElementById('celebrationScreen').classList.remove('hidden');
+            document.getElementById('summaryLevelText').innerText = `Level ${currentLevelIndex + 1}`;
+
+            confetti({ particleCount: 100, spread: 100, origin: { y: 0.5 } });
+        }
+
+        function proceedToNextLevel() {
+            currentLevelIndex++;
+            currentQuestionIndex = 0;
+
+            if (currentLevelIndex < quizData.length) {
+                showLevelQuestion();
+            } else {
+                showVictoryScreen();
+            }
+        }
+
+        function showVictoryScreen() {
+            hideAllScreens();
+            playSound('celebration');
+            document.getElementById('victoryScreen').classList.remove('hidden');
+
+            const end = Date.now() + 2500;
+            (function frame() {
+                confetti({ particleCount: 4, angle: 60, spread: 55, origin: { x: 0 } });
+                confetti({ particleCount: 4, angle: 120, spread: 55, origin: { x: 1 } });
+                if (Date.now() < end) requestAnimationFrame(frame);
+            }());
+        }
+
+        function resetGame() {
+            currentLevelIndex = 0;
+            currentQuestionIndex = 0;
+            totalStars = 0;
+            hideAllScreens();
+            document.getElementById('startScreen').classList.remove('hidden');
+        }
+
+
+        /* ------------------------------------------------------------------
+           5. BRICK BREAKER REWARD MINI-GAME ENGINE
+           ------------------------------------------------------------------ */
+        let canvas, ctx;
+        let animationFrameId;
+        let ball, paddle, bricks;
+        let gameScore = 0;
+        let isGameRunning = false;
+        let isBallLaunched = false;
+
+        const BRICK_ROWS = 4;
+        const BRICK_COLS = 7;
+        const rainbowColors = ['#FF5964', '#FF9F1C', '#2EC4B6', '#3A86FF', '#8338EC'];
+
+        function startBrickBreakerReward() {
+            hideAllScreens();
+            document.getElementById('rewardGameScreen').classList.remove('hidden');
+            document.getElementById('nextLevelBtn').classList.add('hidden');
+            document.getElementById('gameOverlay').classList.remove('hidden');
+            document.getElementById('overlayTitle').innerText = `Level ${currentLevelIndex + 1} Reward Game!`;
+            document.getElementById('overlaySubtitle').innerText = "Smash all rainbow bricks to complete the level!";
+            document.getElementById('startGameBtn').classList.remove('hidden');
+
+            canvas = document.getElementById('brickCanvas');
+            ctx = canvas.getContext('2d');
+
+            gameScore = 0;
+            document.getElementById('gameScore').innerText = gameScore;
+
+            initGameObjects();
+            drawGame();
+            setupControls();
+        }
+
+        function initGameObjects() {
+            paddle = {
+                width: 100,
+                height: 14,
+                x: (canvas.width - 100) / 2,
+                y: canvas.height - 25,
+                dx: 0,
+                speed: 7
+            };
+
+            ball = {
+                x: canvas.width / 2,
+                y: paddle.y - 10,
+                radius: 8,
+                dx: (Math.random() > 0.5 ? 1 : -1) * 3.5,
+                dy: -4,
+                speed: 4
+            };
+
+            bricks = [];
+            const padding = 8;
+            const offsetTop = 35;
+            const offsetLeft = 15;
+            const brickWidth = (canvas.width - (offsetLeft * 2) - (padding * (BRICK_COLS - 1))) / BRICK_COLS;
+            const brickHeight = 22;
+
+            for (let r = 0; r < BRICK_ROWS; r++) {
+                bricks[r] = [];
+                for (let c = 0; c < BRICK_COLS; c++) {
+                    bricks[r][c] = {
+                        x: offsetLeft + c * (brickWidth + padding),
+                        y: offsetTop + r * (brickHeight + padding),
+                        width: brickWidth,
+                        height: brickHeight,
+                        color: rainbowColors[r % rainbowColors.length],
+                        status: 1
+                    };
+                }
+            }
+        }
+
+        function launchBall() {
+            initAudio();
+            document.getElementById('gameOverlay').classList.add('hidden');
+            isGameRunning = true;
+            isBallLaunched = true;
+            loopGame();
+        }
+
+        function loopGame() {
+            if (!isGameRunning) return;
+            updateGame();
+            drawGame();
+            animationFrameId = requestAnimationFrame(loopGame);
+        }
+
+        function updateGame() {
+            paddle.x += paddle.dx;
+            if (paddle.x < 0) paddle.x = 0;
+            if (paddle.x + paddle.width > canvas.width) paddle.x = canvas.width - paddle.width;
+
+            if (!isBallLaunched) return;
+
+            ball.x += ball.dx;
+            ball.y += ball.dy;
+
+            // Wall Collisions
+            if (ball.x + ball.radius > canvas.width || ball.x - ball.radius < 0) {
+                ball.dx *= -1;
+                playSound('bounce');
+            }
+            if (ball.y - ball.radius < 0) {
+                ball.dy *= -1;
+                playSound('bounce');
+            }
+
+            // Paddle Collision
+            if (
+                ball.y + ball.radius >= paddle.y &&
+                ball.y - ball.radius <= paddle.y + paddle.height &&
+                ball.x >= paddle.x &&
+                ball.x <= paddle.x + paddle.width
+            ) {
+                let hitPoint = (ball.x - (paddle.x + paddle.width / 2)) / (paddle.width / 2);
+                ball.dx = hitPoint * 5;
+                ball.dy = -Math.abs(ball.dy);
+                playSound('bounce');
+            }
+
+            // Bottom Boundary Reset
+            if (ball.y - ball.radius > canvas.height) {
+                playSound('wrong');
+                ball.x = paddle.x + paddle.width / 2;
+                ball.y = paddle.y - 10;
+                ball.dy = -4;
+                ball.dx = (Math.random() > 0.5 ? 1 : -1) * 3.5;
+            }
+
+            // Brick Collisions
+            let activeBricks = 0;
+            for (let r = 0; r < BRICK_ROWS; r++) {
+                for (let c = 0; c < BRICK_COLS; c++) {
+                    let b = bricks[r][c];
+                    if (b.status === 1) {
+                        activeBricks++;
+                        if (
+                            ball.x > b.x &&
+                            ball.x < b.x + b.width &&
+                            ball.y - ball.radius < b.y + b.height &&
+                            ball.y + ball.radius > b.y
+                        ) {
+                            ball.dy *= -1;
+                            b.status = 0;
+                            gameScore += 10;
+                            document.getElementById('gameScore').innerText = gameScore;
+                            playSound('pop');
+                        }
+                    }
+                }
+            }
+
+            if (activeBricks === 0) {
+                isGameRunning = false;
+                cancelAnimationFrame(animationFrameId);
+                playSound('celebration');
+                
+                document.getElementById('gameOverlay').classList.remove('hidden');
+                document.getElementById('overlayTitle').innerText = "Awesome Victory! 🌈";
+                document.getElementById('overlaySubtitle').innerText = "You smashed all rainbow bricks!";
+                document.getElementById('startGameBtn').classList.add('hidden');
+                document.getElementById('nextLevelBtn').classList.remove('hidden');
+            }
+        }
+
+        function drawGame() {
+            ctx.fillStyle = '#0f172a';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            for (let r = 0; r < BRICK_ROWS; r++) {
+                for (let c = 0; c < BRICK_COLS; c++) {
+                    let b = bricks[r][c];
+                    if (b.status === 1) {
+                        ctx.fillStyle = b.color;
+                        ctx.beginPath();
+                        ctx.roundRect(b.x, b.y, b.width, b.height, 6);
+                        ctx.fill();
+
+                        ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+                        ctx.fillRect(b.x + 2, b.y + 2, b.width - 4, 3);
+                    }
+                }
+            }
+
+            ctx.fillStyle = '#FF9F1C';
+            ctx.beginPath();
+            ctx.roundRect(paddle.x, paddle.y, paddle.width, paddle.height, 8);
+            ctx.fill();
+
+            ctx.fillStyle = '#2EC4B6';
+            ctx.beginPath();
+            ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.strokeStyle = '#FFFFFF';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+        }
+
+        function setupControls() {
+            window.onkeydown = (e) => {
+                if (e.key === 'ArrowLeft' || e.key === 'a') paddle.dx = -paddle.speed;
+                if (e.key === 'ArrowRight' || e.key === 'd') paddle.dx = paddle.speed;
+            };
+            window.onkeyup = (e) => {
+                if (['ArrowLeft', 'ArrowRight', 'a', 'd'].includes(e.key)) paddle.dx = 0;
+            };
+
+            const handleMove = (clientX) => {
+                const rect = canvas.getBoundingClientRect();
+                const scaleX = canvas.width / rect.width;
+                const canvasX = (clientX - rect.left) * scaleX;
+                paddle.x = canvasX - paddle.width / 2;
+            };
+
+            canvas.onmousemove = (e) => handleMove(e.clientX);
+            canvas.ontouchmove = (e) => {
+                if (e.touches.length > 0) handleMove(e.touches[0].clientX);
+            };
+
+            const btnLeft = document.getElementById('btnLeft');
+            const btnRight = document.getElementById('btnRight');
+
+            btnLeft.ontouchstart = (e) => { e.preventDefault(); paddle.dx = -paddle.speed; };
+            btnLeft.ontouchend = (e) => { e.preventDefault(); paddle.dx = 0; };
+            btnLeft.onmousedown = () => paddle.dx = -paddle.speed;
+            btnLeft.onmouseup = () => paddle.dx = 0;
+
+            btnRight.ontouchstart = (e) => { e.preventDefault(); paddle.dx = paddle.speed; };
+            btnRight.ontouchend = (e) => { e.preventDefault(); paddle.dx = 0; };
+            btnRight.onmousedown = () => paddle.dx = paddle.speed;
+            btnRight.onmouseup = () => paddle.dx = 0;
+        }
+
+        window.onload = function() {
+            loadPlayerProfile();
+        };
+    </script>
+</body>
+</html>

@@ -1,0 +1,1086 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Do You Dare? - Endless Math Quiz & Mini-Game</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome CDN for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap');
+
+        body {
+            font-family: 'Fredoka', sans-serif;
+            background: linear-gradient(-45deg, #ff9a9e, #fad0c4, #a1c4fd, #c2e9fb, #e0c3fc, #8ec5fc);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            min-height: 100vh;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .rainbow-text {
+            background: linear-gradient(to right, #ef4444, #f97316, #eab308, #22c55e, #3b82f6, #a855f7);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .rainbow-btn {
+            background: linear-gradient(135deg, #ff7eb3, #ff758c, #4299e1, #48bb78);
+            background-size: 200% 200%;
+            transition: all 0.3s ease;
+        }
+        .rainbow-btn:hover {
+            background-position: right center;
+            transform: scale(1.03);
+        }
+
+        .bounce-gentle {
+            animation: bounce 2s infinite;
+        }
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
+        }
+
+        .star-pop {
+            animation: pop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        @keyframes pop {
+            0% { transform: scale(0); }
+            80% { transform: scale(1.3); }
+            100% { transform: scale(1); }
+        }
+
+        .avatar-option {
+            transition: all 0.2s ease;
+        }
+        .avatar-option.selected {
+            transform: scale(1.15);
+            border-color: #3b82f6;
+            background-color: #dbeafe;
+            box-shadow: 0 0 15px rgba(59, 130, 246, 0.5);
+        }
+
+        /* Spinner wheel styles */
+        #wheelCanvas {
+            transition: transform 4s cubic-bezier(0.15, 0.9, 0.2, 1);
+        }
+
+        canvas {
+            touch-action: none;
+        }
+    </style>
+</head>
+<body class="flex flex-col items-center justify-between min-h-screen p-2 sm:p-4 text-gray-800">
+
+    <!-- Top Header Navigation / Profile Stats -->
+    <header class="w-full max-w-3xl bg-white/90 backdrop-blur-md rounded-3xl p-3 sm:p-4 shadow-xl border-4 border-white mb-3 flex flex-wrap items-center justify-between gap-2">
+        <div class="flex items-center space-x-3">
+            <button onclick="openProfileModal()" class="w-12 h-12 bg-amber-100 hover:bg-amber-200 rounded-2xl flex items-center justify-center text-3xl shadow-md border-2 border-amber-300 transition active:scale-95 relative" title="Change Profile">
+                <span id="hud-avatar">🚀</span>
+                <span class="absolute -bottom-1 -right-1 bg-blue-500 text-white text-[10px] p-1 rounded-full w-4 h-4 flex items-center justify-center">✏️</span>
+            </button>
+            <div>
+                <h1 id="hud-player-name" class="text-lg sm:text-xl font-extrabold rainbow-text leading-tight">Dare Hero</h1>
+                <p id="hud-players-count" class="text-xs text-purple-600 font-semibold">1 Player Ready</p>
+            </div>
+        </div>
+
+        <div class="flex items-center space-x-2 sm:space-x-4">
+            <div class="bg-purple-100 border-2 border-purple-300 px-3 py-1 sm:px-4 sm:py-2 rounded-2xl flex items-center space-x-1 shadow-sm">
+                <span class="text-xs font-bold text-purple-800 uppercase">Level:</span>
+                <span id="hud-level-num" class="text-lg sm:text-2xl font-extrabold text-purple-900">1</span>
+            </div>
+
+            <div class="bg-amber-100 border-2 border-amber-300 px-3 py-1 sm:px-4 sm:py-2 rounded-2xl flex items-center space-x-2 shadow-sm">
+                <span class="text-xl sm:text-2xl text-amber-500">⭐</span>
+                <span id="star-score" class="text-lg sm:text-2xl font-extrabold text-amber-700">0</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Infinite Level Progress Tracker Bar -->
+    <div class="w-full max-w-3xl bg-white/80 backdrop-blur-sm rounded-2xl p-2 sm:p-3 shadow-md mb-4 border-2 border-white">
+        <div class="flex items-center justify-between px-2 mb-1">
+            <span class="text-xs font-bold text-purple-700" id="infinite-level-label">🚀 Infinite Quest Level 1</span>
+            <span class="text-xs font-bold text-indigo-600" id="high-level-label">Best Record: Level 1 🏆</span>
+        </div>
+        <div class="w-full h-3 bg-gray-200 rounded-full overflow-hidden p-0.5 border border-gray-300">
+            <div id="infinite-progress-bar" class="h-full bg-gradient-to-r from-green-400 via-emerald-500 to-teal-400 rounded-full transition-all duration-500" style="width: 33%"></div>
+        </div>
+    </div>
+
+    <!-- MAIN GAME CONTAINER -->
+    <main class="w-full max-w-3xl flex-1 flex flex-col justify-center my-auto">
+
+        <!-- SCREEN 0: OPTIONAL PROFILE & PLAYERS SETUP -->
+        <div id="profile-screen" class="bg-white/95 backdrop-blur-md rounded-3xl p-4 sm:p-8 shadow-2xl border-4 border-purple-300 text-center flex flex-col items-center">
+            <div class="text-5xl sm:text-6xl mb-1 bounce-gentle">🎡</div>
+            <h2 class="text-3xl sm:text-4xl font-extrabold rainbow-text mb-1">Do You Dare!</h2>
+            <p class="text-xs sm:text-sm text-gray-500 font-semibold mb-3">Endless Math Quiz & Wheel Dares!</p>
+
+            <!-- Avatar Selection Grid -->
+            <div class="w-full max-w-md bg-purple-50 p-3 rounded-2xl border-2 border-purple-200 mb-3">
+                <label class="block text-xs font-bold text-purple-800 mb-2">Pick Main Hero Avatar:</label>
+                <div class="grid grid-cols-4 gap-2">
+                    <button onclick="selectAvatar('🚀')" class="avatar-option p-2 bg-white rounded-xl text-2xl border-2 border-gray-200 shadow-sm hover:scale-105">🚀</button>
+                    <button onclick="selectAvatar('🦄')" class="avatar-option p-2 bg-white rounded-xl text-2xl border-2 border-gray-200 shadow-sm hover:scale-105">🦄</button>
+                    <button onclick="selectAvatar('🦁')" class="avatar-option p-2 bg-white rounded-xl text-2xl border-2 border-gray-200 shadow-sm hover:scale-105">🦁</button>
+                    <button onclick="selectAvatar('🦖')" class="avatar-option p-2 bg-white rounded-xl text-2xl border-2 border-gray-200 shadow-sm hover:scale-105">🦖</button>
+                    <button onclick="selectAvatar('🌈')" class="avatar-option p-2 bg-white rounded-xl text-2xl border-2 border-gray-200 shadow-sm hover:scale-105">🌈</button>
+                    <button onclick="selectAvatar('🤖')" class="avatar-option p-2 bg-white rounded-xl text-2xl border-2 border-gray-200 shadow-sm hover:scale-105">🤖</button>
+                    <button onclick="selectAvatar('🎨')" class="avatar-option p-2 bg-white rounded-xl text-2xl border-2 border-gray-200 shadow-sm hover:scale-105">🎨</button>
+                    <button onclick="selectAvatar('🌟')" class="avatar-option p-2 bg-white rounded-xl text-2xl border-2 border-gray-200 shadow-sm hover:scale-105">🌟</button>
+                </div>
+            </div>
+
+            <!-- Main Hero Name Input -->
+            <div class="w-full max-w-md mb-3">
+                <label for="player-name-input" class="block text-xs font-bold text-purple-800 mb-1 text-left px-1">Your Main Hero Name:</label>
+                <input type="text" id="player-name-input" maxlength="15" placeholder="e.g. Math Hero Alex" class="w-full text-center text-lg font-bold p-2 sm:p-3 rounded-2xl border-2 border-purple-300 focus:outline-none focus:border-purple-500 shadow-inner text-purple-900">
+            </div>
+
+            <!-- Group Players List Manager -->
+            <div class="w-full max-w-md bg-amber-50 p-3 rounded-2xl border-2 border-amber-200 mb-4 text-left">
+                <label class="block text-xs font-bold text-amber-900 mb-1">👥 Who is playing? (Add names for the Spinner Wheel!):</label>
+                
+                <div class="flex gap-2 mb-2">
+                    <input type="text" id="new-player-input" maxlength="12" placeholder="e.g. Sam, Mom, Alex" class="flex-1 text-sm font-bold p-2 rounded-xl border border-amber-300 focus:outline-none">
+                    <button onclick="addPlayerFromInput()" class="bg-amber-500 hover:bg-amber-600 text-white font-bold px-4 py-2 rounded-xl text-sm transition">
+                        + Add
+                    </button>
+                </div>
+
+                <!-- Names Tags Container -->
+                <div id="players-tag-list" class="flex flex-wrap gap-2 pt-1 max-h-24 overflow-y-auto">
+                    <!-- Dynamic Badges rendered here -->
+                </div>
+            </div>
+
+            <!-- Profile Action Buttons -->
+            <div class="flex flex-col sm:flex-row gap-3 w-full max-w-md">
+                <button onclick="saveProfileAndStart()" class="rainbow-btn flex-1 text-white font-extrabold text-lg sm:text-xl py-3 sm:py-4 rounded-2xl shadow-lg hover:scale-105 active:scale-95 transition">
+                    Start Endless Quest! 🚀
+                </button>
+                <button onclick="skipProfileAndStart()" class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold text-sm sm:text-base py-3 sm:py-4 px-5 rounded-2xl transition">
+                    Skip & Quick Play ⚡
+                </button>
+            </div>
+        </div>
+
+        <!-- SCREEN 1: MATH QUIZ -->
+        <div id="quiz-screen" class="hidden bg-white/95 backdrop-blur-md rounded-3xl p-4 sm:p-8 shadow-2xl border-4 border-purple-200 text-center flex flex-col items-center">
+            
+            <div class="flex justify-between items-center w-full mb-2">
+                <span id="level-title-display" class="bg-purple-100 text-purple-700 font-bold px-3 py-1 rounded-full text-xs sm:text-sm border border-purple-300">
+                    Level 1: Addition & Subtraction
+                </span>
+                <span id="question-tracker" class="bg-blue-100 text-blue-700 font-bold px-3 py-1 rounded-full text-xs sm:text-sm border border-blue-300">
+                    Question 1 of 3
+                </span>
+            </div>
+
+            <!-- Cartoon Mascot Header -->
+            <div class="my-2 flex items-center justify-center">
+                <span id="mascot-emoji" class="text-5xl sm:text-6xl bounce-gentle">🐱</span>
+            </div>
+
+            <!-- Question Box -->
+            <div class="w-full bg-gradient-to-r from-indigo-50 via-purple-50 to-pink-50 rounded-2xl p-6 sm:p-8 my-3 border-2 border-indigo-100 shadow-inner">
+                <p id="math-question" class="text-3xl sm:text-5xl font-extrabold text-indigo-900 tracking-wide">
+                    24 + 15 = ?
+                </p>
+            </div>
+
+            <!-- Feedback Display Banner -->
+            <div id="feedback-banner" class="h-10 my-1 flex items-center justify-center text-lg sm:text-xl font-bold transition-all">
+                <span class="text-purple-600">Tap the right answer! 👇</span>
+            </div>
+
+            <!-- Multiple Choice Grid -->
+            <div class="grid grid-cols-2 gap-3 sm:gap-4 w-full mt-2">
+                <button onclick="handleAnswerSelect(0)" id="btn-0" class="ans-btn bg-pink-400 hover:bg-pink-500 text-white font-extrabold text-2xl sm:text-3xl p-4 sm:p-6 rounded-2xl shadow-lg transform active:scale-95 transition border-b-4 border-pink-600 flex items-center justify-center">
+                    --
+                </button>
+                <button onclick="handleAnswerSelect(1)" id="btn-1" class="ans-btn bg-sky-400 hover:bg-sky-500 text-white font-extrabold text-2xl sm:text-3xl p-4 sm:p-6 rounded-2xl shadow-lg transform active:scale-95 transition border-b-4 border-sky-600 flex items-center justify-center">
+                    --
+                </button>
+                <button onclick="handleAnswerSelect(2)" id="btn-2" class="ans-btn bg-emerald-400 hover:bg-emerald-500 text-white font-extrabold text-2xl sm:text-3xl p-4 sm:p-6 rounded-2xl shadow-lg transform active:scale-95 transition border-b-4 border-emerald-600 flex items-center justify-center">
+                    --
+                </button>
+                <button onclick="handleAnswerSelect(3)" id="btn-3" class="ans-btn bg-amber-400 hover:bg-amber-500 text-white font-extrabold text-2xl sm:text-3xl p-4 sm:p-6 rounded-2xl shadow-lg transform active:scale-95 transition border-b-4 border-amber-600 flex items-center justify-center">
+                    --
+                </button>
+            </div>
+        </div>
+
+        <!-- SCREEN 2: DARE & SPINNER WHEEL SCREEN -->
+        <div id="dare-screen" class="hidden bg-white/95 backdrop-blur-md rounded-3xl p-4 sm:p-6 shadow-2xl border-4 border-pink-300 text-center flex flex-col items-center relative overflow-hidden">
+            <div class="bg-pink-100 text-pink-700 font-extrabold px-4 py-1 rounded-full text-xs sm:text-sm uppercase tracking-wider mb-2 border border-pink-300">
+                🔥 DARE TIME! 🔥
+            </div>
+            
+            <h2 class="text-2xl sm:text-3xl font-extrabold rainbow-text mb-1">WHO DOES THE DARE?</h2>
+
+            <!-- SPINNER WHEEL CONTAINER -->
+            <div class="relative flex flex-col items-center justify-center my-2">
+                <!-- Pointer Arrow -->
+                <div class="w-0 h-0 border-l-[15px] border-l-transparent border-r-[15px] border-r-transparent border-t-[25px] border-t-red-500 absolute -top-3 z-20 drop-shadow-md"></div>
+                
+                <canvas id="wheelCanvas" width="260" height="260" class="rounded-full border-4 border-amber-300 shadow-xl bg-white"></canvas>
+            </div>
+
+            <!-- Spin Action Button -->
+            <button id="spin-wheel-btn" onclick="spinWheel()" class="bg-amber-400 hover:bg-amber-500 active:scale-95 text-amber-950 font-extrabold text-lg px-6 py-2 rounded-full shadow-lg border-b-4 border-amber-600 transition mb-3">
+                🎡 SPIN THE WHEEL! 🎡
+            </button>
+
+            <!-- Winner Player Banner -->
+            <div id="selected-player-banner" class="hidden w-full bg-yellow-100 border-2 border-yellow-400 text-yellow-900 font-extrabold py-2 px-4 rounded-2xl mb-3 text-lg sm:text-xl star-pop">
+                🎉 <span id="winner-name-display" class="text-pink-600">Alex</span> HAS TO DO THIS DARE! 🎉
+            </div>
+
+            <!-- Dare Card Inner -->
+            <div class="w-full bg-gradient-to-r from-amber-50 via-rose-50 to-purple-50 rounded-2xl p-4 sm:p-6 my-1 border-4 border-dashed border-pink-400 shadow-md flex flex-col items-center">
+                <div class="flex items-center space-x-2 mb-1">
+                    <span id="dare-icon" class="text-3xl">🐸</span>
+                    <span class="font-bold text-xs text-purple-600 uppercase">Your Challenge:</span>
+                </div>
+                <p id="dare-text-display" class="text-lg sm:text-2xl font-extrabold text-purple-900 leading-snug">
+                    Do 3 giant frog hops while making frog noises! 🐸
+                </p>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex flex-col sm:flex-row items-center justify-center gap-3 w-full mt-3">
+                <button onclick="completeDare()" class="rainbow-btn w-full sm:w-auto text-white font-extrabold text-lg sm:text-xl px-8 py-3 rounded-full shadow-xl hover:scale-105 active:scale-95 transition flex items-center justify-center space-x-2">
+                    <span>I DID THE DARE! 🎉</span>
+                </button>
+                <button onclick="skipDare()" class="w-full sm:w-auto bg-gray-200 hover:bg-gray-300 text-gray-600 font-bold text-sm sm:text-base px-6 py-3 rounded-full transition">
+                    Skip Dare ➡️
+                </button>
+            </div>
+        </div>
+
+        <!-- SCREEN 3: MINI-GAME REWARD INTRO -->
+        <div id="reward-intro-screen" class="hidden bg-white/95 backdrop-blur-md rounded-3xl p-6 sm:p-8 shadow-2xl border-4 border-yellow-300 text-center flex flex-col items-center">
+            <div class="text-6xl my-2">🎉🏆🎉</div>
+            <h2 id="reward-level-title" class="text-3xl sm:text-4xl font-extrabold text-purple-700 mb-2">Level 1 Complete!</h2>
+            <p class="text-lg text-gray-600 mb-4">You earned <span id="earned-time-display" class="font-extrabold text-amber-500 text-2xl">25</span> seconds of Rocket Shooting Time!</p>
+
+            <div class="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl p-4 mb-6 border border-blue-200 max-w-md w-full">
+                <div class="text-4xl mb-2">🚀 vs 🪨</div>
+                <h3 class="font-bold text-indigo-900 text-lg mb-1">Asteroid Shooter Reward Game!</h3>
+                <p class="text-sm text-gray-600">Drag or tap Left/Right to steer your rocket and blast space rocks!</p>
+            </div>
+
+            <button onclick="startMiniGame()" class="rainbow-btn text-white font-extrabold text-2xl px-8 py-4 rounded-full shadow-xl hover:scale-105 active:scale-95 transition">
+                Launch Rocket! 🚀
+            </button>
+        </div>
+
+        <!-- SCREEN 4: MINI-GAME CANVAS -->
+        <div id="minigame-screen" class="hidden bg-slate-900 rounded-3xl p-3 sm:p-4 shadow-2xl border-4 border-indigo-400 text-center flex flex-col items-center relative overflow-hidden">
+            
+            <!-- Mini-Game HUD Header -->
+            <div class="w-full flex justify-between items-center mb-2 px-2 text-white">
+                <div class="bg-indigo-900/80 px-3 py-1 rounded-xl border border-indigo-500 flex items-center space-x-1">
+                    <span class="text-yellow-400 text-lg">⏳</span>
+                    <span id="game-timer" class="font-bold text-xl text-yellow-300">20s</span>
+                </div>
+                <div class="bg-indigo-900/80 px-3 py-1 rounded-xl border border-indigo-500 flex items-center space-x-1">
+                    <span class="text-pink-400 text-lg">💥</span>
+                    <span id="game-score" class="font-bold text-xl text-pink-300">0 pts</span>
+                </div>
+            </div>
+
+            <!-- Mini Game Canvas -->
+            <div class="relative w-full flex justify-center">
+                <canvas id="gameCanvas" width="360" height="420" class="bg-slate-950 rounded-2xl border-2 border-indigo-800 shadow-inner max-w-full h-auto"></canvas>
+            </div>
+
+            <!-- Touch Controls for Mobile / Easy Play -->
+            <div class="w-full flex justify-between items-center gap-2 mt-3 px-2">
+                <button id="btn-left" class="bg-indigo-600 active:bg-indigo-800 text-white font-bold py-3 px-6 rounded-2xl flex-1 text-2xl shadow-lg border-b-4 border-indigo-900">
+                    ⬅ Left
+                </button>
+                <button id="btn-shoot" class="bg-rose-500 active:bg-rose-700 text-white font-bold py-3 px-4 rounded-2xl flex-1 text-2xl shadow-lg border-b-4 border-rose-900">
+                    🔥 FIRE!
+                </button>
+                <button id="btn-right" class="bg-indigo-600 active:bg-indigo-800 text-white font-bold py-3 px-6 rounded-2xl flex-1 text-2xl shadow-lg border-b-4 border-indigo-900">
+                    Right ➡️
+                </button>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Safe Footer -->
+    <footer class="w-full text-center text-xs text-purple-800 font-bold py-2 opacity-80">
+        ✨ Endless Quest • Designed for Year 3 Kids • Safe & Ad-Free ✨
+    </footer>
+
+    <!-- Confetti Overlay Canvas -->
+    <canvas id="confettiCanvas" class="pointer-events-none fixed top-0 left-0 w-full h-full z-50"></canvas>
+
+    <script>
+        // ==========================================
+        // PROFILE & MULTI-PLAYER STATE
+        // ==========================================
+
+        let selectedAvatarEmoji = '🚀';
+        let playerNickname = 'Dare Hero';
+        let groupPlayers = ['Dare Hero'];
+        let highestLevelReached = 1;
+
+        function loadSavedProfile() {
+            const savedAvatar = localStorage.getItem('dyd_avatar');
+            const savedName = localStorage.getItem('dyd_name');
+            const savedGroup = localStorage.getItem('dyd_group');
+            const savedRecord = localStorage.getItem('dyd_high_level');
+
+            if (savedAvatar) selectedAvatarEmoji = savedAvatar;
+            if (savedName) playerNickname = savedName;
+            if (savedRecord) highestLevelReached = parseInt(savedRecord, 10) || 1;
+
+            if (savedGroup) {
+                try {
+                    const parsed = JSON.parse(savedGroup);
+                    if (Array.isArray(parsed) && parsed.length > 0) groupPlayers = parsed;
+                } catch(e) {}
+            } else {
+                groupPlayers = [playerNickname];
+            }
+
+            renderPlayerTags();
+            updateHUDProfile();
+            updateHighLevelDisplay();
+        }
+
+        function selectAvatar(emoji) {
+            selectedAvatarEmoji = emoji;
+            const buttons = document.querySelectorAll('.avatar-option');
+            buttons.forEach(btn => {
+                if (btn.innerText.trim() === emoji) {
+                    btn.classList.add('selected');
+                } else {
+                    btn.classList.remove('selected');
+                }
+            });
+        }
+
+        function addPlayerFromInput() {
+            const input = document.getElementById('new-player-input');
+            const val = input.value.trim();
+            if (val && !groupPlayers.includes(val)) {
+                groupPlayers.push(val);
+                input.value = '';
+                renderPlayerTags();
+            }
+        }
+
+        function removePlayer(name) {
+            if (groupPlayers.length <= 1) return;
+            groupPlayers = groupPlayers.filter(p => p !== name);
+            renderPlayerTags();
+        }
+
+        function renderPlayerTags() {
+            const listContainer = document.getElementById('players-tag-list');
+            listContainer.innerHTML = '';
+
+            groupPlayers.forEach(p => {
+                const badge = document.createElement('div');
+                badge.className = "bg-amber-200 border border-amber-400 text-amber-900 px-3 py-1 rounded-full text-xs font-bold flex items-center space-x-1 shadow-sm";
+                badge.innerHTML = `
+                    <span>${p}</span>
+                    <button onclick="removePlayer('${p}')" class="ml-1 text-red-500 hover:text-red-700 font-extrabold">✕</button>
+                `;
+                listContainer.appendChild(badge);
+            });
+        }
+
+        function saveProfileAndStart() {
+            const nameInput = document.getElementById('player-name-input').value.trim();
+            if (nameInput) {
+                playerNickname = nameInput;
+                if (!groupPlayers.includes(playerNickname)) {
+                    groupPlayers[0] = playerNickname;
+                }
+            }
+
+            localStorage.setItem('dyd_avatar', selectedAvatarEmoji);
+            localStorage.setItem('dyd_name', playerNickname);
+            localStorage.setItem('dyd_group', JSON.stringify(groupPlayers));
+
+            updateHUDProfile();
+            startQuizFlow();
+        }
+
+        function skipProfileAndStart() {
+            updateHUDProfile();
+            startQuizFlow();
+        }
+
+        function updateHUDProfile() {
+            document.getElementById('hud-avatar').innerText = selectedAvatarEmoji;
+            document.getElementById('hud-player-name').innerText = playerNickname;
+            document.getElementById('hud-players-count').innerText = `${groupPlayers.length} Player${groupPlayers.length > 1 ? 's' : ''} Ready`;
+        }
+
+        function updateHighLevelDisplay() {
+            document.getElementById('high-level-label').innerText = `Best Record: Level ${highestLevelReached} 🏆`;
+        }
+
+        function openProfileModal() {
+            document.getElementById('quiz-screen').classList.add('hidden');
+            document.getElementById('dare-screen').classList.add('hidden');
+            document.getElementById('reward-intro-screen').classList.add('hidden');
+            document.getElementById('minigame-screen').classList.add('hidden');
+
+            document.getElementById('player-name-input').value = playerNickname === 'Dare Hero' ? '' : playerNickname;
+            selectAvatar(selectedAvatarEmoji);
+            renderPlayerTags();
+
+            document.getElementById('profile-screen').classList.remove('hidden');
+        }
+
+        function startQuizFlow() {
+            document.getElementById('profile-screen').classList.add('hidden');
+            document.getElementById('quiz-screen').classList.remove('hidden');
+            loadQuestion();
+        }
+
+        const mascots = ['🐱', '🐶', '🦊', '🦁', '🦄', '🐸', '🤖', '🐻', '🐼', '🐯'];
+        
+        // ==========================================
+        // DYNAMIC ENDLESS YEAR 3 MATH GENERATOR
+        // ==========================================
+
+        function generateYear3MathQuestion(levelIndex) {
+            let qText = "";
+            let correctAnswer = 0;
+            const qType = Math.floor(Math.random() * 4); // 0: Addition, 1: Subtraction, 2: 3-Digit, 3: Missing Number
+
+            if (levelIndex <= 2) {
+                // Easy 2-Digit Addition/Subtraction
+                if (Math.random() > 0.5) {
+                    const num1 = Math.floor(Math.random() * 40) + 10;
+                    const num2 = Math.floor(Math.random() * 30) + 5;
+                    correctAnswer = num1 + num2;
+                    qText = `${num1} + ${num2} = ?`;
+                } else {
+                    const num1 = Math.floor(Math.random() * 40) + 20;
+                    const num2 = Math.floor(Math.random() * 15) + 5;
+                    correctAnswer = num1 - num2;
+                    qText = `${num1} - ${num2} = ?`;
+                }
+            } else if (levelIndex <= 5) {
+                // Medium Carrying & Borrowing
+                if (Math.random() > 0.5) {
+                    const num1 = Math.floor(Math.random() * 50) + 25;
+                    const num2 = Math.floor(Math.random() * 40) + 18;
+                    correctAnswer = num1 + num2;
+                    qText = `${num1} + ${num2} = ?`;
+                } else {
+                    const num1 = Math.floor(Math.random() * 60) + 30;
+                    const num2 = Math.floor(Math.random() * 25) + 12;
+                    correctAnswer = num1 - num2;
+                    qText = `${num1} - ${num2} = ?`;
+                }
+            } else {
+                // Higher Endless Levels: 3-Digit & Missing Number Equations
+                if (qType === 0) {
+                    const num1 = Math.floor(Math.random() * 100) + 100;
+                    const num2 = Math.floor(Math.random() * 100) + 20;
+                    correctAnswer = num1 + num2;
+                    qText = `${num1} + ${num2} = ?`;
+                } else if (qType === 1) {
+                    const num1 = Math.floor(Math.random() * 200) + 150;
+                    const num2 = Math.floor(Math.random() * 100) + 20;
+                    correctAnswer = num1 - num2;
+                    qText = `${num1} - ${num2} = ?`;
+                } else if (qType === 2) {
+                    // Missing Addend: e.g., 40 + ? = 95
+                    const num1 = Math.floor(Math.random() * 40) + 20;
+                    correctAnswer = Math.floor(Math.random() * 30) + 10;
+                    const total = num1 + correctAnswer;
+                    qText = `${num1} + ? = ${total}`;
+                } else {
+                    // 3 Number Addition: e.g., 10 + 20 + 15
+                    const n1 = Math.floor(Math.random() * 20) + 10;
+                    const n2 = Math.floor(Math.random() * 20) + 10;
+                    const n3 = Math.floor(Math.random() * 15) + 5;
+                    correctAnswer = n1 + n2 + n3;
+                    qText = `${n1} + ${n2} + ${n3} = ?`;
+                }
+            }
+
+            // Generate 3 unique wrong option choices close to correct answer
+            const options = [correctAnswer];
+            const offsets = [-10, 10, -2, 2, -1, 1, -5, 5];
+            
+            while (options.length < 4) {
+                const offset = offsets[Math.floor(Math.random() * offsets.length)];
+                const candidate = correctAnswer + offset;
+                if (candidate > 0 && !options.includes(candidate)) {
+                    options.push(candidate);
+                } else {
+                    const randVal = correctAnswer + Math.floor(Math.random() * 20) - 10;
+                    if (randVal > 0 && !options.includes(randVal)) {
+                        options.push(randVal);
+                    }
+                }
+            }
+
+            // Shuffle choices randomly
+            options.sort(() => Math.random() - 0.5);
+
+            return {
+                q: qText,
+                options: options,
+                answer: correctAnswer
+            };
+        }
+
+        // ==========================================
+        // INFINITE DYNAMIC DARE GENERATOR
+        // ==========================================
+
+        const dareActions = [
+            "Do 3 giant frog hops", "Spin around twice", "Waddle like a penguin", "Reach up high like a giraffe",
+            "Do 4 starfish jumping jacks", "Stand on one leg like a flamingo", "Touch your nose with your elbow attempt",
+            "Flap your wings like an eagle", "Do a silly robot dance", "Strike a superhero pose", "Bow like a royal king or queen",
+            "High-five the air 5 times", "Pretend to balance a book on your head", "Do 3 giant star jumps"
+        ];
+
+        const dareSounds = [
+            "while making frog sounds! 🐸", "while shouting 'I AM A MATH HERO!' 🌟", "while making funny robot noises! 🤖",
+            "while giggling out loud! 😄", "while making lion roaring sounds! 🦁", "while counting to 5 backwards! 🔢",
+            "while making duck quacking sounds! 🦆", "while wiggling your ears! 👂", "while smiling as big as you can! 😁"
+        ];
+
+        const dareIcons = ["🐸", "🤖", "🐧", "🦒", "🌟", "🦁", "🖐️", "🐒", "🦩", "🎈", "👑", "🚀", "🦖"];
+
+        function generateDynamicDare() {
+            const action = dareActions[Math.floor(Math.random() * dareActions.length)];
+            const sound = dareSounds[Math.floor(Math.random() * dareSounds.length)];
+            const icon = dareIcons[Math.floor(Math.random() * dareIcons.length)];
+
+            return {
+                icon: icon,
+                text: `${action} ${sound}`
+            };
+        }
+
+        // STATE TRACKERS FOR ENDLESS GAMEPLAY
+        let currentLevel = 1;
+        let currentQuestionIndex = 0; // 0, 1, 2 (3 questions per level)
+        let currentQuestionObj = null;
+        let totalStars = 0;
+        let levelFirstTryCorrectCount = 0;
+        let isFirstAttempt = true;
+
+        const praiseMessages = ["Awesome!", "Super Star!", "You Did It!", "Brilliant!", "Rockstar!", "Genius!", "Great Job!"];
+        const retryMessages = ["Nearly there! Try again!", "Give it another shot! 💪", "You can do it! 🌟", "Close! Try once more!"];
+
+        function loadQuestion() {
+            isFirstAttempt = true;
+
+            currentQuestionObj = generateYear3MathQuestion(currentLevel);
+
+            document.getElementById('hud-level-num').innerText = currentLevel;
+            document.getElementById('level-title-display').innerText = `Level ${currentLevel}: Endless Math Quest`;
+            document.getElementById('question-tracker').innerText = `Question ${currentQuestionIndex + 1} of 3`;
+            document.getElementById('infinite-level-label').innerText = `🚀 Infinite Quest Level ${currentLevel}`;
+            
+            const mascotEmoji = mascots[Math.floor(Math.random() * mascots.length)];
+            document.getElementById('mascot-emoji').innerText = mascotEmoji;
+
+            document.getElementById('math-question').innerText = currentQuestionObj.q;
+
+            const feedbackBanner = document.getElementById('feedback-banner');
+            feedbackBanner.className = "h-10 my-1 flex items-center justify-center text-lg sm:text-xl font-bold text-purple-600";
+            feedbackBanner.innerText = "Tap the right answer! 👇";
+
+            currentQuestionObj.options.forEach((opt, idx) => {
+                const btn = document.getElementById(`btn-${idx}`);
+                btn.innerText = opt;
+                btn.disabled = false;
+                btn.className = getBtnBaseColorClass(idx) + " ans-btn font-extrabold text-2xl sm:text-3xl p-4 sm:p-6 rounded-2xl shadow-lg transform active:scale-95 transition border-b-4 flex items-center justify-center text-white";
+            });
+
+            updateProgressBar();
+        }
+
+        function getBtnBaseColorClass(idx) {
+            const colors = [
+                "bg-pink-400 hover:bg-pink-500 border-pink-600",
+                "bg-sky-400 hover:bg-sky-500 border-sky-600",
+                "bg-emerald-400 hover:bg-emerald-500 border-emerald-600",
+                "bg-amber-400 hover:bg-amber-500 border-amber-600"
+            ];
+            return colors[idx % colors.length];
+        }
+
+        function handleAnswerSelect(optionIndex) {
+            const selectedVal = currentQuestionObj.options[optionIndex];
+            const selectedBtn = document.getElementById(`btn-${optionIndex}`);
+            const feedbackBanner = document.getElementById('feedback-banner');
+
+            if (selectedVal === currentQuestionObj.answer) {
+                if (isFirstAttempt) {
+                    levelFirstTryCorrectCount++;
+                    addStars(1);
+                }
+
+                feedbackBanner.className = "h-10 my-1 flex items-center justify-center text-xl sm:text-2xl font-extrabold text-green-600 star-pop";
+                feedbackBanner.innerText = "✨ " + praiseMessages[Math.floor(Math.random() * praiseMessages.length)] + " ✨";
+
+                selectedBtn.className = "bg-green-500 text-white font-extrabold text-2xl sm:text-3xl p-4 sm:p-6 rounded-2xl shadow-lg border-b-4 border-green-700 flex items-center justify-center ring-4 ring-green-300";
+
+                for (let i = 0; i < 4; i++) {
+                    document.getElementById(`btn-${i}`).disabled = true;
+                }
+
+                setTimeout(() => {
+                    showDareScreen();
+                }, 1100);
+
+            } else {
+                isFirstAttempt = false;
+                feedbackBanner.className = "h-10 my-1 flex items-center justify-center text-base sm:text-lg font-bold text-amber-600";
+                feedbackBanner.innerText = retryMessages[Math.floor(Math.random() * retryMessages.length)];
+
+                selectedBtn.className = "bg-gray-300 text-gray-500 font-bold text-2xl sm:text-3xl p-4 sm:p-6 rounded-2xl shadow-inner border-b-4 border-gray-400 flex items-center justify-center opacity-60";
+                selectedBtn.disabled = true;
+            }
+        }
+
+        function advanceQuestionFlow() {
+            currentQuestionIndex++;
+
+            if (currentQuestionIndex < 3) {
+                document.getElementById('dare-screen').classList.add('hidden');
+                document.getElementById('quiz-screen').classList.remove('hidden');
+                loadQuestion();
+            } else {
+                proceedToRewardIntro();
+            }
+        }
+
+        function addStars(num) {
+            totalStars += num;
+            const starElem = document.getElementById('star-score');
+            starElem.innerText = totalStars;
+            starElem.parentElement.classList.add('star-pop');
+            setTimeout(() => starElem.parentElement.classList.remove('star-pop'), 400);
+        }
+
+        function updateProgressBar() {
+            const progPct = ((currentQuestionIndex) / 3) * 100;
+            document.getElementById('infinite-progress-bar').style.width = `${Math.max(10, progPct)}%`;
+        }
+
+        // ==========================================
+        // DARE SPINNER WHEEL LOGIC
+        // ==========================================
+
+        let currentWheelAngle = 0;
+        let isSpinning = false;
+
+        function drawWheel() {
+            const canvas = document.getElementById('wheelCanvas');
+            const ctx = canvas.getContext('2d');
+            const numSegments = groupPlayers.length;
+            const radius = canvas.width / 2;
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            const sliceAngle = (2 * Math.PI) / numSegments;
+            const colors = ['#f87171', '#fb923c', '#facc15', '#4ade80', '#60a5fa', '#c084fc', '#f472b6'];
+
+            for (let i = 0; i < numSegments; i++) {
+                const angle = i * sliceAngle;
+                
+                // Draw Segment Slice
+                ctx.beginPath();
+                ctx.moveTo(radius, radius);
+                ctx.arc(radius, radius, radius - 5, angle, angle + sliceAngle);
+                ctx.closePath();
+                ctx.fillStyle = colors[i % colors.length];
+                ctx.fill();
+                ctx.lineWidth = 3;
+                ctx.strokeStyle = '#ffffff';
+                ctx.stroke();
+
+                // Draw Text
+                ctx.save();
+                ctx.translate(radius, radius);
+                ctx.rotate(angle + sliceAngle / 2);
+                ctx.textAlign = "right";
+                ctx.fillStyle = "#ffffff";
+                ctx.font = "bold 14px Fredoka";
+                ctx.shadowColor = "rgba(0,0,0,0.4)";
+                ctx.shadowBlur = 4;
+                ctx.fillText(groupPlayers[i], radius - 20, 5);
+                ctx.restore();
+            }
+
+            // Draw Center Pin
+            ctx.beginPath();
+            ctx.arc(radius, radius, 20, 0, 2 * Math.PI);
+            ctx.fillStyle = '#ffffff';
+            ctx.fill();
+            ctx.lineWidth = 3;
+            ctx.strokeStyle = '#fbbf24';
+            ctx.stroke();
+
+            ctx.fillStyle = '#7c3aed';
+            ctx.font = "bold 12px Fredoka";
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            ctx.fillText("DARE", radius, radius);
+        }
+
+        function showDareScreen() {
+            const currentDare = generateDynamicDare();
+
+            document.getElementById('dare-icon').innerText = currentDare.icon;
+            document.getElementById('dare-text-display').innerText = currentDare.text;
+
+            document.getElementById('selected-player-banner').classList.add('hidden');
+            document.getElementById('spin-wheel-btn').disabled = false;
+            document.getElementById('spin-wheel-btn').classList.remove('opacity-50');
+
+            document.getElementById('quiz-screen').classList.add('hidden');
+            document.getElementById('dare-screen').classList.remove('hidden');
+
+            drawWheel();
+        }
+
+        function spinWheel() {
+            if (isSpinning) return;
+            isSpinning = true;
+
+            const btn = document.getElementById('spin-wheel-btn');
+            btn.disabled = true;
+            btn.classList.add('opacity-50');
+
+            const wheelCanvas = document.getElementById('wheelCanvas');
+            
+            const numSegments = groupPlayers.length;
+            const winningIndex = Math.floor(Math.random() * numSegments);
+            
+            const sliceDeg = 360 / numSegments;
+            const targetSliceCenter = (winningIndex * sliceDeg) + (sliceDeg / 2);
+            const rotationDegree = 360 * 5 + (270 - targetSliceCenter);
+
+            currentWheelAngle += rotationDegree;
+            wheelCanvas.style.transform = `rotate(${currentWheelAngle}deg)`;
+
+            setTimeout(() => {
+                isSpinning = false;
+                const winnerName = groupPlayers[winningIndex];
+
+                document.getElementById('winner-name-display').innerText = winnerName;
+                document.getElementById('selected-player-banner').classList.remove('hidden');
+
+                triggerConfetti();
+            }, 4000);
+        }
+
+        function completeDare() {
+            addStars(1);
+            advanceQuestionFlow();
+        }
+
+        function skipDare() {
+            advanceQuestionFlow();
+        }
+
+        function proceedToRewardIntro() {
+            const earnedSeconds = 15 + (levelFirstTryCorrectCount * 5);
+
+            // Update Highest Level Record
+            if (currentLevel > highestLevelReached) {
+                highestLevelReached = currentLevel;
+                localStorage.setItem('dyd_high_level', highestLevelReached);
+                updateHighLevelDisplay();
+            }
+
+            document.getElementById('reward-level-title').innerText = `Level ${currentLevel} Complete!`;
+            document.getElementById('earned-time-display').innerText = earnedSeconds;
+
+            document.getElementById('dare-screen').classList.add('hidden');
+            document.getElementById('reward-intro-screen').classList.remove('hidden');
+
+            window.miniGameTime = earnedSeconds;
+        }
+
+        // ==========================================
+        // MINI-GAME ENGINE (ASTEROID SHOOTER)
+        // ==========================================
+
+        let canvas, ctx;
+        let gameLoopId;
+        let rocket = { x: 160, y: 350, width: 40, height: 50, speed: 6 };
+        let bullets = [];
+        let asteroids = [];
+        let miniGameScore = 0;
+        let miniGameTimer = 20;
+        let timerInterval = null;
+        let keys = { left: false, right: false, shoot: false };
+
+        function initCanvas() {
+            canvas = document.getElementById('gameCanvas');
+            ctx = canvas.getContext('2d');
+
+            const btnLeft = document.getElementById('btn-left');
+            const btnRight = document.getElementById('btn-right');
+            const btnShoot = document.getElementById('btn-shoot');
+
+            const addTouchEvents = (elem, keyName) => {
+                elem.addEventListener('touchstart', (e) => { e.preventDefault(); keys[keyName] = true; });
+                elem.addEventListener('touchend', (e) => { e.preventDefault(); keys[keyName] = false; });
+                elem.addEventListener('mousedown', () => { keys[keyName] = true; });
+                elem.addEventListener('mouseup', () => { keys[keyName] = false; });
+            };
+
+            addTouchEvents(btnLeft, 'left');
+            addTouchEvents(btnRight, 'right');
+            addTouchEvents(btnShoot, 'shoot');
+
+            window.addEventListener('keydown', (e) => {
+                if (e.key === 'ArrowLeft' || e.key === 'a') keys.left = true;
+                if (e.key === 'ArrowRight' || e.key === 'd') keys.right = true;
+                if (e.key === ' ' || e.key === 'ArrowUp') {
+                    if (!keys.shoot) fireBullet();
+                    keys.shoot = true;
+                }
+            });
+
+            window.addEventListener('keyup', (e) => {
+                if (e.key === 'ArrowLeft' || e.key === 'a') keys.left = false;
+                if (e.key === 'ArrowRight' || e.key === 'd') keys.right = false;
+                if (e.key === ' ' || e.key === 'ArrowUp') keys.shoot = false;
+            });
+        }
+
+        function startMiniGame() {
+            document.getElementById('reward-intro-screen').classList.add('hidden');
+            document.getElementById('minigame-screen').classList.remove('hidden');
+
+            if (!canvas) initCanvas();
+
+            rocket.x = canvas.width / 2 - rocket.width / 2;
+            bullets = [];
+            asteroids = [];
+            miniGameScore = 0;
+            miniGameTimer = window.miniGameTime || 20;
+
+            document.getElementById('game-score').innerText = `${miniGameScore} pts`;
+            document.getElementById('game-timer').innerText = `${miniGameTimer}s`;
+
+            clearInterval(timerInterval);
+            timerInterval = setInterval(() => {
+                miniGameTimer--;
+                document.getElementById('game-timer').innerText = `${miniGameTimer}s`;
+                if (miniGameTimer <= 0) {
+                    endMiniGame();
+                }
+            }, 1000);
+
+            cancelAnimationFrame(gameLoopId);
+            runGameLoop();
+        }
+
+        let lastShootTime = 0;
+
+        function fireBullet() {
+            bullets.push({
+                x: rocket.x + rocket.width / 2 - 4,
+                y: rocket.y,
+                width: 8,
+                height: 16,
+                speed: 8
+            });
+        }
+
+        function spawnAsteroid() {
+            if (Math.random() < 0.04 + (Math.min(currentLevel, 10) * 0.005)) {
+                const faces = ['😄', '😲', '🤪', '🥳', '😎', '⭐'];
+                const face = faces[Math.floor(Math.random() * faces.length)];
+                const radius = 22 + Math.random() * 10;
+                asteroids.push({
+                    x: radius + Math.random() * (canvas.width - radius * 2),
+                    y: -radius * 2,
+                    radius: radius,
+                    speed: 1.5 + Math.random() * 2 + (currentLevel * 0.1),
+                    face: face,
+                    color: `hsl(${Math.random() * 360}, 70%, 60%)`
+                });
+            }
+        }
+
+        function runGameLoop() {
+            if (keys.left && rocket.x > 0) rocket.x -= rocket.speed;
+            if (keys.right && rocket.x < canvas.width - rocket.width) rocket.x += rocket.speed;
+            if (keys.shoot && Date.now() - lastShootTime > 220) {
+                fireBullet();
+                lastShootTime = Date.now();
+            }
+
+            spawnAsteroid();
+
+            ctx.fillStyle = '#0f172a';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            ctx.fillStyle = '#ffffff';
+            for (let i = 0; i < 15; i++) {
+                ctx.fillRect((i * 37) % canvas.width, (i * 53) % canvas.height, 2, 2);
+            }
+
+            ctx.fillStyle = '#f43f5e';
+            bullets.forEach((b, index) => {
+                b.y -= b.speed;
+                ctx.beginPath();
+                ctx.roundRect(b.x, b.y, b.width, b.height, 4);
+                ctx.fill();
+
+                if (b.y < -20) bullets.splice(index, 1);
+            });
+
+            asteroids.forEach((ast, aIdx) => {
+                ast.y += ast.speed;
+
+                ctx.beginPath();
+                ctx.arc(ast.x, ast.y, ast.radius, 0, Math.PI * 2);
+                ctx.fillStyle = ast.color;
+                ctx.fill();
+                ctx.lineWidth = 3;
+                ctx.strokeStyle = '#ffffff';
+                ctx.stroke();
+
+                ctx.font = `${ast.radius * 1.1}px sans-serif`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(ast.face, ast.x, ast.y);
+
+                bullets.forEach((b, bIdx) => {
+                    const dist = Math.hypot(b.x - ast.x, b.y - ast.y);
+                    if (dist < ast.radius + 8) {
+                        asteroids.splice(aIdx, 1);
+                        bullets.splice(bIdx, 1);
+                        miniGameScore += 10;
+                        document.getElementById('game-score').innerText = `${miniGameScore} pts`;
+                    }
+                });
+
+                if (ast.y > canvas.height + 50) {
+                    asteroids.splice(aIdx, 1);
+                }
+            });
+
+            ctx.font = '40px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'top';
+            ctx.fillText('🚀', rocket.x + rocket.width / 2, rocket.y);
+
+            gameLoopId = requestAnimationFrame(runGameLoop);
+        }
+
+        function endMiniGame() {
+            clearInterval(timerInterval);
+            cancelAnimationFrame(gameLoopId);
+
+            document.getElementById('minigame-screen').classList.add('hidden');
+
+            // Increment Endless Level Counter
+            currentLevel++;
+            currentQuestionIndex = 0;
+            levelFirstTryCorrectCount = 0;
+
+            triggerConfetti();
+
+            document.getElementById('quiz-screen').classList.remove('hidden');
+            loadQuestion();
+        }
+
+        // ==========================================
+        // RAINBOW CONFETTI SYSTEM
+        // ==========================================
+
+        const confettiCanvas = document.getElementById('confettiCanvas');
+        const cCtx = confettiCanvas.getContext('2d');
+        let particles = [];
+
+        function resizeConfettiCanvas() {
+            confettiCanvas.width = window.innerWidth;
+            confettiCanvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeConfettiCanvas);
+        resizeConfettiCanvas();
+
+        function triggerConfetti() {
+            particles = [];
+            const colors = ['#ef4444', '#f97316', '#eab308', '#22c55e', '#3b82f6', '#a855f7', '#ec4899'];
+            
+            for (let i = 0; i < 120; i++) {
+                particles.push({
+                    x: confettiCanvas.width / 2,
+                    y: confettiCanvas.height / 2,
+                    vx: (Math.random() - 0.5) * 14,
+                    vy: (Math.random() - 0.7) * 16,
+                    color: colors[Math.floor(Math.random() * colors.length)],
+                    size: Math.random() * 8 + 6,
+                    gravity: 0.3,
+                    rotation: Math.random() * 360,
+                    rotSpeed: (Math.random() - 0.5) * 10
+                });
+            }
+            animateConfetti();
+        }
+
+        function animateConfetti() {
+            cCtx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+
+            particles.forEach((p, idx) => {
+                p.x += p.vx;
+                p.y += p.vy;
+                p.vy += p.gravity;
+                p.rotation += p.rotSpeed;
+
+                cCtx.save();
+                cCtx.translate(p.x, p.y);
+                cCtx.rotate((p.rotation * Math.PI) / 180);
+                cCtx.fillStyle = p.color;
+                cCtx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size);
+                cCtx.restore();
+
+                if (p.y > confettiCanvas.height + 20) {
+                    particles.splice(idx, 1);
+                }
+            });
+
+            if (particles.length > 0) {
+                requestAnimationFrame(animateConfetti);
+            }
+        }
+
+        window.onload = function() {
+            loadSavedProfile();
+            selectAvatar(selectedAvatarEmoji);
+        };
+    </script>
+</body>
+</html>

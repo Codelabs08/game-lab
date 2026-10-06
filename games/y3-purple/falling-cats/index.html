@@ -1,0 +1,1062 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Falling Cats - Stone Age Boy Quiz Game</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Open+Sans:wght@600;700;800&display=swap');
+
+        :root {
+            --stone-dark: #2d2621;
+            --stone-mid: #4a3f35;
+            --ochre-warm: #d97736;
+            --ochre-light: #f4a261;
+            --sand-bg: #f7f1e3;
+            --cave-red: #9e2a2b;
+            --bone-white: #fffcf2;
+        }
+
+        body {
+            font-family: 'Open Sans', sans-serif;
+            background-color: var(--sand-bg);
+            color: var(--stone-dark);
+            user-select: none;
+            -webkit-user-select: none;
+            overflow-x: hidden;
+        }
+
+        .font-heading {
+            font-family: 'Fredoka One', cursive, sans-serif;
+        }
+
+        /* Cave Texture Overlay */
+        .stone-card {
+            background: linear-gradient(135deg, #ebdcb9 0%, #d8c29d 100%);
+            border: 6px solid #6b5239;
+            box-shadow: 0 10px 0 #3d2e1e, 0 15px 20px rgba(0,0,0,0.25);
+            border-radius: 24px;
+            position: relative;
+        }
+
+        .stone-btn {
+            background: linear-gradient(180deg, #f4a261 0%, #e76f51 100%);
+            border: 4px solid #7c2d12;
+            box-shadow: 0 6px 0 #5c1d0a;
+            color: #ffffff;
+            transition: all 0.1s ease;
+        }
+
+        .stone-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 0 #5c1d0a;
+            filter: brightness(1.05);
+        }
+
+        .stone-btn:active:not(:disabled) {
+            transform: translateY(4px);
+            box-shadow: 0 2px 0 #5c1d0a;
+        }
+
+        .choice-btn {
+            background: #fffcf2;
+            border: 4px solid #b5838d;
+            box-shadow: 0 5px 0 #6d4c41;
+            color: #3d2e1e;
+            transition: all 0.15s ease;
+        }
+
+        .choice-btn:hover:not(:disabled) {
+            background-color: #ffe8d6;
+            transform: translateY(-2px);
+            border-color: #d97736;
+        }
+
+        .choice-btn:active:not(:disabled) {
+            transform: translateY(3px);
+            box-shadow: 0 2px 0 #6d4c41;
+        }
+
+        /* Falling Cat Animation CSS */
+        @keyframes catFall {
+            0% {
+                transform: translateY(-100px) rotate(0deg) scale(0.8);
+                opacity: 0;
+            }
+            15% {
+                opacity: 1;
+            }
+            80% {
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(105vh) rotate(360deg) scale(1.1);
+                opacity: 0;
+            }
+        }
+
+        .falling-cat {
+            position: fixed;
+            z-index: 100;
+            pointer-events: none;
+            animation: catFall linear forwards;
+        }
+
+        /* Pulse Animations */
+        @keyframes floatSlow {
+            0%, 100% { transform: translateY(0px) rotate(-1deg); }
+            50% { transform: translateY(-8px) rotate(1deg); }
+        }
+
+        .float-animation {
+            animation: floatSlow 3.5s ease-in-out infinite;
+        }
+
+        /* Canvas Style */
+        #gameCanvas {
+            background: #2b2118;
+            border: 6px solid #6b5239;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.6), 0 8px 0 #3d2e1e;
+            border-radius: 16px;
+            touch-action: none;
+        }
+
+        .star-gold {
+            color: #f59e0b;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+        }
+        .star-gray {
+            color: #d1d5db;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between items-center p-3 md:p-6 relative">
+
+    <!-- Sound Toggle & Decorative Header -->
+    <header class="w-full max-w-3xl flex justify-between items-center mb-4 z-10">
+        <div class="flex items-center gap-2">
+            <!-- Cave Art Silhouette Mammoth SVG -->
+            <svg class="w-10 h-10 text-amber-900 fill-current" viewBox="0 0 100 100">
+                <path d="M20,60 Q15,40 30,30 Q45,20 65,25 Q85,30 85,50 Q85,65 75,70 Q75,85 70,85 Q65,85 65,75 Q55,75 50,85 Q45,85 45,75 Q30,75 25,65 Z M30,40 C20,40 10,50 15,65 C20,60 25,50 35,45 Z" />
+            </svg>
+            <span class="font-heading text-2xl md:text-3xl text-amber-900 tracking-wide">Falling Cats</span>
+        </div>
+
+        <button id="soundToggle" onclick="toggleSound()" class="p-3 bg-amber-200 border-4 border-amber-800 rounded-2xl shadow-md text-amber-900 font-bold flex items-center gap-2 hover:bg-amber-300 active:scale-95 transition">
+            <span id="soundIcon">🔊</span> <span id="soundText" class="text-sm font-heading hidden sm:inline">Sound ON</span>
+        </button>
+    </header>
+
+    <!-- Falling Cats Overlay Container -->
+    <div id="catContainer" class="fixed inset-0 pointer-events-none z-50 overflow-hidden"></div>
+
+    <!-- MAIN APP CONTAINER -->
+    <main class="w-full max-w-2xl my-auto z-10">
+
+        <!-- SCREEN 1: WELCOME / START SCREEN -->
+        <div id="startScreen" class="stone-card p-6 md:p-8 text-center float-animation">
+            <div class="flex justify-center mb-4">
+                <!-- Cute Cave Cat Mascot SVG -->
+                <svg class="w-32 h-32 md:w-40 md:h-40" viewBox="0 0 200 200">
+                    <circle cx="100" cy="110" r="60" fill="#d97736" />
+                    <!-- Ears -->
+                    <polygon points="50,60 70,10 90,65" fill="#d97736" />
+                    <polygon points="55,58 70,20 85,62" fill="#f4a261" />
+                    <polygon points="110,65 130,10 150,60" fill="#d97736" />
+                    <polygon points="115,62 130,20 145,58" fill="#f4a261" />
+                    <!-- Cave Markings/Stripes -->
+                    <path d="M80,70 L120,70 M85,80 L115,80" stroke="#7c2d12" stroke-width="5" stroke-linecap="round"/>
+                    <!-- Eyes -->
+                    <circle cx="75" cy="105" r="12" fill="#fff" />
+                    <circle cx="125" cy="105" r="12" fill="#fff" />
+                    <circle cx="75" cy="105" r="6" fill="#2d2621" />
+                    <circle cx="125" cy="105" r="6" fill="#2d2621" />
+                    <!-- Nose & Cute Smile -->
+                    <polygon points="95,118 105,118 100,125" fill="#7c2d12" />
+                    <path d="M90,130 Q100,140 100,130 Q100,140 110,130" stroke="#2d2621" stroke-width="4" fill="none" stroke-linecap="round"/>
+                    <!-- Tiger Fur Headband -->
+                    <rect x="50" y="55" width="100" height="12" fill="#2d2621" rx="4"/>
+                    <circle cx="100" cy="61" r="5" fill="#e76f51"/>
+                </svg>
+            </div>
+
+            <h1 class="font-heading text-3xl md:text-5xl text-amber-950 mb-2">Stone Age Boy</h1>
+            <p class="text-amber-900 text-lg md:text-xl font-bold mb-4">5 Levels of Quiz & Mini-Games!</p>
+            
+            <div class="bg-amber-100/80 rounded-xl p-4 border-2 border-amber-700/40 text-amber-900 text-base md:text-lg mb-6 text-left space-y-2">
+                <p>🐾 Answer <strong>3 questions</strong> per level (15 total questions)!</p>
+                <p>🐱 Get correct answers to trigger <strong>happy falling cats</strong>!</p>
+                <p>🧱 Play a <strong>Brick Breaker level</strong> after EVERY quiz level!</p>
+            </div>
+
+            <button onclick="startQuiz()" class="stone-btn w-full py-4 text-2xl md:text-3xl font-heading rounded-2xl cursor-pointer">
+                START LEVEL 1! 🦴
+            </button>
+        </div>
+
+        <!-- SCREEN 2: QUIZ INTERFACE -->
+        <div id="quizScreen" class="stone-card p-5 md:p-7 hidden">
+            <!-- Level & Progress Header -->
+            <div class="flex flex-col sm:flex-row justify-between items-center mb-4 gap-2 border-b-4 border-amber-800/30 pb-3">
+                <div>
+                    <span id="levelBadge" class="bg-amber-800 text-amber-100 font-heading text-sm md:text-base px-3 py-1 rounded-full uppercase tracking-wider">
+                        Level 1: Meeting Om
+                    </span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="text-amber-950 font-bold text-base md:text-lg">Progress:</span>
+                    <span id="questionCounter" class="font-heading text-xl text-amber-900">1 / 15</span>
+                </div>
+            </div>
+
+            <!-- Visual Progress Bar -->
+            <div class="w-full bg-amber-900/20 rounded-full h-4 mb-6 border-2 border-amber-800 overflow-hidden">
+                <div id="progressBar" class="bg-amber-600 h-full rounded-full transition-all duration-300" style="width: 6.66%;"></div>
+            </div>
+
+            <!-- Question Text -->
+            <div class="bg-stone-100/90 rounded-2xl p-4 md:p-5 border-4 border-amber-900/40 mb-6 shadow-inner">
+                <h2 id="questionText" class="text-xl md:text-2xl font-bold text-amber-950 leading-relaxed text-center">
+                    Loading question...
+                </h2>
+            </div>
+
+            <!-- Answer Options -->
+            <div id="optionsContainer" class="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4 mb-4">
+                <!-- Buttons dynamically populated -->
+            </div>
+
+            <!-- Feedback Display Overlay / Banner -->
+            <div id="feedbackBanner" class="hidden rounded-xl p-4 text-center font-bold text-lg md:text-xl border-4 transition-all">
+                <p id="feedbackText"></p>
+                <button id="nextBtn" onclick="nextQuestion()" class="stone-btn mt-3 px-6 py-2 text-xl font-heading rounded-xl cursor-pointer">
+                    Next Question ➔
+                </button>
+            </div>
+        </div>
+
+        <!-- SCREEN 3: LEVEL COMPLETED / MINIGAME TRANSITION -->
+        <div id="levelTransitionScreen" class="stone-card p-6 md:p-8 text-center hidden float-animation">
+            <span class="bg-amber-800 text-amber-100 font-heading text-sm md:text-base px-4 py-1.5 rounded-full uppercase tracking-wider inline-block mb-3">
+                Level Complete!
+            </span>
+            <h2 id="transitionTitle" class="font-heading text-3xl md:text-4xl text-amber-950 mb-2">Level 1 Passed! 🎉</h2>
+            <p id="transitionSub" class="text-amber-900 font-bold text-lg mb-4">You got 3/3 questions right!</p>
+
+            <div class="bg-amber-100/90 border-4 border-amber-800 rounded-2xl p-5 mb-6 text-left space-y-2">
+                <div class="flex items-center gap-3">
+                    <span class="text-3xl">🧱</span>
+                    <div>
+                        <h3 class="font-heading text-amber-950 text-xl">Reward Minigame Stage <span id="transMinigameLevel">1</span></h3>
+                        <p class="text-amber-900 text-sm font-semibold">Smash the stone bricks with your wooden paddle!</p>
+                    </div>
+                </div>
+            </div>
+
+            <button onclick="launchLevelMinigame()" class="stone-btn w-full py-4 text-2xl font-heading rounded-2xl cursor-pointer bg-gradient-to-r from-emerald-600 to-teal-600 border-teal-900">
+                🎮 PLAY MINIGAME STAGE <span id="btnStageNum">1</span>!
+            </button>
+        </div>
+
+        <!-- SCREEN 4: BRICK BREAKER REWARD GAME -->
+        <div id="gameScreen" class="stone-card p-4 md:p-6 text-center hidden">
+            <div class="flex justify-between items-center mb-3 px-2">
+                <div class="text-left">
+                    <span class="font-heading text-amber-950 text-base md:text-lg">Stage <span id="gameStageNum">1</span></span>
+                    <span class="font-heading text-amber-900 text-sm md:text-base block">Score: <span id="gameScore">0</span></span>
+                </div>
+                <div class="text-right">
+                    <span class="font-heading text-amber-800 text-xs md:text-sm">Total Game Score</span>
+                    <span id="totalGameScore" class="font-heading text-xl text-amber-950 block">0</span>
+                </div>
+            </div>
+
+            <!-- Canvas for Game -->
+            <div class="relative flex justify-center items-center">
+                <canvas id="gameCanvas" width="480" height="380" class="w-full max-w-[480px] h-auto"></canvas>
+            </div>
+
+            <!-- Game Touch Helper Controls (Mobile) -->
+            <div class="flex justify-between items-center mt-3 gap-2">
+                <button id="leftTouchBtn" class="flex-1 py-3 bg-amber-800 text-amber-100 font-heading text-xl rounded-xl border-2 border-amber-950 active:bg-amber-900 select-none md:hidden">
+                    ◀ LEFT
+                </button>
+                <button onclick="pauseOrRestartGame()" class="py-3 px-4 bg-amber-200 border-2 border-amber-800 rounded-xl font-heading text-amber-950 text-sm md:text-base">
+                    Retry Stage 🔄
+                </button>
+                <button id="rightTouchBtn" class="flex-1 py-3 bg-amber-800 text-amber-100 font-heading text-xl rounded-xl border-2 border-amber-950 active:bg-amber-900 select-none md:hidden">
+                    RIGHT ▶
+                </button>
+            </div>
+
+            <!-- Continue Button (unlocked on stage completion) -->
+            <div id="minigameContinueBox" class="mt-4 hidden">
+                <button id="stageContinueBtn" onclick="continueToNextQuizLevel()" class="stone-btn w-full py-3.5 text-xl font-heading rounded-xl cursor-pointer bg-gradient-to-r from-emerald-600 to-teal-600 border-teal-900">
+                    Continue to Next Quiz Level ➔
+                </button>
+            </div>
+        </div>
+
+        <!-- SCREEN 5: FINAL CELEBRATION SCREEN -->
+        <div id="resultScreen" class="stone-card p-6 md:p-8 text-center hidden">
+            <h2 class="font-heading text-3xl md:text-4xl text-amber-950 mb-2">Adventure Complete! 🎉</h2>
+            <p id="resultTitle" class="font-heading text-2xl text-amber-700 mb-3">Master Cave Explorer!</p>
+
+            <!-- Star Rating Display -->
+            <div class="flex justify-center gap-2 text-4xl md:text-5xl mb-4" id="starRating">
+                <span class="star-gold">★</span>
+                <span class="star-gold">★</span>
+                <span class="star-gold">★</span>
+            </div>
+
+            <!-- Score Summary Cards -->
+            <div class="grid grid-cols-2 gap-3 mb-6">
+                <div class="bg-amber-100 border-3 border-amber-800 rounded-2xl p-4">
+                    <span class="text-amber-900 font-bold text-xs md:text-sm block">QUIZ SCORE</span>
+                    <span id="finalQuizScoreText" class="font-heading text-3xl md:text-4xl text-amber-900">15 / 15</span>
+                </div>
+                <div class="bg-amber-100 border-3 border-amber-800 rounded-2xl p-4">
+                    <span class="text-amber-900 font-bold text-xs md:text-sm block">BRICK SCORE</span>
+                    <span id="finalBrickScoreText" class="font-heading text-3xl md:text-4xl text-amber-900">350</span>
+                </div>
+            </div>
+
+            <p id="resultMessage" class="text-amber-900 font-bold text-base md:text-lg mb-6">
+                Amazing job! You passed all 5 levels and conquered the Stone Age Brick Breaker!
+            </p>
+
+            <button onclick="resetQuiz()" class="stone-btn w-full py-4 text-2xl font-heading rounded-2xl cursor-pointer">
+                🔄 PLAY WHOLE GAME AGAIN!
+            </button>
+        </div>
+
+    </main>
+
+    <footer class="w-full text-center py-3 text-xs md:text-sm font-bold text-amber-900/80 z-10">
+        Created for Year 3 English — Inspired by Satoshi Kitamura's <em>Stone Age Boy</em> 🐾
+    </footer>
+
+    <script>
+        /* SOUND SYNTHESIZER (Web Audio API - Standalone) */
+        let audioCtx = null;
+        let soundEnabled = true;
+
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        }
+
+        function toggleSound() {
+            soundEnabled = !soundEnabled;
+            document.getElementById('soundIcon').innerText = soundEnabled ? '🔊' : '🔇';
+            document.getElementById('soundText').innerText = soundEnabled ? 'Sound ON' : 'Sound OFF';
+        }
+
+        function playSound(type) {
+            if (!soundEnabled) return;
+            initAudio();
+            if (!audioCtx) return;
+
+            const now = audioCtx.currentTime;
+
+            if (type === 'correct') {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(523.25, now);
+                osc.frequency.exponentialRampToValueAtTime(880, now + 0.3);
+                gain.gain.setValueAtTime(0.3, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start(now);
+                osc.stop(now + 0.4);
+            } else if (type === 'meow') {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(400, now);
+                osc.frequency.linearRampToValueAtTime(700, now + 0.15);
+                osc.frequency.linearRampToValueAtTime(500, now + 0.35);
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start(now);
+                osc.stop(now + 0.4);
+            } else if (type === 'wrong') {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(220, now);
+                osc.frequency.linearRampToValueAtTime(180, now + 0.25);
+                gain.gain.setValueAtTime(0.25, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start(now);
+                osc.stop(now + 0.3);
+            } else if (type === 'bounce') {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(300, now);
+                osc.frequency.exponentialRampToValueAtTime(150, now + 0.08);
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.08);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start(now);
+                osc.stop(now + 0.08);
+            } else if (type === 'brick') {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(450, now);
+                osc.frequency.exponentialRampToValueAtTime(100, now + 0.1);
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start(now);
+                osc.stop(now + 0.1);
+            } else if (type === 'fanfare') {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(440, now);
+                osc.frequency.setValueAtTime(554.37, now + 0.1);
+                osc.frequency.setValueAtTime(659.25, now + 0.2);
+                osc.frequency.setValueAtTime(880, now + 0.3);
+                gain.gain.setValueAtTime(0.3, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.6);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start(now);
+                osc.stop(now + 0.6);
+            }
+        }
+
+        const quizData = [
+            // LEVEL 1: Meeting Om & Basic Plot (Q1 - Q3)
+            {
+                level: 1,
+                levelTitle: "Level 1: Meeting Om",
+                question: "How does the boy accidentally travel back to the Stone Age?",
+                options: [
+                    "He falls down a deep hole in the ground",
+                    "He steps into a magic time machine",
+                    "He gets on a mysterious bus",
+                    "He falls asleep in his bedroom"
+                ],
+                answer: 0
+            },
+            {
+                level: 1,
+                levelTitle: "Level 1: Meeting Om",
+                question: "What is the name of the Stone Age girl that the boy meets first?",
+                options: ["Mia", "Om", "Luna", "Satoshi"],
+                answer: 1
+            },
+            {
+                level: 1,
+                levelTitle: "Level 1: Meeting Om",
+                question: "What were tools and weapons made of in this time period?",
+                options: ["Plastic and steel", "Stone, bone, and wood", "Gold and silver", "Glass and rubber"],
+                answer: 1
+            },
+
+            // LEVEL 2: Stone Age Daily Life (Q4 - Q6)
+            {
+                level: 2,
+                levelTitle: "Level 2: Stone Age Village Life",
+                question: "What were Stone Age clothes usually made from?",
+                options: ["Cotton t-shirts", "Woollen jumpers", "Animal skins and furs", "Silk robes"],
+                answer: 2
+            },
+            {
+                level: 2,
+                levelTitle: "Level 2: Stone Age Village Life",
+                question: "How did Om and her family make fire?",
+                options: [
+                    "By striking flint stones together to make sparks",
+                    "By using a lighter",
+                    "By pressing an electric switch",
+                    "By asking a dragon"
+                ],
+                answer: 0
+            },
+            {
+                level: 2,
+                levelTitle: "Level 2: Stone Age Village Life",
+                question: "What kind of shelter did Om's people live in during summer?",
+                options: [
+                    "Brick houses with glass windows",
+                    "Wooden castles",
+                    "Tents made of animal skins and wooden poles",
+                    "Tall skyscraper flats"
+                ],
+                answer: 2
+            },
+
+            // LEVEL 3: Gathering, Fishing & Cave Art (Q7 - Q9)
+            {
+                level: 3,
+                levelTitle: "Level 3: Gathering & Hunting",
+                question: "What did the boy and Om gather in the forest for food?",
+                options: [
+                    "Sweets and biscuits",
+                    "Berries, nuts, and edible roots",
+                    "Crisps and apples",
+                    "Pizza and pasta"
+                ],
+                answer: 1
+            },
+            {
+                level: 3,
+                levelTitle: "Level 3: Gathering & Hunting",
+                question: "How did the Stone Age people catch fish in the river?",
+                options: [
+                    "Using metal fishing rods",
+                    "With wooden spears and bone hooks",
+                    "Using glass fish tanks",
+                    "With big nylon nets from boats"
+                ],
+                answer: 1
+            },
+            {
+                level: 3,
+                levelTitle: "Level 3: Gathering & Hunting",
+                question: "What did they use to paint pictures on the dark cave walls?",
+                options: [
+                    "Crayons and felt tips",
+                    "Crushed rocks, charcoal, and animal fat",
+                    "Acrylic water paints",
+                    "Colored chalks from school"
+                ],
+                answer: 1
+            },
+
+            // LEVEL 4: The Cave Bear Incident (Q10 - Q12)
+            {
+                level: 4,
+                levelTitle: "Level 4: The Cave Bear Incident",
+                question: "Which big creature did the boy and Om accidentally wake up inside the cave?",
+                options: ["A Woolly Mammoth", "A Saber-toothed Cat", "A giant Cave Bear", "A wild Boar"],
+                answer: 2
+            },
+            {
+                level: 4,
+                levelTitle: "Level 4: The Cave Bear Incident",
+                question: "What happened right after the boy ran away from the cave bear?",
+                options: [
+                    "He tripped, fell down a hole, and woke up in the modern world",
+                    "He flew away on a helicopter",
+                    "He stayed in the cave forever",
+                    "He caught the bear as a pet"
+                ],
+                answer: 0
+            },
+            {
+                level: 4,
+                levelTitle: "Level 4: The Cave Bear Incident",
+                question: "When the boy grew up back in his own time, what did he become?",
+                options: ["An astronaut", "An archaeologist", "A police officer", "A chef"],
+                answer: 1
+            },
+
+            // LEVEL 5: History & Vocabulary (Q13 - Q15)
+            {
+                level: 5,
+                levelTitle: "Level 5: Stone Age Expert!",
+                question: "What type of hard grey rock was shaped to make sharp axes and arrowheads?",
+                options: ["Flint", "Marble", "Chalk", "Granite"],
+                answer: 0
+            },
+            {
+                level: 5,
+                levelTitle: "Level 5: Stone Age Expert!",
+                question: "What did Stone Age people use as needles for sewing skins?",
+                options: ["Plastic pins", "Sharpened animal bones or antlers", "Iron nails", "Wooden sticks"],
+                answer: 1
+            },
+            {
+                level: 5,
+                levelTitle: "Level 5: Stone Age Expert!",
+                question: "Who wrote and illustrated the book 'Stone Age Boy'?",
+                options: ["Julia Donaldson", "Satoshi Kitamura", "Roald Dahl", "Michael Rosen"],
+                answer: 1
+            }
+        ];
+
+        let currentQuestionIndex = 0;
+        let currentLevel = 1;
+        let levelScore = 0;
+        let totalQuizScore = 0;
+        let totalMinigameScore = 0;
+        let answerSelected = false;
+
+        function startQuiz() {
+            initAudio();
+            document.getElementById('startScreen').classList.add('hidden');
+            document.getElementById('quizScreen').classList.remove('hidden');
+            currentQuestionIndex = 0;
+            currentLevel = 1;
+            totalQuizScore = 0;
+            levelScore = 0;
+            totalMinigameScore = 0;
+            showQuestion();
+        }
+
+        function showQuestion() {
+            answerSelected = false;
+            const q = quizData[currentQuestionIndex];
+            currentLevel = q.level;
+
+            // Update Header Information
+            document.getElementById('levelBadge').innerText = q.levelTitle;
+            document.getElementById('questionCounter').innerText = `${currentQuestionIndex + 1} / ${quizData.length}`;
+            
+            // Progress bar
+            const percent = ((currentQuestionIndex + 1) / quizData.length) * 100;
+            document.getElementById('progressBar').style.width = `${percent}%`;
+
+            // Set Question Text
+            document.getElementById('questionText').innerText = q.question;
+
+            // Options container
+            const container = document.getElementById('optionsContainer');
+            container.innerHTML = '';
+            document.getElementById('feedbackBanner').classList.add('hidden');
+
+            q.options.forEach((optText, idx) => {
+                const btn = document.createElement('button');
+                btn.className = 'choice-btn w-full p-4 rounded-2xl text-left font-bold text-base md:text-lg cursor-pointer flex items-center gap-3';
+                const letterMarker = String.fromCharCode(65 + idx);
+                btn.innerHTML = `
+                    <span class="bg-amber-800 text-amber-100 w-8 h-8 rounded-full flex items-center justify-center font-heading text-sm flex-shrink-0">${letterMarker}</span>
+                    <span>${optText}</span>
+                `;
+                btn.onclick = () => handleAnswer(idx, btn);
+                container.appendChild(btn);
+            });
+        }
+
+        function handleAnswer(selectedIndex, clickedBtn) {
+            if (answerSelected) return;
+            answerSelected = true;
+
+            const q = quizData[currentQuestionIndex];
+            const allBtns = document.getElementById('optionsContainer').children;
+
+            for (let b of allBtns) {
+                b.disabled = true;
+                b.classList.add('opacity-80');
+            }
+
+            const feedbackBanner = document.getElementById('feedbackBanner');
+            const feedbackText = document.getElementById('feedbackText');
+
+            if (selectedIndex === q.answer) {
+                totalQuizScore++;
+                levelScore++;
+                playSound('correct');
+                playSound('meow');
+                triggerFallingCats();
+
+                clickedBtn.classList.remove('opacity-80');
+                clickedBtn.classList.add('bg-emerald-100', 'border-emerald-600', 'text-emerald-950');
+
+                feedbackBanner.className = 'rounded-xl p-4 text-center font-bold text-lg md:text-xl border-4 transition-all bg-emerald-100 border-emerald-600 text-emerald-900 mt-4';
+                feedbackText.innerText = "🌟 Great job! That's correct! Look at the happy falling cats!";
+            } else {
+                playSound('wrong');
+
+                clickedBtn.classList.remove('opacity-80');
+                clickedBtn.classList.add('bg-rose-100', 'border-rose-500', 'text-rose-950');
+                
+                allBtns[q.answer].classList.remove('opacity-80');
+                allBtns[q.answer].classList.add('bg-emerald-100', 'border-emerald-600', 'text-emerald-950');
+
+                feedbackBanner.className = 'rounded-xl p-4 text-center font-bold text-lg md:text-xl border-4 transition-all bg-amber-100 border-amber-600 text-amber-950 mt-4';
+                feedbackText.innerText = `Good try! The right answer is: "${q.options[q.answer]}".`;
+            }
+
+            feedbackBanner.classList.remove('hidden');
+        }
+
+        function nextQuestion() {
+            currentQuestionIndex++;
+
+            // Check if level finished (every 3 questions)
+            if (currentQuestionIndex % 3 === 0) {
+                showLevelTransition();
+            } else {
+                showQuestion();
+            }
+        }
+
+        function showLevelTransition() {
+            document.getElementById('quizScreen').classList.add('hidden');
+            document.getElementById('levelTransitionScreen').classList.remove('hidden');
+
+            playSound('fanfare');
+
+            document.getElementById('transitionTitle').innerText = `Level ${currentLevel} Complete! 🎉`;
+            document.getElementById('transitionSub').innerText = `You scored ${levelScore} out of 3 on Level ${currentLevel}!`;
+            document.getElementById('transMinigameLevel').innerText = currentLevel;
+            document.getElementById('btnStageNum').innerText = currentLevel;
+        }
+
+        function launchLevelMinigame() {
+            document.getElementById('levelTransitionScreen').classList.add('hidden');
+            startBrickBreaker(currentLevel);
+        }
+
+        function continueToNextQuizLevel() {
+            document.getElementById('gameScreen').classList.add('hidden');
+            document.getElementById('minigameContinueBox').classList.add('hidden');
+
+            if (currentQuestionIndex < quizData.length) {
+                levelScore = 0;
+                document.getElementById('quizScreen').classList.remove('hidden');
+                showQuestion();
+            } else {
+                showFinalResults();
+            }
+        }
+
+        function triggerFallingCats() {
+            const container = document.getElementById('catContainer');
+            const catSVGs = [
+                `<svg class="w-16 h-16" viewBox="0 0 100 100"><circle cx="50" cy="50" r="40" fill="#f4a261"/><polygon points="20,30 35,5 45,32" fill="#d97736"/><polygon points="80,30 65,5 55,32" fill="#d97736"/><circle cx="35" cy="45" r="6" fill="#fff"/><circle cx="65" cy="45" r="6" fill="#fff"/><circle cx="35" cy="45" r="3" fill="#000"/><circle cx="65" cy="45" r="3" fill="#000"/><polygon points="47,55 53,55 50,60" fill="#7c2d12"/><path d="M40,65 Q50,72 60,65" stroke="#2d2621" stroke-width="3" fill="none"/></svg>`,
+                `<svg class="w-16 h-16" viewBox="0 0 100 100"><circle cx="50" cy="50" r="40" fill="#a8a29e"/><polygon points="20,30 35,5 45,32" fill="#78716c"/><polygon points="80,30 65,5 55,32" fill="#78716c"/><circle cx="35" cy="45" r="7" fill="#fff"/><circle cx="65" cy="45" r="7" fill="#fff"/><circle cx="35" cy="45" r="4" fill="#292524"/><circle cx="65" cy="45" r="4" fill="#292524"/><path d="M42,62 Q50,70 58,62" stroke="#292524" stroke-width="4" fill="none"/><text x="40" y="90" font-size="20">🐾</text></svg>`,
+                `<svg class="w-16 h-16" viewBox="0 0 100 100"><circle cx="50" cy="50" r="40" fill="#fffcf2" stroke="#d97736" stroke-width="4"/><polygon points="20,30 35,5 45,32" fill="#e76f51"/><polygon points="80,30 65,5 55,32" fill="#2d2621"/><circle cx="35" cy="45" r="5" fill="#2d2621"/><circle cx="65" cy="45" r="5" fill="#2d2621"/><text x="38" y="75" font-size="18">❤️</text></svg>`
+            ];
+
+            for (let i = 0; i < 12; i++) {
+                const cat = document.createElement('div');
+                cat.className = 'falling-cat';
+                cat.innerHTML = catSVGs[Math.floor(Math.random() * catSVGs.length)];
+                
+                const randomX = Math.random() * 90;
+                const randomDuration = 2 + Math.random() * 2;
+                const randomDelay = Math.random() * 0.8;
+
+                cat.style.left = `${randomX}vw`;
+                cat.style.animationDuration = `${randomDuration}s`;
+                cat.style.animationDelay = `${randomDelay}s`;
+
+                container.appendChild(cat);
+
+                setTimeout(() => { cat.remove(); }, (randomDuration + randomDelay) * 1000);
+            }
+        }
+
+        function showFinalResults() {
+            document.getElementById('gameScreen').classList.add('hidden');
+            document.getElementById('resultScreen').classList.remove('hidden');
+
+            document.getElementById('finalQuizScoreText').innerText = `${totalQuizScore} / 15`;
+            document.getElementById('finalBrickScoreText').innerText = totalMinigameScore;
+
+            const starContainer = document.getElementById('starRating');
+            const titleElem = document.getElementById('resultTitle');
+            const msgElem = document.getElementById('resultMessage');
+
+            let stars = "★★★";
+            if (totalQuizScore >= 13) {
+                titleElem.innerText = "🏆 Master Cave Archaeologist!";
+                msgElem.innerText = "AMAZING! You conquered all 5 quiz levels and smashed all the stone bricks!";
+                starContainer.innerHTML = '<span class="star-gold">★</span><span class="star-gold">★</span><span class="star-gold">★</span>';
+            } else if (totalQuizScore >= 9) {
+                titleElem.innerText = "🦴 Stone Age Hunter-Gatherer!";
+                msgElem.innerText = "Great job! You know so much about Stone Age Boy!";
+                starContainer.innerHTML = '<span class="star-gold">★</span><span class="star-gold">★</span><span class="star-gray">★</span>';
+            } else {
+                titleElem.innerText = "🐾 Stone Age Explorer!";
+                msgElem.innerText = "Good effort! Try again to earn all 3 golden stars!";
+                starContainer.innerHTML = '<span class="star-gold">★</span><span class="star-gray">★</span><span class="star-gray">★</span>';
+            }
+
+            triggerFallingCats();
+        }
+
+        function resetQuiz() {
+            document.getElementById('resultScreen').classList.add('hidden');
+            document.getElementById('startScreen').classList.remove('hidden');
+        }
+
+        /* BRICK BREAKER GAME ENGINE WITH PER-LEVEL STAGES */
+        let canvas, ctx;
+        let gameLoopId = null;
+        let paddle, ball, bricks;
+        let stageScore = 0;
+        let gameOver = false;
+        let minigameLevel = 1;
+
+        // Level Configurations for Brick Breaker Stages
+        const levelConfigs = {
+            1: { rows: 2, cols: 5, speed: 3.5, paddleWidth: 100, name: "Sandstone Bricks" },
+            2: { rows: 3, cols: 6, speed: 4.0, paddleWidth: 90, name: "Flint Stone Bricks" },
+            3: { rows: 3, cols: 6, speed: 4.5, paddleWidth: 85, name: "Cave Wall Rocks" },
+            4: { rows: 4, cols: 6, speed: 5.0, paddleWidth: 80, name: "Glacier Ice Blocks" },
+            5: { rows: 5, cols: 6, speed: 5.5, paddleWidth: 75, name: "Granite Cave Wall" }
+        };
+
+        function startBrickBreaker(lvl) {
+            minigameLevel = lvl || 1;
+            document.getElementById('gameStageNum').innerText = minigameLevel;
+
+            canvas = document.getElementById('gameCanvas');
+            ctx = canvas.getContext('2d');
+
+            document.getElementById('minigameContinueBox').classList.add('hidden');
+
+            initStageObjects();
+            setupGameControls();
+
+            gameOver = false;
+
+            if (gameLoopId) cancelAnimationFrame(gameLoopId);
+            gameLoopId = requestAnimationFrame(updateGame);
+        }
+
+        function initStageObjects() {
+            stageScore = 0;
+            document.getElementById('gameScore').innerText = stageScore;
+            document.getElementById('totalGameScore').innerText = totalMinigameScore;
+
+            const config = levelConfigs[minigameLevel];
+
+            // Wooden Paddle
+            paddle = {
+                width: config.paddleWidth,
+                height: 16,
+                x: (canvas.width - config.paddleWidth) / 2,
+                y: canvas.height - 30,
+                dx: 7
+            };
+
+            // Smooth Pebble Ball
+            ball = {
+                x: canvas.width / 2,
+                y: canvas.height - 45,
+                radius: 8,
+                dx: config.speed * (Math.random() > 0.5 ? 1 : -1),
+                dy: -config.speed
+            };
+
+            // Stone Bricks setup
+            bricks = [];
+            const brickWidth = Math.floor((canvas.width - 28) / config.cols) - 6;
+            const brickHeight = 20;
+            const brickPadding = 6;
+            const offsetTop = 40;
+            const offsetLeft = 14;
+
+            const stoneColors = ['#d97736', '#f4a261', '#a8a29e', '#78716c', '#b5838d'];
+
+            for (let r = 0; r < config.rows; r++) {
+                bricks[r] = [];
+                for (let c = 0; c < config.cols; c++) {
+                    bricks[r][c] = {
+                        x: offsetLeft + c * (brickWidth + brickPadding),
+                        y: offsetTop + r * (brickHeight + brickPadding),
+                        width: brickWidth,
+                        height: brickHeight,
+                        status: 1,
+                        color: stoneColors[r % stoneColors.length]
+                    };
+                }
+            }
+        }
+
+        let rightPressed = false;
+        let leftPressed = false;
+
+        function setupGameControls() {
+            document.onkeydown = (e) => {
+                if (e.key === 'ArrowRight' || e.key === 'Right') rightPressed = true;
+                if (e.key === 'ArrowLeft' || e.key === 'Left') leftPressed = true;
+            };
+            document.onkeyup = (e) => {
+                if (e.key === 'ArrowRight' || e.key === 'Right') rightPressed = false;
+                if (e.key === 'ArrowLeft' || e.key === 'Left') leftPressed = false;
+            };
+
+            canvas.onmousemove = (e) => {
+                const rect = canvas.getBoundingClientRect();
+                const relativeX = e.clientX - rect.left;
+                if (relativeX > 0 && relativeX < canvas.width) {
+                    paddle.x = relativeX - paddle.width / 2;
+                }
+            };
+
+            canvas.ontouchmove = (e) => {
+                if (e.touches.length > 0) {
+                    const rect = canvas.getBoundingClientRect();
+                    const relativeX = e.touches[0].clientX - rect.left;
+                    if (relativeX > 0 && relativeX < canvas.width) {
+                        paddle.x = relativeX - paddle.width / 2;
+                    }
+                }
+            };
+
+            const lBtn = document.getElementById('leftTouchBtn');
+            const rBtn = document.getElementById('rightTouchBtn');
+
+            lBtn.ontouchstart = (e) => { e.preventDefault(); leftPressed = true; };
+            lBtn.ontouchend = () => { leftPressed = false; };
+            rBtn.ontouchstart = (e) => { e.preventDefault(); rightPressed = true; };
+            rBtn.ontouchend = () => { rightPressed = false; };
+        }
+
+        function pauseOrRestartGame() {
+            initStageObjects();
+            gameOver = false;
+            document.getElementById('minigameContinueBox').classList.add('hidden');
+            if (gameLoopId) cancelAnimationFrame(gameLoopId);
+            gameLoopId = requestAnimationFrame(updateGame);
+        }
+
+        function updateGame() {
+            if (gameOver) return;
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            const config = levelConfigs[minigameLevel];
+            let remainingBricks = 0;
+
+            // Draw Stone Bricks
+            for (let r = 0; r < config.rows; r++) {
+                for (let c = 0; c < config.cols; c++) {
+                    const b = bricks[r][c];
+                    if (b.status === 1) {
+                        remainingBricks++;
+                        ctx.fillStyle = b.color;
+                        ctx.beginPath();
+                        ctx.roundRect(b.x, b.y, b.width, b.height, 4);
+                        ctx.fill();
+                        ctx.strokeStyle = '#2d2621';
+                        ctx.lineWidth = 2;
+                        ctx.stroke();
+
+                        ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+                        ctx.beginPath();
+                        ctx.moveTo(b.x + 4, b.y + 4);
+                        ctx.lineTo(b.x + b.width - 4, b.y + 4);
+                        ctx.stroke();
+                    }
+                }
+            }
+
+            // STAGE WON!
+            if (remainingBricks === 0) {
+                gameOver = true;
+                playSound('correct');
+                triggerFallingCats();
+                
+                const stageButtonText = currentQuestionIndex < quizData.length 
+                    ? `Continue to Quiz Level ${currentLevel + 1} ➔` 
+                    : `View Final Quiz Score 🎉`;
+
+                document.getElementById('stageContinueBtn').innerText = stageButtonText;
+                document.getElementById('minigameContinueBox').classList.remove('hidden');
+
+                drawMessage(`STAGE ${minigameLevel} PASSED! 🦴`, "#f4a261");
+                return;
+            }
+
+            // Draw Wooden Paddle
+            ctx.fillStyle = '#7c2d12';
+            ctx.beginPath();
+            ctx.roundRect(paddle.x, paddle.y, paddle.width, paddle.height, 8);
+            ctx.fill();
+            ctx.strokeStyle = '#f4a261';
+            ctx.lineWidth = 3;
+            ctx.stroke();
+
+            // Draw Pebble Ball
+            ctx.fillStyle = '#d6d3d1';
+            ctx.beginPath();
+            ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.strokeStyle = '#44403c';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            // Ball Collisions Wall
+            if (ball.x + ball.dx > canvas.width - ball.radius || ball.x + ball.dx < ball.radius) {
+                ball.dx = -ball.dx;
+                playSound('bounce');
+            }
+            if (ball.y + ball.dy < ball.radius) {
+                ball.dy = -ball.dy;
+                playSound('bounce');
+            } else if (ball.y + ball.dy > canvas.height - ball.radius) {
+                if (ball.x > paddle.x && ball.x < paddle.x + paddle.width) {
+                    ball.dy = -Math.abs(ball.dy);
+                    const hitPoint = ball.x - (paddle.x + paddle.width / 2);
+                    ball.dx = hitPoint * 0.12;
+                    playSound('bounce');
+                } else {
+                    // Stage Retry
+                    gameOver = true;
+                    playSound('wrong');
+                    drawMessage("Ball Fell! Tap Retry Stage Below!", "#e76f51");
+                    return;
+                }
+            }
+
+            // Ball Collisions Bricks
+            for (let r = 0; r < config.rows; r++) {
+                for (let c = 0; c < config.cols; c++) {
+                    const b = bricks[r][c];
+                    if (b.status === 1) {
+                        if (
+                            ball.x > b.x &&
+                            ball.x < b.x + b.width &&
+                            ball.y > b.y &&
+                            ball.y < b.y + b.height
+                        ) {
+                            ball.dy = -ball.dy;
+                            b.status = 0;
+                            stageScore += 10;
+                            totalMinigameScore += 10;
+                            document.getElementById('gameScore').innerText = stageScore;
+                            document.getElementById('totalGameScore').innerText = totalMinigameScore;
+                            playSound('brick');
+                        }
+                    }
+                }
+            }
+
+            // Move Paddle
+            if (rightPressed && paddle.x < canvas.width - paddle.width) {
+                paddle.x += paddle.dx;
+            } else if (leftPressed && paddle.x > 0) {
+                paddle.x -= paddle.dx;
+            }
+
+            // Move Ball
+            ball.x += ball.dx;
+            ball.y += ball.dy;
+
+            gameLoopId = requestAnimationFrame(updateGame);
+        }
+
+        function drawMessage(text, color) {
+            ctx.fillStyle = 'rgba(0,0,0,0.7)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            ctx.font = '26px "Fredoka One", cursive';
+            ctx.fillStyle = color;
+            ctx.textAlign = 'center';
+            ctx.fillText(text, canvas.width / 2, canvas.height / 2 - 10);
+        }
+    </script>
+</body>
+</html>

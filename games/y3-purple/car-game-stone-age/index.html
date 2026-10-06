@@ -1,0 +1,994 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Car Game - Stone Age History Adventure</title>
+    <!-- Tailwind CSS for modern responsive styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts for child-friendly typography -->
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Quicksand:wght@500;700&display=swap" rel="stylesheet">
+    
+    <style>
+        * {
+            font-family: 'Quicksand', sans-serif;
+            touch-action: manipulation;
+            user-select: none;
+        }
+        h1, h2, h3, .font-heading {
+            font-family: 'Fredoka One', cursive;
+        }
+        .bg-red-theme {
+            background: linear-gradient(135deg, #7f1d1d 0%, #dc2626 50%, #991b1b 100%);
+        }
+        .card-stone {
+            background: #fff5f5;
+            border: 4px solid #b91c1c;
+            box-shadow: 0 8px 0 #7f1d1d;
+        }
+        .btn-red {
+            background: linear-gradient(to bottom, #ef4444, #dc2626);
+            border-bottom: 5px solid #991b1b;
+            transition: all 0.1s ease;
+        }
+        .btn-red:active {
+            transform: translateY(3px);
+            border-bottom-width: 2px;
+        }
+        .btn-green {
+            background: linear-gradient(to bottom, #22c55e, #16a34a);
+            border-bottom: 5px solid #15803d;
+            transition: all 0.1s ease;
+        }
+        .btn-green:active {
+            transform: translateY(3px);
+            border-bottom-width: 2px;
+        }
+        .btn-amber {
+            background: linear-gradient(to bottom, #f59e0b, #d97706);
+            border-bottom: 5px solid #b45309;
+            transition: all 0.1s ease;
+        }
+        .btn-amber:active {
+            transform: translateY(3px);
+            border-bottom-width: 2px;
+        }
+        canvas {
+            touch-action: none;
+        }
+        @keyframes pulse-gentle {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.03); }
+        }
+        .animate-pulse-gentle {
+            animation: pulse-gentle 2s infinite ease-in-out;
+        }
+    </style>
+</head>
+<body class="bg-stone-900 text-stone-800 min-h-screen flex flex-col items-center justify-center p-2 md:p-4 overflow-x-hidden">
+
+    <!-- MAIN CONTAINER -->
+    <div id="gameContainer" class="w-full max-w-4xl bg-red- theme bg-red-950 rounded-3xl p-3 md:p-6 shadow-2xl border-4 border-red-700 relative overflow-hidden flex flex-col items-center min-h-[600px]">
+
+        <!-- HEADER / SCORE BAR -->
+        <header class="w-full bg-red-900/80 backdrop-blur border-2 border-red-600 rounded-2xl p-3 mb-3 flex flex-wrap items-center justify-between text-white shadow-lg">
+            <div class="flex items-center space-x-2">
+                <i class="fa-solid font-heading text-red-400 text-2xl md:text-3xl fa-car-side"></i>
+                <span class="font-heading text-xl md:text-2xl text-amber-300 tracking-wide">CAR GAME</span>
+            </div>
+            
+            <div class="flex items-center space-x-4 text-sm md:text-base font-bold">
+                <div class="bg-red-950 px-3 py-1 rounded-xl border border-red-700 flex items-center gap-2">
+                    <i class="fa-solid fa-trophy text-amber-400"></i>
+                    <span>Level: <span id="currentLevelText" class="text-amber-300">1</span>/5</span>
+                </div>
+                <div class="bg-red-950 px-3 py-1 rounded-xl border border-red-700 flex items-center gap-2">
+                    <i class="fa-solid fa-star text-amber-300"></i>
+                    <span>Stars: <span id="totalStarsText" class="text-amber-300">0</span></span>
+                </div>
+            </div>
+        </header>
+
+        <!-- ==================== SCREEN 1: WELCOME SCREEN ==================== -->
+        <div id="welcomeScreen" class="w-full flex-1 flex flex-col items-center justify-center text-center p-4 bg-red-900/40 rounded-2xl border-2 border-red-800/50">
+            <div class="relative mb-4">
+                <div class="text-6xl md:text-8xl text-red-500 animate-bounce">🏎️</div>
+                <div class="absolute -bottom-2 -right-2 text-4xl">🪨</div>
+            </div>
+            
+            <h1 class="text-3xl md:text-5xl text-amber-300 font-heading mb-2 drop-shadow-md">
+                Stone Age Car Game!
+            </h1>
+            <p class="text-lg md:text-xl text-red-100 max-w-xl mb-6 leading-relaxed">
+                Drive your red race car back in time! Answer Year 3 Stone Age questions correctly to reach the finish line and unlock the exciting <span class="text-amber-300 font-bold">Brick Breaker</span> arcade game!
+            </p>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-3 w-full max-w-md mb-8">
+                <div class="bg-red-950/80 p-3 rounded-xl border border-red-700 text-red-200 text-sm">
+                    <i class="fa-solid fa-scroll text-amber-400 text-xl mb-1"></i>
+                    <p class="font-bold">5 Historic Levels</p>
+                    <p class="text-xs opacity-80">15 fun questions</p>
+                </div>
+                <div class="bg-red-950/80 p-3 rounded-xl border border-red-700 text-red-200 text-sm">
+                    <i class="fa-solid fa-flag-checkered text-amber-400 text-xl mb-1"></i>
+                    <p class="font-bold">Drive to Victory</p>
+                    <p class="text-xs opacity-80">Zoom past signposts</p>
+                </div>
+                <div class="bg-red-950/80 p-3 rounded-xl border border-red-700 text-red-200 text-sm">
+                    <i class="fa-solid fa-gamepad text-amber-400 text-xl mb-1"></i>
+                    <p class="font-bold">Play Brick Breaker</p>
+                    <p class="text-xs opacity-80">Earn play time!</p>
+                </div>
+            </div>
+
+            <button onclick="startGame()" class="btn-green text-white font-heading text-2xl py-4 px-10 rounded-2xl shadow-xl flex items-center gap-3 animate-pulse-gentle">
+                <i class="fa-solid fa-play"></i> START ADVENTURE!
+            </button>
+        </div>
+
+        <!-- ==================== SCREEN 2: QUIZ & DRIVE SCREEN ==================== -->
+        <div id="quizScreen" class="w-full flex-1 flex flex-col hidden">
+            <!-- CANVAS DRIVE TRACK -->
+            <div class="relative w-full h-44 md:h-52 bg-stone-800 rounded-2xl overflow-hidden border-4 border-red-800 shadow-inner mb-4">
+                <canvas id="driveCanvas" class="w-full h-full"></canvas>
+                <div class="absolute top-2 left-3 bg-red-950/80 px-3 py-1 rounded-full border border-red-600 text-amber-300 font-bold text-xs md:text-sm">
+                    📍 <span id="levelTitleText">Level 1: Old Stone Age</span>
+                </div>
+            </div>
+
+            <!-- QUESTION CARD -->
+            <div class="card-stone rounded-2xl p-4 md:p-6 flex-1 flex flex-col justify-between shadow-2xl relative">
+                <div>
+                    <!-- Progress meter for level (3 questions) -->
+                    <div class="flex items-center justify-between mb-3 text-xs md:text-sm font-bold text-red-900">
+                        <span>Question <span id="questionNumText">1</span> of 3</span>
+                        <div class="flex gap-1" id="questionStars">
+                            <i class="fa-regular fa-star text-amber-500 text-lg"></i>
+                            <i class="fa-regular fa-star text-amber-500 text-lg"></i>
+                            <i class="fa-regular fa-star text-amber-500 text-lg"></i>
+                        </div>
+                    </div>
+
+                    <h2 id="questionText" class="text-xl md:text-2xl text-stone-900 font-bold text-center my-2 md:my-4 leading-snug">
+                        Loading question...
+                    </h2>
+
+                    <!-- MULTIPLE CHOICE OPTIONS -->
+                    <div id="optionsContainer" class="grid grid-cols-1 md:grid-cols-2 gap-3 mt-4">
+                        <!-- Options injected dynamically -->
+                    </div>
+                </div>
+
+                <!-- Kind Encouraging Feedback Message -->
+                <div id="feedbackBox" class="mt-4 p-3 rounded-xl text-center font-bold hidden transition-all duration-300">
+                    <p id="feedbackText" class="text-base md:text-lg"></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== SCREEN 3: BRICK BREAKER REWARD SCREEN ==================== -->
+        <div id="rewardScreen" class="w-full flex-1 flex flex-col items-center hidden">
+            <div class="w-full flex items-center justify-between bg-red-900/90 p-3 rounded-2xl border border-red-700 text-white mb-2">
+                <div class="flex items-center gap-2">
+                    <span class="text-2xl">🏆</span>
+                    <div>
+                        <p class="font-heading text-amber-300 text-base leading-none">REWARD TIME!</p>
+                        <p class="text-xs text-red-200">Smash the prehistoric stone bricks!</p>
+                    </div>
+                </div>
+                <!-- Playtime Countdown Meter -->
+                <div class="bg-red-950 px-4 py-2 rounded-xl border border-amber-500/50 flex items-center gap-2">
+                    <i class="fa-solid fa-stopwatch text-amber-400 text-lg animate-spin"></i>
+                    <span class="font-heading text-2xl text-amber-300" id="rewardTimerText">30s</span>
+                </div>
+            </div>
+
+            <!-- BRICK BREAKER CANVAS -->
+            <div class="relative w-full flex-1 max-h-[380px] bg-stone-900 rounded-2xl overflow-hidden border-4 border-amber-600 shadow-2xl flex items-center justify-center">
+                <canvas id="brickCanvas" width="700" height="380" class="w-full h-full object-contain"></canvas>
+            </div>
+
+            <!-- ON-SCREEN TOUCH CONTROLS FOR MOBILE -->
+            <div class="w-full flex justify-between gap-4 mt-3">
+                <button id="btnLeft" class="flex-1 btn-red text-white py-3 rounded-xl font-heading text-xl flex items-center justify-center gap-2 select-none">
+                    <i class="fa-solid fa-arrow-left"></i> LEFT
+                </button>
+                <button id="btnRight" class="flex-1 btn-red text-white py-3 rounded-xl font-heading text-xl flex items-center justify-center gap-2 select-none">
+                    RIGHT <i class="fa-solid fa-arrow-right"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- ==================== SCREEN 4: LEVEL COMPLETE SCREEN ==================== -->
+        <div id="levelCompleteScreen" class="w-full flex-1 flex flex-col items-center justify-center text-center p-6 bg-red-900/60 rounded-2xl border-2 border-red-700 hidden">
+            <div class="text-6xl mb-2 animate-bounce">🎉</div>
+            <h2 class="text-3xl md:text-4xl text-amber-300 font-heading mb-2">Awesome Job, Historian!</h2>
+            <p id="levelCompleteSubtext" class="text-red-100 text-lg mb-6">You mastered Level 1!</p>
+
+            <div class="bg-red-950/90 p-6 rounded-2xl border-2 border-amber-500/40 w-full max-w-md mb-6">
+                <div class="flex justify-center gap-3 text-4xl mb-3 text-amber-400">
+                    <i class="fa-solid fa-star"></i>
+                    <i class="fa-solid fa-star"></i>
+                    <i class="fa-solid fa-star"></i>
+                </div>
+                <p class="text-red-200 font-bold">You earned <span class="text-amber-300">3 Stars</span> and unlocked Brick Breaker play time!</p>
+            </div>
+
+            <div class="flex flex-col sm:flex-row gap-4 w-full max-w-md">
+                <button onclick="startBrickBreakerStage()" class="flex-1 btn-amber text-white font-heading py-4 px-6 rounded-xl text-xl flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-gamepad"></i> PLAY REWARD!
+                </button>
+                <button onclick="nextLevel()" id="nextLevelBtn" class="flex-1 btn-green text-white font-heading py-4 px-6 rounded-xl text-xl flex items-center justify-center gap-2">
+                    NEXT LEVEL <i class="fa-solid fa-arrow-right"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- ==================== SCREEN 5: GAME COMPLETE SCREEN ==================== -->
+        <div id="gameCompleteScreen" class="w-full flex-1 flex flex-col items-center justify-center text-center p-6 bg-red-900/80 rounded-2xl border-2 border-amber-500 hidden">
+            <div class="text-7xl mb-3">👑</div>
+            <h2 class="text-4xl md:text-5xl text-amber-300 font-heading mb-2">STONE AGE MASTER!</h2>
+            <p class="text-xl text-red-100 max-w-md mb-6">
+                Superstar! You completed all 5 levels and learned all about Palaeolithic, Mesolithic, and Neolithic times!
+            </p>
+
+            <div class="bg-red-950 p-6 rounded-2xl border-2 border-amber-400/50 w-full max-w-sm mb-6 text-center">
+                <p class="text-red-300 text-sm font-bold uppercase tracking-wider mb-1">Final Score</p>
+                <p class="text-4xl font-heading text-amber-300 mb-2"><span id="finalStarsText">15</span> / 15 Stars</p>
+                <p class="text-xs text-red-200">You are a true History Detective!</p>
+            </div>
+
+            <button onclick="restartGame()" class="btn-green text-white font-heading text-2xl py-4 px-10 rounded-2xl shadow-xl flex items-center gap-3">
+                <i class="fa-solid fa-rotate-right"></i> PLAY AGAIN!
+            </button>
+        </div>
+
+    </div>
+
+    <!-- ==================== JAVASCRIPT LOGIC ==================== -->
+    <script>
+        /* ===================================================================
+           1. GAME DATA & QUESTION DATABASE (15 Questions, Year 3 Suitable)
+           =================================================================== */
+        const quizLevels = [
+            {
+                level: 1,
+                title: "Level 1: Palaeolithic (Old Stone Age)",
+                questions: [
+                    {
+                        q: "What massive, hairy animal with long tusks lived during the Ice Age?",
+                        options: ["Woolly Mammoth", "Safari Giraffe", "Farm Cow", "Dolphin"],
+                        correct: 0,
+                        fact: "Woolly Mammoths had thick fur and long tusks to survive the cold Ice Age!"
+                    },
+                    {
+                        q: "Where did early Stone Age people often shelter from cold rain and wild animals?",
+                        options: ["Wooden Houses", "Caves", "Castles", "Brick Flats"],
+                        correct: 1,
+                        fact: "Caves gave natural shelter and warmth to early Stone Age hunter-gatherers."
+                    },
+                    {
+                        q: "What hard black stone was shaped to make sharp tools and axe heads?",
+                        options: ["Flint", "Plastic", "Glass", "Sand"],
+                        correct: 0,
+                        fact: "Flint chips into sharp edges, making it perfect for spears and tools!"
+                    }
+                ]
+            },
+            {
+                level: 2,
+                title: "Level 2: Stone Age Life & Survival",
+                questions: [
+                    {
+                        q: "How did Palaeolithic people get their food before farming began?",
+                        options: ["Supermarkets", "Hunting & Gathering", "Ordering Pizza", "Baking Bread"],
+                        correct: 1,
+                        fact: "They hunted wild animals and gathered berries, nuts, and roots!"
+                    },
+                    {
+                        q: "What important discovery provided light, warmth, and cooked meat?",
+                        options: ["Electricity", "Fire", "Torches with Batteries", "Radiators"],
+                        correct: 1,
+                        fact: "Controlling fire changed human history by giving warmth, light, and safety!"
+                    },
+                    {
+                        q: "What did Stone Age people use to craft warm clothing for cold winter days?",
+                        options: ["Cotton T-shirts", "Animal Skins & Furs", "Polyester Coats", "Paper Sheets"],
+                        correct: 1,
+                        fact: "Animal skins were cleaned and stitched with bone needles for clothes."
+                    }
+                ]
+            },
+            {
+                level: 3,
+                title: "Level 3: Cave Paintings & Art",
+                questions: [
+                    {
+                        q: "What did Stone Age artists paint onto cave walls thousands of years ago?",
+                        options: ["Cars and Buses", "Animals & Handprints", "Bicycles", "Space Rockets"],
+                        correct: 1,
+                        fact: "They painted deer, bison, mammoths, and painted hand stencils!"
+                    },
+                    {
+                        q: "How did Stone Age artists create colored paint for their cave walls?",
+                        options: ["Crushed Rocks & Charcoal", "Acrylic Paints", "Felt-tip Pens", "Food Coloring"],
+                        correct: 0,
+                        fact: "They mixed ground earth minerals (ochre) and charcoal with water!"
+                    },
+                    {
+                        q: "Famous Stone Age cave paintings were found in which European country?",
+                        options: ["Lascaux in France", "North Pole", "Australia", "New York"],
+                        correct: 0,
+                        fact: "The Lascaux caves in France feature hundreds of magnificent animal paintings!"
+                    }
+                ]
+            },
+            {
+                level: 4,
+                title: "Level 4: Mesolithic & Neolithic Farming",
+                questions: [
+                    {
+                        q: "In the Neolithic (New Stone Age), what big change helped people stay in one place?",
+                        options: ["Farming crops & animals", "Buying cars", "Flying planes", "Building roads"],
+                        correct: 0,
+                        fact: "Farming meant people could grow wheat and keep sheep instead of moving!"
+                    },
+                    {
+                        q: "Which animals were among the first to be domesticated by early farmers?",
+                        options: ["Lions & Tigers", "Dogs, Sheep & Goats", "Elephants", "Penguins"],
+                        correct: 1,
+                        fact: "Dogs helped with hunting, while sheep, goats, and cows provided food and wool."
+                    },
+                    {
+                        q: "What did Stone Age people make out of clay to store grain and water?",
+                        options: ["Metal Cans", "Pottery Vessels", "Cardboard Boxes", "Glass Bottles"],
+                        correct: 1,
+                        fact: "Clay pottery was baked in fire to hold water, seeds, and cooked stews!"
+                    }
+                ]
+            },
+            {
+                level: 5,
+                title: "Level 5: Monuments & The End of Stone Age",
+                questions: [
+                    {
+                        q: "What famous ancient circle of standing stones can still be visited in England today?",
+                        options: ["Stonehenge", "The Eiffel Tower", "Big Ben", "The Pyramids"],
+                        correct: 0,
+                        fact: "Stonehenge was built in Wiltshire, England using massive heavy stones!"
+                    },
+                    {
+                        q: "How did Stone Age people move huge heavy stones for monument building?",
+                        options: ["Giant Cranes", "Wooden Rollers & Ropes", "Trucks", "Helicopters"],
+                        correct: 1,
+                        fact: "They pulled giant stones over logs and wooden rollers with strong ropes!"
+                    },
+                    {
+                        q: "What new shiny material brought the Stone Age to an end?",
+                        options: ["Bronze & Metals", "Plastic", "Rubber", "Wood"],
+                        correct: 0,
+                        fact: "When people learned to melt copper and tin into bronze, the Bronze Age began!"
+                    }
+                ]
+            }
+        ];
+
+        /* ===================================================================
+           2. GLOBAL STATE VARIABLES
+           =================================================================== */
+        let currentLevelIdx = 0;
+        let currentQuestionIdx = 0;
+        let totalStars = 0;
+        let levelStarsEarned = 0;
+        let carPositionX = 10; // Percentage along track (0 - 100%)
+
+        // Reward game state
+        let rewardTimeRemaining = 30;
+        let rewardTimerInterval = null;
+
+        /* ===================================================================
+           3. AUDIO SYNTHESIS (Web Audio API - Friendly Chimes & SFX)
+           =================================================================== */
+        let audioCtx = null;
+
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        }
+
+        function playSound(type) {
+            try {
+                initAudio();
+                if (!audioCtx) return;
+
+                const now = audioCtx.currentTime;
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+
+                if (type === 'correct') {
+                    // Cheerful rising tone
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(440, now); // A4
+                    osc.frequency.exponentialRampToValueAtTime(880, now + 0.2); // A5
+                    gain.gain.setValueAtTime(0.2, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+                    osc.start(now);
+                    osc.stop(now + 0.3);
+                } else if (type === 'wrong') {
+                    // Gentle buzz
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(200, now);
+                    osc.frequency.setValueAtTime(150, now + 0.1);
+                    gain.gain.setValueAtTime(0.15, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
+                    osc.start(now);
+                    osc.stop(now + 0.25);
+                } else if (type === 'vroom') {
+                    // Engine zoom
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(120, now);
+                    osc.frequency.linearRampToValueAtTime(320, now + 0.4);
+                    gain.gain.setValueAtTime(0.2, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+                    osc.start(now);
+                    osc.stop(now + 0.4);
+                } else if (type === 'bounce') {
+                    // Brick breaker bounce
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(500, now);
+                    osc.frequency.exponentialRampToValueAtTime(250, now + 0.08);
+                    gain.gain.setValueAtTime(0.15, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.08);
+                    osc.start(now);
+                    osc.stop(now + 0.08);
+                } else if (type === 'win') {
+                    // Fanfare
+                    [523.25, 659.25, 783.99, 1046.50].forEach((freq, idx) => {
+                        const o = audioCtx.createOscillator();
+                        const g = audioCtx.createGain();
+                        o.connect(g);
+                        g.connect(audioCtx.destination);
+                        o.type = 'triangle';
+                        o.frequency.value = freq;
+                        g.gain.setValueAtTime(0.15, now + idx * 0.1);
+                        g.gain.exponentialRampToValueAtTime(0.01, now + idx * 0.1 + 0.25);
+                        o.start(now + idx * 0.1);
+                        o.stop(now + idx * 0.1 + 0.25);
+                    });
+                }
+            } catch(e) {
+                // Audio fallback
+            }
+        }
+
+        /* ===================================================================
+           4. SCREEN SWITCHING LOGIC
+           =================================================================== */
+        function showScreen(screenId) {
+            document.getElementById('welcomeScreen').classList.add('hidden');
+            document.getElementById('quizScreen').classList.add('hidden');
+            document.getElementById('rewardScreen').classList.add('hidden');
+            document.getElementById('levelCompleteScreen').classList.add('hidden');
+            document.getElementById('gameCompleteScreen').classList.add('hidden');
+
+            document.getElementById(screenId).classList.remove('hidden');
+
+            // Resize canvases on screen change
+            if (screenId === 'quizScreen') {
+                resizeDriveCanvas();
+                drawDriveCanvas();
+            } else if (screenId === 'rewardScreen') {
+                resizeBrickCanvas();
+            }
+        }
+
+        function startGame() {
+            initAudio();
+            currentLevelIdx = 0;
+            currentQuestionIdx = 0;
+            totalStars = 0;
+            updateHeaderUI();
+            loadLevel(currentLevelIdx);
+        }
+
+        function restartGame() {
+            startGame();
+        }
+
+        function updateHeaderUI() {
+            document.getElementById('currentLevelText').textContent = currentLevelIdx + 1;
+            document.getElementById('totalStarsText').textContent = totalStars;
+        }
+
+        /* ===================================================================
+           5. QUIZ LOGIC & CAR DRIVE CANVAS
+           =================================================================== */
+        const driveCanvas = document.getElementById('driveCanvas');
+        const driveCtx = driveCanvas.getContext('2d');
+
+        function resizeDriveCanvas() {
+            const rect = driveCanvas.parentElement.getBoundingClientRect();
+            driveCanvas.width = rect.width;
+            driveCanvas.height = rect.height;
+        }
+
+        function loadLevel(levelIdx) {
+            currentQuestionIdx = 0;
+            levelStarsEarned = 0;
+            carPositionX = 10;
+            showScreen('quizScreen');
+            document.getElementById('levelTitleText').textContent = quizLevels[levelIdx].title;
+            renderQuestion();
+            drawDriveCanvas();
+        }
+
+        function renderQuestion() {
+            const levelObj = quizLevels[currentLevelIdx];
+            const qObj = levelObj.questions[currentQuestionIdx];
+
+            document.getElementById('questionNumText').textContent = currentQuestionIdx + 1;
+            document.getElementById('questionText').textContent = qObj.q;
+
+            // Reset feedback
+            const feedbackBox = document.getElementById('feedbackBox');
+            feedbackBox.classList.add('hidden');
+
+            // Render options
+            const container = document.getElementById('optionsContainer');
+            container.innerHTML = '';
+
+            const colors = ['btn-red', 'btn-amber', 'btn-green', 'bg-red-700 hover:bg-red-600 text-white border-b-4 border-red-900'];
+
+            qObj.options.forEach((optText, i) => {
+                const btn = document.createElement('button');
+                btn.className = `${colors[i % colors.length]} text-white font-bold text-lg md:text-xl p-4 rounded-xl shadow-md text-left flex items-center justify-between transition-transform active:scale-95`;
+                btn.innerHTML = `<span>${optText}</span> <i class="fa-solid fa-circle-chevron-right opacity-70"></i>`;
+                btn.onclick = () => handleAnswer(i);
+                container.appendChild(btn);
+            });
+
+            // Update level stars display
+            const starsContainer = document.getElementById('questionStars');
+            starsContainer.innerHTML = '';
+            for (let i = 0; i < 3; i++) {
+                const icon = document.createElement('i');
+                if (i < levelStarsEarned) {
+                    icon.className = 'fa-solid fa-star text-amber-400 text-lg';
+                } else {
+                    icon.className = 'fa-regular fa-star text-stone-400 text-lg';
+                }
+                starsContainer.appendChild(icon);
+            }
+        }
+
+        function handleAnswer(selectedIndex) {
+            const levelObj = quizLevels[currentLevelIdx];
+            const qObj = levelObj.questions[currentQuestionIdx];
+            const feedbackBox = document.getElementById('feedbackBox');
+            const feedbackText = document.getElementById('feedbackText');
+
+            // Disable all option buttons temporarily
+            const btns = document.getElementById('optionsContainer').querySelectorAll('button');
+            btns.forEach(b => b.disabled = true);
+
+            if (selectedIndex === qObj.correct) {
+                // Correct answer!
+                playSound('correct');
+                playSound('vroom');
+                levelStarsEarned++;
+                totalStars++;
+                updateHeaderUI();
+
+                feedbackBox.className = "mt-4 p-3 rounded-xl text-center font-bold bg-green-100 text-green-900 border-2 border-green-500 block";
+                feedbackText.innerHTML = `🌟 <strong>Awesome history detective!</strong> ${qObj.fact}`;
+
+                // Animate car forward on track
+                animateCarMove((currentQuestionIdx + 1) * 30 + 10, () => {
+                    setTimeout(() => {
+                        currentQuestionIdx++;
+                        if (currentQuestionIdx < 3) {
+                            renderQuestion();
+                        } else {
+                            // Level completed!
+                            playSound('win');
+                            showLevelComplete();
+                        }
+                    }, 1800);
+                });
+
+            } else {
+                // Gentle try again message
+                playSound('wrong');
+                feedbackBox.className = "mt-4 p-3 rounded-xl text-center font-bold bg-amber-100 text-amber-900 border-2 border-amber-500 block";
+                feedbackText.innerHTML = `💭 <strong>Great try!</strong> Let's learn together: The correct answer is <em>"${qObj.options[qObj.correct]}"</em>. You'll get it next time!`;
+
+                setTimeout(() => {
+                    currentQuestionIdx++;
+                    if (currentQuestionIdx < 3) {
+                        renderQuestion();
+                    } else {
+                        playSound('win');
+                        showLevelComplete();
+                    }
+                }, 2800);
+            }
+        }
+
+        function animateCarMove(targetX, callback) {
+            const startX = carPositionX;
+            const startTime = performance.now();
+            const duration = 800; // ms
+
+            function step(now) {
+                const elapsed = now - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+                carPositionX = startX + (targetX - startX) * progress;
+                drawDriveCanvas();
+
+                if (progress < 1) {
+                    requestAnimationFrame(step);
+                } else if (callback) {
+                    callback();
+                }
+            }
+            requestAnimationFrame(step);
+        }
+
+        /* Drawing the Stone Age Track & Red Race Car */
+        function drawDriveCanvas() {
+            if (!driveCanvas.width) return;
+            const w = driveCanvas.width;
+            const h = driveCanvas.height;
+
+            // Background pre-historic landscape
+            driveCtx.fillStyle = '#78350f'; // Warm stone earth
+            driveCtx.fillRect(0, 0, w, h);
+
+            // Green prehistoric grass border
+            driveCtx.fillStyle = '#15803d';
+            driveCtx.fillRect(0, 0, w, h * 0.3);
+            driveCtx.fillRect(0, h * 0.85, w, h * 0.15);
+
+            // Mammoth/Cave decorations in background
+            driveCtx.fillStyle = '#451a03';
+            driveCtx.font = '24px sans-serif';
+            driveCtx.fillText('🦣', w * 0.15, h * 0.22);
+            driveCtx.fillText('🌿', w * 0.4, h * 0.22);
+            driveCtx.fillText('🪨', w * 0.7, h * 0.22);
+
+            // Dirt road track
+            const trackY = h * 0.35;
+            const trackH = h * 0.48;
+            driveCtx.fillStyle = '#a16207';
+            driveCtx.fillRect(0, trackY, w, trackH);
+
+            // Dashed center road line
+            driveCtx.strokeStyle = '#fef08a';
+            driveCtx.lineWidth = 4;
+            driveCtx.setLineDash([15, 15]);
+            driveCtx.beginPath();
+            driveCtx.moveTo(0, trackY + trackH / 2);
+            driveCtx.lineTo(w, trackY + trackH / 2);
+            driveCtx.stroke();
+            driveCtx.setLineDash([]); // Reset line dash
+
+            // Draw finish line at 90%
+            const finishX = w * 0.9;
+            driveCtx.fillStyle = '#ffffff';
+            for (let i = 0; i < trackH; i += 12) {
+                if (Math.floor(i / 12) % 2 === 0) {
+                    driveCtx.fillRect(finishX, trackY + i, 12, 12);
+                    driveCtx.fillRect(finishX + 12, trackY + i + 6, 12, 12);
+                }
+            }
+
+            // Draw Red Race Car
+            const carX = (carPositionX / 100) * (w - 70);
+            const carY = trackY + trackH / 2 - 15;
+
+            // Car Wheels
+            driveCtx.fillStyle = '#1c1917';
+            driveCtx.beginPath();
+            driveCtx.arc(carX + 12, carY + 22, 9, 0, Math.PI * 2);
+            driveCtx.arc(carX + 48, carY + 22, 9, 0, Math.PI * 2);
+            driveCtx.fill();
+
+            // Car Body (Red Race Car)
+            driveCtx.fillStyle = '#dc2626'; // Bright Red
+            driveCtx.beginPath();
+            driveCtx.roundRect(carX, carY, 60, 20, 6);
+            driveCtx.fill();
+
+            // Car Cabin / Windshield
+            driveCtx.fillStyle = '#f87171';
+            driveCtx.beginPath();
+            driveCtx.roundRect(carX + 18, carY - 10, 24, 12, 4);
+            driveCtx.fill();
+
+            driveCtx.fillStyle = '#93c5fd'; // Glass
+            driveCtx.fillRect(carX + 22, carY - 8, 16, 8);
+
+            // Yellow Racing Stripe
+            driveCtx.fillStyle = '#f59e0b';
+            driveCtx.fillRect(carX, carY + 8, 60, 4);
+        }
+
+        /* ===================================================================
+           6. LEVEL COMPLETE & REWARD FLOW
+           =================================================================== */
+        function showLevelComplete() {
+            showScreen('levelCompleteScreen');
+            document.getElementById('levelCompleteSubtext').textContent = `You finished ${quizLevels[currentLevelIdx].title}!`;
+
+            const nextBtn = document.getElementById('nextLevelBtn');
+            if (currentLevelIdx >= quizLevels.length - 1) {
+                nextBtn.innerHTML = `FINISH GAME! <i class="fa-solid fa-crown"></i>`;
+            } else {
+                nextBtn.innerHTML = `NEXT LEVEL <i class="fa-solid fa-arrow-right"></i>`;
+            }
+        }
+
+        function nextLevel() {
+            if (currentLevelIdx >= quizLevels.length - 1) {
+                // Game completely won!
+                showScreen('gameCompleteScreen');
+                document.getElementById('finalStarsText').textContent = totalStars;
+                playSound('win');
+            } else {
+                currentLevelIdx++;
+                updateHeaderUI();
+                loadLevel(currentLevelIdx);
+            }
+        }
+
+        /* ===================================================================
+           7. REWARD GAME: BRICK BREAKER MINI-GAME
+           =================================================================== */
+        const brickCanvas = document.getElementById('brickCanvas');
+        const brickCtx = brickCanvas.getContext('2d');
+
+        let paddleWidth = 100;
+        let paddleHeight = 18;
+        let paddleX = 300;
+        let ballX = 350;
+        let ballY = 300;
+        let ballDX = 4;
+        let ballDY = -4;
+        let ballRadius = 10;
+
+        let bricks = [];
+        const brickRows = 4;
+        const brickCols = 7;
+        const brickPadding = 10;
+        const brickOffsetTop = 30;
+        const brickOffsetLeft = 35;
+        let brickWidth = 80;
+        let brickHeight = 22;
+
+        let isLeftPressed = false;
+        let isRightPressed = false;
+        let brickAnimFrame = null;
+
+        function resizeBrickCanvas() {
+            // Keep fixed internal resolution 700x380 for crisp game math
+            paddleX = (brickCanvas.width - paddleWidth) / 2;
+            resetBall();
+            initBricks();
+        }
+
+        function initBricks() {
+            bricks = [];
+            const stoneColors = ['#991b1b', '#b45309', '#78350f', '#dc2626'];
+            for (let c = 0; c < brickCols; c++) {
+                bricks[c] = [];
+                for (let r = 0; r < brickRows; r++) {
+                    bricks[c][r] = {
+                        x: 0,
+                        y: 0,
+                        status: 1,
+                        color: stoneColors[r % stoneColors.length]
+                    };
+                }
+            }
+        }
+
+        function resetBall() {
+            ballX = brickCanvas.width / 2;
+            ballY = brickCanvas.height - 40;
+            ballDX = (Math.random() > 0.5 ? 4 : -4);
+            ballDY = -4;
+        }
+
+        function startBrickBreakerStage() {
+            showScreen('rewardScreen');
+            rewardTimeRemaining = 30;
+            document.getElementById('rewardTimerText').textContent = rewardTimeRemaining + 's';
+
+            initBricks();
+            resetBall();
+
+            if (rewardTimerInterval) clearInterval(rewardTimerInterval);
+            rewardTimerInterval = setInterval(() => {
+                rewardTimeRemaining--;
+                document.getElementById('rewardTimerText').textContent = rewardTimeRemaining + 's';
+                if (rewardTimeRemaining <= 0) {
+                    clearInterval(rewardTimerInterval);
+                    cancelAnimationFrame(brickAnimFrame);
+                    playSound('win');
+                    // Return to level flow
+                    nextLevel();
+                }
+            }, 1000);
+
+            gameLoopBrickBreaker();
+        }
+
+        /* Controls Setup for Brick Breaker */
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') isLeftPressed = true;
+            if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') isRightPressed = true;
+        });
+
+        document.addEventListener('keyup', (e) => {
+            if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') isLeftPressed = false;
+            if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') isRightPressed = false;
+        });
+
+        // Touch buttons for mobile
+        const btnLeft = document.getElementById('btnLeft');
+        const btnRight = document.getElementById('btnRight');
+
+        btnLeft.addEventListener('touchstart', (e) => { e.preventDefault(); isLeftPressed = true; });
+        btnLeft.addEventListener('touchend', (e) => { e.preventDefault(); isLeftPressed = false; });
+        btnLeft.addEventListener('mousedown', () => isLeftPressed = true);
+        btnLeft.addEventListener('mouseup', () => isLeftPressed = false);
+
+        btnRight.addEventListener('touchstart', (e) => { e.preventDefault(); isRightPressed = true; });
+        btnRight.addEventListener('touchend', (e) => { e.preventDefault(); isRightPressed = false; });
+        btnRight.addEventListener('mousedown', () => isRightPressed = true);
+        btnRight.addEventListener('mouseup', () => isRightPressed = false);
+
+        // Touch drag on canvas directly
+        brickCanvas.addEventListener('touchmove', (e) => {
+            const rect = brickCanvas.getBoundingClientRect();
+            const touchX = e.touches[0].clientX - rect.left;
+            const scaleX = brickCanvas.width / rect.width;
+            paddleX = (touchX * scaleX) - paddleWidth / 2;
+        });
+
+        /* Collision Detection */
+        function collisionDetection() {
+            for (let c = 0; c < brickCols; c++) {
+                for (let r = 0; r < brickRows; r++) {
+                    let b = bricks[c][r];
+                    if (b.status === 1) {
+                        if (
+                            ballX > b.x &&
+                            ballX < b.x + brickWidth &&
+                            ballY > b.y &&
+                            ballY < b.y + brickHeight
+                        ) {
+                            ballDY = -ballDY;
+                            b.status = 0;
+                            playSound('bounce');
+                        }
+                    }
+                }
+            }
+        }
+
+        /* Main Brick Breaker Loop */
+        function gameLoopBrickBreaker() {
+            brickCtx.clearRect(0, 0, brickCanvas.width, brickCanvas.height);
+
+            // Draw background stone texture style
+            brickCtx.fillStyle = '#292524';
+            brickCtx.fillRect(0, 0, brickCanvas.width, brickCanvas.height);
+
+            // Draw Bricks
+            for (let c = 0; c < brickCols; c++) {
+                for (let r = 0; r < brickRows; r++) {
+                    if (bricks[c][r].status === 1) {
+                        let brickX = c * (brickWidth + brickPadding) + brickOffsetLeft;
+                        let brickY = r * (brickHeight + brickPadding) + brickOffsetTop;
+                        bricks[c][r].x = brickX;
+                        bricks[c][r].y = brickY;
+
+                        brickCtx.fillStyle = bricks[c][r].color;
+                        brickCtx.beginPath();
+                        brickCtx.roundRect(brickX, brickY, brickWidth, brickHeight, 5);
+                        brickCtx.fill();
+
+                        // Inner stone highlight
+                        brickCtx.strokeStyle = 'rgba(255,255,255,0.2)';
+                        brickCtx.strokeRect(brickX + 2, brickY + 2, brickWidth - 4, brickHeight - 4);
+                    }
+                }
+            }
+
+            // Draw Boulder Ball
+            brickCtx.beginPath();
+            brickCtx.arc(ballX, ballY, ballRadius, 0, Math.PI * 2);
+            brickCtx.fillStyle = '#f59e0b'; // Warm Amber Boulder
+            brickCtx.fill();
+            brickCtx.strokeStyle = '#78350f';
+            brickCtx.lineWidth = 2;
+            brickCtx.stroke();
+            brickCtx.closePath();
+
+            // Draw Car Paddle
+            brickCtx.fillStyle = '#dc2626'; // Red Car Paddle
+            brickCtx.beginPath();
+            brickCtx.roundRect(paddleX, brickCanvas.height - paddleHeight - 5, paddleWidth, paddleHeight, 6);
+            brickCtx.fill();
+
+            // Car Paddle Windows decoration
+            brickCtx.fillStyle = '#93c5fd';
+            brickCtx.fillRect(paddleX + paddleWidth / 2 - 12, brickCanvas.height - paddleHeight - 2, 24, 6);
+
+            // Paddle Wheels
+            brickCtx.fillStyle = '#000000';
+            brickCtx.fillRect(paddleX + 8, brickCanvas.height - 6, 16, 5);
+            brickCtx.fillRect(paddleX + paddleWidth - 24, brickCanvas.height - 6, 16, 5);
+
+            // Collision check with bricks
+            collisionDetection();
+
+            // Ball bouncing off side walls
+            if (ballX + ballDX > brickCanvas.width - ballRadius || ballX + ballDX < ballRadius) {
+                ballDX = -ballDX;
+                playSound('bounce');
+            }
+
+            // Ball bouncing off top ceiling
+            if (ballY + ballDY < ballRadius) {
+                ballDY = -ballDY;
+                playSound('bounce');
+            } 
+            // Ball hitting paddle bottom area
+            else if (ballY + ballDY > brickCanvas.height - paddleHeight - ballRadius - 5) {
+                if (ballX > paddleX && ballX < paddleX + paddleWidth) {
+                    ballDY = -Math.abs(ballDY);
+                    // Add slight angle change based on where ball hits paddle
+                    let hitPoint = (ballX - (paddleX + paddleWidth / 2)) / (paddleWidth / 2);
+                    ballDX = hitPoint * 5;
+                    playSound('bounce');
+                } else if (ballY + ballDY > brickCanvas.height - ballRadius) {
+                    // Ball dropped - auto reset gently
+                    resetBall();
+                }
+            }
+
+            // Paddle movement
+            if (isRightPressed && paddleX < brickCanvas.width - paddleWidth) {
+                paddleX += 7;
+            } else if (isLeftPressed && paddleX > 0) {
+                paddleX -= 7;
+            }
+
+            ballX += ballDX;
+            ballY += ballDY;
+
+            // Continue animation
+            brickAnimFrame = requestAnimationFrame(gameLoopBrickBreaker);
+        }
+
+        /* Handle window resizing */
+        window.addEventListener('resize', () => {
+            resizeDriveCanvas();
+            drawDriveCanvas();
+        });
+
+        // Initial setup on window load
+        window.onload = function() {
+            resizeDriveCanvas();
+            drawDriveCanvas();
+        };
+    </script>
+</body>
+</html>

@@ -1,0 +1,1183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Blast Off! Stone Age Cosmic Math Quiz</title>
+    <!-- Tailwind CSS for utility styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts for child-friendly rounded typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Quicksand:wght@600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --pink-main: #FF70A6;
+            --pink-light: #FF97B7;
+            --blue-main: #70D6FF;
+            --blue-dark: #3A86FF;
+            --gold-star: #FFD166;
+            --stone-cream: #FAF3DD;
+            --stone-dark: #33272A;
+            --stone-border: #6C5CE7;
+        }
+
+        body {
+            font-family: 'Fredoka', 'Quicksand', sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 30%, #31103f 65%, #4c0519 100%);
+            min-height: 100vh;
+            color: #2b2d42;
+            overflow-x: hidden;
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: manipulation;
+        }
+
+        /* Animated Starry Sky Background */
+        .stars-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .star {
+            position: absolute;
+            background-color: #ffffff;
+            border-radius: 50%;
+            animation: twinkle var(--duration, 3s) infinite ease-in-out var(--delay, 0s);
+        }
+
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.2; transform: scale(0.8); }
+            50% { opacity: 1; transform: scale(1.3); box-shadow: 0 0 10px #70D6FF, 0 0 15px #FF70A6; }
+        }
+
+        /* Stone Age Tablet Frame */
+        .stone-card {
+            background-color: #FAF3DD;
+            border: 6px solid #4A3E3D;
+            box-shadow: 
+                0 10px 0 #2A2121,
+                0 15px 25px rgba(0, 0, 0, 0.4),
+                inset 0 0 15px rgba(184, 150, 108, 0.4);
+            border-radius: 28px;
+            position: relative;
+        }
+
+        .stone-header {
+            background: linear-gradient(180deg, #5C4B49 0%, #3D3130 100%);
+            border-bottom: 4px solid #2A2121;
+            color: #FFD166;
+            text-shadow: 2px 2px 0px #000;
+        }
+
+        /* Interactive Buttons */
+        .stone-btn {
+            transition: all 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 8px 0 rgba(0, 0, 0, 0.25), inset 0 2px 0 rgba(255, 255, 255, 0.4);
+            cursor: pointer;
+        }
+
+        .stone-btn:hover {
+            transform: translateY(-3px);
+            filter: brightness(1.05);
+        }
+
+        .stone-btn:active {
+            transform: translateY(4px);
+            box-shadow: 0 2px 0 rgba(0, 0, 0, 0.25);
+        }
+
+        .btn-pink {
+            background: linear-gradient(180deg, #FF97B7 0%, #FF70A6 100%);
+            border: 4px solid #D6336C;
+            color: #ffffff;
+            text-shadow: 1px 2px 2px rgba(0,0,0,0.3);
+        }
+
+        .btn-blue {
+            background: linear-gradient(180deg, #70D6FF 0%, #3A86FF 100%);
+            border: 4px solid #1D4ED8;
+            color: #ffffff;
+            text-shadow: 1px 2px 2px rgba(0,0,0,0.3);
+        }
+
+        .btn-gold {
+            background: linear-gradient(180deg, #FFE380 0%, #FFD166 100%);
+            border: 4px solid #D97706;
+            color: #4A3E3D;
+            text-shadow: 1px 1px 0px rgba(255,255,255,0.6);
+        }
+
+        .btn-green {
+            background: linear-gradient(180deg, #06D6A0 0%, #059669 100%);
+            border: 4px solid #047857;
+            color: #ffffff;
+            text-shadow: 1px 2px 2px rgba(0,0,0,0.3);
+        }
+
+        /* Speech Bubble */
+        .speech-bubble {
+            position: relative;
+            background: #ffffff;
+            border: 4px solid #3A86FF;
+            border-radius: 20px;
+            box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+        }
+
+        .speech-bubble::after {
+            content: '';
+            position: absolute;
+            bottom: -15px;
+            left: 30px;
+            border-width: 15px 15px 0;
+            border-style: solid;
+            border-color: #ffffff transparent;
+            display: block;
+            width: 0;
+        }
+
+        .speech-bubble::before {
+            content: '';
+            position: absolute;
+            bottom: -20px;
+            left: 28px;
+            border-width: 17px 17px 0;
+            border-style: solid;
+            border-color: #3A86FF transparent;
+            display: block;
+            width: 0;
+        }
+
+        /* Animations */
+        @keyframes floatDino {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-8px) rotate(2deg); }
+        }
+
+        .animate-float {
+            animation: floatDino 3.5s ease-in-out infinite;
+        }
+
+        @keyframes bounceJump {
+            0%, 100% { transform: translateY(0) scale(1); }
+            30% { transform: translateY(-25px) scale(1.08); }
+            50% { transform: translateY(0) scale(0.95); }
+            70% { transform: translateY(-10px) scale(1.02); }
+        }
+
+        .animate-bounce-jump {
+            animation: bounceJump 0.8s ease-in-out;
+        }
+
+        @keyframes shakeWrong {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-12px); }
+            40%, 80% { transform: translateX(12px); }
+        }
+
+        .animate-shake {
+            animation: shakeWrong 0.5s ease-in-out;
+        }
+
+        /* Star Badge Pop */
+        @keyframes starEarned {
+            0% { transform: scale(0) rotate(-180deg); opacity: 0; }
+            80% { transform: scale(1.3) rotate(20deg); opacity: 1; }
+            100% { transform: scale(1) rotate(0deg); opacity: 1; }
+        }
+
+        .star-pop {
+            animation: starEarned 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        /* Custom Scrollbar for smooth presentation */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(0,0,0,0.2);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #FF70A6;
+            border-radius: 4px;
+        }
+
+        /* Canvas container */
+        #gameCanvas {
+            touch-action: none;
+            background: radial-gradient(circle at center, #1e1b4b 0%, #090d16 100%);
+            border-radius: 20px;
+            cursor: crosshair;
+        }
+    </style>
+</head>
+<body class="flex flex-col items-center justify-between min-h-screen p-3 md:p-6 relative">
+
+    <div class="stars-container" id="starsBg"></div>
+
+    <!-- Top Header Bar -->
+    <header class="w-full max-w-4xl z-10 flex flex-wrap items-center justify-between gap-2 mb-3 bg-slate-900/80 backdrop-blur-md p-3 rounded-2xl border-2 border-pink-400/30 text-white shadow-lg">
+        <div class="flex items-center gap-2">
+            <span class="text-3xl">🚀</span>
+            <div>
+                <h1 class="text-xl md:text-2xl font-bold tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-pink-300 via-sky-300 to-yellow-300">
+                    BLAST OFF!
+                </h1>
+                <p class="text-xs text-sky-200">Year 3 Math Mission</p>
+            </div>
+        </div>
+
+        <!-- Score & Stars Display -->
+        <div class="flex items-center gap-3 bg-slate-800/90 px-4 py-2 rounded-xl border border-yellow-400/40">
+            <div class="flex items-center gap-1.5">
+                <span class="text-xl">⭐</span>
+                <span id="starCounter" class="text-lg md:text-xl font-bold text-yellow-300">0 / 15</span>
+            </div>
+            <div class="h-6 w-0.5 bg-slate-600"></div>
+            <div class="flex items-center gap-1.5">
+                <span class="text-xl">🏆</span>
+                <span id="scoreCounter" class="text-lg md:text-xl font-bold text-pink-300">0 pts</span>
+            </div>
+        </div>
+
+        <!-- Audio Sound Toggle Button -->
+        <button id="soundToggleBtn" onclick="toggleSound()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 rounded-xl border border-slate-600 text-sm flex items-center gap-1.5 transition">
+            <span id="soundIcon">🔊</span>
+            <span id="soundLabel" class="hidden sm:inline">Sound ON</span>
+        </button>
+    </header>
+
+    <!-- Main Content Canvas / Area -->
+    <main class="w-full max-w-3xl z-10 flex-1 flex flex-col justify-center items-center my-auto">
+        
+        <!-- ================= SCREEN 1: WELCOME SCREEN ================= -->
+        <div id="welcomeScreen" class="w-full stone-card p-6 md:p-8 text-center flex flex-col items-center">
+            <div class="inline-block bg-pink-500/20 px-4 py-1.5 rounded-full text-pink-700 font-bold text-sm mb-3">
+                🦕 Prehistoric Cosmic Adventure
+            </div>
+            <h2 class="text-3xl md:text-5xl font-extrabold text-slate-800 mb-3 tracking-wide">
+                Times Tables Mission!
+            </h2>
+            <p class="text-slate-600 text-base md:text-lg mb-6 max-w-lg leading-relaxed">
+                Join our friendly dinosaurs <span class="text-pink-600 font-bold">Rexy</span> and <span class="text-sky-600 font-bold">Trike</span>! Answer 15 math questions (2, 3, 4, 5, & 10 times tables) to blast off and unlock the <span class="text-purple-600 font-bold">Asteroid Shooter</span> mini-game!
+            </p>
+
+            <!-- Cute Mascot Illustration (SVG Dinos) -->
+            <div class="flex justify-center items-center gap-4 my-4 animate-float">
+                <!-- Pink T-Rex with Party Hat -->
+                <svg width="110" height="110" viewBox="0 0 120 120" class="drop-shadow-md">
+                    <!-- Body -->
+                    <path d="M40 90 C30 90 20 80 20 60 C20 40 35 30 55 30 C75 30 90 40 90 55 C90 65 85 75 80 85 C70 95 50 90 40 90 Z" fill="#FF70A6"/>
+                    <!-- Belly -->
+                    <path d="M45 85 C38 85 30 75 30 60 C30 50 40 42 50 42 C58 42 65 52 65 65 C65 75 55 85 45 85 Z" fill="#FF97B7"/>
+                    <!-- Tail -->
+                    <path d="M25 70 Q 5 75 10 90 Q 25 85 30 78 Z" fill="#FF70A6"/>
+                    <!-- Head & Mouth -->
+                    <circle cx="75" cy="45" r="22" fill="#FF70A6"/>
+                    <ellipse cx="85" cy="50" rx="12" ry="8" fill="#FF70A6"/>
+                    <!-- Eye -->
+                    <circle cx="72" cy="40" r="4" fill="#FFFFFF"/>
+                    <circle cx="73" cy="40" r="2" fill="#2B2D42"/>
+                    <!-- Cute Blush -->
+                    <ellipse cx="80" cy="48" rx="4" ry="2.5" fill="#E63946" opacity="0.4"/>
+                    <!-- Party Hat -->
+                    <polygon points="75,23 65,5 85,15" fill="#FFD166"/>
+                    <circle cx="65" cy="5" r="3" fill="#70D6FF"/>
+                    <!-- Small Arms -->
+                    <path d="M68 62 Q 78 64 72 68" stroke="#D6336C" stroke-width="3" stroke-linecap="round" fill="none"/>
+                    <!-- Cute Feet -->
+                    <ellipse cx="40" cy="92" rx="8" ry="4" fill="#D6336C"/>
+                    <ellipse cx="60" cy="92" rx="8" ry="4" fill="#D6336C"/>
+                </svg>
+
+                <!-- Sky Blue Triceratops -->
+                <svg width="110" height="110" viewBox="0 0 120 120" class="drop-shadow-md">
+                    <!-- Body -->
+                    <path d="M30 85 C20 85 15 70 20 55 C25 40 45 35 65 40 C80 45 95 60 90 75 C85 88 45 85 30 85 Z" fill="#70D6FF"/>
+                    <!-- Head Shield -->
+                    <path d="M70 25 C85 20 100 35 95 55 C90 40 80 30 70 25 Z" fill="#3A86FF"/>
+                    <!-- Horns -->
+                    <polygon points="80,32 92,18 85,36" fill="#FFD166"/>
+                    <polygon points="68,28 75,12 73,32" fill="#FFD166"/>
+                    <!-- Nose Horn -->
+                    <polygon points="96,52 108,48 95,58" fill="#FFD166"/>
+                    <!-- Eye -->
+                    <circle cx="75" cy="48" r="4" fill="#FFFFFF"/>
+                    <circle cx="76" cy="48" r="2" fill="#2B2D42"/>
+                    <!-- Cute Smile -->
+                    <path d="M82 58 Q 87 63 92 58" stroke="#1D4ED8" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+                    <!-- Cute Feet -->
+                    <ellipse cx="38" cy="88" rx="7" ry="4" fill="#1D4ED8"/>
+                    <ellipse cx="62" cy="88" rx="7" ry="4" fill="#1D4ED8"/>
+                </svg>
+            </div>
+
+            <button onclick="startGame()" class="stone-btn btn-green w-full max-w-xs py-4 px-8 rounded-2xl text-2xl font-bold tracking-wider mt-4 flex items-center justify-center gap-2">
+                START MISSION 🚀
+            </button>
+        </div>
+
+        <!-- ================= SCREEN 2: QUIZ SCREEN ================= -->
+        <div id="quizScreen" class="w-full stone-card p-4 md:p-6 hidden">
+            
+            <!-- Progress Bar Header -->
+            <div class="flex flex-col sm:flex-row items-center justify-between gap-2 mb-4 bg-amber-100/80 p-3 rounded-2xl border-2 border-amber-300/60">
+                <div class="flex items-center gap-2">
+                    <span class="bg-amber-400 text-amber-950 font-bold px-3 py-1 rounded-xl text-sm" id="levelBadge">
+                        Level 1 / 5
+                    </span>
+                    <span class="text-xs md:text-sm font-semibold text-slate-700" id="topicBadge">
+                        Topic: 2 & 10 Tables
+                    </span>
+                </div>
+
+                <!-- Progress Dots (3 questions per level) -->
+                <div class="flex items-center gap-2" id="progressDotsContainer">
+                    <div class="w-4 h-4 rounded-full bg-slate-300 border border-slate-400" id="dot-0"></div>
+                    <div class="w-4 h-4 rounded-full bg-slate-300 border border-slate-400" id="dot-1"></div>
+                    <div class="w-4 h-4 rounded-full bg-slate-300 border border-slate-400" id="dot-2"></div>
+                </div>
+            </div>
+
+            <!-- Dino Mascot Speech Area -->
+            <div class="flex items-start gap-3 mb-4">
+                <div id="mascotSvgContainer" class="w-20 h-20 md:w-24 md:h-24 flex-shrink-0">
+                    <!-- Dynamic Mascot SVG inserted via JS -->
+                </div>
+                
+                <div class="speech-bubble p-3 md:p-4 flex-1 my-auto text-slate-800 font-bold text-sm md:text-base leading-snug">
+                    <p id="mascotSpeech">
+                        Welcome space explorer! Choose the correct answer to fuel our rocket! 🚀
+                    </p>
+                </div>
+            </div>
+
+            <!-- Question Card -->
+            <div class="bg-white/90 border-4 border-slate-700/20 rounded-2xl p-6 text-center shadow-inner mb-6">
+                <span class="text-xs font-bold text-pink-500 uppercase tracking-widest mb-1 block">Question</span>
+                <div id="questionText" class="text-4xl md:text-6xl font-black text-slate-800 tracking-wide my-2">
+                    2 × 4 = ?
+                </div>
+            </div>
+
+            <!-- 3 Multiple Choice Option Buttons -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4" id="optionsContainer">
+                <button onclick="selectOption(0)" id="btn-opt-0" class="stone-btn btn-pink py-4 px-4 rounded-2xl text-2xl md:text-3xl font-bold text-center">
+                    8
+                </button>
+                <button onclick="selectOption(1)" id="btn-opt-1" class="stone-btn btn-blue py-4 px-4 rounded-2xl text-2xl md:text-3xl font-bold text-center">
+                    6
+                </button>
+                <button onclick="selectOption(2)" id="btn-opt-2" class="stone-btn btn-gold py-4 px-4 rounded-2xl text-2xl md:text-3xl font-bold text-center">
+                    10
+                </button>
+            </div>
+        </div>
+
+        <!-- ================= SCREEN 3: LEVEL COMPLETE MODAL ================= -->
+        <div id="levelModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+            <div class="stone-card max-w-md w-full p-6 text-center flex flex-col items-center border-4 border-yellow-400">
+                <div class="text-5xl mb-2 animate-bounce">🏆</div>
+                <h3 class="text-3xl font-black text-slate-800 mb-1" id="levelModalTitle">
+                    Level 1 Complete!
+                </h3>
+                <p class="text-slate-600 text-sm mb-4">You are doing fantastic!</p>
+
+                <!-- Earned Stars Animation -->
+                <div class="flex justify-center gap-3 my-3">
+                    <span class="text-4xl star-pop" style="animation-delay: 0.1s">⭐</span>
+                    <span class="text-4xl star-pop" style="animation-delay: 0.3s">⭐</span>
+                    <span class="text-4xl star-pop" style="animation-delay: 0.5s">⭐</span>
+                </div>
+
+                <div class="bg-amber-100/90 rounded-xl p-3 border border-amber-300 w-full my-3 text-slate-700 text-sm font-semibold">
+                    <p id="levelModalSummary">You earned 3 Stars in this level! Total: 3/15 Stars</p>
+                </div>
+
+                <button onclick="nextLevel()" id="nextLevelBtn" class="stone-btn btn-green w-full py-3.5 rounded-2xl text-xl font-bold mt-2">
+                    NEXT LEVEL 🚀
+                </button>
+            </div>
+        </div>
+
+        <!-- ================= SCREEN 4: ASTEROID SHOOTER MINI-GAME ================= -->
+        <div id="rewardGameScreen" class="w-full stone-card p-4 text-center hidden">
+            <div class="flex flex-wrap items-center justify-between gap-2 mb-3 bg-purple-900/40 p-2.5 rounded-xl border border-purple-400/30 text-white">
+                <div class="flex items-center gap-2">
+                    <span class="text-2xl">☄️</span>
+                    <div class="text-left">
+                        <h3 class="font-extrabold text-base md:text-lg text-pink-300">Asteroid Shooter!</h3>
+                        <p class="text-xs text-purple-200">Tap glowing space rocks to smash them!</p>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-3">
+                    <div class="bg-purple-950/80 px-3 py-1 rounded-lg border border-purple-400/50 text-xs md:text-sm font-bold text-yellow-300">
+                        Time: <span id="gameTimer" class="text-base text-white">30</span>s
+                    </div>
+                    <div class="bg-purple-950/80 px-3 py-1 rounded-lg border border-purple-400/50 text-xs md:text-sm font-bold text-sky-300">
+                        Smashed: <span id="asteroidsSmashed" class="text-base text-white">0</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Interactive Canvas -->
+            <div class="relative w-full flex justify-center items-center">
+                <canvas id="gameCanvas" width="600" height="400" class="w-full max-w-full h-auto shadow-2xl border-4 border-purple-500/30"></canvas>
+            </div>
+
+            <p class="text-xs text-slate-600 mt-2 font-semibold">
+                Tip: Rapidly tap asteroids before they disappear! 🌟
+            </p>
+        </div>
+
+        <!-- ================= SCREEN 5: GRAND VICTORY SCREEN ================= -->
+        <div id="victoryScreen" class="w-full stone-card p-6 md:p-8 text-center flex flex-col items-center hidden">
+            <div class="text-6xl my-2 animate-bounce">👑</div>
+            <h2 class="text-3xl md:text-5xl font-black text-slate-800 mb-2">
+                COSMIC CHAMPION!
+            </h2>
+            <p class="text-slate-600 text-base md:text-lg mb-4">
+                You completed all 5 levels and mastered your Year 3 times tables!
+            </p>
+
+            <div class="bg-amber-100 p-4 rounded-2xl border-2 border-amber-300 w-full max-w-md my-2 text-slate-800">
+                <div class="flex justify-around items-center mb-2">
+                    <div>
+                        <span class="text-xs text-slate-500 block uppercase font-bold">Total Stars</span>
+                        <span class="text-2xl font-black text-amber-500">⭐ 15 / 15</span>
+                    </div>
+                    <div class="h-8 w-0.5 bg-amber-300"></div>
+                    <div>
+                        <span class="text-xs text-slate-500 block uppercase font-bold">Final Score</span>
+                        <span id="finalScoreText" class="text-2xl font-black text-pink-500">1500 pts</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex flex-col sm:flex-row gap-3 w-full max-w-md mt-4">
+                <button onclick="startAsteroidShooter()" class="stone-btn btn-pink flex-1 py-3.5 rounded-2xl text-lg font-bold">
+                    PLAY SHOOTER AGAIN ☄️️
+                </button>
+                <button onclick="restartFullGame()" class="stone-btn btn-blue flex-1 py-3.5 rounded-2xl text-lg font-bold">
+                    REPLAY QUIZ 🔄
+                </button>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Footer Security & Kindness Notice -->
+    <footer class="w-full max-w-4xl z-10 text-center py-2 text-xs text-slate-300/80 flex justify-between items-center px-2">
+        <span>🦕 Safe & Kind Kids Learning Game</span>
+        <span>Year 3 Maths • Blast Off!</span>
+    </footer>
+
+    <script>
+        /* ====================================================================
+         * AUDIO SYSTEM (Web Audio API Synthesizer - Offline Safe & Friendly)
+         * ==================================================================== */
+        let audioCtx = null;
+        let soundEnabled = true;
+
+        function initAudio() {
+            if (!audioCtx) {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                if (AudioContext) {
+                    audioCtx = new AudioContext();
+                }
+            }
+            if (audioCtx && audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }
+
+        function toggleSound() {
+            soundEnabled = !soundEnabled;
+            const soundIcon = document.getElementById('soundIcon');
+            const soundLabel = document.getElementById('soundLabel');
+            if (soundEnabled) {
+                soundIcon.textContent = '🔊';
+                soundLabel.textContent = 'Sound ON';
+                playChimeSound(523.25, 'sine', 0.1); // C5 test
+            } else {
+                soundIcon.textContent = '🔇';
+                soundLabel.textContent = 'Sound OFF';
+            }
+        }
+
+        // Generic synth helper
+        function playChimeSound(freq, type = 'sine', duration = 0.2, gainVal = 0.15) {
+            if (!soundEnabled) return;
+            initAudio();
+            if (!audioCtx) return;
+
+            try {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+
+                osc.type = type;
+                osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+
+                gain.gain.setValueAtTime(gainVal, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
+
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+
+                osc.start();
+                osc.stop(audioCtx.currentTime + duration);
+            } catch (e) {
+                console.warn("Audio error:", e);
+            }
+        }
+
+        // Sound 1: Click
+        function playClickSound() {
+            playChimeSound(440, 'sine', 0.08, 0.1);
+        }
+
+        // Sound 2: Correct Answer (Happy Arpeggio)
+        function playCorrectSound() {
+            if (!soundEnabled) return;
+            initAudio();
+            const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+            notes.forEach((freq, idx) => {
+                setTimeout(() => {
+                    playChimeSound(freq, 'triangle', 0.2, 0.2);
+                }, idx * 90);
+            });
+        }
+
+        // Sound 3: Soft Friendly Retry (Warm non-scary tone)
+        function playRetrySound() {
+            if (!soundEnabled) return;
+            initAudio();
+            playChimeSound(329.63, 'sine', 0.18, 0.12); // E4
+            setTimeout(() => {
+                playChimeSound(261.63, 'sine', 0.25, 0.1); // C4
+            }, 120);
+        }
+
+        // Sound 4: Level Complete Fanfare
+        function playFanfareSound() {
+            if (!soundEnabled) return;
+            initAudio();
+            const notes = [392.00, 523.25, 659.25, 783.99, 1046.50]; // G4, C5, E5, G5, C6
+            notes.forEach((freq, idx) => {
+                setTimeout(() => {
+                    playChimeSound(freq, 'triangle', 0.35, 0.2);
+                }, idx * 110);
+            });
+        }
+
+        // Sound 5: Asteroid Smash (Crunch Pop)
+        function playAsteroidSmashSound() {
+            if (!soundEnabled) return;
+            initAudio();
+            if (!audioCtx) return;
+
+            try {
+                // Pitch drop synth
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(350, audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(60, audioCtx.currentTime + 0.15);
+
+                gain.gain.setValueAtTime(0.25, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.15);
+
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.15);
+            } catch (e) {
+                console.warn("Audio smash error:", e);
+            }
+        }
+
+        /* ====================================================================
+         * GAME STATE & QUESTION BANK (Year 3: 2, 3, 4, 5, 10 Times Tables)
+         * ==================================================================== */
+        const QUESTION_BANK = [
+            // LEVEL 1: 2 and 10 times tables
+            {
+                level: 1,
+                topic: "2 & 10 Tables",
+                questions: [
+                    { q: "2 × 4 = ?", options: [8, 6, 10], correct: 0 },
+                    { q: "10 × 3 = ?", options: [20, 30, 40], correct: 1 },
+                    { q: "2 × 7 = ?", options: [12, 16, 14], correct: 2 }
+                ]
+            },
+            // LEVEL 2: 5 and 2 times tables
+            {
+                level: 2,
+                topic: "5 & 2 Tables",
+                questions: [
+                    { q: "5 × 5 = ?", options: [20, 25, 30], correct: 1 },
+                    { q: "2 × 9 = ?", options: [18, 16, 20], correct: 0 },
+                    { q: "5 × 8 = ?", options: [35, 45, 40], correct: 2 }
+                ]
+            },
+            // LEVEL 3: 3 times table
+            {
+                level: 3,
+                topic: "3 Times Table",
+                questions: [
+                    { q: "3 × 3 = ?", options: [9, 6, 12], correct: 0 },
+                    { q: "3 × 6 = ?", options: [15, 18, 21], correct: 1 },
+                    { q: "3 × 8 = ?", options: [22, 27, 24], correct: 2 }
+                ]
+            },
+            // LEVEL 4: 4 times table
+            {
+                level: 4,
+                topic: "4 Times Table",
+                questions: [
+                    { q: "4 × 4 = ?", options: [16, 12, 20], correct: 0 },
+                    { q: "4 × 7 = ?", options: [24, 28, 32], correct: 1 },
+                    { q: "4 × 9 = ?", options: [32, 40, 36], correct: 2 }
+                ]
+            },
+            // LEVEL 5: Master Mix (2, 3, 4, 5, 10)
+            {
+                level: 5,
+                topic: "Master Mix!",
+                questions: [
+                    { q: "3 × 7 = ?", options: [21, 18, 24], correct: 0 },
+                    { q: "4 × 8 = ?", options: [28, 32, 36], correct: 1 },
+                    { q: "5 × 9 = ?", options: [40, 50, 45], correct: 2 }
+                ]
+            }
+        ];
+
+        let gameState = {
+            currentLevelIdx: 0,
+            currentQuestionIdx: 0,
+            score: 0,
+            starsEarned: 0,
+            isLocked: false,
+            mascotType: 0 // 0: Rexy (Pink), 1: Trike (Blue)
+        };
+
+        // SVG Dino Mascots Markup
+        const REXY_SVG = `
+            <svg viewBox="0 0 120 120" class="w-full h-full drop-shadow">
+                <path d="M40 90 C30 90 20 80 20 60 C20 40 35 30 55 30 C75 30 90 40 90 55 C90 65 85 75 80 85 C70 95 50 90 40 90 Z" fill="#FF70A6"/>
+                <path d="M45 85 C38 85 30 75 30 60 C30 50 40 42 50 42 C58 42 65 52 65 65 C65 75 55 85 45 85 Z" fill="#FF97B7"/>
+                <circle cx="75" cy="45" r="22" fill="#FF70A6"/>
+                <circle cx="72" cy="40" r="4" fill="#FFFFFF"/>
+                <circle cx="73" cy="40" r="2" fill="#2B2D42"/>
+                <polygon points="75,23 65,5 85,15" fill="#FFD166"/>
+                <path d="M68 62 Q 78 64 72 68" stroke="#D6336C" stroke-width="3" stroke-linecap="round" fill="none"/>
+            </svg>
+        `;
+
+        const TRIKE_SVG = `
+            <svg viewBox="0 0 120 120" class="w-full h-full drop-shadow">
+                <path d="M30 85 C20 85 15 70 20 55 C25 40 45 35 65 40 C80 45 95 60 90 75 C85 88 45 85 30 85 Z" fill="#70D6FF"/>
+                <polygon points="80,32 92,18 85,36" fill="#FFD166"/>
+                <polygon points="68,28 75,12 73,32" fill="#FFD166"/>
+                <circle cx="75" cy="48" r="4" fill="#FFFFFF"/>
+                <circle cx="76" cy="48" r="2" fill="#2B2D42"/>
+                <path d="M82 58 Q 87 63 92 58" stroke="#1D4ED8" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+            </svg>
+        `;
+
+        const FRIENDLY_MOTIVATIONS = [
+            "You are doing awesome! 🌟",
+            "Super intelligence power! 🧠✨",
+            "Keep going, space explorer! 🚀",
+            "Math genius in action! 🦖",
+            "Awesome work! You got this! 💫"
+        ];
+
+        const RETRY_MESSAGES = [
+            "Try again! You can do it! 🦕✨",
+            "Almost! Give it another shot! 💫",
+            "Keep trying! You are so close! 🌟",
+            "Take your time and try again! 🦖"
+        ];
+
+        function updateHeaderUI() {
+            document.getElementById('starCounter').textContent = `${gameState.starsEarned} / 15`;
+            document.getElementById('scoreCounter').textContent = `${gameState.score} pts`;
+        }
+
+        function startGame() {
+            initAudio();
+            playClickSound();
+
+            document.getElementById('welcomeScreen').classList.add('hidden');
+            document.getElementById('quizScreen').classList.remove('hidden');
+
+            gameState.currentLevelIdx = 0;
+            gameState.currentQuestionIdx = 0;
+            gameState.score = 0;
+            gameState.starsEarned = 0;
+
+            updateHeaderUI();
+            renderQuestion();
+        }
+
+        function renderQuestion() {
+            gameState.isLocked = false;
+            const currentLevelData = QUESTION_BANK[gameState.currentLevelIdx];
+            const currentQ = currentLevelData.questions[gameState.currentQuestionIdx];
+
+            // Update Level Header
+            document.getElementById('levelBadge').textContent = `Level ${currentLevelData.level} / 5`;
+            document.getElementById('topicBadge').textContent = `Topic: ${currentLevelData.topic}`;
+
+            // Update Progress Dots
+            for (let i = 0; i < 3; i++) {
+                const dot = document.getElementById(`dot-${i}`);
+                if (i < gameState.currentQuestionIdx) {
+                    dot.className = "w-4 h-4 rounded-full bg-yellow-400 border border-yellow-600 shadow-sm";
+                } else if (i === gameState.currentQuestionIdx) {
+                    dot.className = "w-4 h-4 rounded-full bg-pink-500 border-2 border-white shadow-md animate-pulse";
+                } else {
+                    dot.className = "w-4 h-4 rounded-full bg-slate-300 border border-slate-400";
+                }
+            }
+
+            // Alternate Mascot SVG
+            gameState.mascotType = (gameState.currentLevelIdx + gameState.currentQuestionIdx) % 2;
+            document.getElementById('mascotSvgContainer').innerHTML = gameState.mascotType === 0 ? REXY_SVG : TRIKE_SVG;
+
+            // Mascot Speech text
+            const randomMotiv = FRIENDLY_MOTIVATIONS[Math.floor(Math.random() * FRIENDLY_MOTIVATIONS.length)];
+            document.getElementById('mascotSpeech').textContent = randomMotiv;
+
+            // Render Question Text
+            document.getElementById('questionText').textContent = currentQ.q;
+
+            // Render Option Buttons
+            currentQ.options.forEach((optValue, idx) => {
+                const btn = document.getElementById(`btn-opt-${idx}`);
+                btn.textContent = optValue;
+                btn.disabled = false;
+                btn.classList.remove('opacity-40', 'animate-shake');
+            });
+        }
+
+        function selectOption(optionIndex) {
+            if (gameState.isLocked) return;
+
+            initAudio();
+            const currentLevelData = QUESTION_BANK[gameState.currentLevelIdx];
+            const currentQ = currentLevelData.questions[gameState.currentQuestionIdx];
+
+            if (optionIndex === currentQ.correct) {
+                // CORRECT ANSWER LOGIC
+                gameState.isLocked = true;
+                playCorrectSound();
+
+                // Rewards
+                gameState.score += 100;
+                gameState.starsEarned += 1;
+                updateHeaderUI();
+
+                // Dino jump animation & speech
+                const mascotContainer = document.getElementById('mascotSvgContainer');
+                mascotContainer.classList.add('animate-bounce-jump');
+                setTimeout(() => mascotContainer.classList.remove('animate-bounce-jump'), 800);
+
+                document.getElementById('mascotSpeech').textContent = "SUPER JOB! That's correct! ⭐🎉";
+
+                // Confetti particle burst
+                launchConfetti();
+
+                // Advance question or level after 1.2s
+                setTimeout(() => {
+                    gameState.currentQuestionIdx++;
+                    if (gameState.currentQuestionIdx >= currentLevelData.questions.length) {
+                        // Level Completed!
+                        showLevelCompleteModal();
+                    } else {
+                        renderQuestion();
+                    }
+                }, 1200);
+
+            } else {
+                // INCORRECT ANSWER LOGIC (Gentle retry, non-scary, no loss of score)
+                playRetrySound();
+
+                const btn = document.getElementById(`btn-opt-${optionIndex}`);
+                btn.classList.add('animate-shake', 'opacity-40');
+                btn.disabled = true;
+
+                // Friendly prompt bubble from Dino
+                const retryMsg = RETRY_MESSAGES[Math.floor(Math.random() * RETRY_MESSAGES.length)];
+                document.getElementById('mascotSpeech').textContent = retryMsg;
+
+                setTimeout(() => {
+                    btn.classList.remove('animate-shake');
+                }, 500);
+            }
+        }
+
+        function launchConfetti() {
+            const colors = ['#FF70A6', '#70D6FF', '#FFD166', '#06D6A0', '#B5179E'];
+            for (let i = 0; i < 30; i++) {
+                const particle = document.createElement('div');
+                particle.style.position = 'fixed';
+                particle.style.zIndex = '100';
+                particle.style.width = Math.random() * 10 + 6 + 'px';
+                particle.style.height = Math.random() * 10 + 6 + 'px';
+                particle.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                particle.style.borderRadius = Math.random() > 0.5 ? '50%' : '3px';
+                particle.style.left = Math.random() * 100 + 'vw';
+                particle.style.top = '-10px';
+                particle.style.pointerEvents = 'none';
+
+                document.body.appendChild(particle);
+
+                const duration = Math.random() * 1.5 + 1.2;
+                const xOffset = (Math.random() - 0.5) * 200;
+
+                particle.animate([
+                    { transform: 'translate(0, 0) rotate(0deg)', opacity: 1 },
+                    { transform: `translate(${xOffset}px, 100vh) rotate(${Math.random() * 720}deg)`, opacity: 0 }
+                ], {
+                    duration: duration * 1000,
+                    easing: 'cubic-bezier(0.25, 0.46, 0.45, 0.94)'
+                }).onfinish = () => particle.remove();
+            }
+        }
+
+        function showLevelCompleteModal() {
+            playFanfareSound();
+            const modal = document.getElementById('levelModal');
+            const title = document.getElementById('levelModalTitle');
+            const summary = document.getElementById('levelModalSummary');
+            const nextBtn = document.getElementById('nextLevelBtn');
+
+            const currentLevelNum = gameState.currentLevelIdx + 1;
+            title.textContent = `Level ${currentLevelNum} Complete!`;
+            summary.textContent = `You earned 3 Stars in Level ${currentLevelNum}! Total Stars: ${gameState.starsEarned}/15 ⭐`;
+
+            if (gameState.currentLevelIdx >= 4) {
+                // Final Level Completed -> Unlock Asteroid Shooter!
+                nextBtn.textContent = "UNLOCK ASTEROID SHOOTER! ☄️🚀";
+            } else {
+                nextBtn.textContent = "NEXT LEVEL 🚀";
+            }
+
+            modal.classList.remove('hidden');
+        }
+
+        function nextLevel() {
+            playClickSound();
+            document.getElementById('levelModal').classList.add('hidden');
+
+            if (gameState.currentLevelIdx >= 4) {
+                // All 5 levels complete! Open Asteroid Shooter mini-game
+                startAsteroidShooter();
+            } else {
+                gameState.currentLevelIdx++;
+                gameState.currentQuestionIdx = 0;
+                renderQuestion();
+            }
+        }
+
+        /* ====================================================================
+         * REWARD GAME: ASTEROID SHOOTER MINI-GAME (Canvas 2D Engine)
+         * ==================================================================== */
+        let canvas, ctx;
+        let gameLoopId = null;
+        let gameTimerInterval = null;
+        let asteroids = [];
+        let particles = [];
+        let floatingTexts = [];
+        let shooterScore = 0;
+        let asteroidsSmashed = 0;
+        let timeLeft = 30;
+        let isShooterActive = false;
+
+        class Asteroid {
+            constructor(w, h) {
+                this.radius = Math.random() * 18 + 22; // 22px to 40px
+                this.x = Math.random() * (w - this.radius * 2) + this.radius;
+                this.y = -this.radius;
+                this.speedY = Math.random() * 1.5 + 1.2;
+                this.speedX = (Math.random() - 0.5) * 1.0;
+                this.rotation = Math.random() * Math.PI * 2;
+                this.rotSpeed = (Math.random() - 0.5) * 0.05;
+                this.color = Math.random() > 0.5 ? '#FF70A6' : '#70D6FF';
+                this.glowColor = this.color === '#FF70A6' ? '#FF97B7' : '#3A86FF';
+            }
+
+            update() {
+                this.y += this.speedY;
+                this.x += this.speedX;
+                this.rotation += this.rotSpeed;
+            }
+
+            draw(ctx) {
+                ctx.save();
+                ctx.translate(this.x, this.y);
+                ctx.rotate(this.rotation);
+
+                // Outer cosmic glow
+                ctx.shadowBlur = 12;
+                ctx.shadowColor = this.glowColor;
+
+                // Asteroid body
+                ctx.fillStyle = this.color;
+                ctx.beginPath();
+                ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Prehistoric crater details
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
+                ctx.beginPath();
+                ctx.arc(-this.radius * 0.3, -this.radius * 0.3, this.radius * 0.25, 0, Math.PI * 2);
+                ctx.arc(this.radius * 0.2, this.radius * 0.2, this.radius * 0.2, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.restore();
+            }
+        }
+
+        class DustParticle {
+            constructor(x, y, color) {
+                this.x = x;
+                this.y = y;
+                this.radius = Math.random() * 4 + 2;
+                this.color = color;
+                this.vx = (Math.random() - 0.5) * 8;
+                this.vy = (Math.random() - 0.5) * 8;
+                this.alpha = 1;
+            }
+
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                this.alpha -= 0.03;
+            }
+
+            draw(ctx) {
+                ctx.save();
+                ctx.globalAlpha = Math.max(0, this.alpha);
+                ctx.fillStyle = this.color;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            }
+        }
+
+        class FloatingText {
+            constructor(x, y, text) {
+                this.x = x;
+                this.y = y;
+                this.text = text;
+                this.alpha = 1;
+                this.vy = -1.5;
+            }
+
+            update() {
+                this.y += this.vy;
+                this.alpha -= 0.025;
+            }
+
+            draw(ctx) {
+                ctx.save();
+                ctx.globalAlpha = Math.max(0, this.alpha);
+                ctx.font = 'bold 20px Fredoka, sans-serif';
+                ctx.fillStyle = '#FFD166';
+                ctx.fillText(this.text, this.x, this.y);
+                ctx.restore();
+            }
+        }
+
+        function startAsteroidShooter() {
+            document.getElementById('quizScreen').classList.add('hidden');
+            document.getElementById('levelModal').classList.add('hidden');
+            document.getElementById('victoryScreen').classList.add('hidden');
+            document.getElementById('rewardGameScreen').classList.remove('hidden');
+
+            canvas = document.getElementById('gameCanvas');
+            ctx = canvas.getContext('2d');
+
+            // Set dynamic canvas resolution
+            const rect = canvas.parentElement.getBoundingClientRect();
+            canvas.width = Math.min(rect.width, 600);
+            canvas.height = 380;
+
+            asteroids = [];
+            particles = [];
+            floatingTexts = [];
+            shooterScore = 0;
+            asteroidsSmashed = 0;
+            timeLeft = 30;
+            isShooterActive = true;
+
+            document.getElementById('gameTimer').textContent = timeLeft;
+            document.getElementById('asteroidsSmashed').textContent = asteroidsSmashed;
+
+            // Attach canvas click/touch handlers
+            canvas.onpointerdown = handleCanvasTap;
+
+            // Timer interval
+            if (gameTimerInterval) clearInterval(gameTimerInterval);
+            gameTimerInterval = setInterval(() => {
+                if (!isShooterActive) return;
+                timeLeft--;
+                document.getElementById('gameTimer').textContent = timeLeft;
+                if (timeLeft <= 0) {
+                    endAsteroidShooter();
+                }
+            }, 1000);
+
+            // Game loop
+            if (gameLoopId) cancelAnimationFrame(gameLoopId);
+            let lastSpawn = 0;
+
+            function runLoop(timestamp) {
+                if (!isShooterActive) return;
+
+                // Clear & dark starry background
+                ctx.fillStyle = '#0f172a';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                // Spawn Asteroids
+                if (timestamp - lastSpawn > 800) {
+                    asteroids.push(new Asteroid(canvas.width, canvas.height));
+                    lastSpawn = timestamp;
+                }
+
+                // Update & draw asteroids
+                for (let i = asteroids.length - 1; i >= 0; i--) {
+                    const ast = asteroids[i];
+                    ast.update();
+                    ast.draw(ctx);
+
+                    // Remove if fallen below canvas
+                    if (ast.y - ast.radius > canvas.height) {
+                        asteroids.splice(i, 1);
+                    }
+                }
+
+                // Update & draw particles
+                for (let i = particles.length - 1; i >= 0; i--) {
+                    const p = particles[i];
+                    p.update();
+                    p.draw(ctx);
+                    if (p.alpha <= 0) particles.splice(i, 1);
+                }
+
+                // Update & draw floating score texts
+                for (let i = floatingTexts.length - 1; i >= 0; i--) {
+                    const ft = floatingTexts[i];
+                    ft.update();
+                    ft.draw(ctx);
+                    if (ft.alpha <= 0) floatingTexts.splice(i, 1);
+                }
+
+                gameLoopId = requestAnimationFrame(runLoop);
+            }
+
+            gameLoopId = requestAnimationFrame(runLoop);
+        }
+
+        function handleCanvasTap(e) {
+            if (!isShooterActive) return;
+            initAudio();
+
+            const rect = canvas.getBoundingClientRect();
+            const tapX = (e.clientX - rect.left) * (canvas.width / rect.width);
+            const tapY = (e.clientY - rect.top) * (canvas.height / rect.height);
+
+            for (let i = asteroids.length - 1; i >= 0; i--) {
+                const ast = asteroids[i];
+                const dist = Math.hypot(tapX - ast.x, tapY - ast.y);
+
+                if (dist <= ast.radius + 10) { // Touch target cushion
+                    // SMASH ASTEROID!
+                    playAsteroidSmashSound();
+
+                    // Spawn dust sparkles
+                    for (let p = 0; p < 18; p++) {
+                        particles.push(new DustParticle(ast.x, ast.y, ast.color));
+                    }
+
+                    // Floating bonus text
+                    floatingTexts.push(new FloatingText(ast.x - 15, ast.y, "+100"));
+
+                    // Update stats
+                    shooterScore += 100;
+                    asteroidsSmashed++;
+                    document.getElementById('asteroidsSmashed').textContent = asteroidsSmashed;
+
+                    // Remove asteroid
+                    asteroids.splice(i, 1);
+                    break;
+                }
+            }
+        }
+
+        function endAsteroidShooter() {
+            isShooterActive = false;
+            if (gameTimerInterval) clearInterval(gameTimerInterval);
+            if (gameLoopId) cancelAnimationFrame(gameLoopId);
+
+            playFanfareSound();
+
+            document.getElementById('rewardGameScreen').classList.add('hidden');
+            document.getElementById('victoryScreen').classList.remove('hidden');
+
+            const totalScore = gameState.score + shooterScore;
+            document.getElementById('finalScoreText').textContent = `${totalScore} pts`;
+        }
+
+        function restartFullGame() {
+            playClickSound();
+            document.getElementById('victoryScreen').classList.add('hidden');
+            document.getElementById('quizScreen').classList.remove('hidden');
+
+            gameState.currentLevelIdx = 0;
+            gameState.currentQuestionIdx = 0;
+            gameState.score = 0;
+            gameState.starsEarned = 0;
+
+            updateHeaderUI();
+            renderQuestion();
+        }
+
+        // Create CSS twinkle stars dynamically
+        function createBackgroundStars() {
+            const container = document.getElementById('starsBg');
+            const starCount = 45;
+            for (let i = 0; i < starCount; i++) {
+                const star = document.createElement('div');
+                star.className = 'star';
+                const size = Math.random() * 3 + 2;
+                star.style.width = `${size}px`;
+                star.style.height = `${size}px`;
+                star.style.left = `${Math.random() * 100}%`;
+                star.style.top = `${Math.random() * 100}%`;
+                star.style.setProperty('--duration', `${Math.random() * 3 + 2}s`);
+                star.style.setProperty('--delay', `${Math.random() * 3}s`);
+                container.appendChild(star);
+            }
+        }
+
+        // Initialize on DOM load
+        document.addEventListener('DOMContentLoaded', () => {
+            createBackgroundStars();
+        });
+    </script>
+</body>
+</html>

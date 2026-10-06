@@ -1,0 +1,1062 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MARIO RUN: Space Place Value Math Game</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@600;800;900&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        heading: ['"Fredoka One"', 'cursive'],
+                        body: ['"Nunito"', 'sans-serif'],
+                    },
+                    colors: {
+                        cosmic: {
+                            purple: '#1e0b36',
+                            dark: '#0b031a',
+                            neonPink: '#ff2a85',
+                            neonCyan: '#00f0ff',
+                            neonYellow: '#ffe600',
+                            neonGreen: '#00ff66',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Nunito', sans-serif;
+            background: radial-gradient(circle at center, #1b0c38 0%, #080214 100%);
+            overflow-x: hidden;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        .font-heading {
+            font-family: 'Fredoka One', cursive;
+        }
+
+        /* Glowing text effects */
+        .glow-title {
+            text-shadow: 0 0 15px rgba(0, 240, 255, 0.7), 0 0 30px rgba(255, 42, 133, 0.5);
+        }
+        .glow-box {
+            box-shadow: 0 0 25px rgba(0, 240, 255, 0.25), inset 0 0 15px rgba(255, 255, 255, 0.1);
+        }
+
+        /* Space animations */
+        @keyframes floatSlow {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-18px) rotate(5deg); }
+        }
+        @keyframes floatReverse {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(20px) rotate(-6deg); }
+        }
+        @keyframes pulseGlow {
+            0%, 100% { opacity: 0.8; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.05); }
+        }
+        @keyframes rocketFly {
+            0% { transform: translate(-100px, 100vh) rotate(-35deg); }
+            100% { transform: translate(calc(100vw + 100px), -100px) rotate(-35deg); }
+        }
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.3; transform: scale(0.8); }
+            50% { opacity: 1; transform: scale(1.2); }
+        }
+
+        .animate-float-1 { animation: floatSlow 8s ease-in-out infinite; }
+        .animate-float-2 { animation: floatReverse 10s ease-in-out infinite; }
+        .animate-float-3 { animation: floatSlow 12s ease-in-out infinite; }
+        .animate-pulse-glow { animation: pulseGlow 3s ease-in-out infinite; }
+
+        .star {
+            position: absolute;
+            background-color: white;
+            border-radius: 50%;
+            animation: twinkle infinite ease-in-out;
+        }
+
+        /* Glassmorphism panel */
+        .glass-panel {
+            background: rgba(22, 10, 45, 0.75);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 2px solid rgba(255, 255, 255, 0.15);
+        }
+
+        /* Custom scrollbars */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0b031a;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #ff2a85;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body class="min-h-screen text-white relative flex flex-col justify-between overflow-y-auto">
+
+    <!-- Dynamic Space Background Layer -->
+    <div id="space-background" class="fixed inset-0 pointer-events-none overflow-hidden z-0">
+        <!-- Twinkling stars injected via JS -->
+        <div id="stars-container"></div>
+
+        <!-- Floating Nebula Blobs -->
+        <div class="absolute -top-20 -left-20 w-96 h-96 bg-purple-600/20 rounded-full blur-3xl"></div>
+        <div class="absolute top-1/2 -right-20 w-96 h-96 bg-pink-600/20 rounded-full blur-3xl"></div>
+        <div class="absolute -bottom-20 left-1/3 w-96 h-96 bg-cyan-600/20 rounded-full blur-3xl"></div>
+
+        <!-- Floating Planet 1: Ringed Gas Giant -->
+        <div class="absolute top-12 left-6 md:left-16 w-24 h-24 md:w-36 md:h-36 animate-float-1 opacity-90">
+            <svg viewBox="0 0 100 100" class="w-full h-full drop-shadow-[0_0_15px_rgba(255,42,133,0.6)]">
+                <circle cx="50" cy="50" r="30" fill="url(#planetGrad1)" />
+                <ellipse cx="50" cy="50" rx="45" ry="12" fill="none" stroke="#ffe600" stroke-width="4" transform="rotate(-20 50 50)" opacity="0.8"/>
+                <ellipse cx="50" cy="50" rx="40" ry="9" fill="none" stroke="#ff2a85" stroke-width="2" transform="rotate(-20 50 50)" opacity="0.9"/>
+                <defs>
+                    <radialGradient id="planetGrad1" cx="30%" cy="30%" r="70%">
+                        <stop offset="0%" stop-color="#ff99dd"/>
+                        <stop offset="50%" stop-color="#ff2a85"/>
+                        <stop offset="100%" stop-color="#4a0033"/>
+                    </radialGradient>
+                </defs>
+            </svg>
+        </div>
+
+        <!-- Floating Planet 2: Cratered Rocky World -->
+        <div class="absolute bottom-16 right-8 md:right-24 w-28 h-28 md:w-44 md:h-44 animate-float-2 opacity-85">
+            <svg viewBox="0 0 100 100" class="w-full h-full drop-shadow-[0_0_20px_rgba(0,240,255,0.5)]">
+                <circle cx="50" cy="50" r="38" fill="url(#planetGrad2)" />
+                <circle cx="38" cy="35" r="7" fill="#00b3e6" opacity="0.4"/>
+                <circle cx="62" cy="48" r="9" fill="#00b3e6" opacity="0.4"/>
+                <circle cx="45" cy="65" r="6" fill="#00b3e6" opacity="0.4"/>
+                <defs>
+                    <radialGradient id="planetGrad2" cx="30%" cy="30%" r="70%">
+                        <stop offset="0%" stop-color="#80f5ff"/>
+                        <stop offset="60%" stop-color="#00f0ff"/>
+                        <stop offset="100%" stop-color="#004d66"/>
+                    </radialGradient>
+                </defs>
+            </svg>
+        </div>
+
+        <!-- Floating Planet 3: Golden Sun-like Star -->
+        <div class="absolute top-1/3 right-4 md:right-12 w-20 h-20 md:w-28 md:h-28 animate-float-3 opacity-80">
+            <svg viewBox="0 0 100 100" class="w-full h-full drop-shadow-[0_0_25px_rgba(255,230,0,0.8)]">
+                <circle cx="50" cy="50" r="32" fill="url(#planetGrad3)" />
+                <defs>
+                    <radialGradient id="planetGrad3" cx="35%" cy="35%" r="65%">
+                        <stop offset="0%" stop-color="#ffffff"/>
+                        <stop offset="40%" stop-color="#ffe600"/>
+                        <stop offset="100%" stop-color="#ff6600"/>
+                    </radialGradient>
+                </defs>
+            </svg>
+        </div>
+
+        <!-- Flying Cosmic Rocket Background Animation -->
+        <div class="absolute w-12 h-12" style="animation: rocketFly 18s linear infinite; animation-delay: 2s;">
+            <svg viewBox="0 0 64 64" class="w-full h-full">
+                <path d="M32 4 L44 28 L38 52 L32 46 L26 52 L20 28 Z" fill="#ffffff" />
+                <path d="M32 4 L44 28 L32 46 Z" fill="#ff2a85" />
+                <circle cx="32" cy="24" r="5" fill="#00f0ff" />
+                <path d="M26 52 L32 62 L38 52 Z" fill="#ffe600" />
+            </svg>
+        </div>
+    </div>
+
+    <!-- Main Header Bar -->
+    <header class="relative z-10 w-full max-w-5xl mx-auto px-4 pt-4 pb-2">
+        <div class="glass-panel rounded-2xl p-4 flex flex-wrap justify-between items-center gap-4 border-b-4 border-cyan-400/40">
+            <!-- Game Title & Mascot -->
+            <div class="flex items-center space-x-3">
+                <div class="w-12 h-12 bg-gradient-to-tr from-pink-500 to-yellow-400 rounded-xl flex items-center justify-center text-2xl shadow-lg shadow-pink-500/30">
+                    🚀
+                </div>
+                <div>
+                    <h1 class="text-2xl md:text-3xl font-heading text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-yellow-200 to-pink-400 tracking-wider glow-title">
+                        MARIO RUN
+                    </h1>
+                    <p class="text-xs text-cyan-200 font-bold uppercase tracking-widest">Space Place Value Math</p>
+                </div>
+            </div>
+
+            <!-- Stats Bar -->
+            <div class="flex items-center gap-3 sm:gap-6 bg-black/40 px-4 py-2 rounded-xl border border-white/10 text-sm md:text-base font-bold">
+                <!-- Level Indicator -->
+                <div class="flex items-center space-x-1">
+                    <span class="text-yellow-400">LEVEL:</span>
+                    <span id="stat-level" class="text-white text-lg font-heading">1/5</span>
+                </div>
+
+                <!-- Score Indicator -->
+                <div class="flex items-center space-x-1">
+                    <span class="text-cyan-400">SCORE:</span>
+                    <span id="stat-score" class="text-white text-lg font-heading">0</span>
+                </div>
+
+                <!-- Star Rating -->
+                <div id="stat-stars" class="flex text-yellow-400 text-lg">
+                    ⭐ 0/15
+                </div>
+
+                <!-- Mini-Game Fuel Indicator -->
+                <div class="flex items-center space-x-1 bg-pink-950/60 px-3 py-1 rounded-lg border border-pink-500/40">
+                    <span>⚡ MINI-GAME:</span>
+                    <span id="stat-fuel" class="text-pink-300 font-heading">0s</span>
+                </div>
+
+                <!-- Sound Toggle -->
+                <button id="sound-toggle-btn" onclick="toggleSound()" class="p-2 bg-purple-800/60 hover:bg-purple-700 rounded-lg transition text-lg" title="Toggle Mute">
+                    🔊
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Interactive Display Container -->
+    <main class="relative z-10 flex-grow flex items-center justify-center p-4">
+        <div class="w-full max-w-3xl">
+
+            <!-- VIEW 1: INTRO / START SCREEN -->
+            <section id="screen-intro" class="glass-panel rounded-3xl p-6 md:p-10 text-center glow-box transition-all duration-300">
+                <div class="inline-block p-4 bg-purple-900/50 rounded-full mb-4 animate-pulse-glow border border-pink-500/30">
+                    <span class="text-6xl md:text-7xl">👨‍🚀</span>
+                </div>
+                <h2 class="text-3xl md:text-5xl font-heading text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 via-pink-400 to-cyan-300 mb-4">
+                    WELCOME SPACE EXPLORER!
+                </h2>
+                <p class="text-gray-200 text-base md:text-lg max-w-xl mx-auto mb-6 leading-relaxed">
+                    Blast off through 5 cosmic levels of Year 3 Place Value Maths! Solve questions correctly to power your <span class="text-cyan-300 font-bold">Space Rover Mini-Game</span> with fuel!
+                </p>
+
+                <!-- Rules Badge Container -->
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 max-w-lg mx-auto mb-8 text-xs font-bold">
+                    <div class="bg-purple-950/70 border border-purple-500/30 p-3 rounded-xl flex items-center justify-center space-x-2">
+                        <span class="text-xl">📊</span>
+                        <span>5 Cosmic Levels</span>
+                    </div>
+                    <div class="bg-purple-950/70 border border-purple-500/30 p-3 rounded-xl flex items-center justify-center space-x-2">
+                        <span class="text-xl">🎯</span>
+                        <span>15 Math Missions</span>
+                    </div>
+                    <div class="bg-purple-950/70 border border-purple-500/30 p-3 rounded-xl flex items-center justify-center space-x-2">
+                        <span class="text-xl">🏎️</span>
+                        <span>Rover Dodge Game</span>
+                    </div>
+                </div>
+
+                <button onclick="startGame()" class="w-full sm:w-auto px-10 py-4 bg-gradient-to-r from-pink-500 via-purple-600 to-cyan-500 hover:from-pink-400 hover:to-cyan-400 text-white font-heading text-2xl rounded-2xl shadow-xl transform hover:scale-105 active:scale-95 transition-all duration-200 border-2 border-white/20">
+                    🚀 LAUNCH MISSION!
+                </button>
+            </section>
+
+            <!-- VIEW 2: QUIZ SCREEN -->
+            <section id="screen-quiz" class="glass-panel rounded-3xl p-6 md:p-8 glow-box hidden transition-all duration-300">
+                <!-- Level Header Info -->
+                <div class="flex flex-wrap justify-between items-center border-b border-white/10 pb-4 mb-6">
+                    <div>
+                        <span id="quiz-level-badge" class="bg-pink-600/80 text-white font-bold text-xs uppercase px-3 py-1 rounded-full border border-pink-300/40">
+                            Level 1: Hundreds, Tens & Ones
+                        </span>
+                        <h3 id="quiz-question-num" class="text-xl font-heading text-cyan-300 mt-2">
+                            Question 1 of 3
+                        </h3>
+                    </div>
+                    <!-- Fuel Earned Banner -->
+                    <div class="bg-cyan-950/70 border border-cyan-400/40 px-3 py-1.5 rounded-xl text-xs text-cyan-200 font-bold flex items-center gap-1">
+                        <span>🚀 Fuel Bank:</span>
+                        <span id="quiz-fuel-earned" class="text-yellow-300 font-heading text-sm">0s</span>
+                    </div>
+                </div>
+
+                <!-- Question Text Box -->
+                <div class="bg-purple-950/80 border-2 border-cyan-400/30 rounded-2xl p-6 text-center mb-6 shadow-inner">
+                    <p id="quiz-question-text" class="text-xl md:text-2xl font-bold text-white leading-relaxed">
+                        Loading math mission...
+                    </p>
+                </div>
+
+                <!-- Answer Choices (3 Multiple Choice Buttons) -->
+                <div id="quiz-options-container" class="grid grid-cols-1 gap-4 mb-6">
+                    <!-- Buttons generated via JavaScript -->
+                </div>
+
+                <!-- Instant Feedback Banner -->
+                <div id="quiz-feedback" class="hidden p-4 rounded-xl text-center font-bold text-lg transition-all duration-300 mb-4">
+                    <!-- Feedback message injected dynamically -->
+                </div>
+
+                <!-- Navigation Action Row -->
+                <div class="flex justify-between items-center">
+                    <button id="btn-play-rover" onclick="openMiniGameModal()" class="hidden px-5 py-2.5 bg-gradient-to-r from-yellow-500 to-amber-600 hover:from-yellow-400 hover:to-amber-500 text-purple-950 font-heading text-sm rounded-xl shadow-lg border border-yellow-200/50 transform hover:scale-105 transition">
+                        🏎️ Play Rover Dodger Now!
+                    </button>
+                    <button id="btn-next-question" onclick="nextQuestion()" class="hidden ml-auto px-8 py-3 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-heading text-lg rounded-xl shadow-lg transform hover:scale-105 transition">
+                        Next Question ➔
+                    </button>
+                </div>
+            </section>
+
+            <!-- VIEW 3: LEVEL COMPLETE / VICTORY SCREEN -->
+            <section id="screen-victory" class="glass-panel rounded-3xl p-8 md:p-10 text-center glow-box hidden transition-all duration-300">
+                <div class="text-6xl mb-4 animate-bounce">🏆</div>
+                <h2 class="text-3xl md:text-5xl font-heading text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 via-pink-400 to-cyan-300 mb-2">
+                    MISSION ACCOMPLISHED!
+                </h2>
+                <p class="text-cyan-200 font-bold mb-6">You completed all Year 3 Space Math Levels!</p>
+
+                <!-- Final Stats Summary Card -->
+                <div class="bg-purple-950/80 border border-cyan-400/30 rounded-2xl p-6 max-w-md mx-auto mb-8 grid grid-cols-2 gap-4">
+                    <div class="text-left">
+                        <span class="text-xs text-gray-400 uppercase font-bold block">Final Score</span>
+                        <span id="final-score" class="text-3xl font-heading text-yellow-300">0</span>
+                    </div>
+                    <div class="text-left">
+                        <span class="text-xs text-gray-400 uppercase font-bold block">Stars Earned</span>
+                        <span id="final-stars" class="text-3xl font-heading text-cyan-300">0 / 15</span>
+                    </div>
+                    <div class="text-left col-span-2 border-t border-white/10 pt-3">
+                        <span class="text-xs text-gray-400 uppercase font-bold block">Mini-Game Play Fuel Remaining</span>
+                        <span id="final-fuel" class="text-2xl font-heading text-pink-400">0 Seconds</span>
+                    </div>
+                </div>
+
+                <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                    <button onclick="launchMiniGameFromVictory()" class="px-8 py-4 bg-gradient-to-r from-pink-500 to-yellow-500 hover:from-pink-400 hover:to-yellow-400 text-purple-950 font-heading text-xl rounded-2xl shadow-xl transform hover:scale-105 transition border border-yellow-200">
+                        🏎️ PLAY MINI-GAME REWARD!
+                    </button>
+                    <button onclick="restartGame()" class="px-8 py-4 bg-purple-800/80 hover:bg-purple-700 text-white font-heading text-xl rounded-2xl border border-white/20 transition">
+                        🔄 Play Again
+                    </button>
+                </div>
+            </section>
+
+        </div>
+    </main>
+
+    <!-- MINI-GAME MODAL: SPACE ROVER DODGER -->
+    <div id="modal-minigame" class="fixed inset-0 bg-black/85 backdrop-blur-md z-50 flex items-center justify-center p-3 hidden">
+        <div class="glass-panel w-full max-w-xl rounded-3xl p-5 border-2 border-cyan-400/50 flex flex-col items-center relative shadow-2xl">
+            
+            <!-- Modal Title & Timer Header -->
+            <div class="w-full flex justify-between items-center mb-3 px-2">
+                <div>
+                    <h3 class="font-heading text-xl text-yellow-300">🏎️ SPACE ROVER DODGER</h3>
+                    <p class="text-xs text-cyan-200">Dodge incoming space debris and asteroids!</p>
+                </div>
+                <!-- Mini-Game Timer Badge -->
+                <div class="bg-pink-950 border border-pink-500/50 px-4 py-1.5 rounded-xl text-center">
+                    <span class="text-xs text-pink-300 block uppercase font-bold">Fuel Time</span>
+                    <span id="rover-timer" class="text-2xl font-heading text-yellow-300">0s</span>
+                </div>
+            </div>
+
+            <!-- Canvas Container -->
+            <div class="relative w-full aspect-[4/5] max-h-[60vh] bg-slate-950 rounded-2xl overflow-hidden border-2 border-purple-500/40 shadow-inner">
+                <canvas id="roverCanvas" class="w-full h-full block"></canvas>
+                
+                <!-- Overlay Game Over/Time Up Banner -->
+                <div id="rover-overlay" class="absolute inset-0 bg-black/80 flex flex-col items-center justify-center p-6 text-center hidden z-10">
+                    <h4 id="rover-overlay-title" class="text-3xl font-heading text-yellow-300 mb-2">TIME UP!</h4>
+                    <p id="rover-overlay-desc" class="text-gray-200 text-sm mb-6">Answer more math questions to earn extra mini-game fuel!</p>
+                    <button onclick="closeMiniGame()" class="px-8 py-3 bg-gradient-to-r from-cyan-500 to-pink-500 text-white font-heading text-lg rounded-xl shadow-lg hover:scale-105 transition">
+                        Return to Math Quiz 🚀
+                    </button>
+                </div>
+            </div>
+
+            <!-- Touch / Button Controls for Mobile & Accessibility -->
+            <div class="w-full flex justify-between items-center gap-4 mt-4">
+                <button id="btn-rover-left" class="flex-1 py-4 bg-purple-800/80 active:bg-purple-600 rounded-2xl border-2 border-purple-400 text-2xl font-bold active:scale-95 transition touch-none">
+                    ⬅️ LEFT
+                </button>
+                <button onclick="closeMiniGame()" class="px-4 py-4 bg-gray-800 hover:bg-gray-700 text-gray-300 text-xs font-bold rounded-2xl border border-white/10">
+                    CLOSE
+                </button>
+                <button id="btn-rover-right" class="flex-1 py-4 bg-purple-800/80 active:bg-purple-600 rounded-2xl border-2 border-purple-400 text-2xl font-bold active:scale-95 transition touch-none">
+                    RIGHT ➡️
+                </button>
+            </div>
+            <p class="text-[11px] text-gray-400 mt-2">Use Left/Right Arrow keys or screen buttons to move rover.</p>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="relative z-10 w-full text-center py-3 text-xs text-cyan-300/60 font-semibold">
+        MARIO RUN • Safe Educational Maths Game • Year 3 Place Value
+    </footer>
+
+    <script>
+        /* ==========================================================================
+           1. QUESTION BANK & CURRICULUM (YEAR 3 PLACE VALUE - 5 LEVELS, 15 QUESTIONS)
+           ========================================================================== */
+        const quizLevels = [
+            {
+                level: 1,
+                name: "Level 1: Hundreds, Tens & Ones (Up to 500)",
+                questions: [
+                    {
+                        q: "In the number 348, how many HUNDREDS are there?",
+                        options: ["3 hundreds", "4 hundreds", "8 hundreds"],
+                        correct: 0,
+                        explanation: "348 has 3 hundreds (300), 4 tens (40), and 8 ones (8)!"
+                    },
+                    {
+                        q: "Which number has 2 hundreds, 5 tens, and 1 one?",
+                        options: ["215", "251", "521"],
+                        correct: 1,
+                        explanation: "2 hundreds (200) + 5 tens (50) + 1 one (1) = 251!"
+                    },
+                    {
+                        q: "In the number 409, how many TENS are there?",
+                        options: ["4 tens", "9 tens", "0 tens"],
+                        correct: 2,
+                        explanation: "409 has 0 tens in the tens place!"
+                    }
+                ]
+            },
+            {
+                level: 2,
+                name: "Level 2: Value of Digits (Up to 1000)",
+                questions: [
+                    {
+                        q: "What is the actual value of the digit 7 in 725?",
+                        options: ["7", "70", "700"],
+                        correct: 2,
+                        explanation: "The digit 7 is in the hundreds place, so its value is 700!"
+                    },
+                    {
+                        q: "What is the value of the digit 6 in 863?",
+                        options: ["600", "60", "6"],
+                        correct: 1,
+                        explanation: "The 6 is in the tens place, which means 6 tens or 60!"
+                    },
+                    {
+                        q: "In the number 904, what does the 4 represent?",
+                        options: ["4 ones", "4 tens", "4 hundreds"],
+                        correct: 0,
+                        explanation: "The 4 is in the ones place, representing 4 ones!"
+                    }
+                ]
+            },
+            {
+                level: 3,
+                name: "Level 3: Expanded Form & Partitioning",
+                questions: [
+                    {
+                        q: "What is 500 + 30 + 6 written as a single number?",
+                        options: ["536", "500306", "356"],
+                        correct: 0,
+                        explanation: "500 + 30 + 6 = 536!"
+                    },
+                    {
+                        q: "How do you break down (partition) 819?",
+                        options: ["800 + 10 + 9", "80 + 10 + 9", "800 + 100 + 9"],
+                        correct: 0,
+                        explanation: "819 partitions into 800 + 10 + 9!"
+                    },
+                    {
+                        q: "Which expanded form equals 640?",
+                        options: ["600 + 4", "600 + 40", "60 + 400"],
+                        correct: 1,
+                        explanation: "640 is 600 + 40 + 0 ones!"
+                    }
+                ]
+            },
+            {
+                level: 4,
+                name: "Level 4: 10/100 More or Less & Comparing",
+                questions: [
+                    {
+                        q: "What number is 10 MORE than 452?",
+                        options: ["453", "462", "552"],
+                        correct: 1,
+                        explanation: "Adding 10 increases the tens digit from 5 to 6, giving 462!"
+                    },
+                    {
+                        q: "What number is 100 LESS than 739?",
+                        options: ["639", "729", "738"],
+                        correct: 0,
+                        explanation: "Subtracting 100 decreases the hundreds digit from 7 to 6, giving 639!"
+                    },
+                    {
+                        q: "Which number is GREATER than 685?",
+                        options: ["679", "658", "692"],
+                        correct: 2,
+                        explanation: "692 has 9 tens, which is greater than 8 tens in 685!"
+                    }
+                ]
+            },
+            {
+                level: 5,
+                name: "Level 5: Cosmic Word Problems & Building Numbers",
+                questions: [
+                    {
+                        q: "Captain Mario collects 4 hundreds, 0 tens, and 7 ones of space gems. How many gems does he have?",
+                        options: ["470", "407", "704"],
+                        correct: 1,
+                        explanation: "4 hundreds + 0 tens + 7 ones = 407 gems!"
+                    },
+                    {
+                        q: "A star ship travels 390 miles. It travels 100 miles more. How far is it now?",
+                        options: ["490 miles", "391 miles", "400 miles"],
+                        correct: 0,
+                        explanation: "390 + 100 = 490 miles!"
+                    },
+                    {
+                        q: "Using digits 2, 9, and 5, what is the LARGEST 3-digit number you can build?",
+                        options: ["592", "925", "952"],
+                        correct: 2,
+                        explanation: "Put the largest digit (9) in hundreds, then 5 in tens, then 2 in ones = 952!"
+                    }
+                ]
+            }
+        ];
+
+        /* ==========================================================================
+           2. GLOBAL GAME STATE
+           ========================================================================== */
+        let currentLevelIdx = 0;
+        let currentQuestionIdx = 0;
+        let totalScore = 0;
+        let starsEarned = 0;
+        let miniGameFuelSeconds = 0; // Earned time for mini-game
+        let soundEnabled = true;
+
+        /* ==========================================================================
+           3. WEB AUDIO API SYNTHESIZER (No external audio files needed!)
+           ========================================================================== */
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        let audioCtx = null;
+
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new AudioContext();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }
+
+        function playSound(type) {
+            if (!soundEnabled) return;
+            initAudio();
+            if (!audioCtx) return;
+
+            const now = audioCtx.currentTime;
+
+            if (type === 'correct') {
+                // Happy ascending chime
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(523.25, now); // C5
+                osc.frequency.setValueAtTime(659.25, now + 0.1); // E5
+                osc.frequency.setValueAtTime(783.99, now + 0.2); // G5
+                osc.frequency.setValueAtTime(1046.50, now + 0.3); // C6
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.6);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start(now);
+                osc.stop(now + 0.6);
+            } else if (type === 'wrong') {
+                // Low boop sound
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(220, now);
+                osc.frequency.setValueAtTime(160, now + 0.15);
+                gain.gain.setValueAtTime(0.25, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start(now);
+                osc.stop(now + 0.4);
+            } else if (type === 'fuel') {
+                // Laser style beep for fuel gain
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(400, now);
+                osc.frequency.exponentialRampToValueAtTime(800, now + 0.2);
+                gain.gain.setValueAtTime(0.15, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start(now);
+                osc.stop(now + 0.25);
+            }
+        }
+
+        function toggleSound() {
+            soundEnabled = !soundEnabled;
+            document.getElementById('sound-toggle-btn').innerText = soundEnabled ? '🔊' : '🔇';
+        }
+
+        /* ==========================================================================
+           4. VISUAL BACKGROUND DECORATIONS (STARS)
+           ========================================================================== */
+        function createStars() {
+            const container = document.getElementById('stars-container');
+            container.innerHTML = '';
+            const starCount = 65;
+            for (let i = 0; i < starCount; i++) {
+                const star = document.createElement('div');
+                star.className = 'star';
+                const size = Math.random() * 3 + 1;
+                star.style.width = `${size}px`;
+                star.style.height = `${size}px`;
+                star.style.top = `${Math.random() * 100}%`;
+                star.style.left = `${Math.random() * 100}%`;
+                star.style.animationDuration = `${Math.random() * 3 + 2}s`;
+                star.style.animationDelay = `${Math.random() * 3}s`;
+                container.appendChild(star);
+            }
+        }
+
+        /* ==========================================================================
+           5. GAME NAVIGATION & UI CONTROLLERS
+           ========================================================================== */
+        function startGame() {
+            initAudio();
+            currentLevelIdx = 0;
+            currentQuestionIdx = 0;
+            totalScore = 0;
+            starsEarned = 0;
+            miniGameFuelSeconds = 0;
+
+            updateStatsUI();
+            showScreen('screen-quiz');
+            loadQuestion();
+        }
+
+        function restartGame() {
+            startGame();
+        }
+
+        function showScreen(screenId) {
+            document.getElementById('screen-intro').classList.add('hidden');
+            document.getElementById('screen-quiz').classList.add('hidden');
+            document.getElementById('screen-victory').classList.add('hidden');
+
+            document.getElementById(screenId).classList.remove('hidden');
+        }
+
+        function updateStatsUI() {
+            document.getElementById('stat-level').innerText = `${currentLevelIdx + 1}/5`;
+            document.getElementById('stat-score').innerText = totalScore;
+            document.getElementById('stat-stars').innerText = `⭐ ${starsEarned}/15`;
+            document.getElementById('stat-fuel').innerText = `${miniGameFuelSeconds}s`;
+            document.getElementById('quiz-fuel-earned').innerText = `${miniGameFuelSeconds}s`;
+        }
+
+        /* ==========================================================================
+           6. QUIZ LOGIC
+           ========================================================================== */
+        function loadQuestion() {
+            const levelData = quizLevels[currentLevelIdx];
+            const qData = levelData.questions[currentQuestionIdx];
+
+            // Set Header Badges
+            document.getElementById('quiz-level-badge').innerText = levelData.name;
+            document.getElementById('quiz-question-num').innerText = `Question ${currentQuestionIdx + 1} of 3`;
+
+            // Set Question Text
+            document.getElementById('quiz-question-text').innerText = qData.q;
+
+            // Reset Feedback Banner & Next Buttons
+            const feedbackEl = document.getElementById('quiz-feedback');
+            feedbackEl.className = 'hidden p-4 rounded-xl text-center font-bold text-lg transition-all duration-300 mb-4';
+            feedbackEl.innerText = '';
+
+            document.getElementById('btn-next-question').classList.add('hidden');
+            
+            // Show Mini-Game button if user has at least 10s fuel
+            const roverBtn = document.getElementById('btn-play-rover');
+            if (miniGameFuelSeconds >= 10) {
+                roverBtn.classList.remove('hidden');
+            } else {
+                roverBtn.classList.add('hidden');
+            }
+
+            // Render Answer Buttons
+            const optionsContainer = document.getElementById('quiz-options-container');
+            optionsContainer.innerHTML = '';
+
+            qData.options.forEach((optText, idx) => {
+                const btn = document.createElement('button');
+                btn.className = 'w-full py-4 px-6 bg-purple-900/60 hover:bg-purple-800/90 text-white font-bold text-lg rounded-2xl border-2 border-purple-500/40 hover:border-cyan-400 transition transform hover:-translate-y-0.5 active:translate-y-0 text-left flex items-center justify-between shadow-lg';
+                btn.innerHTML = `
+                    <span>${optText}</span>
+                    <span class="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-sm font-heading">${String.fromCharCode(65 + idx)}</span>
+                `;
+                btn.onclick = () => checkAnswer(idx, btn);
+                optionsContainer.appendChild(btn);
+            });
+        }
+
+        function checkAnswer(selectedIndex, clickedBtn) {
+            const qData = quizLevels[currentLevelIdx].questions[currentQuestionIdx];
+            const optionsContainer = document.getElementById('quiz-options-container');
+            const buttons = optionsContainer.getElementsByTagName('button');
+
+            // Disable all buttons to prevent double click
+            for (let btn of buttons) {
+                btn.disabled = true;
+                btn.classList.add('opacity-75', 'cursor-not-allowed');
+            }
+
+            const feedbackEl = document.getElementById('quiz-feedback');
+            feedbackEl.classList.remove('hidden');
+
+            if (selectedIndex === qData.correct) {
+                // Correct Answer!
+                playSound('correct');
+                clickedBtn.classList.remove('bg-purple-900/60', 'border-purple-500/40', 'opacity-75');
+                clickedBtn.classList.add('bg-green-600/80', 'border-green-300', 'text-white');
+
+                // Reward points and mini-game fuel
+                totalScore += 100;
+                starsEarned += 1;
+                miniGameFuelSeconds += 10; // +10s rover play time!
+                playSound('fuel');
+
+                feedbackEl.classList.add('bg-green-900/80', 'border', 'border-green-400', 'text-green-200');
+                feedbackEl.innerHTML = `🎉 <strong>OUT OF THIS WORLD!</strong><br>${qData.explanation} <span class="text-yellow-300">+10s Rover Fuel Earned! ⚡</span>`;
+            } else {
+                // Incorrect Answer
+                playSound('wrong');
+                clickedBtn.classList.remove('bg-purple-900/60', 'border-purple-500/40', 'opacity-75');
+                clickedBtn.classList.add('bg-red-600/80', 'border-red-400', 'text-white');
+
+                // Highlight correct one
+                buttons[qData.correct].classList.remove('bg-purple-900/60', 'opacity-75');
+                buttons[qData.correct].classList.add('bg-green-600/60', 'border-green-300');
+
+                feedbackEl.classList.add('bg-red-950/80', 'border', 'border-red-400', 'text-red-200');
+                feedbackEl.innerHTML = `🚀 <strong>Nice try, Explorer!</strong><br>${qData.explanation}`;
+            }
+
+            updateStatsUI();
+            document.getElementById('btn-next-question').classList.remove('hidden');
+        }
+
+        function nextQuestion() {
+            currentQuestionIdx++;
+            if (currentQuestionIdx >= 3) {
+                // Advance Level
+                currentQuestionIdx = 0;
+                currentLevelIdx++;
+
+                if (currentLevelIdx >= quizLevels.length) {
+                    // Completed All 5 Levels!
+                    showVictoryScreen();
+                    return;
+                }
+            }
+            loadQuestion();
+        }
+
+        function showVictoryScreen() {
+            document.getElementById('final-score').innerText = totalScore;
+            document.getElementById('final-stars').innerText = `${starsEarned} / 15`;
+            document.getElementById('final-fuel').innerText = `${miniGameFuelSeconds} Seconds`;
+            showScreen('screen-victory');
+        }
+
+        /* ==========================================================================
+           7. MINI-GAME: SPACE ROVER DODGER (HTML5 Canvas Engine)
+           ========================================================================== */
+        let canvas = null;
+        let ctx = null;
+        let roverAnimId = null;
+        let miniGameInterval = null;
+
+        // Rover Game State
+        const roverGame = {
+            active: false,
+            x: 0,
+            y: 0,
+            width: 44,
+            height: 44,
+            speed: 6,
+            moveLeft: false,
+            moveRight: false,
+            obstacles: [],
+            starsBg: [],
+            score: 0
+        };
+
+        function initCanvas() {
+            canvas = document.getElementById('roverCanvas');
+            ctx = canvas.getContext('2d');
+            
+            // Set canvas dynamic resolution
+            const rect = canvas.getBoundingClientRect();
+            canvas.width = rect.width || 400;
+            canvas.height = rect.height || 500;
+
+            roverGame.x = canvas.width / 2 - roverGame.width / 2;
+            roverGame.y = canvas.height - roverGame.height - 20;
+
+            // Generate canvas starfield background
+            roverGame.starsBg = [];
+            for (let i = 0; i < 40; i++) {
+                roverGame.starsBg.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height,
+                    size: Math.random() * 2 + 1,
+                    speed: Math.random() * 1.5 + 0.5
+                });
+            }
+        }
+
+        function openMiniGameModal() {
+            if (miniGameFuelSeconds <= 0) {
+                alert("You need mini-game fuel! Answer math questions to earn play time.");
+                return;
+            }
+
+            document.getElementById('modal-minigame').classList.remove('hidden');
+            document.getElementById('rover-overlay').classList.add('hidden');
+            
+            initCanvas();
+            startRoverGame();
+        }
+
+        function launchMiniGameFromVictory() {
+            if (miniGameFuelSeconds <= 0) {
+                miniGameFuelSeconds = 30; // Bonus courtesy time on victory!
+                updateStatsUI();
+            }
+            openMiniGameModal();
+        }
+
+        function closeMiniGame() {
+            stopRoverGame();
+            document.getElementById('modal-minigame').classList.add('hidden');
+            updateStatsUI();
+        }
+
+        function startRoverGame() {
+            roverGame.active = true;
+            roverGame.obstacles = [];
+            
+            // Countdown timer for fuel
+            clearInterval(miniGameInterval);
+            miniGameInterval = setInterval(() => {
+                if (miniGameFuelSeconds > 0) {
+                    miniGameFuelSeconds--;
+                    document.getElementById('rover-timer').innerText = `${miniGameFuelSeconds}s`;
+                    document.getElementById('stat-fuel').innerText = `${miniGameFuelSeconds}s`;
+                } else {
+                    // Fuel exhausted!
+                    stopRoverGame();
+                    document.getElementById('rover-overlay-title').innerText = "FUEL EMPTY!";
+                    document.getElementById('rover-overlay-desc').innerText = "Great driving! Answer more math questions to earn extra fuel time!";
+                    document.getElementById('rover-overlay').classList.remove('hidden');
+                }
+            }, 1000);
+
+            // Start Animation Loop
+            cancelAnimationFrame(roverAnimId);
+            roverLoop();
+        }
+
+        function stopRoverGame() {
+            roverGame.active = false;
+            clearInterval(miniGameInterval);
+            cancelAnimationFrame(roverAnimId);
+        }
+
+        // Spawn Asteroids & Space Debris
+        function spawnObstacle() {
+            if (Math.random() < 0.04) {
+                const size = Math.random() * 20 + 20;
+                roverGame.obstacles.push({
+                    x: Math.random() * (canvas.width - size),
+                    y: -size,
+                    width: size,
+                    height: size,
+                    speed: Math.random() * 3 + 2,
+                    color: Math.random() > 0.5 ? '#ff2a85' : '#00f0ff',
+                    rot: 0,
+                    rotSpeed: (Math.random() - 0.5) * 0.1
+                });
+            }
+        }
+
+        function updateRoverGame() {
+            // Smooth Left/Right Movement
+            if (roverGame.moveLeft && roverGame.x > 5) {
+                roverGame.x -= roverGame.speed;
+            }
+            if (roverGame.moveRight && roverGame.x < canvas.width - roverGame.width - 5) {
+                roverGame.x += roverGame.speed;
+            }
+
+            // Move Canvas Background Stars
+            roverGame.starsBg.forEach(star => {
+                star.y += star.speed;
+                if (star.y > canvas.height) {
+                    star.y = 0;
+                    star.x = Math.random() * canvas.width;
+                }
+            });
+
+            // Update Obstacles
+            spawnObstacle();
+            for (let i = roverGame.obstacles.length - 1; i >= 0; i--) {
+                const obs = roverGame.obstacles[i];
+                obs.y += obs.speed;
+                obs.rot += obs.rotSpeed;
+
+                // Collision Detection with Rover
+                if (
+                    roverGame.x < obs.x + obs.width &&
+                    roverGame.x + roverGame.width > obs.x &&
+                    roverGame.y < obs.y + obs.height &&
+                    roverGame.y + roverGame.height > obs.y
+                ) {
+                    // Hit Obstacle - deduct 2 seconds fuel penalty
+                    playSound('wrong');
+                    miniGameFuelSeconds = Math.max(0, miniGameFuelSeconds - 2);
+                    roverGame.obstacles.splice(i, 1);
+                    continue;
+                }
+
+                // Remove off-screen obstacles
+                if (obs.y > canvas.height + 30) {
+                    roverGame.obstacles.splice(i, 1);
+                }
+            }
+        }
+
+        function renderRoverGame() {
+            // Clear Canvas
+            ctx.fillStyle = '#070212';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Draw Scrolling Starfield
+            ctx.fillStyle = '#ffffff';
+            roverGame.starsBg.forEach(star => {
+                ctx.beginPath();
+                ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
+                ctx.fill();
+            });
+
+            // Draw Space Rover (Player)
+            ctx.save();
+            ctx.translate(roverGame.x + roverGame.width / 2, roverGame.y + roverGame.height / 2);
+            
+            // Rover Chassis Body
+            ctx.fillStyle = '#ffe600';
+            ctx.beginPath();
+            ctx.roundRect(-roverGame.width / 2, -roverGame.height / 2, roverGame.width, roverGame.height, 8);
+            ctx.fill();
+
+            // Cockpit Window
+            ctx.fillStyle = '#00f0ff';
+            ctx.beginPath();
+            ctx.arc(0, -5, 10, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Wheels
+            ctx.fillStyle = '#ff2a85';
+            ctx.fillRect(-roverGame.width / 2 - 4, -roverGame.height / 2 + 4, 4, 12);
+            ctx.fillRect(roverGame.width / 2, -roverGame.height / 2 + 4, 4, 12);
+            ctx.fillRect(-roverGame.width / 2 - 4, roverGame.height / 2 - 16, 4, 12);
+            ctx.fillRect(roverGame.width / 2, roverGame.height / 2 - 16, 4, 12);
+
+            // Thruster Flame effect
+            ctx.fillStyle = '#ff6600';
+            ctx.beginPath();
+            ctx.moveTo(-6, roverGame.height / 2);
+            ctx.lineTo(6, roverGame.height / 2);
+            ctx.lineTo(0, roverGame.height / 2 + 8 + Math.random() * 4);
+            ctx.closePath();
+            ctx.fill();
+
+            ctx.restore();
+
+            // Draw Falling Asteroids / Obstacles
+            roverGame.obstacles.forEach(obs => {
+                ctx.save();
+                ctx.translate(obs.x + obs.width / 2, obs.y + obs.height / 2);
+                ctx.rotate(obs.rot);
+
+                ctx.fillStyle = obs.color;
+                ctx.beginPath();
+                ctx.arc(0, 0, obs.width / 2, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Crater detail
+                ctx.fillStyle = 'rgba(0,0,0,0.3)';
+                ctx.beginPath();
+                ctx.arc(-obs.width / 5, -obs.height / 5, obs.width / 5, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.restore();
+            });
+        }
+
+        function roverLoop() {
+            if (!roverGame.active) return;
+            updateRoverGame();
+            renderRoverGame();
+            roverAnimId = requestAnimationFrame(roverLoop);
+        }
+
+        /* ==========================================================================
+           8. INPUT CONTROL EVENT LISTENERS
+           ========================================================================== */
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowLeft' || e.key === 'a') roverGame.moveLeft = true;
+            if (e.key === 'ArrowRight' || e.key === 'd') roverGame.moveRight = true;
+        });
+
+        window.addEventListener('keyup', (e) => {
+            if (e.key === 'ArrowLeft' || e.key === 'a') roverGame.moveLeft = false;
+            if (e.key === 'ArrowRight' || e.key === 'd') roverGame.moveRight = false;
+        });
+
+        // Touch Control Listeners for Mobile Buttons
+        const leftBtn = document.getElementById('btn-rover-left');
+        const rightBtn = document.getElementById('btn-rover-right');
+
+        leftBtn.addEventListener('touchstart', (e) => { e.preventDefault(); roverGame.moveLeft = true; });
+        leftBtn.addEventListener('touchend', (e) => { e.preventDefault(); roverGame.moveLeft = false; });
+        leftBtn.addEventListener('mousedown', () => roverGame.moveLeft = true);
+        leftBtn.addEventListener('mouseup', () => roverGame.moveLeft = false);
+
+        rightBtn.addEventListener('touchstart', (e) => { e.preventDefault(); roverGame.moveRight = true; });
+        rightBtn.addEventListener('touchend', (e) => { e.preventDefault(); roverGame.moveRight = false; });
+        rightBtn.addEventListener('mousedown', () => roverGame.moveRight = true);
+        rightBtn.addEventListener('mouseup', () => roverGame.moveRight = false);
+
+        /* ==========================================================================
+           9. INITIALIZATION
+           ========================================================================== */
+        window.onload = function() {
+            createStars();
+        };
+
+        window.onresize = function() {
+            if (canvas && roverGame.active) {
+                initCanvas();
+            }
+        };
+    </script>
+</body>
+</html>

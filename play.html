@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Play</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎮</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@600;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <!-- ADS: paste your AdSense <script> here later -->
+</head>
+<body class="player-page">
+  <div class="bar">
+    <a class="btn" id="back" href="index.html">← All games</a>
+    <h1 id="title">Loading…</h1>
+    <button class="btn ghost hide-sm" id="restart">↻ Restart</button>
+    <button class="btn ghost" id="fs">⛶ Full screen</button>
+  </div>
+  <!-- ADS: a banner slot could go here, above or below the game -->
+  <div class="stage"><iframe id="frame" title="Game" allow="fullscreen; autoplay; gamepad" allowfullscreen></iframe></div>
+
+  <script>
+    (async () => {
+      const id = new URLSearchParams(location.search).get("g");
+      const [site, data] = await Promise.all([
+        fetch("site.json").then(r => r.json()),
+        fetch("games.json", { cache: "no-store" }).then(r => r.json()),
+      ]);
+      const g = data.games.find(x => x.id === id);
+      const title = document.getElementById("title");
+      if (!g) { title.textContent = "Game not found"; return; }
+      title.textContent = g.title;
+      document.title = `${g.title} · ${site.title}`;
+      document.getElementById("back").href = `index.html?s=${encodeURIComponent(g.subject)}`;
+      const frame = document.getElementById("frame");
+      frame.src = g.url;
+      frame.addEventListener("load", () => frame.focus());
+      document.getElementById("restart").onclick = () => { frame.src = g.url; };
+      document.getElementById("fs").onclick = () => {
+        const el = frame;
+        (el.requestFullscreen || el.webkitRequestFullscreen).call(el);
+      };
+    })();
+  </script>
+</body>
+</html>

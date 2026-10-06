@@ -1,0 +1,937 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cat - Jungle Maths Quiz & Asteroid Shooter</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            font-family: 'Fredoka', cursive, sans-serif;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #14532d;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #22c55e;
+            border-radius: 4px;
+        }
+
+        /* Keyframe Animations */
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-10px) rotate(2deg); }
+        }
+
+        @keyframes bounce-gentle {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        @keyframes pop-in {
+            0% { transform: scale(0.8); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        @keyframes pulse-ring {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(74, 222, 128, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 15px rgba(74, 222, 128, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(74, 222, 128, 0); }
+        }
+
+        .animate-float {
+            animation: float 4s ease-in-out infinite;
+        }
+
+        .animate-bounce-gentle {
+            animation: bounce-gentle 2s ease-in-out infinite;
+        }
+
+        .animate-pop {
+            animation: pop-in 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        .jungle-card {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(240, 253, 244, 0.95) 100%);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.04), inset 0 2px 4px 0 rgba(255, 255, 255, 0.6);
+            border: 4px solid #16a34a;
+        }
+
+        .btn-jungle {
+            background: linear-gradient(180deg, #4ade80 0%, #16a34a 100%);
+            box-shadow: 0 6px 0 #15803d, 0 10px 15px rgba(0,0,0,0.2);
+            transition: all 0.1s ease;
+        }
+        .btn-jungle:active:not(:disabled) {
+            transform: translateY(4px);
+            box-shadow: 0 2px 0 #15803d, 0 5px 10px rgba(0,0,0,0.2);
+        }
+
+        .btn-option {
+            background: linear-gradient(180deg, #ffffff 0%, #f0fdf4 100%);
+            border: 3px solid #86efac;
+            box-shadow: 0 6px 0 #4ade80, 0 8px 15px rgba(0,0,0,0.1);
+            transition: all 0.15s ease;
+        }
+        .btn-option:hover:not(:disabled) {
+            border-color: #22c55e;
+            transform: translateY(-2px);
+        }
+        .btn-option:active:not(:disabled) {
+            transform: translateY(4px);
+            box-shadow: 0 2px 0 #4ade80;
+        }
+
+        .btn-gold {
+            background: linear-gradient(180deg, #fde047 0%, #eab308 100%);
+            box-shadow: 0 6px 0 #ca8a04, 0 10px 15px rgba(0,0,0,0.2);
+            color: #713f12;
+        }
+        .btn-gold:active:not(:disabled) {
+            transform: translateY(4px);
+            box-shadow: 0 2px 0 #ca8a04;
+        }
+
+        /* Custom Vine Overlay Background Pattern */
+        .jungle-bg {
+            background-color: #052e16;
+            background-image: radial-gradient(#15803d 1.5px, transparent 1.5px), radial-gradient(#166534 1.5px, #052e16 1.5px);
+            background-size: 60px 60px;
+            background-position: 0 0, 30px 30px;
+        }
+
+        canvas {
+            touch-action: none;
+        }
+    </style>
+</head>
+<body class="jungle-bg min-h-screen text-slate-800 flex flex-col items-center justify-between p-2 sm:p-4 overflow-x-hidden relative">
+
+    <!-- Top Bar Navigation -->
+    <header class="w-full max-w-3xl flex justify-between items-center z-20 mb-2 sm:mb-4 px-2">
+        <div class="flex items-center gap-2 bg-emerald-950/80 backdrop-blur border-2 border-emerald-500/50 rounded-2xl px-4 py-2 text-white shadow-lg">
+            <svg class="w-8 h-8 text-yellow-400 animate-bounce-gentle" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 2l2.4 7.4h7.6l-6.2 4.5 2.4 7.4-6.2-4.5-6.2 4.5 2.4-7.4-6.2-4.5h7.6z"/>
+            </svg>
+            <div>
+                <div class="text-xs text-emerald-300 font-bold uppercase tracking-wider">Score</div>
+                <div id="top-score-display" class="text-xl sm:text-2xl font-black text-yellow-400 leading-none">0</div>
+            </div>
+        </div>
+
+        <!-- Title Badge -->
+        <div class="flex items-center gap-2 bg-gradient-to-r from-emerald-600 to-green-600 border-2 border-emerald-300 text-white font-black px-4 py-2 rounded-2xl shadow-xl">
+            <span class="text-2xl">🐱</span>
+            <span class="text-xl sm:text-2xl tracking-wide uppercase">CAT MATHS</span>
+        </div>
+
+        <!-- Audio Toggle Button -->
+        <button id="btn-toggle-audio" onclick="toggleAudio()" class="bg-emerald-950/80 hover:bg-emerald-900 border-2 border-emerald-500/50 text-white p-3 rounded-2xl shadow-lg transition active:scale-95 flex items-center justify-center">
+            <span id="audio-icon" class="text-xl">🔊</span>
+        </button>
+    </header>
+
+    <main class="w-full max-w-3xl flex-1 flex flex-col justify-center items-center z-10 relative my-auto">
+
+        <!-- 1. START SCREEN -->
+        <div id="screen-start" class="w-full jungle-card rounded-3xl p-6 sm:p-8 text-center animate-pop relative overflow-hidden">
+            <!-- Decorative Jungle Vine Top SVG -->
+            <div class="absolute -top-4 -left-4 w-24 h-24 text-emerald-600 pointer-events-none opacity-40">
+                <svg viewBox="0 0 100 100" fill="currentColor"><path d="M10,10 Q50,0 90,40 Q60,60 10,10 Z"/></svg>
+            </div>
+            
+            <div class="w-28 h-28 sm:w-36 sm:h-36 mx-auto mb-4 relative animate-float">
+                <!-- Cat Explorer SVG Illustration -->
+                <svg viewBox="0 0 200 200" class="w-full h-full drop-shadow-xl">
+                    <!-- Ear Outer -->
+                    <polygon points="35,60 15,10 75,35" fill="#f97316" />
+                    <polygon points="165,60 185,10 125,35" fill="#f97316" />
+                    <!-- Ear Inner -->
+                    <polygon points="38,52 23,17 68,34" fill="#fdba74" />
+                    <polygon points="162,52 177,17 132,34" fill="#fdba74" />
+                    <!-- Head -->
+                    <circle cx="100" cy="110" r="70" fill="#fb923c" />
+                    <!-- Cheeks -->
+                    <circle cx="60" cy="130" r="18" fill="#fed7aa" opacity="0.6"/>
+                    <circle cx="140" cy="130" r="18" fill="#fed7aa" opacity="0.6"/>
+                    <!-- Eyes -->
+                    <ellipse cx="70" cy="100" rx="10" ry="14" fill="#1e293b" />
+                    <ellipse cx="130" cy="100" rx="10" ry="14" fill="#1e293b" />
+                    <circle cx="67" cy="95" r="4" fill="#ffffff" />
+                    <circle cx="127" cy="95" r="4" fill="#ffffff" />
+                    <!-- Snout -->
+                    <ellipse cx="100" cy="120" rx="18" ry="12" fill="#ffedd5" />
+                    <polygon points="100,114 93,122 107,122" fill="#ef4444" />
+                    <path d="M93,124 Q100,132 107,124" stroke="#1e293b" stroke-width="3" fill="none" stroke-linecap="round" />
+                    <!-- Explorer Hat -->
+                    <path d="M40,75 C40,40 160,40 160,75 Z" fill="#854d0e" />
+                    <ellipse cx="100" cy="75" rx="75" ry="12" fill="#a16207" />
+                    <rect x="55" y="65" width="90" height="8" fill="#ef4444" rx="3" />
+                    <circle cx="100" cy="69" r="5" fill="#facc15" />
+                </svg>
+            </div>
+
+            <h1 class="text-3xl sm:text-5xl font-black text-emerald-900 mb-2 tracking-tight">Welcome, Explorer!</h1>
+            <p class="text-base sm:text-lg text-emerald-800 mb-6 font-semibold max-w-md mx-auto">
+                Join <span class="text-orange-600 font-bold">Cat the Explorer</span> on an awesome Year 3 jungle maths adventure! Answer correctly to unlock the <span class="text-yellow-600 font-bold">Asteroid Shooter</span> mini-game! 🚀✨
+            </p>
+
+            <div class="grid grid-cols-2 gap-3 mb-6 max-w-sm mx-auto text-left text-xs sm:text-sm font-bold text-emerald-900 bg-emerald-100/80 p-4 rounded-2xl border border-emerald-300">
+                <div class="flex items-center gap-2">🌴 <span>5 Jungle Levels</span></div>
+                <div class="flex items-center gap-2">🧮 <span>Year 3 Maths</span></div>
+                <div class="flex items-center gap-2">⭐ <span>Earn Stars</span></div>
+                <div class="flex items-center gap-2">🚀 <span>Space Reward</span></div>
+            </div>
+
+            <button onclick="startQuiz()" class="btn-jungle text-white text-2xl sm:text-3xl font-black px-10 py-4 rounded-2xl w-full max-w-md cursor-pointer tracking-wider">
+                PLAY NOW! 🐾
+            </button>
+        </div>
+
+        <!-- 2. QUIZ GAME SCREEN -->
+        <div id="screen-quiz" class="w-full jungle-card rounded-3xl p-4 sm:p-6 text-center hidden animate-pop relative">
+            
+            <!-- Level & Vine Progress Bar -->
+            <div class="mb-4">
+                <div class="flex justify-between items-center mb-1 text-sm sm:text-base font-bold text-emerald-900">
+                    <span id="level-title-text" class="flex items-center gap-1">🌿 Level 1: Jungle Path</span>
+                    <span id="question-tracker-text" class="bg-emerald-200 text-emerald-900 px-3 py-0.5 rounded-full text-xs sm:text-sm">Question 1 of 3</span>
+                </div>
+                <!-- Vine Progress Bar -->
+                <div class="w-full bg-emerald-950/20 h-4 rounded-full p-0.5 border border-emerald-600/40 relative overflow-hidden">
+                    <div id="progress-bar-fill" class="bg-gradient-to-r from-green-400 to-emerald-500 h-full rounded-full transition-all duration-500 w-0"></div>
+                </div>
+            </div>
+
+            <!-- Question Card Header -->
+            <div class="bg-emerald-100/90 border-2 border-emerald-300 rounded-2xl p-4 sm:p-6 mb-6 shadow-inner relative">
+                <!-- Mascot Mini Avatar -->
+                <div class="absolute -top-7 left-4 w-12 h-12 bg-orange-400 border-2 border-white rounded-full flex items-center justify-center text-xl shadow-md">
+                    🐱
+                </div>
+                <p id="question-text" class="text-2xl sm:text-4xl font-black text-slate-800 tracking-wide mt-2">
+                    24 + 5 = ?
+                </p>
+            </div>
+
+            <!-- Multiple Choice Answer Options -->
+            <div id="options-container" class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mb-4">
+                <!-- Buttons injected dynamically -->
+            </div>
+
+            <!-- Encouragement Banner & Feedback Msg -->
+            <div id="feedback-banner" class="min-h-[50px] flex items-center justify-center rounded-2xl px-4 py-2 font-black text-lg sm:text-xl transition-all duration-300 opacity-0">
+                <span id="feedback-text">Pawsome! 🐾</span>
+            </div>
+        </div>
+
+        <!-- 3. LEVEL CLEARED MODAL / OVERLAY -->
+        <div id="screen-level-clear" class="w-full jungle-card rounded-3xl p-6 text-center hidden animate-pop">
+            <div class="text-6xl mb-2 animate-bounce">🎉</div>
+            <h2 id="level-clear-title" class="text-3xl sm:text-4xl font-black text-emerald-900 mb-2">Level Complete!</h2>
+            <p id="level-clear-desc" class="text-base sm:text-lg text-emerald-800 font-semibold mb-6">You handled those maths problems like a true jungle explorer!</p>
+            
+            <div class="flex justify-center gap-4 mb-6">
+                <span class="text-4xl animate-bounce" style="animation-delay: 0.1s">⭐</span>
+                <span class="text-5xl animate-bounce" style="animation-delay: 0.2s">🌟</span>
+                <span class="text-4xl animate-bounce" style="animation-delay: 0.3s">⭐</span>
+            </div>
+
+            <button id="btn-next-level" onclick="nextLevel()" class="btn-gold text-2xl font-black px-8 py-4 rounded-2xl w-full max-w-sm">
+                CONTINUE ➡️
+            </button>
+        </div>
+
+        <!-- 4. FINAL VICTORY & MINI-GAME UNLOCK SCREEN -->
+        <div id="screen-victory" class="w-full jungle-card rounded-3xl p-6 sm:p-8 text-center hidden animate-pop">
+            <div class="w-24 h-24 mx-auto mb-2 text-6xl">🏆</div>
+            <h2 class="text-3xl sm:text-5xl font-black text-emerald-900 mb-2">JUNGLE CHAMPION!</h2>
+            <p class="text-base sm:text-lg text-emerald-800 font-bold mb-4">
+                You completed all 5 levels! You are a Year 3 Maths Superstar! 🌟
+            </p>
+
+            <div class="bg-amber-100 border-2 border-amber-300 rounded-2xl p-4 mb-6 text-amber-900 font-bold max-w-md mx-auto">
+                <p class="text-lg">🎁 REWARD UNLOCKED:</p>
+                <p class="text-2xl text-orange-600 font-black">ASTEROID SHOOTER MINI-GAME!</p>
+            </div>
+
+            <div class="flex flex-col sm:flex-row gap-3 justify-center max-w-md mx-auto">
+                <button onclick="startMiniGame()" class="btn-gold text-xl sm:text-2xl font-black px-6 py-4 rounded-2xl flex-1 animate-pulse">
+                    PLAY MINI-GAME 🚀
+                </button>
+                <button onclick="resetQuiz()" class="btn-jungle text-white text-lg font-black px-6 py-4 rounded-2xl">
+                    REPLAY QUIZ 🔄
+                </button>
+            </div>
+        </div>
+
+        <!-- 5. REWARD MINI-GAME: ASTEROID SHOOTER -->
+        <div id="screen-minigame" class="w-full bg-slate-950 border-4 border-purple-500 rounded-3xl p-3 sm:p-4 text-center hidden animate-pop shadow-2xl relative">
+            
+            <!-- Mini-Game Stats Header -->
+            <div class="flex justify-between items-center mb-2 px-2 text-white font-bold text-sm sm:text-base">
+                <div class="flex items-center gap-1 text-yellow-400">
+                    <span>🚀 Score:</span>
+                    <span id="minigame-score" class="text-xl font-black">0</span>
+                </div>
+                <div class="text-emerald-400 text-xs sm:text-sm">
+                    Drag / Arrow Keys to Move • Tap/Space to Shoot
+                </div>
+                <button onclick="exitMiniGame()" class="bg-red-600 hover:bg-red-500 text-white px-3 py-1 rounded-xl text-xs font-black">
+                    EXIT ✖
+                </button>
+            </div>
+
+            <!-- Canvas Container -->
+            <div class="relative w-full aspect-[4/3] sm:aspect-[16/10] max-h-[60vh] bg-black rounded-2xl overflow-hidden border-2 border-purple-800 shadow-inner">
+                <canvas id="gameCanvas" class="w-full h-full block cursor-crosshair"></canvas>
+                
+                <!-- Game Over Overlay on Canvas -->
+                <div id="canvas-game-over" class="absolute inset-0 bg-black/80 flex flex-col items-center justify-center text-white hidden p-4">
+                    <h3 class="text-3xl font-black text-yellow-400 mb-1">BOOM! GAME OVER!</h3>
+                    <p class="text-slate-300 font-bold mb-4">Final Mini-Game Score: <span id="final-minigame-score" class="text-yellow-300">0</span></p>
+                    <button onclick="restartMiniGame()" class="btn-gold text-lg font-black px-6 py-3 rounded-xl text-slate-900">
+                        PLAY AGAIN 🔄
+                    </button>
+                </div>
+            </div>
+
+            <!-- Mobile Touch Controls Bar -->
+            <div class="mt-3 grid grid-cols-3 gap-2 max-w-sm mx-auto sm:hidden">
+                <button id="btn-touch-left" class="bg-slate-800 active:bg-purple-600 text-white font-black text-2xl py-3 rounded-2xl border-2 border-slate-600">
+                    ⬅️
+                </button>
+                <button id="btn-touch-shoot" class="bg-orange-500 active:bg-orange-400 text-white font-black text-xl py-3 rounded-2xl border-2 border-orange-300">
+                    🔥 FIRE
+                </button>
+                <button id="btn-touch-right" class="bg-slate-800 active:bg-purple-600 text-white font-black text-2xl py-3 rounded-2xl border-2 border-slate-600">
+                    ➡️
+                </button>
+            </div>
+        </div>
+
+    </main>
+
+    <footer class="w-full text-center z-10 py-2 text-emerald-200/70 text-xs font-semibold">
+        Cat Jungle Maths Explorer • Safe, Fun & Child-Friendly Year 3 Learning
+    </footer>
+
+    <script>
+        /* -------------------------------------------------------------------------
+           1. WEB AUDIO API SYNTHESIZER (No External Assets Required)
+           ------------------------------------------------------------------------- */
+        let audioCtx = null;
+        let isMuted = false;
+
+        function initAudio() {
+            if (!audioCtx) {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                audioCtx = new AudioContext();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }
+
+        function toggleAudio() {
+            isMuted = !isMuted;
+            document.getElementById('audio-icon').innerText = isMuted ? '🔇' : '🔊';
+        }
+
+        function playSound(type) {
+            if (isMuted) return;
+            initAudio();
+            if (!audioCtx) return;
+
+            const now = audioCtx.currentTime;
+
+            if (type === 'click') {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(400, now);
+                osc.frequency.exponentialRampToValueAtTime(800, now + 0.08);
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.linearRampToValueAtTime(0.01, now + 0.08);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start(now);
+                osc.stop(now + 0.08);
+            } 
+            else if (type === 'correct') {
+                // Happy Arpeggio
+                const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+                notes.forEach((freq, idx) => {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(freq, now + idx * 0.08);
+                    gain.gain.setValueAtTime(0.25, now + idx * 0.08);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.08 + 0.2);
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.start(now + idx * 0.08);
+                    osc.stop(now + idx * 0.08 + 0.2);
+                });
+            } 
+            else if (type === 'wrong') {
+                // Gentle Try Again Sound
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(280, now);
+                osc.frequency.linearRampToValueAtTime(200, now + 0.25);
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.linearRampToValueAtTime(0.01, now + 0.25);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start(now);
+                osc.stop(now + 0.25);
+            } 
+            else if (type === 'fanfare') {
+                // Victory Fanfare
+                const notes = [440, 554.37, 659.25, 880];
+                notes.forEach((freq, idx) => {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = 'square';
+                    osc.frequency.setValueAtTime(freq, now + idx * 0.12);
+                    gain.gain.setValueAtTime(0.15, now + idx * 0.12);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.12 + 0.3);
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.start(now + idx * 0.12);
+                    osc.stop(now + idx * 0.12 + 0.3);
+                });
+            }
+            else if (type === 'laser') {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(900, now);
+                osc.frequency.exponentialRampToValueAtTime(200, now + 0.1);
+                gain.gain.setValueAtTime(0.15, now);
+                gain.gain.linearRampToValueAtTime(0.01, now + 0.1);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start(now);
+                osc.stop(now + 0.1);
+            }
+            else if (type === 'explosion') {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(150, now);
+                osc.frequency.exponentialRampToValueAtTime(30, now + 0.2);
+                gain.gain.setValueAtTime(0.25, now);
+                gain.gain.linearRampToValueAtTime(0.01, now + 0.2);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start(now);
+                osc.stop(now + 0.2);
+            }
+        }
+
+        /* -------------------------------------------------------------------------
+           2. YEAR 3 MATHS QUIZ DATA (5 Levels, 3 Questions each = 15 total)
+           ------------------------------------------------------------------------- */
+        const quizLevels = [
+            {
+                title: "Level 1: Jungle Path 🌴",
+                subtitle: "2-digit + 1-digit Addition & Subtraction",
+                questions: [
+                    { q: "24 + 5 = ?", options: ["29", "28", "30", "27"], answer: 0 },
+                    { q: "38 - 6 = ?", options: ["30", "32", "34", "31"], answer: 1 },
+                    { q: "42 + 7 = ?", options: ["48", "50", "49", "47"], answer: 2 }
+                ]
+            },
+            {
+                title: "Level 2: Canopy Climb 🐒",
+                subtitle: "Adding & Subtracting Tens",
+                questions: [
+                    { q: "40 + 30 = ?", options: ["60", "70", "80", "50"], answer: 1 },
+                    { q: "85 - 20 = ?", options: ["65", "55", "75", "60"], answer: 0 },
+                    { q: "120 + 30 = ?", options: ["140", "160", "150", "130"], answer: 2 }
+                ]
+            },
+            {
+                title: "Level 3: Waterfall River 🌊",
+                subtitle: "3-digit Numbers (No Regrouping)",
+                questions: [
+                    { q: "142 + 23 = ?", options: ["165", "163", "162", "175"], answer: 0 },
+                    { q: "256 - 30 = ?", options: ["226", "236", "216", "246"], answer: 0 },
+                    { q: "310 + 45 = ?", options: ["350", "355", "365", "345"], answer: 1 }
+                ]
+            },
+            {
+                title: "Level 4: Ancient Temple 🏛️",
+                subtitle: "3-digit Crossing 10 or 100",
+                questions: [
+                    { q: "145 + 18 = ?", options: ["163", "165", "153", "161"], answer: 0 },
+                    { q: "230 - 45 = ?", options: ["185", "195", "175", "190"], answer: 0 },
+                    { q: "295 + 15 = ?", options: ["305", "315", "310", "300"], answer: 2 }
+                ]
+            },
+            {
+                title: "Level 5: Safari Treasure 💎",
+                subtitle: "Jungle Word Problems",
+                questions: [
+                    { 
+                        q: "Cat found 120 bananas and picked 45 more. How many in total?", 
+                        options: ["165 bananas", "170 bananas", "155 bananas", "160 bananas"], 
+                        answer: 0 
+                    },
+                    { 
+                        q: "There were 180 birds in a tree. 35 flew away. How many stay?", 
+                        options: ["140 birds", "145 birds", "150 birds", "155 birds"], 
+                        answer: 1 
+                    },
+                    { 
+                        q: "Cat collected 215 shiny river stones and gave 40 to a friend. Left?", 
+                        options: ["175 stones", "165 stones", "185 stones", "170 stones"], 
+                        answer: 0 
+                    }
+                ]
+            }
+        ];
+
+        /* -------------------------------------------------------------------------
+           3. QUIZ STATE & LOGIC
+           ------------------------------------------------------------------------- */
+        let currentLevel = 0;
+        let currentQuestionIdx = 0;
+        let totalScore = 0;
+        let isAnsweringBlocked = false;
+
+        const encouragingPhrases = [
+            "Pawsome job! 🐾",
+            "Roar-tastic! 🦁",
+            "Super effort! ⭐",
+            "Jungle Genius! 🌴",
+            "Brilliant Maths! 🧠",
+            "You're on fire! 🔥"
+        ];
+
+        function showScreen(screenId) {
+            const screens = ['screen-start', 'screen-quiz', 'screen-level-clear', 'screen-victory', 'screen-minigame'];
+            screens.forEach(id => {
+                const el = document.getElementById(id);
+                if (id === screenId) {
+                    el.classList.remove('hidden');
+                } else {
+                    el.classList.add('hidden');
+                }
+            });
+        }
+
+        function startQuiz() {
+            initAudio();
+            playSound('click');
+            currentLevel = 0;
+            currentQuestionIdx = 0;
+            totalScore = 0;
+            updateScoreDisplay();
+            showScreen('screen-quiz');
+            loadQuestion();
+        }
+
+        function updateScoreDisplay() {
+            document.getElementById('top-score-display').innerText = totalScore;
+        }
+
+        function loadQuestion() {
+            isAnsweringBlocked = false;
+            const levelData = quizLevels[currentLevel];
+            const qData = levelData.questions[currentQuestionIdx];
+
+            // Update Level & Progress Bar Header
+            document.getElementById('level-title-text').innerText = levelData.title;
+            document.getElementById('question-tracker-text').innerText = `Question ${currentQuestionIdx + 1} of 3`;
+            
+            // Calculate progress % across whole 15 questions
+            const globalQuestionNum = (currentLevel * 3) + currentQuestionIdx;
+            const progressPercent = (globalQuestionNum / 15) * 100;
+            document.getElementById('progress-bar-fill').style.width = `${progressPercent}%`;
+
+            // Question Text
+            document.getElementById('question-text').innerText = qData.q;
+
+            // Render Options
+            const container = document.getElementById('options-container');
+            container.innerHTML = '';
+
+            qData.options.forEach((optText, idx) => {
+                const btn = document.createElement('button');
+                btn.className = "btn-option font-black text-xl sm:text-2xl text-emerald-950 p-4 sm:p-5 rounded-2xl w-full cursor-pointer flex items-center justify-center gap-2";
+                btn.innerHTML = `<span class="text-emerald-500/70 text-base">●</span> ${optText}`;
+                btn.onclick = () => checkAnswer(idx, btn);
+                container.appendChild(btn);
+            });
+
+            // Hide Feedback Banner
+            const banner = document.getElementById('feedback-banner');
+            banner.style.opacity = '0';
+        }
+
+        function checkAnswer(selectedIdx, btnEl) {
+            if (isAnsweringBlocked) return;
+            isAnsweringBlocked = true;
+
+            const qData = quizLevels[currentLevel].questions[currentQuestionIdx];
+            const banner = document.getElementById('feedback-banner');
+            const feedbackText = document.getElementById('feedback-text');
+
+            if (selectedIdx === qData.answer) {
+                // Correct
+                playSound('correct');
+                btnEl.classList.remove('btn-option');
+                btnEl.classList.add('bg-green-500', 'text-white', 'border-green-600', 'shadow-green-700');
+                
+                totalScore += 100;
+                updateScoreDisplay();
+
+                const randomPhrase = encouragingPhrases[Math.floor(Math.random() * encouragingPhrases.length)];
+                feedbackText.innerText = randomPhrase;
+                banner.className = "min-h-[50px] flex items-center justify-center rounded-2xl px-4 py-2 font-black text-lg sm:text-xl transition-all duration-300 opacity-100 bg-green-200 text-green-900 border-2 border-green-400";
+
+                setTimeout(() => {
+                    advanceQuestion();
+                }, 1200);
+
+            } else {
+                // Try again gently
+                playSound('wrong');
+                btnEl.classList.add('bg-red-200', 'border-red-400', 'text-red-800');
+
+                feedbackText.innerText = "Nice try! Let's give it another shot! 💪";
+                banner.className = "min-h-[50px] flex items-center justify-center rounded-2xl px-4 py-2 font-black text-lg sm:text-xl transition-all duration-300 opacity-100 bg-amber-200 text-amber-900 border-2 border-amber-400";
+
+                setTimeout(() => {
+                    btnEl.classList.remove('bg-red-200', 'border-red-400', 'text-red-800');
+                    isAnsweringBlocked = false;
+                }, 1200);
+            }
+        }
+
+        function advanceQuestion() {
+            currentQuestionIdx++;
+            if (currentQuestionIdx >= 3) {
+                // Level Complete!
+                playSound('fanfare');
+                currentQuestionIdx = 0;
+                currentLevel++;
+
+                if (currentLevel >= quizLevels.length) {
+                    // Completed all 5 levels!
+                    document.getElementById('progress-bar-fill').style.width = '100%';
+                    showScreen('screen-victory');
+                } else {
+                    // Show Level Cleared Screen
+                    document.getElementById('level-clear-title').innerText = `${quizLevels[currentLevel-1].title} Complete!`;
+                    showScreen('screen-level-clear');
+                }
+            } else {
+                loadQuestion();
+            }
+        }
+
+        function nextLevel() {
+            playSound('click');
+            showScreen('screen-quiz');
+            loadQuestion();
+        }
+
+        function resetQuiz() {
+            startQuiz();
+        }
+
+        /* -------------------------------------------------------------------------
+           4. ASTEROID SHOOTER MINI-GAME (Canvas Arcade Engine)
+           ------------------------------------------------------------------------- */
+        let canvas, ctx;
+        let miniGameActive = false;
+        let animFrameId = null;
+
+        // Player Space Cat Ship
+        const player = {
+            x: 0,
+            y: 0,
+            width: 50,
+            height: 50,
+            speed: 7,
+            dx: 0
+        };
+
+        let bullets = [];
+        let asteroids = [];
+        let particles = [];
+        let miniScore = 0;
+        let lastAsteroidSpawn = 0;
+
+        // Key states
+        const keys = {
+            left: false,
+            right: false,
+            space: false
+        };
+
+        function startMiniGame() {
+            playSound('click');
+            showScreen('screen-minigame');
+            
+            canvas = document.getElementById('gameCanvas');
+            ctx = canvas.getContext('2d');
+
+            // Responsive sizing
+            const container = canvas.parentElement;
+            canvas.width = container.clientWidth;
+            canvas.height = container.clientHeight;
+
+            player.x = canvas.width / 2 - player.width / 2;
+            player.y = canvas.height - player.height - 15;
+            player.dx = 0;
+
+            bullets = [];
+            asteroids = [];
+            particles = [];
+            miniScore = 0;
+            document.getElementById('minigame-score').innerText = miniScore;
+            document.getElementById('canvas-game-over').classList.add('hidden');
+
+            miniGameActive = true;
+            setupControls();
+            lastAsteroidSpawn = performance.now();
+            
+            if (animFrameId) cancelAnimationFrame(animFrameId);
+            gameLoop(performance.now());
+        }
+
+        function setupControls() {
+            window.onkeydown = (e) => {
+                if (e.key === 'ArrowLeft' || e.key === 'a') keys.left = true;
+                if (e.key === 'ArrowRight' || e.key === 'd') keys.right = true;
+                if (e.key === ' ' || e.key === 'ArrowUp') {
+                    if (!keys.space && miniGameActive) shootLaser();
+                    keys.space = true;
+                }
+            };
+
+            window.onkeyup = (e) => {
+                if (e.key === 'ArrowLeft' || e.key === 'a') keys.left = false;
+                if (e.key === 'ArrowRight' || e.key === 'd') keys.right = false;
+                if (e.key === ' ' || e.key === 'ArrowUp') keys.space = false;
+            };
+
+            // Touch controls for screen buttons
+            const btnLeft = document.getElementById('btn-touch-left');
+            const btnRight = document.getElementById('btn-touch-right');
+            const btnShoot = document.getElementById('btn-touch-shoot');
+
+            btnLeft.ontouchstart = (e) => { e.preventDefault(); keys.left = true; };
+            btnLeft.ontouchend = (e) => { e.preventDefault(); keys.left = false; };
+            btnRight.ontouchstart = (e) => { e.preventDefault(); keys.right = true; };
+            btnRight.ontouchend = (e) => { e.preventDefault(); keys.right = false; };
+            btnShoot.ontouchstart = (e) => { e.preventDefault(); if(miniGameActive) shootLaser(); };
+
+            // Canvas drag/touch moving
+            canvas.ontouchmove = (e) => {
+                if (!miniGameActive) return;
+                const rect = canvas.getBoundingClientRect();
+                const touchX = e.touches[0].clientX - rect.left;
+                player.x = touchX - player.width / 2;
+            };
+        }
+
+        function shootLaser() {
+            playSound('laser');
+            bullets.push({
+                x: player.x + player.width / 2 - 4,
+                y: player.y,
+                width: 8,
+                height: 18,
+                speed: 10
+            });
+        }
+
+        function spawnAsteroid() {
+            const size = Math.random() * 25 + 25; // 25px - 50px
+            asteroids.push({
+                x: Math.random() * (canvas.width - size),
+                y: -size,
+                size: size,
+                speed: Math.random() * 2 + 1.5,
+                color: `hsl(${Math.random() * 60 + 10}, 80%, 50%)`
+            });
+        }
+
+        function createExplosion(x, y, color) {
+            playSound('explosion');
+            for (let i = 0; i < 12; i++) {
+                particles.push({
+                    x: x,
+                    y: y,
+                    vx: (Math.random() - 0.5) * 8,
+                    vy: (Math.random() - 0.5) * 8,
+                    life: 20,
+                    color: color || '#f97316'
+                });
+            }
+        }
+
+        function gameLoop(timestamp) {
+            if (!miniGameActive) return;
+
+            // Clear Screen
+            ctx.fillStyle = '#090d16';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Draw Space Stars Background
+            ctx.fillStyle = '#ffffff';
+            for (let i = 0; i < 20; i++) {
+                const sx = (Math.sin(i * 99 + timestamp * 0.001) * 0.5 + 0.5) * canvas.width;
+                const sy = ((i * 30 + timestamp * 0.05) % canvas.height);
+                ctx.fillRect(sx, sy, 2, 2);
+            }
+
+            // Move Player
+            if (keys.left) player.x -= player.speed;
+            if (keys.right) player.x += player.speed;
+            // Clamp player within canvas bounds
+            player.x = Math.max(0, Math.min(canvas.width - player.width, player.x));
+
+            // Draw Player Cat Ship
+            ctx.save();
+            ctx.translate(player.x, player.y);
+            
+            // Spaceship Body
+            ctx.fillStyle = '#f97316';
+            ctx.beginPath();
+            ctx.moveTo(player.width / 2, 0);
+            ctx.lineTo(player.width, player.height);
+            ctx.lineTo(0, player.height);
+            ctx.closePath();
+            ctx.fill();
+
+            // Cat Ears on Ship
+            ctx.fillStyle = '#ea580c';
+            ctx.beginPath();
+            ctx.moveTo(10, 20);
+            ctx.lineTo(0, 5);
+            ctx.lineTo(20, 15);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.moveTo(30, 15);
+            ctx.lineTo(50, 5);
+            ctx.lineTo(40, 20);
+            ctx.fill();
+
+            // Cockpit Glass
+            ctx.fillStyle = '#38bdf8';
+            ctx.beginPath();
+            ctx.arc(player.width / 2, player.height / 2 + 5, 12, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.restore();
+
+            // Spawn Asteroids
+            if (timestamp - lastAsteroidSpawn > 900) {
+                spawnAsteroid();
+                lastAsteroidSpawn = timestamp;
+            }
+
+            // Update & Draw Bullets
+            ctx.fillStyle = '#facc15';
+            for (let i = bullets.length - 1; i >= 0; i--) {
+                let b = bullets[i];
+                b.y -= b.speed;
+                ctx.fillRect(b.x, b.y, b.width, b.height);
+
+                if (b.y < -20) bullets.splice(i, 1);
+            }
+
+            // Update & Draw Asteroids
+            for (let i = asteroids.length - 1; i >= 0; i--) {
+                let ast = asteroids[i];
+                ast.y += ast.speed;
+
+                // Draw Asteroid
+                ctx.fillStyle = ast.color;
+                ctx.beginPath();
+                ctx.arc(ast.x, ast.y, ast.size / 2, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.strokeStyle = '#fef08a';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+
+                // Bullet Collision
+                for (let j = bullets.length - 1; j >= 0; j--) {
+                    let b = bullets[j];
+                    const dist = Math.hypot(b.x - ast.x, b.y - ast.y);
+                    if (dist < ast.size / 2 + 5) {
+                        createExplosion(ast.x, ast.y, ast.color);
+                        asteroids.splice(i, 1);
+                        bullets.splice(j, 1);
+                        miniScore += 50;
+                        document.getElementById('minigame-score').innerText = miniScore;
+                        break;
+                    }
+                }
+
+                // Player Collision
+                if (ast) {
+                    const playerDist = Math.hypot((player.x + player.width/2) - ast.x, (player.y + player.height/2) - ast.y);
+                    if (playerDist < ast.size / 2 + player.width / 3) {
+                        createExplosion(player.x + player.width/2, player.y + player.height/2, '#ef4444');
+                        gameOverMiniGame();
+                        return;
+                    }
+
+                    // Bottom boundary
+                    if (ast.y > canvas.height + 50) {
+                        asteroids.splice(i, 1);
+                    }
+                }
+            }
+
+            // Update & Draw Particles
+            for (let i = particles.length - 1; i >= 0; i--) {
+                let p = particles[i];
+                p.x += p.vx;
+                p.y += p.vy;
+                p.life--;
+                ctx.fillStyle = p.color;
+                ctx.fillRect(p.x, p.y, 4, 4);
+
+                if (p.life <= 0) particles.splice(i, 1);
+            }
+
+            animFrameId = requestAnimationFrame(gameLoop);
+        }
+
+        function gameOverMiniGame() {
+            miniGameActive = false;
+            document.getElementById('final-minigame-score').innerText = miniScore;
+            document.getElementById('canvas-game-over').classList.remove('hidden');
+        }
+
+        function restartMiniGame() {
+            startMiniGame();
+        }
+
+        function exitMiniGame() {
+            miniGameActive = false;
+            if (animFrameId) cancelAnimationFrame(animFrameId);
+            showScreen('screen-victory');
+        }
+    </script>
+</body>
+</html>
