@@ -1,0 +1,1140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Evolution Science Quiz</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Nunito:wght@600;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #FF7B38;
+            --primary-dark: #E05810;
+            --secondary: #4EB8FF;
+            --accent-yellow: #FFD23F;
+            --bg-green: #7BC676;
+            --text-main: #2D3748;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        body {
+            font-family: 'Fredoka', 'Nunito', sans-serif;
+            background: linear-gradient(135deg, #A8E063 0%, #56AB2F 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 12px;
+            color: var(--text-main);
+            overflow-x: hidden;
+        }
+
+        /* Container & Card Layout */
+        .game-wrapper {
+            width: 100%;
+            max-width: 920px;
+            background: #EBF8FF;
+            border: 8px solid #3182CE;
+            border-radius: 32px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.25), inset 0 6px 0 rgba(255,255,255,0.6);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            min-height: 680px;
+        }
+
+        /* Top Bar Header */
+        .top-bar {
+            background: linear-gradient(180deg, #3182CE 0%, #2B6CB0 100%);
+            color: white;
+            padding: 14px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 6px solid #1A365D;
+        }
+
+        .game-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-shadow: 0 2px 40px rgba(0,0,0,0.3);
+        }
+
+        .sound-btn {
+            background: #ECC94B;
+            border: 3px solid #D69E2E;
+            border-radius: 50%;
+            width: 44px;
+            height: 44px;
+            cursor: pointer;
+            font-size: 1.3rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 0 #B7791F;
+            transition: transform 0.1s, background 0.2s;
+        }
+
+        .sound-btn:active {
+            transform: translateY(3px);
+            box-shadow: 0 1px 0 #B7791F;
+        }
+
+        /* Screen Sections */
+        .screen {
+            display: none;
+            padding: 24px;
+            flex: 1;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            background-size: cover;
+            background-position: center;
+            position: relative;
+        }
+
+        .screen.active {
+            display: flex;
+        }
+
+        /* Welcome Screen */
+        #welcome-screen {
+            background: radial-gradient(circle at center, #FFF5F0 0%, #FED7D7 100%);
+            text-align: center;
+            justify-content: center;
+            gap: 20px;
+        }
+
+        .hero-banner {
+            font-size: 2.5rem;
+            color: #C53030;
+            text-shadow: 3px 3px 0 #FFF, 5px 5px 0 #9B2C2C;
+            margin-bottom: 10px;
+        }
+
+        .hero-subtitle {
+            font-size: 1.25rem;
+            color: #4A5568;
+            max-width: 650px;
+            line-height: 1.4;
+        }
+
+        /* Button Styles */
+        .btn-primary {
+            background: linear-gradient(180deg, #ED8936 0%, #DD6B20 100%);
+            color: white;
+            font-family: inherit;
+            font-size: 1.4rem;
+            font-weight: 700;
+            padding: 16px 40px;
+            border: 4px solid #9C4221;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 8px 0 #7B341E, 0 15px 20px rgba(0,0,0,0.2);
+            transition: all 0.15s ease;
+            text-shadow: 0 2px 0 #7B341E;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            background: linear-gradient(180deg, #F6AD55 0%, #ED8936 100%);
+        }
+
+        .btn-primary:active {
+            transform: translateY(6px);
+            box-shadow: 0 2px 0 #7B341E;
+        }
+
+        /* Quiz Screen Layout */
+        .quiz-container {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .status-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: white;
+            padding: 12px 20px;
+            border-radius: 20px;
+            border: 4px solid #CBD5E0;
+            box-shadow: 0 4px 0 #A0AEC0;
+        }
+
+        .badge-progress {
+            display: flex;
+            gap: 8px;
+        }
+
+        .badge-slot {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            background: #E2E8F0;
+            border: 3px solid #CBD5E0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            opacity: 0.4;
+            transition: all 0.3s ease;
+        }
+
+        .badge-slot.unlocked {
+            opacity: 1;
+            background: #FEFCBF;
+            border-color: #D69E2E;
+            box-shadow: 0 0 10px #ECC94B;
+            transform: scale(1.1);
+        }
+
+        .question-card {
+            background: white;
+            border: 5px solid #4A5568;
+            border-radius: 24px;
+            padding: 24px;
+            box-shadow: 0 10px 0 #2D3748;
+            text-align: center;
+            position: relative;
+        }
+
+        .question-text {
+            font-size: 1.35rem;
+            color: #1A202C;
+            line-height: 1.4;
+            margin-bottom: 10px;
+        }
+
+        .answers-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+            width: 100%;
+        }
+
+        @media (max-width: 640px) {
+            .answers-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .answer-btn {
+            background: #F7FAFC;
+            border: 4px solid #CBD5E0;
+            border-radius: 18px;
+            padding: 16px 20px;
+            font-family: inherit;
+            font-size: 1.15rem;
+            font-weight: 600;
+            color: #2D3748;
+            cursor: pointer;
+            box-shadow: 0 6px 0 #A0AEC0;
+            transition: all 0.15s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            min-height: 65px;
+        }
+
+        .answer-btn:hover {
+            background: #EDF2F7;
+            border-color: #4299E1;
+            transform: translateY(-2px);
+        }
+
+        .answer-btn:active {
+            transform: translateY(4px);
+            box-shadow: 0 2px 0 #A0AEC0;
+        }
+
+        .answer-btn.correct {
+            background: #C6F6D5 !important;
+            border-color: #38A169 !important;
+            color: #22543D !important;
+            box-shadow: 0 6px 0 #276749 !important;
+            animation: pulse-green 0.5s ease;
+        }
+
+        .answer-btn.wrong {
+            background: #FED7D7 !important;
+            border-color: #E53E3E !important;
+            color: #742A2A !important;
+            box-shadow: 0 6px 0 #9B2C2C !important;
+            animation: shake 0.4s ease;
+        }
+
+        /* Avatar Container & Styling */
+        .avatar-stage {
+            position: relative;
+            width: 210px;
+            height: 210px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .avatar-svg {
+            width: 100%;
+            height: 100%;
+            filter: drop-shadow(0 8px 0 rgba(0,0,0,0.15));
+        }
+
+        /* Feedback Toast */
+        .feedback-box {
+            min-height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px 20px;
+            border-radius: 16px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            text-align: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            width: 100%;
+        }
+
+        .feedback-box.show {
+            opacity: 1;
+        }
+
+        .feedback-box.correct-bg {
+            background: #C6F6D5;
+            color: #22543D;
+            border: 3px solid #38A169;
+        }
+
+        .feedback-box.wrong-bg {
+            background: #FEEBC8;
+            color: #7B341E;
+            border: 3px solid #DD6B20;
+        }
+
+        /* Dress-Up Screen Layout */
+        .dressup-layout {
+            display: grid;
+            grid-template-columns: 220px 1fr;
+            gap: 20px;
+            width: 100%;
+            align-items: start;
+        }
+
+        @media (max-width: 680px) {
+            .dressup-layout {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Evolution Selector Ribbon */
+        .evolution-ribbon {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            padding: 10px 4px;
+            background: #E2E8F0;
+            border-radius: 16px;
+            border: 3px solid #CBD5E0;
+            margin-bottom: 12px;
+        }
+
+        .evo-chip {
+            background: white;
+            border: 3px solid #A0AEC0;
+            border-radius: 14px;
+            padding: 6px 12px;
+            font-size: 0.95rem;
+            font-weight: 700;
+            cursor: pointer;
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .evo-chip:hover {
+            transform: translateY(-2px);
+            border-color: #3182CE;
+        }
+
+        .evo-chip.active {
+            border-color: #2B6CB0;
+            background: #BEE3F8;
+            box-shadow: 0 0 10px rgba(49, 130, 206, 0.5);
+            transform: scale(1.05);
+        }
+
+        .dressing-controls {
+            background: white;
+            border: 4px solid #CBD5E0;
+            border-radius: 20px;
+            padding: 16px;
+            max-height: 380px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .category-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #4A5568;
+            border-bottom: 2px dashed #E2E8F0;
+            padding-bottom: 4px;
+        }
+
+        .item-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(85px, 1fr));
+            gap: 10px;
+        }
+
+        .item-card {
+            background: #EDF2F7;
+            border: 3px solid #CBD5E0;
+            border-radius: 12px;
+            padding: 8px;
+            cursor: pointer;
+            text-align: center;
+            font-size: 0.85rem;
+            font-weight: 600;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .item-card:hover {
+            border-color: #3182CE;
+            background: #EBF8FF;
+        }
+
+        .item-card.equipped {
+            border-color: #38A169;
+            background: #C6F6D5;
+            box-shadow: 0 0 8px rgba(56,161,105,0.4);
+        }
+
+        .item-card.locked {
+            opacity: 0.5;
+            cursor: not-allowed;
+            background: #E2E8F0;
+        }
+
+        .item-icon {
+            font-size: 1.8rem;
+        }
+
+        /* Animations */
+        @keyframes pulse-green {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.04); }
+            100% { transform: scale(1); }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-8px); }
+            40%, 80% { transform: translateX(8px); }
+        }
+
+        @keyframes bounce-gentle {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
+        }
+
+        .animate-bounce {
+            animation: bounce-gentle 2s infinite ease-in-out;
+        }
+
+        /* Trophy Screen */
+        .trophy-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 12px;
+            width: 100%;
+            margin: 20px 0;
+        }
+
+        .trophy-card {
+            background: white;
+            border: 3px solid #CBD5E0;
+            border-radius: 16px;
+            padding: 12px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .trophy-card.unlocked {
+            border-color: #D69E2E;
+            background: #FEFCBF;
+        }
+
+        .trophy-icon {
+            font-size: 2.2rem;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="game-wrapper">
+        <!-- Top Bar -->
+        <div class="top-bar">
+            <div class="game-title">
+                <span id="header-title">⚡ Eevee & Her Evolutions</span>
+            </div>
+            <button class="sound-btn" id="sound-toggle" onclick="toggleAudio()" title="Toggle Sound">🔊</button>
+        </div>
+
+        <!-- 1. WELCOME / START SCREEN -->
+        <div id="welcome-screen" class="screen active">
+            <div class="avatar-stage animate-bounce">
+                <svg id="welcome-eevee" class="avatar-svg" viewBox="0 0 200 200"></svg>
+            </div>
+            <h1 class="hero-banner">Eevee's Evolution Quiz!</h1>
+            <p class="hero-subtitle">Answer Year 3 Science questions, earn Evolution Badges, and swap Eevee into Vaporeon, Jolteon, Flareon, Sylveon, and more in the Wardrobe!</p>
+            <button class="btn-primary" onclick="startGame()">Start Adventure!</button>
+        </div>
+
+        <!-- 2. QUIZ SCREEN -->
+        <div id="quiz-screen" class="screen">
+            <div class="quiz-container">
+                <!-- Level & Badge Header -->
+                <div class="status-header">
+                    <div>
+                        <strong id="level-title" style="font-size: 1.2rem; color: #2B6CB0;">Level 1</strong>
+                        <span id="question-tracker" style="color: #718096; font-size: 1rem; margin-left: 8px;">Question 1/3</span>
+                    </div>
+                    <div class="badge-progress" id="badge-bar"></div>
+                </div>
+
+                <!-- Avatar & Feedback -->
+                <div style="display: flex; align-items: center; gap: 16px; justify-content: center; margin: 10px 0;">
+                    <div class="avatar-stage" style="width: 130px; height: 130px;">
+                        <svg id="quiz-eevee" class="avatar-svg" viewBox="0 0 200 200"></svg>
+                    </div>
+                    <div id="feedback-box" class="feedback-box">
+                        <span id="feedback-text">Select an answer below!</span>
+                    </div>
+                </div>
+
+                <!-- Question Area -->
+                <div class="question-card">
+                    <div id="question-text" class="question-text">Question text goes here?</div>
+                </div>
+
+                <!-- Answer Choices -->
+                <div class="answers-grid" id="answers-container"></div>
+            </div>
+        </div>
+
+        <!-- 3. DRESS-UP & EVOLUTION REWARD SCREEN -->
+        <div id="dressup-screen" class="screen">
+            <h2 id="reward-heading" style="font-size: 1.6rem; color: #2B6CB0; text-align: center;">🎉 Level Complete! Dress Up & Evolve Eevee!</h2>
+
+            <div class="dressup-layout">
+                <!-- Avatar Display Side -->
+                <div style="display:flex; flex-direction:column; align-items:center; gap:10px;">
+                    <div class="avatar-stage" style="width: 200px; height: 200px;">
+                        <svg id="dressup-eevee" class="avatar-svg" viewBox="0 0 200 200"></svg>
+                    </div>
+                    <div id="evo-name-tag" style="font-size:1.3rem; font-weight:800; color:#2D3748; background:#FFF; padding:4px 16px; border-radius:20px; border:3px solid #CBD5E0;">
+                        Eevee
+                    </div>
+                </div>
+
+                <!-- Wardrobe & Evolution Panel -->
+                <div>
+                    <!-- Evolution Selector Strip -->
+                    <div style="font-size:0.95rem; font-weight:700; color:#4A5568; margin-bottom:4px;">✨ Choose Evolution:</div>
+                    <div class="evolution-ribbon" id="evolution-ribbon"></div>
+
+                    <!-- Accessories Wardrobe Grid -->
+                    <div class="dressing-controls" id="wardrobe-list"></div>
+                </div>
+            </div>
+
+            <button class="btn-primary" id="next-level-btn" onclick="continueFromDressup()" style="margin-top: 10px;">Next Level ➔</button>
+        </div>
+
+        <!-- 4. FINAL VICTORY SCREEN -->
+        <div id="victory-screen" class="screen" style="text-align: center; justify-content: center;">
+            <h1 class="hero-banner" style="color: #D69E2E;">🏆 Master Science Trainer!</h1>
+            <p class="hero-subtitle">Amazing job! You passed all 5 levels, mastered Year 3 Science, and unlocked all Eeveelution forms!</p>
+
+            <div class="avatar-stage animate-bounce" style="width: 200px; height: 200px; margin: 15px auto;">
+                <svg id="victory-eevee" class="avatar-svg" viewBox="0 0 200 200"></svg>
+            </div>
+
+            <!-- Badge Summary -->
+            <div class="trophy-grid" id="trophy-display"></div>
+
+            <button class="btn-primary" onclick="startGame()">Play Again!</button>
+        </div>
+    </div>
+
+    <script>
+        let audioCtx = null;
+        let soundEnabled = true;
+
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        }
+
+        function toggleAudio() {
+            soundEnabled = !soundEnabled;
+            document.getElementById('sound-toggle').innerText = soundEnabled ? '🔊' : '🔇';
+        }
+
+        function playSound(type) {
+            if (!soundEnabled) return;
+            initAudio();
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            const now = audioCtx.currentTime;
+
+            if (type === 'correct') {
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(523.25, now);
+                osc.frequency.exponentialRampToValueAtTime(659.25, now + 0.1);
+                osc.frequency.exponentialRampToValueAtTime(783.99, now + 0.2);
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.35);
+                osc.start(now);
+                osc.stop(now + 0.35);
+            } else if (type === 'wrong') {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(220, now);
+                osc.frequency.exponentialRampToValueAtTime(164.81, now + 0.2);
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
+                osc.start(now);
+                osc.stop(now + 0.25);
+            } else if (type === 'fanfare') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(440, now);
+                osc.frequency.setValueAtTime(554.37, now + 0.1);
+                osc.frequency.setValueAtTime(659.25, now + 0.2);
+                osc.frequency.setValueAtTime(880, now + 0.3);
+                gain.gain.setValueAtTime(0.25, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.6);
+                osc.start(now);
+                osc.stop(now + 0.6);
+            }
+        }
+
+        const quizData = [
+            {
+                level: 1,
+                title: "Level 1: Animal Groups",
+                badgeName: "Water Badge",
+                badgeIcon: "💧",
+                questions: [
+                    {
+                        q: "Which group of animals has fur or hair and feeds milk to their babies?",
+                        a: ["Mammals", "Reptiles", "Birds", "Amphibians"],
+                        correct: 0,
+                        hint: "Think of dogs, cats, and human beings!"
+                    },
+                    {
+                        q: "What group of animals spends part of their life in water and part on land, and has damp skin?",
+                        a: ["Fish", "Amphibians", "Insects", "Reptiles"],
+                        correct: 1,
+                        hint: "Frogs and newts belong to this cool group!"
+                    },
+                    {
+                        q: "Which group of animals is cold-blooded and has dry, scaly skin?",
+                        a: ["Birds", "Mammals", "Reptiles", "Fish"],
+                        correct: 2,
+                        hint: "Snakes and lizards are good examples!"
+                    }
+                ]
+            },
+            {
+                level: 2,
+                title: "Level 2: Diets & Food Chains",
+                badgeName: "Thunder Badge",
+                badgeIcon: "⚡",
+                questions: [
+                    {
+                        q: "An animal that eats ONLY plants is called a...",
+                        a: ["Carnivore", "Herbivore", "Omnivore", "Producer"],
+                        correct: 1,
+                        hint: "Rabbits and cows love eating grass and plants!"
+                    },
+                    {
+                        q: "An animal that eats BOTH plants and other animals is an...",
+                        a: ["Omnivore", "Herbivore", "Carnivore", "Insectivore"],
+                        correct: 0,
+                        hint: "Humans and bears eat both meat/fish and plants!"
+                    },
+                    {
+                        q: "In a simple food chain, what is always at the very start?",
+                        a: ["An apex predator", "A plant (Producer)", "An insect", "A carnivore"],
+                        correct: 1,
+                        hint: "Green plants make their own food using sunlight!"
+                    }
+                ]
+            },
+            {
+                level: 3,
+                title: "Level 3: Skeletons & Muscles",
+                badgeName: "Flame Badge",
+                badgeIcon: "🔥",
+                questions: [
+                    {
+                        q: "What is the main job of the human skull?",
+                        a: ["To help us digest food", "To protect our brain", "To pump blood", "To help us breathe"],
+                        correct: 1,
+                        hint: "It acts like a hard helmet for your brain!"
+                    },
+                    {
+                        q: "Animals like crabs and insects have a hard outer shell called an...",
+                        a: ["Endoskeleton", "Exoskeleton", "Hydrostatic skeleton", "Outer bone"],
+                        correct: 1,
+                        hint: "'Exo' means on the outside!"
+                    },
+                    {
+                        q: "How do muscles work together in pairs to move our bones?",
+                        a: ["One contracts while the other relaxes", "Both push at the same time", "Both relax at the same time", "They melt and reform"],
+                        correct: 0,
+                        hint: "When your biceps pull up, the triceps relax!"
+                    }
+                ]
+            },
+            {
+                level: 4,
+                title: "Level 4: Life Cycles & Growth",
+                badgeName: "Psychic Badge",
+                badgeIcon: "🔮",
+                questions: [
+                    {
+                        q: "What is the change called when a caterpillar transforms into a butterfly?",
+                        a: ["Germination", "Metamorphosis", "Hibernation", "Skeleton growth"],
+                        correct: 1,
+                        hint: "It is a big word starting with 'Meta-'!"
+                    },
+                    {
+                        q: "Which of these animals gives birth to live young instead of laying eggs?",
+                        a: ["Chicken", "Frog", "Human", "Salmon"],
+                        correct: 2,
+                        hint: "Mammals give birth to live babies!"
+                    },
+                    {
+                        q: "What do seeds need to germinate (start growing)?",
+                        a: ["Water, warmth, and air", "Fruit juice and salt", "Darkness and ice", "Sand and rocks"],
+                        correct: 0,
+                        hint: "Think about watering a plant in a warm place!"
+                    }
+                ]
+            },
+            {
+                level: 5,
+                title: "Level 5: Habitats & Staying Healthy",
+                badgeName: "Ribbon Badge",
+                badgeIcon: "🎀",
+                questions: [
+                    {
+                        q: "Why do polar bears have thick white fur and a layer of fat?",
+                        a: ["To stay warm and blend into the snow", "To run faster in water", "To eat plants", "To climb trees"],
+                        correct: 0,
+                        hint: "It keeps them warm in freezing icy habitats!"
+                    },
+                    {
+                        q: "Which of these helps keep our human body healthy?",
+                        a: ["Eating a balanced diet, exercise, and sleep", "Playing video games all night", "Only eating sweets", "Never washing hands"],
+                        correct: 0,
+                        hint: "Healthy food, moving around, and rest!"
+                    },
+                    {
+                        q: "Why is washing our hands with soap important?",
+                        a: ["To make our hands turn blue", "To wash away harmful germs and bacteria", "To help our muscles grow", "To fix broken bones"],
+                        correct: 1,
+                        hint: "Soap removes tiny invisible germs that can make us sick!"
+                    }
+                ]
+            }
+        ];
+
+        const evolutions = {
+            eevee: {
+                name: 'Eevee', icon: '🦊', body: '#C07D3A', stroke: '#8D531B', mane: '#FFF8E7',
+                ears: '<path d="M 75 75 Q 35 25 30 65 Q 50 80 70 85 Z" fill="#8D531B" stroke="#5A320E" stroke-width="3"/><path d="M 65 72 Q 42 38 38 62 Z" fill="#E8A7B8"/><path d="M 125 75 Q 165 25 170 65 Q 150 80 130 85 Z" fill="#8D531B" stroke="#5A320E" stroke-width="3"/><path d="M 135 72 Q 158 38 162 62 Z" fill="#E8A7B8"/>',
+                extra: ''
+            },
+            vaporeon: {
+                name: 'Vaporeon', icon: '💧', body: '#3182CE', stroke: '#1A365D', mane: '#EBF8FF',
+                ears: '<polygon points="45,65 15,50 35,80" fill="#63B3ED" stroke="#1A365D" stroke-width="2"/><polygon points="155,65 185,50 165,80" fill="#63B3ED" stroke="#1A365D" stroke-width="2"/>',
+                extra: '<path d="M 90 40 L 100 20 L 110 40 Z" fill="#3182CE" stroke="#1A365D" stroke-width="2"/>'
+            },
+            jolteon: {
+                name: 'Jolteon', icon: '⚡', body: '#ECC94B', stroke: '#742A2A', mane: '#FFFFFF',
+                ears: '<polygon points="75,75 30,15 65,65" fill="#D69E2E" stroke="#742A2A" stroke-width="3"/><polygon points="125,75 170,15 135,65" fill="#D69E2E" stroke="#742A2A" stroke-width="3"/>',
+                extra: '<path d="M 60 120 L 50 135 L 70 130 Z M 140 120 L 150 135 L 130 130 Z" fill="#FFFFFF"/>'
+            },
+            flareon: {
+                name: 'Flareon', icon: '🔥', body: '#DD6B20', stroke: '#7B341E', mane: '#FEFCBF',
+                ears: '<path d="M 75 75 Q 35 20 45 70 Z" fill="#C53030" stroke="#7B341E" stroke-width="3"/><path d="M 125 75 Q 165 20 155 70 Z" fill="#C53030" stroke="#7B341E" stroke-width="3"/>',
+                extra: '<path d="M 85 65 Q 100 40 115 65 Z" fill="#FEFCBF"/>'
+            },
+            espeon: {
+                name: 'Espeon', icon: '🔮', body: '#B794F4', stroke: '#553C9A', mane: '#E9D8FD',
+                ears: '<polygon points="75,75 25,35 60,70" fill="#805AD5" stroke="#553C9A" stroke-width="3"/><polygon points="125,75 175,35 140,70" fill="#805AD5" stroke="#553C9A" stroke-width="3"/>',
+                extra: '<circle cx="100" cy="80" r="5" fill="#E53E3E" stroke="#9B2C2C" stroke-width="1.5"/>'
+            },
+            umbreon: {
+                name: 'Umbreon', icon: '🌙', body: '#2D3748', stroke: '#1A202C', mane: '#4A5568',
+                ears: '<path d="M 75 75 Q 30 25 50 75 Z" fill="#1A202C" stroke="#ECC94B" stroke-width="3"/><path d="M 125 75 Q 170 25 150 75 Z" fill="#1A202C" stroke="#ECC94B" stroke-width="3"/>',
+                extra: '<ellipse cx="100" cy="78" rx="6" ry="3" fill="none" stroke="#D69E2E" stroke-width="2.5"/>'
+            },
+            leafeon: {
+                name: 'Leafeon', icon: '🍃', body: '#C6F6D5', stroke: '#22543D', mane: '#FEFCBF',
+                ears: '<path d="M 75 75 Q 25 20 65 60 Z" fill="#38A169" stroke="#1C4532" stroke-width="3"/><path d="M 125 75 Q 175 20 135 60 Z" fill="#38A169" stroke="#1C4532" stroke-width="3"/>',
+                extra: '<path d="M 100 60 C 90 40 110 40 100 60" fill="#38A169" stroke="#1C4532" stroke-width="2"/>'
+            },
+            glaceon: {
+                name: 'Glaceon', icon: '❄️', body: '#9DECF9', stroke: '#0BC5EA', mane: '#E6FFFA',
+                ears: '<polygon points="75,75 35,25 65,70" fill="#00B5D8" stroke="#065666" stroke-width="3"/><polygon points="125,75 165,25 135,70" fill="#00B5D8" stroke="#065666" stroke-width="3"/>',
+                extra: '<path d="M 80 65 L 85 105 M 120 65 L 115 105" stroke="#00B5D8" stroke-width="4"/>'
+            },
+            sylveon: {
+                name: 'Sylveon', icon: '🎀', body: '#FFF5F5', stroke: '#D53F8C', mane: '#FED7E2',
+                ears: '<path d="M 75 75 Q 30 20 50 70 Z" fill="#FEB2B2" stroke="#D53F8C" stroke-width="3"/><path d="M 125 75 Q 170 20 150 70 Z" fill="#FEB2B2" stroke="#D53F8C" stroke-width="3"/>',
+                extra: '<path d="M 75 70 Q 60 60 70 50 Q 80 60 75 70 Z M 125 70 Q 140 60 130 50 Q 120 60 125 70 Z" fill="#BEE3F8"/>'
+            }
+        };
+
+        const availableItems = {
+            hats: [
+                { id: 'none', name: 'None', icon: '❌', levelRequired: 1, svg: '' },
+                { id: 'cap', name: 'Red Cap', icon: '🧢', levelRequired: 1, svg: '<path d="M 65 65 Q 100 35 135 65 Z" fill="#E53E3E"/><rect x="50" y="62" width="60" height="8" rx="4" fill="#C53030"/>' },
+                { id: 'flower', name: 'Flower Crown', icon: '🌸', levelRequired: 1, svg: '<circle cx="70" cy="60" r="8" fill="#FBB6CE"/><circle cx="100" cy="50" r="10" fill="#FED7E2"/><circle cx="130" cy="60" r="8" fill="#FBB6CE"/>' },
+                { id: 'crown', name: 'Master Crown', icon: '👑', levelRequired: 5, svg: '<path d="M 65 65 L 75 35 L 100 55 L 125 35 L 135 65 Z" fill="#ECC94B" stroke="#B7791F" stroke-width="3"/>' }
+            ],
+            outfits: [
+                { id: 'none', name: 'None', icon: '❌', levelRequired: 1, svg: '' },
+                { id: 'vest', name: 'Hero Vest', icon: '🎽', levelRequired: 2, svg: '<path d="M 75 125 Q 100 135 125 125 L 130 160 Q 100 170 70 160 Z" fill="#3182CE"/>' },
+                { id: 'scarf', name: 'Cozy Scarf', icon: '🧣', levelRequired: 2, svg: '<path d="M 70 115 Q 100 130 130 115 Q 135 130 120 135 Q 100 130 80 135 Z" fill="#E53E3E"/>' }
+            ],
+            glasses: [
+                { id: 'none', name: 'None', icon: '❌', levelRequired: 1, svg: '' },
+                { id: 'specs', name: 'Cute Specs', icon: '👓', levelRequired: 3, svg: '<circle cx="82" cy="90" r="12" fill="none" stroke="#2D3748" stroke-width="3"/><circle cx="118" cy="90" r="12" fill="none" stroke="#2D3748" stroke-width="3"/><line x1="94" y1="90" x2="106" y2="90" stroke="#2D3748" stroke-width="3"/>' },
+                { id: 'shades', name: 'Cool Shades', icon: '🕶️', levelRequired: 3, svg: '<path d="M 70 85 L 95 85 L 90 100 L 73 100 Z" fill="#1A202C"/><path d="M 105 85 L 130 85 L 127 100 L 110 100 Z" fill="#1A202C"/><line x1="95" y1="88" x2="105" y2="88" stroke="#1A202C" stroke-width="3"/>' }
+            ],
+            auras: [
+                { id: 'none', name: 'None', icon: '❌', levelRequired: 1, svg: '' },
+                { id: 'sparkles', name: 'Star Aura', icon: '✨', levelRequired: 4, svg: '<path d="M 40 40 L 45 50 L 55 55 L 45 60 L 40 70 L 35 60 L 25 55 L 35 50 Z" fill="#ECC94B"/><path d="M 160 40 L 165 50 L 175 55 L 165 60 L 160 70 L 155 60 L 145 55 L 155 50 Z" fill="#ECC94B"/>' }
+            ]
+        };
+
+        // State Management
+        let currentLevelIndex = 0;
+        let currentQuestionIndex = 0;
+        let unlockedLevels = 1;
+        let selectedEvolution = 'eevee';
+        let equippedItems = { hat: 'none', outfit: 'none', glasses: 'none', aura: 'none' };
+
+        function renderEeveeSVG(targetSvgId) {
+            const svg = document.getElementById(targetSvgId);
+            if (!svg) return;
+
+            const evo = evolutions[selectedEvolution] || evolutions.eevee;
+
+            const hatSvg = availableItems.hats.find(i => i.id === equippedItems.hat)?.svg || '';
+            const outfitSvg = availableItems.outfits.find(i => i.id === equippedItems.outfit)?.svg || '';
+            const glassesSvg = availableItems.glasses.find(i => i.id === equippedItems.glasses)?.svg || '';
+            const auraSvg = availableItems.auras.find(i => i.id === equippedItems.aura)?.svg || '';
+
+            svg.innerHTML = `
+                <!-- Aura layer -->
+                <g id="layer-aura">${auraSvg}</g>
+
+                <!-- Tail -->
+                <path d="M 135 125 Q 185 100 170 145 Q 145 170 125 150 Z" fill="${evo.body}" stroke="${evo.stroke}" stroke-width="3"/>
+
+                <!-- Body -->
+                <ellipse cx="100" cy="140" rx="35" ry="30" fill="${evo.body}" stroke="${evo.stroke}" stroke-width="3"/>
+
+                <!-- Fluffy Collar / Mane -->
+                <path d="M 70 120 Q 100 145 130 120 Q 135 135 120 145 Q 100 150 80 145 Q 65 135 70 120 Z" fill="${evo.mane}" stroke="${evo.stroke}" stroke-width="2"/>
+
+                <!-- Ears Layer -->
+                <g id="layer-ears">${evo.ears}</g>
+
+                <!-- Head Base -->
+                <ellipse cx="100" cy="95" rx="38" ry="32" fill="${evo.body}" stroke="${evo.stroke}" stroke-width="3"/>
+
+                <!-- Evolution Details/Gems -->
+                <g id="layer-extra">${evo.extra}</g>
+
+                <!-- Eyes -->
+                <ellipse cx="85" cy="92" rx="6" ry="9" fill="#2D3748"/>
+                <circle cx="83" cy="89" r="2.5" fill="#FFFFFF"/>
+
+                <ellipse cx="115" cy="92" rx="6" ry="9" fill="#2D3748"/>
+                <circle cx="113" cy="89" r="2.5" fill="#FFFFFF"/>
+
+                <!-- Nose & Mouth -->
+                <polygon points="98,100 102,100 100,103" fill="#1A202C"/>
+                <path d="M 95 106 Q 100 110 105 106" fill="none" stroke="#1A202C" stroke-width="2" stroke-linecap="round"/>
+
+                <!-- Outfit layer -->
+                <g id="layer-outfit">${outfitSvg}</g>
+
+                <!-- Glasses layer -->
+                <g id="layer-glasses">${glassesSvg}</g>
+
+                <!-- Hat layer -->
+                <g id="layer-hat">${hatSvg}</g>
+            `;
+        }
+
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+
+            if (screenId === 'welcome-screen') renderEeveeSVG('welcome-eevee');
+            if (screenId === 'quiz-screen') renderEeveeSVG('quiz-eevee');
+            if (screenId === 'dressup-screen') renderEeveeSVG('dressup-eevee');
+            if (screenId === 'victory-screen') renderEeveeSVG('victory-eevee');
+        }
+
+        function startGame() {
+            currentLevelIndex = 0;
+            currentQuestionIndex = 0;
+            unlockedLevels = 1;
+            renderBadgeBar();
+            loadQuestion();
+            showScreen('quiz-screen');
+        }
+
+        function renderBadgeBar() {
+            const bar = document.getElementById('badge-bar');
+            bar.innerHTML = '';
+            quizData.forEach((lvl, idx) => {
+                const badge = document.createElement('div');
+                badge.className = `badge-slot ${idx < unlockedLevels - 1 || (idx === unlockedLevels - 1 && currentLevelIndex > idx) ? 'unlocked' : ''}`;
+                badge.innerText = lvl.badgeIcon;
+                badge.title = lvl.badgeName;
+                bar.appendChild(badge);
+            });
+        }
+
+        function loadQuestion() {
+            const levelData = quizData[currentLevelIndex];
+            const qData = levelData.questions[currentQuestionIndex];
+
+            document.getElementById('level-title').innerText = levelData.title;
+            document.getElementById('question-tracker').innerText = `Question ${currentQuestionIndex + 1}/3`;
+            document.getElementById('question-text').innerText = qData.q;
+
+            const feedback = document.getElementById('feedback-box');
+            feedback.className = 'feedback-box';
+            document.getElementById('feedback-text').innerText = "Choose the correct answer!";
+
+            const container = document.getElementById('answers-container');
+            container.innerHTML = '';
+
+            qData.a.forEach((optionText, idx) => {
+                const btn = document.createElement('button');
+                btn.className = 'answer-btn';
+                btn.innerText = optionText;
+                btn.onclick = () => handleAnswer(idx, btn);
+                container.appendChild(btn);
+            });
+
+            renderBadgeBar();
+        }
+
+        function handleAnswer(selectedIndex, buttonElem) {
+            const levelData = quizData[currentLevelIndex];
+            const qData = levelData.questions[currentQuestionIndex];
+            const feedback = document.getElementById('feedback-box');
+            const feedbackText = document.getElementById('feedback-text');
+
+            if (selectedIndex === qData.correct) {
+                playSound('correct');
+                buttonElem.classList.add('correct');
+                feedback.className = 'feedback-box show correct-bg';
+                feedbackText.innerText = "🌟 Great job! That's correct!";
+
+                const allBtns = document.querySelectorAll('.answer-btn');
+                allBtns.forEach(b => b.style.pointerEvents = 'none');
+
+                setTimeout(() => {
+                    currentQuestionIndex++;
+                    if (currentQuestionIndex >= levelData.questions.length) {
+                        currentQuestionIndex = 0;
+                        if (unlockedLevels <= currentLevelIndex + 1) {
+                            unlockedLevels = currentLevelIndex + 2;
+                        }
+                        playSound('fanfare');
+                        openDressupRoom();
+                    } else {
+                        loadQuestion();
+                    }
+                }, 1300);
+
+            } else {
+                playSound('wrong');
+                buttonElem.classList.add('wrong');
+                feedback.className = 'feedback-box show wrong-bg';
+                feedbackText.innerText = `Try again! Hint: ${qData.hint}`;
+
+                setTimeout(() => {
+                    buttonElem.classList.remove('wrong');
+                }, 800);
+            }
+        }
+
+        function openDressupRoom() {
+            const currentBadge = quizData[currentLevelIndex];
+            document.getElementById('reward-heading').innerText = `🎉 You Earned the ${currentBadge.badgeName}!`;
+
+            const nextBtn = document.getElementById('next-level-btn');
+            if (currentLevelIndex >= quizData.length - 1) {
+                nextBtn.innerText = 'View Final Trophy Cabinet 🏆';
+            } else {
+                nextBtn.innerText = `Continue to Level ${currentLevelIndex + 2} ➔`;
+            }
+
+            renderEvolutionRibbon();
+            renderWardrobe();
+            showScreen('dressup-screen');
+        }
+
+        function renderEvolutionRibbon() {
+            const ribbon = document.getElementById('evolution-ribbon');
+            ribbon.innerHTML = '';
+
+            Object.keys(evolutions).forEach((key) => {
+                const evo = evolutions[key];
+                const chip = document.createElement('div');
+                chip.className = `evo-chip ${selectedEvolution === key ? 'active' : ''}`;
+                chip.innerHTML = `<span>${evo.icon}</span> <span>${evo.name}</span>`;
+
+                chip.onclick = () => {
+                    selectedEvolution = key;
+                    document.getElementById('evo-name-tag').innerText = evo.name;
+                    renderEvolutionRibbon();
+                    renderEeveeSVG('dressup-eevee');
+                };
+
+                ribbon.appendChild(chip);
+            });
+            document.getElementById('evo-name-tag').innerText = evolutions[selectedEvolution].name;
+        }
+
+        function renderWardrobe() {
+            const list = document.getElementById('wardrobe-list');
+            list.innerHTML = '';
+
+            const categories = [
+                { name: 'Hats & Accessories', key: 'hats', itemKey: 'hat' },
+                { name: 'Outfits & Scarves', key: 'outfits', itemKey: 'outfit' },
+                { name: 'Glasses', key: 'glasses', itemKey: 'glasses' },
+                { name: 'Aura & Sparkles', key: 'auras', itemKey: 'aura' }
+            ];
+
+            categories.forEach(cat => {
+                const title = document.createElement('div');
+                title.className = 'category-title';
+                title.innerText = cat.name;
+                list.appendChild(title);
+
+                const grid = document.createElement('div');
+                grid.className = 'item-grid';
+
+                availableItems[cat.key].forEach(item => {
+                    const card = document.createElement('div');
+                    const isUnlocked = item.levelRequired <= unlockedLevels;
+                    const isEquipped = equippedItems[cat.itemKey] === item.id;
+
+                    card.className = `item-card ${isEquipped ? 'equipped' : ''} ${!isUnlocked ? 'locked' : ''}`;
+                    card.innerHTML = `
+                        <span class="item-icon">${item.icon}</span>
+                        <span>${item.name}</span>
+                        ${!isUnlocked ? `<span style="font-size:0.7rem; color:#E53E3E;">Lvl ${item.levelRequired}</span>` : ''}
+                    `;
+
+                    if (isUnlocked) {
+                        card.onclick = () => {
+                            equippedItems[cat.itemKey] = item.id;
+                            renderWardrobe();
+                            renderEeveeSVG('dressup-eevee');
+                        };
+                    }
+
+                    grid.appendChild(card);
+                });
+
+                list.appendChild(grid);
+            });
+        }
+
+        function continueFromDressup() {
+            currentLevelIndex++;
+            if (currentLevelIndex >= quizData.length) {
+                showVictoryScreen();
+            } else {
+                loadQuestion();
+                showScreen('quiz-screen');
+            }
+        }
+
+        function showVictoryScreen() {
+            playSound('fanfare');
+            const trophyContainer = document.getElementById('trophy-display');
+            trophyContainer.innerHTML = '';
+
+            quizData.forEach((lvl) => {
+                const card = document.createElement('div');
+                card.className = 'trophy-card unlocked';
+                card.innerHTML = `
+                    <div class="trophy-icon">${lvl.badgeIcon}</div>
+                    <strong style="font-size:0.85rem; color:#2B6CB0;">${lvl.badgeName}</strong>
+                `;
+                trophyContainer.appendChild(card);
+            });
+
+            showScreen('victory-screen');
+        }
+
+        window.onload = function() {
+            renderEeveeSVG('welcome-eevee');
+        };
+    </script>
+</body>
+</html>

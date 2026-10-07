@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Stars Stone Age Maths</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Sniglet:wght@800&family=Quicksand:wght@700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: manipulation;
+        }
+
+        body {
+            font-family: 'Quicksand', sans-serif;
+            background-color: #2b1810;
+            background-image: 
+                radial-gradient(#4a2818 15%, transparent 16%),
+                radial-gradient(#3a1f13 15%, transparent 16%);
+            background-size: 60px 60px;
+            background-position: 0 0, 30px 30px;
+            color: #fff3e0;
+            overflow-x: hidden;
+        }
+
+        .font-stone {
+            font-family: 'Fredoka One', cursive;
+            letter-spacing: 1px;
+        }
+
+        .font-cave {
+            font-family: 'Sniglet', cursive;
+        }
+
+        /* Stone card texturing */
+        .stone-card {
+            background: linear-gradient(145deg, #78472a, #522d19);
+            border: 6px solid #a3653b;
+            box-shadow: 0 12px 0 #28140a, 0 15px 20px rgba(0,0,0,0.6), inset 0 3px 0 rgba(255,255,255,0.2);
+            border-radius: 28px;
+            position: relative;
+        }
+
+        .stone-button {
+            background: linear-gradient(180deg, #d97724 0%, #b35209 100%);
+            border: 4px solid #fce18a;
+            box-shadow: 0 8px 0 #5c2800, 0 10px 10px rgba(0,0,0,0.4);
+            transition: all 0.1s ease-in-out;
+            border-radius: 20px;
+            text-shadow: 2px 2px 0px #421c00;
+        }
+
+        .stone-button:active {
+            transform: translateY(6px);
+            box-shadow: 0 2px 0 #5c2800, 0 4px 5px rgba(0,0,0,0.4);
+        }
+
+        .stone-button-alt {
+            background: linear-gradient(180deg, #85a832 0%, #597818 100%);
+            border: 4px solid #d3f37b;
+            box-shadow: 0 8px 0 #2e4207, 0 10px 10px rgba(0,0,0,0.4);
+            text-shadow: 2px 2px 0px #1a2902;
+        }
+
+        .stone-button-alt:active {
+            transform: translateY(6px);
+            box-shadow: 0 2px 0 #2e4207;
+        }
+
+        /* Star Glow Effect */
+        .star-glow {
+            filter: drop-shadow(0 0 12px #ffcb05);
+            animation: pulse-star 1.8s infinite alternate;
+        }
+
+        @keyframes pulse-star {
+            0% { transform: scale(1); filter: drop-shadow(0 0 8px #ffba00); }
+            100% { transform: scale(1.15); filter: drop-shadow(0 0 18px #fff066); }
+        }
+
+        .pop-animation {
+            animation: pop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes pop {
+            0% { transform: scale(0.5); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        /* Brick breaker canvas overlay styling */
+        #gameCanvas {
+            background: linear-gradient(to bottom, #3d2215, #1d0f09);
+            border: 5px solid #a3653b;
+            border-radius: 16px;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.8);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-between p-2 sm:p-4 selection:bg-amber-500 selection:text-white">
+
+    <!-- TOP BAR / HEADER -->
+    <header class="w-full max-w-2xl flex items-center justify-between bg-amber-950/80 border-4 border-amber-700/60 p-3 sm:p-4 rounded-3xl mb-3 shadow-lg backdrop-blur-sm">
+        <div class="flex items-center space-x-2 sm:space-x-3">
+            <!-- Cave Fire Icon -->
+            <svg class="w-8 h-8 sm:w-10 sm:h-10 text-amber-500 animate-bounce" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 23c-4.97 0-9-3.58-9-8 0-4.19 3.43-7.85 6.55-10.98.39-.39 1.02-.39 1.41 0C12.1 5.14 15 8.1 15 11c0 1.1-.9 2-2 2s-2-.9-2-2c0-.55-.45-1-1-1s-1 .45-1 1c0 2.21 1.79 4 4 4 1.1 0 2-.9 2-2 0-3.15-2.2-5.74-4.52-8.08C16.92 7.76 21 11.23 21 15c0 4.42-4.03 8-9 8z"/>
+            </svg>
+            <div>
+                <h1 class="font-stone text-xl sm:text-2xl text-amber-400 tracking-wider uppercase leading-none drop-shadow-md">STARS</h1>
+                <p class="font-cave text-xs sm:text-sm text-amber-200/80">Stone Age Math</p>
+            </div>
+        </div>
+
+        <!-- Audio & Level Info -->
+        <div class="flex items-center space-x-3 sm:space-x-4">
+            <button id="soundToggle" onclick="toggleSound()" class="bg-amber-800 hover:bg-amber-700 p-2 sm:p-2.5 rounded-2xl border-2 border-amber-500 text-amber-200 transition-transform active:scale-95 shadow">
+                <svg id="soundIconOn" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15.536 8.464a5 5 0 010 7.072M18.364 5.636a9 9 0 010 12.728M11 5L6 9H2v6h4l5 4V5z"></path>
+                </svg>
+                <svg id="soundIconOff" class="w-6 h-6 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" stroke-dasharray="2 2"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2"></path>
+                </svg>
+            </button>
+
+            <!-- Level Indicator Badge -->
+            <div class="bg-amber-900/90 border-2 border-amber-500 px-3 py-1.5 rounded-2xl flex flex-col items-center min-w-[70px]">
+                <span class="text-[10px] text-amber-300 font-bold uppercase tracking-wider">Level</span>
+                <span id="levelDisplay" class="font-stone text-lg text-amber-400 leading-none">1 / 5</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- STAR PROGRESS TRACKER (15 total) -->
+    <div class="w-full max-w-2xl bg-amber-950/60 border-2 border-amber-800/80 rounded-2xl p-2.5 mb-4 shadow-inner flex justify-between items-center px-3 sm:px-5">
+        <span class="font-stone text-xs sm:text-sm text-amber-300 mr-2 flex items-center">
+            STARS:
+        </span>
+        <div id="starsTracker" class="flex items-center justify-between w-full max-w-md gap-1">
+            <!-- 15 Star slots rendered dynamically via JS -->
+        </div>
+    </div>
+
+    <!-- MAIN CONTENT CONTAINER -->
+    <main class="w-full max-w-2xl flex-1 flex flex-col justify-center items-center relative my-auto">
+
+        <!-- SCREEN 1: QUIZ CARD -->
+        <div id="quizScreen" class="w-full stone-card p-4 sm:p-8 flex flex-col items-center text-center my-auto transition-all">
+            <!-- Mammoth / Cave Art Decorative Header -->
+            <div class="w-full flex justify-between items-center mb-2 px-2 text-amber-300/60">
+                <svg class="w-8 h-8 opacity-40" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M19 13c0-3.31-2.69-6-6-6s-6 2.69-6 6c0 2.22 1.21 4.15 3 5.19V21h2v-2h2v2h2v-2.81c1.79-1.04 3-2.97 3-5.19zM12 3c-4.97 0-9 4.03-9 9 0 2.12.74 4.07 1.97 5.61L3.5 19.1 4.9 20.5l1.43-1.43C7.87 20.26 9.82 21 12 21s4.13-.74 5.67-2.03L19.1 20.4l1.4-1.4-1.47-1.49C20.26 16.07 21 14.12 21 12c0-4.97-4.03-9-9-9z"/>
+                </svg>
+                <span id="questionNumText" class="font-cave text-base sm:text-lg text-amber-200">Question 1 of 3</span>
+                <svg class="w-8 h-8 opacity-40" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 2L2 22h20L12 2zm0 4.5l6.5 13.5h-13L12 6.5z"/>
+                </svg>
+            </div>
+
+            <!-- MATH QUESTION BOX -->
+            <div class="bg-amber-950/70 border-4 border-amber-600/80 rounded-2xl p-5 sm:p-8 w-full mb-6 shadow-inner flex flex-col items-center justify-center min-h-[140px]">
+                <span class="text-xs sm:text-sm font-bold text-amber-400/90 uppercase tracking-widest mb-1">Solve the Cave Puzzle</span>
+                <div id="questionBox" class="font-stone text-4xl sm:text-6xl text-amber-100 tracking-wider drop-shadow-md">
+                    -- + -- = ?
+                </div>
+            </div>
+
+            <!-- FEEDBACK MESSAGE -->
+            <div id="feedbackText" class="min-h-[32px] font-cave text-xl sm:text-2xl font-bold text-amber-300 mb-4 transition-all opacity-0">
+                &nbsp;
+            </div>
+
+            <!-- 4 ANSWER BUTTONS GRID -->
+            <div id="answersGrid" class="grid grid-cols-2 gap-3 sm:gap-5 w-full">
+                <button onclick="checkAnswer(0)" class="stone-button py-4 sm:py-5 px-3 text-2xl sm:text-4xl font-stone text-white tracking-wide">000</button>
+                <button onclick="checkAnswer(1)" class="stone-button py-4 sm:py-5 px-3 text-2xl sm:text-4xl font-stone text-white tracking-wide">000</button>
+                <button onclick="checkAnswer(2)" class="stone-button py-4 sm:py-5 px-3 text-2xl sm:text-4xl font-stone text-white tracking-wide">000</button>
+                <button onclick="checkAnswer(3)" class="stone-button py-4 sm:py-5 px-3 text-2xl sm:text-4xl font-stone text-white tracking-wide">000</button>
+            </div>
+        </div>
+
+        <!-- SCREEN 2: BRICK BREAKER MINI GAME -->
+        <div id="minigameScreen" class="w-full stone-card p-4 sm:p-6 flex flex-col items-center text-center hidden">
+            <div class="mb-2">
+                <h2 class="font-stone text-2xl sm:text-3xl text-amber-300 uppercase">Stone Crusher Reward!</h2>
+                <p class="font-cave text-sm sm:text-base text-amber-100">Break all the mud bricks using your boulder & bone club!</p>
+            </div>
+
+            <!-- Canvas Container -->
+            <div class="relative w-full max-w-[480px] aspect-[4/3] my-2">
+                <canvas id="gameCanvas" class="w-full h-full block cursor-pointer"></canvas>
+                
+                <!-- Start / Pause Overlay -->
+                <div id="canvasOverlay" class="absolute inset-0 bg-black/60 rounded-xl flex flex-col items-center justify-center p-4">
+                    <p class="font-stone text-xl sm:text-2xl text-amber-300 mb-4 text-center" id="overlayMsg">Tap or Click to launch!</p>
+                    <button id="startMinigameBtn" onclick="startBrickBreakerRound()" class="stone-button stone-button-alt px-6 py-3 font-stone text-xl text-white">
+                        PLAY ROUND
+                    </button>
+                </div>
+            </div>
+
+            <!-- Controls hint -->
+            <p class="font-cave text-xs sm:text-sm text-amber-200/80 mt-1">
+                Drag / Move mouse or use Left/Right Arrow keys to steer paddle
+            </p>
+        </div>
+
+        <!-- SCREEN 3: GAME VICTORY SCREEN -->
+        <div id="victoryScreen" class="w-full stone-card p-6 sm:p-10 flex flex-col items-center text-center hidden pop-animation">
+            <!-- Big Golden Star Badge -->
+            <div class="relative mb-4">
+                <svg class="w-28 h-28 sm:w-36 sm:h-36 text-amber-400 star-glow" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
+                </svg>
+                <span class="absolute inset-0 flex items-center justify-center font-stone text-amber-950 text-2xl sm:text-3xl mt-1">15/15</span>
+            </div>
+
+            <h2 class="font-stone text-3xl sm:text-5xl text-amber-300 uppercase mb-2 drop-shadow-md">Caveman Genius!</h2>
+            <p class="font-cave text-lg sm:text-2xl text-amber-100 max-w-md mb-6">
+                You earned all 15 stars! You are the grand Master Math Explorer of the Stone Age!
+            </p>
+
+            <button onclick="resetFullGame()" class="stone-button stone-button-alt px-8 py-4 text-2xl sm:text-3xl font-stone text-white tracking-wider">
+                PLAY AGAIN
+            </button>
+        </div>
+
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="w-full max-w-2xl text-center py-2 text-xs font-cave text-amber-400/60">
+        Stars: Year 3 Math Game • Safe, Offline & Kid-Friendly
+    </footer>
+
+    <script>
+        /* -------------------------------------------------------------
+         * 1. QUESTION DATABASE (Year 3 level: Addition & Subtraction)
+         * ------------------------------------------------------------- */
+        // 5 Levels x 3 Questions = 15 Questions total
+        const quizLevels = [
+            // Level 1: Warmup 2-digit basic addition & subtraction
+            [
+                { q: "25 + 14", ans: 39, options: [39, 37, 49, 29] },
+                { q: "48 - 12", ans: 36, options: [32, 36, 26, 38] },
+                { q: "50 + 30", ans: 80, options: [70, 90, 80, 85] }
+            ],
+            // Level 2: Crossing tens & simple 3-digit intro
+            [
+                { q: "65 + 23", ans: 88, options: [88, 78, 85, 98] },
+                { q: "95 - 40", ans: 55, options: [45, 55, 65, 50] },
+                { q: "120 + 30", ans: 150, options: [140, 160, 150, 130] }
+            ],
+            // Level 3: 3-digit addition & subtraction
+            [
+                { q: "150 - 40", ans: 110, options: [100, 120, 110, 115] },
+                { q: "210 + 140", ans: 350, options: [350, 340, 360, 250] },
+                { q: "84 - 31", ans: 53, options: [53, 51, 63, 43] }
+            ],
+            // Level 4: Moderate Year 3 challenges
+            [
+                { q: "340 - 120", ans: 220, options: [210, 220, 230, 120] },
+                { q: "175 + 25", ans: 200, options: [190, 200, 210, 225] },
+                { q: "90 - 45", ans: 45, options: [35, 45, 55, 40] }
+            ],
+            // Level 5: Master Stone Age Math
+            [
+                { q: "450 + 130", ans: 580, options: [570, 580, 590, 680] },
+                { q: "300 - 150", ans: 150, options: [140, 150, 160, 200] },
+                { q: "225 + 112", ans: 337, options: [337, 327, 347, 335] }
+            ]
+        ];
+
+        const praiseMessages = [
+            "Great job!", 
+            "Super Star!", 
+            "Caveman Genius!", 
+            "Awesome math skills!", 
+            "You rock!", 
+            "Brilliant!",
+            " Dino-mite!"
+        ];
+
+        /* -------------------------------------------------------------
+         * 2. GAME STATE VARIABLES
+         * ------------------------------------------------------------- */
+        let currentLevel = 0; // 0 to 4
+        let currentQuestionIdx = 0; // 0 to 2
+        let totalStarsEarned = 0; // 0 to 15
+        let isAudioMuted = false;
+        let canAnswer = true;
+
+        /* -------------------------------------------------------------
+         * 3. SYNTHESIZED AUDIO SYSTEM (Web Audio API)
+         * ------------------------------------------------------------- */
+        let audioCtx = null;
+
+        function getAudioContext() {
+            if (!audioCtx) {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                if (AudioContext) {
+                    audioCtx = new AudioContext();
+                }
+            }
+            if (audioCtx && audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+            return audioCtx;
+        }
+
+        function toggleSound() {
+            isAudioMuted = !isAudioMuted;
+            document.getElementById('soundIconOn').classList.toggle('hidden', isAudioMuted);
+            document.getElementById('soundIconOff').classList.toggle('hidden', !isAudioMuted);
+        }
+
+        function playSound(type) {
+            if (isAudioMuted) return;
+            const ctx = getAudioContext();
+            if (!ctx) return;
+
+            const now = ctx.currentTime;
+
+            if (type === 'correct') {
+                // Cheerful rising two-tone chime
+                const osc1 = ctx.createOscillator();
+                const osc2 = ctx.createOscillator();
+                const gain = ctx.createGain();
+
+                osc1.type = 'sine';
+                osc2.type = 'triangle';
+
+                osc1.frequency.setValueAtTime(523.25, now); // C5
+                osc1.frequency.exponentialRampToValueAtTime(659.25, now + 0.12); // E5
+                osc1.frequency.exponentialRampToValueAtTime(783.99, now + 0.25); // G5
+
+                osc2.frequency.setValueAtTime(261.63, now);
+                osc2.frequency.exponentialRampToValueAtTime(392.00, now + 0.25);
+
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
+
+                osc1.connect(gain);
+                osc2.connect(gain);
+                gain.connect(ctx.destination);
+
+                osc1.start(now);
+                osc2.start(now);
+                osc1.stop(now + 0.4);
+                osc2.stop(now + 0.4);
+
+            } else if (type === 'wrong') {
+                // Gentle low thud
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(180, now);
+                osc.frequency.linearRampToValueAtTime(90, now + 0.2);
+
+                gain.gain.setValueAtTime(0.25, now);
+                gain.gain.linearRampToValueAtTime(0.001, now + 0.25);
+
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+
+                osc.start(now);
+                osc.stop(now + 0.25);
+
+            } else if (type === 'pop') {
+                // Short stone pop for brick breaker
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(300, now);
+                osc.frequency.exponentialRampToValueAtTime(120, now + 0.08);
+
+                gain.gain.setValueAtTime(0.15, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
+
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+
+                osc.start(now);
+                osc.stop(now + 0.08);
+
+            } else if (type === 'bounce') {
+                // Paddle / wall bounce sound
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(220, now);
+                osc.frequency.exponentialRampToValueAtTime(440, now + 0.05);
+
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.06);
+
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+
+                osc.start(now);
+                osc.stop(now + 0.06);
+
+            } else if (type === 'victory') {
+                // Arpeggiated fanfare
+                const notes = [523.25, 659.25, 783.99, 1046.50]; // C, E, G, High C
+                notes.forEach((freq, idx) => {
+                    const osc = ctx.createOscillator();
+                    const gain = ctx.createGain();
+
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(freq, now + idx * 0.12);
+
+                    gain.gain.setValueAtTime(0, now + idx * 0.12);
+                    gain.gain.setValueAtTime(0.25, now + idx * 0.12 + 0.02);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.12 + 0.35);
+
+                    osc.connect(gain);
+                    gain.connect(ctx.destination);
+
+                    osc.start(now + idx * 0.12);
+                    osc.stop(now + idx * 0.12 + 0.35);
+                });
+            }
+        }
+
+        /* -------------------------------------------------------------
+         * 4. UI INIT & STAR TRACKER
+         * ------------------------------------------------------------- */
+        function initStarTracker() {
+            const container = document.getElementById('starsTracker');
+            container.innerHTML = '';
+            for (let i = 0; i < 15; i++) {
+                const starWrapper = document.createElement('div');
+                starWrapper.id = `star-slot-${i}`;
+                starWrapper.className = 'transition-transform duration-300';
+                starWrapper.innerHTML = `
+                    <svg class="w-5 h-5 sm:w-6 sm:h-6 text-amber-950/80 fill-current stroke-amber-700/60 stroke-2" viewBox="0 0 24 24">
+                        <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
+                    </svg>
+                `;
+                container.appendChild(starWrapper);
+            }
+        }
+
+        function updateStarUI(starIndex) {
+            const slot = document.getElementById(`star-slot-${starIndex}`);
+            if (slot) {
+                slot.className = 'transition-transform duration-300 scale-125 pop-animation';
+                slot.innerHTML = `
+                    <svg class="w-5 h-5 sm:w-6 sm:h-6 text-amber-400 fill-current star-glow drop-shadow" viewBox="0 0 24 24">
+                        <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
+                    </svg>
+                `;
+            }
+        }
+
+        /* -------------------------------------------------------------
+         * 5. QUIZ ENGINE LOGIC
+         * ------------------------------------------------------------- */
+        function loadCurrentQuestion() {
+            canAnswer = true;
+            const levelData = quizLevels[currentLevel];
+            const qData = levelData[currentQuestionIdx];
+
+            // Update Level & Question Headers
+            document.getElementById('levelDisplay').textContent = `${currentLevel + 1} / 5`;
+            document.getElementById('questionNumText').textContent = `Question ${currentQuestionIdx + 1} of 3`;
+
+            // Display question
+            document.getElementById('questionBox').textContent = `${qData.q} = ?`;
+
+            // Reset feedback
+            const feedbackEl = document.getElementById('feedbackText');
+            feedbackEl.textContent = '\u00A0';
+            feedbackEl.className = 'min-h-[32px] font-cave text-xl sm:text-2xl font-bold text-amber-300 mb-4 transition-all opacity-0';
+
+            // Shuffle option buttons array so correct answer is in random slot
+            const shuffledOptions = [...qData.options];
+            // Deterministic or simple shuffle
+            shuffledOptions.sort(() => Math.random() - 0.5);
+
+            const grid = document.getElementById('answersGrid');
+            const buttons = grid.getElementsByTagName('button');
+
+            for (let i = 0; i < 4; i++) {
+                buttons[i].textContent = shuffledOptions[i];
+                buttons[i].dataset.value = shuffledOptions[i];
+                buttons[i].disabled = false;
+                buttons[i].className = 'stone-button py-4 sm:py-5 px-3 text-2xl sm:text-4xl font-stone text-white tracking-wide opacity-100';
+            }
+        }
+
+        function checkAnswer(btnIndex) {
+            if (!canAnswer) return;
+
+            const grid = document.getElementById('answersGrid');
+            const btn = grid.getElementsByTagName('button')[btnIndex];
+            const selectedVal = parseInt(btn.dataset.value, 10);
+            const qData = quizLevels[currentLevel][currentQuestionIdx];
+            const feedbackEl = document.getElementById('feedbackText');
+
+            if (selectedVal === qData.ans) {
+                // CORRECT
+                canAnswer = false;
+                playSound('correct');
+
+                // Award Star
+                updateStarUI(totalStarsEarned);
+                totalStarsEarned++;
+
+                // Praise Feedback
+                const randomPraise = praiseMessages[Math.floor(Math.random() * praiseMessages.length)];
+                feedbackEl.textContent = `⭐ ${randomPraise} ⭐`;
+                feedbackEl.className = 'min-h-[32px] font-cave text-xl sm:text-2xl font-bold text-amber-300 mb-4 transition-all opacity-100 pop-animation text-green-400';
+
+                // Highlight button
+                btn.className = 'stone-button stone-button-alt py-4 sm:py-5 px-3 text-2xl sm:text-4xl font-stone text-white tracking-wide scale-105';
+
+                setTimeout(() => {
+                    currentQuestionIdx++;
+                    if (currentQuestionIdx >= 3) {
+                        // Level finished! Trigger Brick Breaker Reward!
+                        currentQuestionIdx = 0;
+                        switchToMinigame();
+                    } else {
+                        loadCurrentQuestion();
+                    }
+                }, 1400);
+
+            } else {
+                // INCORRECT
+                playSound('wrong');
+                feedbackEl.textContent = "Try again, brave explorer! 🪨";
+                feedbackEl.className = 'min-h-[32px] font-cave text-xl sm:text-2xl font-bold text-amber-300 mb-4 transition-all opacity-100 text-amber-300';
+
+                btn.className = 'stone-button py-4 sm:py-5 px-3 text-2xl sm:text-4xl font-stone text-white tracking-wide opacity-40 scale-95';
+                btn.disabled = true;
+            }
+        }
+
+        /* -------------------------------------------------------------
+         * 6. BRICK BREAKER MINI-GAME ENGINE
+         * ------------------------------------------------------------- */
+        let canvas, ctx;
+        let animationFrameId = null;
+        let gameState = 'STOPPED'; // 'STOPPED', 'RUNNING'
+
+        // Game objects
+        let paddle = { x: 0, y: 0, width: 90, height: 16 };
+        let ball = { x: 0, y: 0, dx: 4, dy: -4, radius: 10 };
+        let bricks = [];
+        const brickRows = 3;
+        const brickCols = 6;
+        const brickPadding = 8;
+        const brickOffsetTop = 25;
+        const brickOffsetLeft = 15;
+
+        function initCanvas() {
+            canvas = document.getElementById('gameCanvas');
+            ctx = canvas.getContext('2d');
+            
+            // Fixed internal resolution for consistent math
+            canvas.width = 480;
+            canvas.height = 360;
+
+            setupEventListeners();
+        }
+
+        function setupEventListeners() {
+            // Touch & Mouse paddle movement
+            const updatePaddlePos = (e) => {
+                const rect = canvas.getBoundingClientRect();
+                const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                const relativeX = clientX - rect.left;
+                const scaleX = canvas.width / rect.width;
+                const canvasX = relativeX * scaleX;
+
+                paddle.x = Math.max(0, Math.min(canvas.width - paddle.width, canvasX - paddle.width / 2));
+            };
+
+            canvas.addEventListener('mousemove', updatePaddlePos);
+            canvas.addEventListener('touchmove', (e) => {
+                updatePaddlePos(e);
+                e.preventDefault();
+            }, { passive: false });
+
+            // Keyboard controls
+            window.addEventListener('keydown', (e) => {
+                if (gameState !== 'RUNNING') return;
+                if (e.key === 'ArrowLeft') {
+                    paddle.x = Math.max(0, paddle.x - 25);
+                } else if (e.key === 'ArrowRight') {
+                    paddle.x = Math.min(canvas.width - paddle.width, paddle.x + 25);
+                }
+            });
+        }
+
+        function switchToMinigame() {
+            document.getElementById('quizScreen').classList.add('hidden');
+            document.getElementById('minigameScreen').classList.remove('hidden');
+
+            document.getElementById('overlayMsg').textContent = `Level ${currentLevel + 1} Cleared! Crush the Bricks!`;
+            document.getElementById('canvasOverlay').classList.remove('hidden');
+            document.getElementById('startMinigameBtn').classList.remove('hidden');
+
+            setupBrickBreakerRound();
+        }
+
+        function setupBrickBreakerRound() {
+            // Reset Paddle & Ball
+            paddle.width = 95;
+            paddle.x = (canvas.width - paddle.width) / 2;
+            paddle.y = canvas.height - 28;
+
+            ball.radius = 10;
+            ball.x = canvas.width / 2;
+            ball.y = paddle.y - ball.radius - 2;
+            
+            // Adjust speed slightly based on level
+            const speed = 3.8 + (currentLevel * 0.4);
+            ball.dx = (Math.random() > 0.5 ? 1 : -1) * speed;
+            ball.dy = -speed;
+
+            // Generate Mud Bricks
+            bricks = [];
+            const brickWidth = (canvas.width - (brickOffsetLeft * 2) - (brickPadding * (brickCols - 1))) / brickCols;
+            const brickHeight = 22;
+
+            const colors = ['#a35229', '#d97724', '#85a832'];
+
+            for (let r = 0; r < brickRows; r++) {
+                bricks[r] = [];
+                for (let c = 0; c < brickCols; c++) {
+                    bricks[r][c] = { 
+                        x: brickOffsetLeft + c * (brickWidth + brickPadding), 
+                        y: brickOffsetTop + r * (brickHeight + brickPadding), 
+                        width: brickWidth, 
+                        height: brickHeight, 
+                        status: 1,
+                        color: colors[r % colors.length]
+                    };
+                }
+            }
+
+            drawMinigame(); // Render initial static frame
+        }
+
+        function startBrickBreakerRound() {
+            getAudioContext();
+            document.getElementById('canvasOverlay').classList.add('hidden');
+            gameState = 'RUNNING';
+            if (animationFrameId) cancelAnimationFrame(animationFrameId);
+            gameLoop();
+        }
+
+        function gameLoop() {
+            if (gameState !== 'RUNNING') return;
+
+            updateMinigame();
+            drawMinigame();
+
+            animationFrameId = requestAnimationFrame(gameLoop);
+        }
+
+        function updateMinigame() {
+            // Ball movement
+            ball.x += ball.dx;
+            ball.y += ball.dy;
+
+            // Wall collisions
+            if (ball.x + ball.radius > canvas.width || ball.x - ball.radius < 0) {
+                ball.dx = -ball.dx;
+                playSound('bounce');
+            }
+
+            if (ball.y - ball.radius < 0) {
+                ball.dy = -ball.dy;
+                playSound('bounce');
+            }
+
+            // Paddle collision
+            if (ball.y + ball.radius >= paddle.y && ball.y - ball.radius <= paddle.y + paddle.height) {
+                if (ball.x >= paddle.x && ball.x <= paddle.x + paddle.width) {
+                    ball.dy = -Math.abs(ball.dy);
+                    // Add slight horizontal spin based on impact location
+                    const hitPoint = (ball.x - (paddle.x + paddle.width / 2)) / (paddle.width / 2);
+                    ball.dx = hitPoint * 5;
+                    playSound('bounce');
+                }
+            }
+
+            // Bottom edge reset (no penalty for kids, just relaunch gently)
+            if (ball.y + ball.radius > canvas.height) {
+                ball.x = paddle.x + paddle.width / 2;
+                ball.y = paddle.y - ball.radius - 2;
+                ball.dy = -Math.abs(ball.dy);
+                playSound('wrong');
+            }
+
+            // Brick collision detection
+            let bricksRemaining = 0;
+
+            for (let r = 0; r < brickRows; r++) {
+                for (let c = 0; c < brickCols; c++) {
+                    let b = bricks[r][c];
+                    if (b.status === 1) {
+                        bricksRemaining++;
+                        if (
+                            ball.x + ball.radius > b.x &&
+                            ball.x - ball.radius < b.x + b.width &&
+                            ball.y + ball.radius > b.y &&
+                            ball.y - ball.radius < b.y + b.height
+                        ) {
+                            ball.dy = -ball.dy;
+                            b.status = 0;
+                            playSound('pop');
+                            bricksRemaining--;
+                        }
+                    }
+                }
+            }
+
+            // Win condition for round
+            if (bricksRemaining === 0) {
+                gameState = 'STOPPED';
+                cancelAnimationFrame(animationFrameId);
+                playSound('victory');
+
+                currentLevel++;
+
+                setTimeout(() => {
+                    if (currentLevel >= 5) {
+                        // Game Complete!
+                        showVictoryScreen();
+                    } else {
+                        // Next Level Quiz
+                        document.getElementById('minigameScreen').classList.add('hidden');
+                        document.getElementById('quizScreen').classList.remove('hidden');
+                        loadCurrentQuestion();
+                    }
+                }, 800);
+            }
+        }
+
+        function drawMinigame() {
+            // Clear background
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Draw Bricks
+            for (let r = 0; r < brickRows; r++) {
+                for (let c = 0; c < brickCols; c++) {
+                    let b = bricks[r][c];
+                    if (b.status === 1) {
+                        ctx.fillStyle = b.color;
+                        ctx.beginPath();
+                        ctx.roundRect(b.x, b.y, b.width, b.height, 6);
+                        ctx.fill();
+                        ctx.strokeStyle = '#2b140a';
+                        ctx.lineWidth = 3;
+                        ctx.stroke();
+
+                        // Brick texture line
+                        ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+                        ctx.lineWidth = 2;
+                        ctx.beginPath();
+                        ctx.moveTo(b.x + 4, b.y + 4);
+                        ctx.lineTo(b.x + b.width - 4, b.y + 4);
+                        ctx.stroke();
+                    }
+                }
+            }
+
+            // Draw Paddle (Mammoth Bone / Club aesthetic)
+            ctx.fillStyle = '#e6c89c';
+            ctx.beginPath();
+            ctx.roundRect(paddle.x, paddle.y, paddle.width, paddle.height, 8);
+            ctx.fill();
+            ctx.strokeStyle = '#6e4720';
+            ctx.lineWidth = 3;
+            ctx.stroke();
+
+            // Bone joints on paddle ends
+            ctx.fillStyle = '#fce18a';
+            ctx.beginPath();
+            ctx.arc(paddle.x, paddle.y + paddle.height/2, 6, 0, Math.PI * 2);
+            ctx.arc(paddle.x + paddle.width, paddle.y + paddle.height/2, 6, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Draw Ball (Round Stone Boulder)
+            ctx.fillStyle = '#999999';
+            ctx.beginPath();
+            ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.strokeStyle = '#444444';
+            ctx.lineWidth = 2.5;
+            ctx.stroke();
+
+            // Boulder texture crater
+            ctx.fillStyle = '#666666';
+            ctx.beginPath();
+            ctx.arc(ball.x - 3, ball.y - 3, 3, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        /* -------------------------------------------------------------
+         * 7. VICTORY & GAME RESET LOGIC
+         * ------------------------------------------------------------- */
+        function showVictoryScreen() {
+            document.getElementById('minigameScreen').classList.add('hidden');
+            document.getElementById('quizScreen').classList.add('hidden');
+            document.getElementById('victoryScreen').classList.remove('hidden');
+            playSound('victory');
+        }
+
+        function resetFullGame() {
+            currentLevel = 0;
+            currentQuestionIdx = 0;
+            totalStarsEarned = 0;
+
+            initStarTracker();
+
+            document.getElementById('victoryScreen').classList.add('hidden');
+            document.getElementById('minigameScreen').classList.add('hidden');
+            document.getElementById('quizScreen').classList.remove('hidden');
+
+            loadCurrentQuestion();
+        }
+
+        /* -------------------------------------------------------------
+         * 8. INIT ON LOAD
+         * ------------------------------------------------------------- */
+        window.onload = function() {
+            initStarTracker();
+            initCanvas();
+            loadCurrentQuestion();
+        };
+    </script>
+</body>
+</html>

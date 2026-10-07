@@ -1,0 +1,946 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Rocks &amp; Soil Space Quiz</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        * {
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: manipulation;
+        }
+
+        body {
+            font-family: 'Fredoka', cursive, sans-serif;
+            background: radial-gradient(ellipse at bottom, #1B2735 0%, #090A0F 100%);
+            min-height: 100vh;
+            color: #FFFFFF;
+            overflow-x: hidden;
+        }
+
+        .stars-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .star {
+            position: absolute;
+            background-color: #FFF;
+            border-radius: 50%;
+            animation: twinkle var(--duration, 3s) infinite ease-in-out;
+            opacity: 0.8;
+        }
+
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.3; transform: scale(0.8); }
+            50% { opacity: 1; transform: scale(1.2); }
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-10px) rotate(3deg); }
+        }
+
+        .floating {
+            animation: float 4s ease-in-out infinite;
+        }
+
+        .glow-purple {
+            box-shadow: 0 0 20px rgba(168, 85, 247, 0.5), inset 0 0 10px rgba(168, 85, 247, 0.3);
+        }
+
+        .glow-cyan {
+            box-shadow: 0 0 20px rgba(6, 182, 212, 0.5), inset 0 0 10px rgba(6, 182, 212, 0.3);
+        }
+
+        .glow-yellow {
+            box-shadow: 0 0 20px rgba(234, 179, 8, 0.6), inset 0 0 10px rgba(234, 179, 8, 0.3);
+        }
+
+        @keyframes wobble {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-10px); }
+            40%, 80% { transform: translateX(10px); }
+        }
+
+        .wobble {
+            animation: wobble 0.5s ease-in-out;
+        }
+
+        @keyframes pulse-speak {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        .speaking-active {
+            animation: pulse-speak 0.8s infinite ease-in-out;
+            border-color: #38bdf8 !important;
+            background-color: #0284c7 !important;
+        }
+    </style>
+</head>
+<body class="flex flex-col justify-between min-h-screen relative overflow-x-hidden text-slate-100">
+
+    <div id="stars" class="stars-container"></div>
+
+    <header class="relative z-10 w-full p-4 flex justify-between items-center bg-slate-900/70 backdrop-blur-md border-b border-indigo-500/30">
+        <div class="flex items-center space-x-3 cursor-pointer" onclick="showScreen('title-screen')">
+            <div class="w-11 h-11 rounded-full bg-gradient-to-tr from-purple-600 to-cyan-400 flex items-center justify-center shadow-lg">
+                <i class="fa-solid fa-rocket text-2xl text-yellow-300"></i>
+            </div>
+            <span class="text-2xl sm:text-3xl font-black tracking-wider bg-clip-text text-transparent bg-gradient-to-r from-yellow-300 via-pink-400 to-cyan-300">QUIZ MASTER</span>
+        </div>
+
+        <div class="flex items-center space-x-3">
+            <div class="hidden sm:flex items-center bg-indigo-950/80 border border-yellow-400/40 px-3 py-1.5 rounded-full text-sm font-semibold text-yellow-300">
+                <i class="fa-solid fa-trophy mr-2 text-yellow-400"></i> Best: <span id="high-score-display" class="ml-1 text-white">0</span>
+            </div>
+            
+            <button id="sound-toggle-btn" onclick="toggleSound()" title="Toggle Sound Effects" class="w-11 h-11 rounded-full bg-slate-800 border border-slate-600 hover:border-cyan-400 text-cyan-300 flex items-center justify-center transition hover:scale-105 active:scale-95 shadow-md">
+                <i id="sound-icon" class="fa-solid fa-volume-high text-lg"></i>
+            </button>
+        </div>
+    </header>
+
+    <main class="relative z-10 flex-grow flex items-center justify-center p-4">
+
+        <!-- TITLE SCREEN -->
+        <div id="title-screen" class="w-full max-w-xl bg-slate-900/85 border-2 border-indigo-500/50 rounded-3xl p-6 sm:p-8 text-center backdrop-blur-lg shadow-2xl transition-all">
+            <div class="relative mb-6">
+                <div class="floating inline-block">
+                    <div class="w-28 h-28 sm:w-36 sm:h-36 mx-auto rounded-full bg-gradient-to-br from-indigo-500 via-purple-600 to-pink-500 flex items-center justify-center p-1 glow-purple">
+                        <div class="w-full h-full bg-slate-900 rounded-full flex items-center justify-center overflow-hidden relative">
+                            <span class="text-6xl sm:text-7xl">🪨🌱</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <h1 class="text-3xl sm:text-5xl font-black mb-2 bg-clip-text text-transparent bg-gradient-to-r from-yellow-300 via-cyan-300 to-pink-400">
+                Rocks & Soil Quiz! 🚀
+            </h1>
+            <p class="text-slate-200 text-lg sm:text-xl mb-6 font-semibold">Fun Science for Early Explorers!</p>
+
+            <div class="bg-indigo-950/70 rounded-2xl p-4 border border-indigo-800/60 mb-6 text-left text-base sm:text-lg space-y-2 text-indigo-100">
+                <div class="flex items-center"><span class="mr-3 text-2xl">🌟</span> 5 Fun Space Levels (15 Questions)</div>
+                <div class="flex items-center"><span class="mr-3 text-2xl">🔊</span> Speaks Words & Questions Aloud</div>
+                <div class="flex items-center"><span class="mr-3 text-2xl">⭐</span> Catch Stars in the Mini-Game!</div>
+            </div>
+
+            <button onclick="startQuiz()" class="w-full py-4 px-8 rounded-2xl bg-gradient-to-r from-yellow-400 via-amber-500 to-orange-500 text-slate-950 font-black text-2xl sm:text-3xl tracking-wide shadow-lg hover:scale-105 active:scale-95 transition glow-yellow flex items-center justify-center gap-3">
+                <i class="fa-solid fa-play"></i> START MISSION!
+            </button>
+        </div>
+
+        <div id="quiz-screen" class="hidden w-full max-w-2xl bg-slate-900/85 border-2 border-cyan-500/40 rounded-3xl p-5 sm:p-8 backdrop-blur-xl shadow-2xl transition-all">
+            
+            <!-- HUD -->
+            <div class="flex flex-row items-center justify-between mb-4 gap-2">
+                <div class="flex items-center space-x-2 sm:space-x-3">
+                    <span id="level-badge" class="px-3 py-1 rounded-full bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-bold text-sm tracking-wide border border-purple-400/40 shadow">
+                        Level 1 / 5
+                    </span>
+                    <span id="question-count" class="text-sm sm:text-base text-cyan-300 font-semibold">Question 1 of 3</span>
+                </div>
+
+                <div class="flex items-center space-x-3">
+                    <div class="text-right">
+                        <span class="text-xs uppercase tracking-wider text-slate-400 font-bold block">Score</span>
+                        <span id="score-display" class="text-2xl font-black text-yellow-400">0</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Progress Bar -->
+            <div class="w-full bg-slate-800 rounded-full h-3 mb-5 overflow-hidden border border-slate-700">
+                <div id="progress-bar" class="bg-gradient-to-r from-cyan-400 to-purple-500 h-full w-0 transition-all duration-500 rounded-full"></div>
+            </div>
+
+            <!-- Question Card with Speech Button -->
+            <div class="bg-indigo-950/80 border-2 border-indigo-700/60 rounded-2xl p-5 mb-5 shadow-inner flex flex-col sm:flex-row items-center gap-4 text-center sm:text-left">
+                <button id="speak-btn" onclick="readCurrentQuestionAloud()" title="Listen to question" class="w-14 h-14 rounded-2xl bg-cyan-500 border-2 border-cyan-300 text-slate-950 flex-shrink-0 flex items-center justify-center text-2xl shadow-lg hover:scale-105 active:scale-95 transition">
+                    <i class="fa-solid fa-volume-high"></i>
+                </button>
+                <div class="flex-grow">
+                    <span class="text-xs uppercase font-bold text-cyan-400 tracking-wider">Question:</span>
+                    <h2 id="question-text" class="text-2xl sm:text-3xl font-extrabold text-white leading-tight mt-1">
+                        Loading...
+                    </h2>
+                </div>
+            </div>
+
+            <!-- Hint Box -->
+            <div id="hint-box" class="hidden mb-5 bg-amber-950/70 border border-amber-500/60 rounded-2xl p-4 flex items-center space-x-3 text-amber-200 text-base sm:text-lg animate-pulse">
+                <span class="text-3xl flex-shrink-0">💡</span>
+                <div>
+                    <span class="font-bold text-yellow-300 block">Space Hint:</span>
+                    <span id="hint-text">Clue goes here...</span>
+                </div>
+            </div>
+
+            <!-- Answer Options -->
+            <div id="options-container" class="grid grid-cols-1 gap-3 sm:gap-4 mb-4">
+                <!-- Answers injected dynamically -->
+            </div>
+
+            <!-- Feedback Message -->
+            <div id="feedback-bar" class="hidden text-center py-3 px-4 rounded-xl font-black text-xl sm:text-2xl"></div>
+        </div>
+
+        <div id="minigame-screen" class="hidden w-full max-w-xl bg-slate-900/90 border-2 border-yellow-400/50 rounded-3xl p-5 text-center backdrop-blur-xl shadow-2xl relative overflow-hidden">
+            <div class="flex justify-between items-center mb-3 px-2">
+                <div>
+                    <span class="text-xs uppercase text-slate-400 block font-bold">Reward Game</span>
+                    <span class="text-xl font-black text-yellow-300">Catch Falling Stars! ⭐</span>
+                </div>
+                <div class="text-right">
+                    <span class="text-xs uppercase text-slate-400 block font-bold">Time Left</span>
+                    <span id="game-timer" class="text-2xl font-black text-cyan-300">15s</span>
+                </div>
+            </div>
+
+            <div class="relative w-full aspect-[4/3] bg-slate-950 rounded-2xl overflow-hidden border border-indigo-500/30 shadow-inner">
+                <canvas id="star-canvas" class="w-full h-full block cursor-none"></canvas>
+                
+                <div class="absolute bottom-3 left-0 right-0 flex justify-between px-6 pointer-events-none sm:hidden">
+                    <button id="btn-left" class="pointer-events-auto w-14 h-14 rounded-full bg-indigo-600/80 text-white text-2xl active:bg-cyan-500 flex items-center justify-center border border-white/30 shadow-lg">
+                        <i class="fa-solid fa-arrow-left"></i>
+                    </button>
+                    <button id="btn-right" class="pointer-events-auto w-14 h-14 rounded-full bg-indigo-600/80 text-white text-2xl active:bg-cyan-500 flex items-center justify-center border border-white/30 shadow-lg">
+                        <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                </div>
+            </div>
+
+            <p class="text-sm text-slate-300 mt-3 font-semibold">
+                👆 Drag the basket or use arrow keys to catch stars! ⭐
+            </p>
+        </div>
+
+        <div id="level-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-4">
+            <div class="bg-slate-900 border-2 border-yellow-400 rounded-3xl p-6 sm:p-8 max-w-md w-full text-center shadow-2xl relative">
+                <div class="w-20 h-20 mx-auto -mt-14 rounded-full bg-gradient-to-tr from-yellow-400 to-amber-500 flex items-center justify-center border-4 border-slate-900 shadow-xl text-4xl">
+                    ⭐
+                </div>
+                <h3 id="modal-title" class="text-3xl font-black text-yellow-300 my-3">Level Complete!</h3>
+                <p id="modal-desc" class="text-slate-200 text-lg mb-6 font-medium">Great reading and science work!</p>
+                <button id="modal-next-btn" onclick="continueFromModal()" class="w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-cyan-400 to-blue-600 text-white font-black text-2xl shadow-lg hover:scale-105 active:scale-95 transition glow-cyan flex items-center justify-center gap-2">
+                    Catch Stars! ⭐
+                </button>
+            </div>
+        </div>
+
+        <div id="end-screen" class="hidden w-full max-w-xl bg-slate-900/90 border-2 border-yellow-400/70 rounded-3xl p-6 sm:p-8 text-center backdrop-blur-xl shadow-2xl">
+            <div class="w-24 h-24 mx-auto mb-4 bg-gradient-to-tr from-yellow-300 via-amber-400 to-orange-500 rounded-full flex items-center justify-center border-4 border-yellow-200 shadow-xl glow-yellow floating text-5xl">
+                🏆
+            </div>
+
+            <h2 class="text-3xl sm:text-4xl font-black text-yellow-300 mb-1">GREAT JOB!</h2>
+            <p class="text-cyan-300 font-bold text-xl mb-6">You are a Space Science Master! 🎓</p>
+
+            <div class="bg-indigo-950/80 border-2 border-dashed border-yellow-400/50 rounded-2xl p-5 mb-6 text-left relative overflow-hidden">
+                <div class="text-center border-b border-indigo-800 pb-3 mb-3">
+                    <span class="text-xs uppercase tracking-widest text-slate-400 block font-bold">Official Certificate</span>
+                    <span class="text-xl font-bold text-white">Rocks & Soil Explorer</span>
+                </div>
+                
+                <div class="space-y-2 text-base sm:text-lg text-slate-200">
+                    <div class="flex justify-between">
+                        <span class="text-slate-400">Total Points:</span>
+                        <span id="final-score" class="font-bold text-yellow-300 text-xl">0</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-slate-400">Stars Caught:</span>
+                        <span id="final-stars" class="font-bold text-cyan-300 text-xl">0</span>
+                    </div>
+                </div>
+            </div>
+
+            <button onclick="restartQuiz()" class="w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-yellow-400 to-amber-500 text-slate-950 font-black text-2xl shadow-lg hover:scale-105 active:scale-95 transition glow-yellow">
+                <i class="fa-solid fa-rotate-right mr-2"></i> Play Again!
+            </button>
+        </div>
+
+    </main>
+
+    <footer class="relative z-10 p-3 text-center text-xs text-slate-500 border-t border-slate-800/60 bg-slate-950/40">
+        Quiz Master Space Edition • Simple Words, Emojis & Read-Aloud Audio
+    </footer>
+
+    <script>
+        // Web Audio Synthesizer
+        let audioCtx = null;
+        let soundEnabled = true;
+
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        }
+
+        function playSound(type) {
+            if (!soundEnabled) return;
+            initAudio();
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+
+            const now = audioCtx.currentTime;
+
+            if (type === 'click') {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(400, now);
+                osc.frequency.exponentialRampToValueAtTime(800, now + 0.05);
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.05);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start(now);
+                osc.stop(now + 0.05);
+            } 
+            else if (type === 'correct') {
+                const notes = [523.25, 659.25, 783.99, 1046.50];
+                notes.forEach((freq, idx) => {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(freq, now + idx * 0.08);
+                    gain.gain.setValueAtTime(0.25, now + idx * 0.08);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + idx * 0.08 + 0.2);
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.start(now + idx * 0.08);
+                    osc.stop(now + idx * 0.08 + 0.2);
+                });
+            } 
+            else if (type === 'wrong') {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(220, now);
+                osc.frequency.exponentialRampToValueAtTime(110, now + 0.25);
+                gain.gain.setValueAtTime(0.25, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start(now);
+                osc.stop(now + 0.25);
+            } 
+            else if (type === 'catch') {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(880, now);
+                osc.frequency.exponentialRampToValueAtTime(1320, now + 0.08);
+                gain.gain.setValueAtTime(0.3, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.08);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start(now);
+                osc.stop(now + 0.08);
+            }
+            else if (type === 'win') {
+                const notes = [440, 554.37, 659.25, 880, 1108.73, 1318.51];
+                notes.forEach((freq, idx) => {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(freq, now + idx * 0.1);
+                    gain.gain.setValueAtTime(0.3, now + idx * 0.1);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + idx * 0.1 + 0.3);
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.start(now + idx * 0.1);
+                    osc.stop(now + idx * 0.1 + 0.3);
+                });
+            }
+        }
+
+        function toggleSound() {
+            soundEnabled = !soundEnabled;
+            const icon = document.getElementById('sound-icon');
+            if (soundEnabled) {
+                icon.className = 'fa-solid fa-volume-high text-lg';
+            } else {
+                icon.className = 'fa-solid fa-volume-xmark text-lg text-rose-400';
+            }
+            playSound('click');
+        }
+
+        const questionDatabase = [
+            // Level 1: Hard or Soft?
+            {
+                level: 1,
+                question: "Which one is hard?",
+                options: ["🪨 A Rock", "🧸 A Teddy Bear", "🍦 Soft Ice Cream"],
+                spokenText: "Which one is hard? A Rock, A Teddy Bear, or Soft Ice Cream?",
+                answer: 0,
+                hint: "Rocks are super hard and strong!"
+            },
+            {
+                level: 1,
+                question: "Where do we find rocks?",
+                options: ["🏞️ Outside on the Ground", "📺 Inside the TV", "👕 Inside a T-Shirt"],
+                spokenText: "Where do we find rocks? Outside on the Ground, Inside the TV, or Inside a T-Shirt?",
+                answer: 0,
+                hint: "Look down outside in nature!"
+            },
+            {
+                level: 1,
+                question: "What is dirt or soil made of?",
+                options: ["🌱 Tiny Rocks and Leaves", "🍫 Pure Chocolate", "🎈 Toy Balloons"],
+                spokenText: "What is dirt or soil made of? Tiny Rocks and Leaves, Pure Chocolate, or Toy Balloons?",
+                answer: 0,
+                hint: "Dirt has tiny bits of rock and plant leaves in it!"
+            },
+
+            // Level 2: Soil & Plants
+            {
+                level: 2,
+                question: "What grows in dirt?",
+                options: ["🌸 Plants and Flowers", "🚲 Bicycle Wheels", "👟 Running Shoes"],
+                spokenText: "What grows in dirt? Plants and Flowers, Bicycle Wheels, or Running Shoes?",
+                answer: 0,
+                hint: "Plants need dirt, water, and sun to grow big!"
+            },
+            {
+                level: 2,
+                question: "Who lives under the ground in soil?",
+                options: ["🪱 Earthworms", "🦁 Big Lions", "✈️ Aeroplanes"],
+                spokenText: "Who lives under the ground in soil? Earthworms, Big Lions, or Aeroplanes?",
+                answer: 0,
+                hint: "Wriggly worms dig tunnels under the soil!"
+            },
+            {
+                level: 2,
+                question: "How does wet mud feel?",
+                options: ["🧼 Squishy and Sticky", "🪵 Dry like Wood", "🧊 Ice Cold Snow"],
+                spokenText: "How does wet mud feel? Squishy and Sticky, Dry like Wood, or Ice Cold Snow?",
+                answer: 0,
+                hint: "Adding water to dirt makes squishy mud!"
+            },
+
+            // Level 3: Fossils & Dinosaur Bones
+            {
+                level: 3,
+                question: "What is a fossil?",
+                options: ["🦖 An Old Dinosaur Bone in Rock", "🍕 A Slice of Pizza", "🚗 A Fast Toy Car"],
+                spokenText: "What is a fossil? An Old Dinosaur Bone in Rock, A Slice of Pizza, or A Fast Toy Car?",
+                answer: 0,
+                hint: "Fossils are real dinosaur bones preserved in rock!"
+            },
+            {
+                level: 3,
+                question: "Where are fossils hidden?",
+                options: ["🪨 Inside Hard Rocks", "☁️️ High in Clouds", "🥣 In a Bowl of Soup"],
+                spokenText: "Where are fossils hidden? Inside Hard Rocks, High in Clouds, or In a Bowl of Soup?",
+                answer: 0,
+                hint: "Scientists chip away at rocks to find them!"
+            },
+            {
+                level: 3,
+                question: "Are fossils very old or brand new?",
+                options: ["⏳ Very, Very Old!", "🆕 Made Today", "⏰ Made 5 Minutes Ago"],
+                spokenText: "Are fossils very old or brand new? Very Very Old, Made Today, or Made 5 Minutes Ago?",
+                answer: 0,
+                hint: "They are millions of years old!"
+            },
+
+            // Level 4: Volcanoes & Lava Rocks
+            {
+                level: 4,
+                question: "What comes out of a volcano?",
+                options: ["🌋 Hot Liquid Lava", "🧊 Cold Ice Cubes", "🍬 Sweet Candy"],
+                spokenText: "What comes out of a volcano? Hot Liquid Lava, Cold Ice Cubes, or Sweet Candy?",
+                answer: 0,
+                hint: "Volcanoes shoot out fiery hot lava!"
+            },
+            {
+                level: 4,
+                question: "What happens when hot lava cools down?",
+                options: ["🪨 It Turns Into Hard Rock", "🧃 It Turns Into Juice", "☁️ It Turns Into A Cloud"],
+                spokenText: "What happens when hot lava cools down? It Turns Into Hard Rock, It Turns Into Juice, or It Turns Into A Cloud?",
+                answer: 0,
+                hint: "Cool lava turns into dark, hard igneous rock!"
+            },
+            {
+                level: 4,
+                question: "Which rock has lots of air holes and floats?",
+                options: ["🧽 Pumice Volcanic Rock", "🧱 Heavy Red Brick", "💎 Shiny Diamond"],
+                spokenText: "Which rock has lots of air holes and floats? Pumice Volcanic Rock, Heavy Red Brick, or Shiny Diamond?",
+                answer: 0,
+                hint: "Pumice has tiny air bubbles inside it!"
+            },
+
+            // Level 5: Uses of Rocks
+            {
+                level: 5,
+                question: "What do we use to build strong houses?",
+                options: ["🧱 Heavy Bricks and Stones", "🧻 Paper Towels", "🦩 Plastic Flamingos"],
+                spokenText: "What do we use to build strong houses? Heavy Bricks and Stones, Paper Towels, or Plastic Flamingos?",
+                answer: 0,
+                hint: "Stones and bricks make walls super strong!"
+            },
+            {
+                level: 5,
+                question: "What soft white rock do we use to draw on sidewalks?",
+                options: ["🖍️ Soft Chalk Rock", "🪵 Tree Bark", "🍇 Purple Grapes"],
+                spokenText: "What soft white rock do we use to draw on sidewalks? Soft Chalk Rock, Tree Bark, or Purple Grapes?",
+                answer: 0,
+                hint: "Chalk is a very soft rock used for writing!"
+            },
+            {
+                level: 5,
+                question: "How do big rocks turn into tiny sand?",
+                options: ["🌧️ Wind and Rain Break Them", "🎨 Painting Them Blue", "🪄 Magic Spell"],
+                spokenText: "How do big rocks turn into tiny sand? Wind and Rain Break Them, Painting Them Blue, or Magic Spell?",
+                answer: 0,
+                hint: "Rain and wind slowly break rocks over years!"
+            }
+        ];
+
+        let currentLevel = 1;
+        let currentQuestionIdx = 0;
+        let totalScore = 0;
+        let starsCaughtTotal = 0;
+        let isAnswerLocked = false;
+
+        let highScore = localStorage.getItem('quizler_high_score') || 0;
+        document.getElementById('high-score-display').textContent = highScore;
+
+        function showScreen(screenId) {
+            stopSpeech();
+            ['title-screen', 'quiz-screen', 'minigame-screen', 'end-screen'].forEach(id => {
+                const el = document.getElementById(id);
+                if (id === screenId) {
+                    el.classList.remove('hidden');
+                } else {
+                    el.classList.add('hidden');
+                }
+            });
+        }
+
+        function startQuiz() {
+            playSound('click');
+            currentLevel = 1;
+            currentQuestionIdx = 0;
+            totalScore = 0;
+            starsCaughtTotal = 0;
+            updateScoreDisplay();
+            showScreen('quiz-screen');
+            loadQuestion();
+        }
+
+        function restartQuiz() {
+            startQuiz();
+        }
+
+        function updateScoreDisplay() {
+            document.getElementById('score-display').textContent = totalScore;
+        }
+
+        function getCurrentQuestion() {
+            const levelQuestions = questionDatabase.filter(q => q.level === currentLevel);
+            return levelQuestions[currentQuestionIdx];
+        }
+
+        function readCurrentQuestionAloud() {
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel(); // Stop current speech
+                const q = getCurrentQuestion();
+                if (!q) return;
+
+                const textToSay = q.spokenText || `${q.question}. ${q.options.join(', ')}`;
+                const utterance = new SpeechSynthesisUtterance(textToSay);
+                utterance.rate = 0.85; // Slightly slower, clear voice for young children
+                utterance.pitch = 1.1;
+
+                const speakBtn = document.getElementById('speak-btn');
+                speakBtn.classList.add('speaking-active');
+
+                utterance.onend = () => {
+                    speakBtn.classList.remove('speaking-active');
+                };
+                utterance.onerror = () => {
+                    speakBtn.classList.remove('speaking-active');
+                };
+
+                window.speechSynthesis.speak(utterance);
+            }
+        }
+
+        function stopSpeech() {
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+            }
+            const speakBtn = document.getElementById('speak-btn');
+            if (speakBtn) speakBtn.classList.remove('speaking-active');
+        }
+
+        function loadQuestion() {
+            stopSpeech();
+            isAnswerLocked = false;
+            const q = getCurrentQuestion();
+            if (!q) return;
+
+            // HUD update
+            document.getElementById('level-badge').textContent = `Level ${currentLevel} / 5`;
+            document.getElementById('question-count').textContent = `Question ${currentQuestionIdx + 1} of 3`;
+            
+            const totalQuestions = 15;
+            const overallIdx = (currentLevel - 1) * 3 + currentQuestionIdx;
+            const progressPercent = (overallIdx / totalQuestions) * 100;
+            document.getElementById('progress-bar').style.width = `${progressPercent}%`;
+
+            // Reset Hints
+            document.getElementById('hint-box').classList.add('hidden');
+            const feedbackBar = document.getElementById('feedback-bar');
+            feedbackBar.classList.add('hidden');
+            feedbackBar.className = 'hidden text-center py-2 px-4 rounded-xl font-bold text-lg';
+
+            // Set question text
+            document.getElementById('question-text').textContent = q.question;
+
+            // Option Buttons
+            const optionsContainer = document.getElementById('options-container');
+            optionsContainer.innerHTML = '';
+
+            q.options.forEach((opt, idx) => {
+                const btn = document.createElement('button');
+                btn.className = `w-full p-4 sm:p-5 rounded-2xl bg-indigo-900/70 hover:bg-indigo-800 border-2 border-indigo-600/70 hover:border-cyan-400 text-left text-xl sm:text-2xl font-black text-slate-100 transition duration-200 flex items-center justify-between shadow-md active:scale-95`;
+                btn.innerHTML = `
+                    <span class="flex items-center space-x-3">
+                        <span>${opt}</span>
+                    </span>
+                    <i class="fa-solid fa-circle-chevron-right text-indigo-400 opacity-60 text-xl"></i>
+                `;
+                btn.onclick = () => handleAnswer(idx, btn);
+                optionsContainer.appendChild(btn);
+            });
+
+            // Auto-read question aloud for 4-year-olds
+            setTimeout(() => {
+                readCurrentQuestionAloud();
+            }, 300);
+        }
+
+        function handleAnswer(selectedIndex, btnElement) {
+            if (isAnswerLocked) return;
+            stopSpeech();
+
+            const q = getCurrentQuestion();
+
+            if (selectedIndex === q.answer) {
+                // Correct
+                isAnswerLocked = true;
+                playSound('correct');
+                
+                btnElement.className = "w-full p-4 sm:p-5 rounded-2xl bg-emerald-600 border-2 border-emerald-300 text-left text-xl sm:text-2xl font-black text-white transition flex items-center justify-between shadow-lg glow-cyan";
+                
+                totalScore += 100;
+                updateScoreDisplay();
+
+                confetti({
+                    particleCount: 40,
+                    spread: 60,
+                    origin: { y: 0.7 }
+                });
+
+                const feedbackBar = document.getElementById('feedback-bar');
+                const praises = ["YES! Great job! ⭐", "SUPER EXPLORER! 🚀", "CORRECT! 🎉", "YOU ROCK! 🪨"];
+                const randomPraise = praises[Math.floor(Math.random() * praises.length)];
+                
+                feedbackBar.textContent = randomPraise;
+                feedbackBar.className = "block bg-emerald-950/90 border border-emerald-500 text-emerald-300 text-center py-3 px-4 rounded-xl font-black text-xl mb-4";
+
+                setTimeout(() => {
+                    nextQuestion();
+                }, 1400);
+
+            } else {
+                // Wrong
+                playSound('wrong');
+                btnElement.classList.add('wobble', 'border-rose-500', 'bg-rose-950/50');
+                
+                document.getElementById('hint-text').textContent = q.hint;
+                document.getElementById('hint-box').classList.remove('hidden');
+
+                setTimeout(() => {
+                    btnElement.classList.remove('wobble');
+                }, 500);
+            }
+        }
+
+        function nextQuestion() {
+            currentQuestionIdx++;
+
+            if (currentQuestionIdx >= 3) {
+                playSound('win');
+                showLevelCompleteModal();
+            } else {
+                loadQuestion();
+            }
+        }
+
+        function showLevelCompleteModal() {
+            const modal = document.getElementById('level-modal');
+            const title = document.getElementById('modal-title');
+            const desc = document.getElementById('modal-desc');
+
+            title.textContent = `Level ${currentLevel} Cleared! 🎉`;
+            desc.textContent = `You finished Level ${currentLevel}! Time to catch falling stars!`;
+            
+            modal.classList.remove('hidden');
+        }
+
+        function continueFromModal() {
+            document.getElementById('level-modal').classList.add('hidden');
+            startFallingStarsGame();
+        }
+
+        let canvas, ctx;
+        let basket = { x: 0, y: 0, width: 90, height: 24, speed: 8 };
+        let stars = [];
+        let miniGameTimer = 15;
+        let miniGameInterval = null;
+        let animationFrameId = null;
+        let keys = { left: false, right: false };
+
+        function startFallingStarsGame() {
+            showScreen('minigame-screen');
+            canvas = document.getElementById('star-canvas');
+            ctx = canvas.getContext('2d');
+
+            canvas.width = canvas.parentElement.clientWidth;
+            canvas.height = canvas.parentElement.clientHeight;
+
+            basket.width = Math.max(70, canvas.width * 0.2);
+            basket.x = (canvas.width - basket.width) / 2;
+            basket.y = canvas.height - 35;
+
+            stars = [];
+            miniGameTimer = 15;
+            document.getElementById('game-timer').textContent = `${miniGameTimer}s`;
+
+            setupControls();
+
+            clearInterval(miniGameInterval);
+            miniGameInterval = setInterval(() => {
+                miniGameTimer--;
+                document.getElementById('game-timer').textContent = `${miniGameTimer}s`;
+
+                if (miniGameTimer <= 0) {
+                    endFallingStarsGame();
+                }
+            }, 1000);
+
+            cancelAnimationFrame(animationFrameId);
+            gameLoop();
+        }
+
+        function setupControls() {
+            const handlePointer = (e) => {
+                const rect = canvas.getBoundingClientRect();
+                const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                const relX = clientX - rect.left;
+                basket.x = Math.max(0, Math.min(canvas.width - basket.width, relX - basket.width / 2));
+            };
+
+            canvas.onmousemove = handlePointer;
+            canvas.ontouchmove = (e) => {
+                handlePointer(e);
+                e.preventDefault();
+            };
+
+            window.onkeydown = (e) => {
+                if (e.key === 'ArrowLeft') keys.left = true;
+                if (e.key === 'ArrowRight') keys.right = true;
+            };
+
+            window.onkeyup = (e) => {
+                if (e.key === 'ArrowLeft') keys.left = false;
+                if (e.key === 'ArrowRight') keys.right = false;
+            };
+
+            const btnLeft = document.getElementById('btn-left');
+            const btnRight = document.getElementById('btn-right');
+
+            btnLeft.ontouchstart = () => keys.left = true;
+            btnLeft.ontouchend = () => keys.left = false;
+            btnRight.ontouchstart = () => keys.right = true;
+            btnRight.ontouchend = () => keys.right = false;
+        }
+
+        function spawnStar() {
+            if (Math.random() < 0.08) {
+                const isGold = Math.random() < 0.3;
+                stars.push({
+                    x: Math.random() * (canvas.width - 20) + 10,
+                    y: -20,
+                    size: isGold ? 16 : 12,
+                    speed: Math.random() * 2 + 2.5,
+                    isGold: isGold,
+                    rotation: 0,
+                    rotSpeed: (Math.random() - 0.5) * 0.1
+                });
+            }
+        }
+
+        function gameLoop() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            if (keys.left) basket.x = Math.max(0, basket.x - basket.speed);
+            if (keys.right) basket.x = Math.min(canvas.width - basket.width, basket.x + basket.speed);
+
+            // Draw Basket
+            ctx.fillStyle = '#6366f1';
+            ctx.beginPath();
+            ctx.roundRect(basket.x, basket.y, basket.width, basket.height, 12);
+            ctx.fill();
+            ctx.lineWidth = 3;
+            ctx.strokeStyle = '#38bdf8';
+            ctx.stroke();
+
+            ctx.fillStyle = '#fef08a';
+            ctx.fillRect(basket.x + 5, basket.y + 2, basket.width - 10, 3);
+
+            spawnStar();
+
+            for (let i = stars.length - 1; i >= 0; i--) {
+                const s = stars[i];
+                s.y += s.speed;
+                s.rotation += s.rotSpeed;
+
+                ctx.save();
+                ctx.translate(s.x, s.y);
+                ctx.rotate(s.rotation);
+                ctx.fillStyle = s.isGold ? '#facc15' : '#e0f2fe';
+                ctx.shadowColor = s.isGold ? '#f59e0b' : '#38bdf8';
+                ctx.shadowBlur = 10;
+
+                drawStarShape(ctx, 0, 0, 5, s.size, s.size / 2);
+                ctx.fill();
+                ctx.restore();
+
+                // Collision Detection
+                if (
+                    s.y + s.size >= basket.y &&
+                    s.y - s.size <= basket.y + basket.height &&
+                    s.x >= basket.x &&
+                    s.x <= basket.x + basket.width
+                ) {
+                    playSound('catch');
+                    const points = s.isGold ? 50 : 20;
+                    totalScore += points;
+                    starsCaughtTotal++;
+                    updateScoreDisplay();
+
+                    stars.splice(i, 1);
+                    continue;
+                }
+
+                if (s.y > canvas.height + 20) {
+                    stars.splice(i, 1);
+                }
+            }
+
+            animationFrameId = requestAnimationFrame(gameLoop);
+        }
+
+        function drawStarShape(ctx, cx, cy, spikes, outerRadius, innerRadius) {
+            let rot = Math.PI / 2 * 3;
+            let x = cx;
+            let y = cy;
+            let step = Math.PI / spikes;
+
+            ctx.beginPath();
+            ctx.moveTo(cx, cy - outerRadius);
+            for (let i = 0; i < spikes; i++) {
+                x = cx + Math.cos(rot) * outerRadius;
+                y = cy + Math.sin(rot) * outerRadius;
+                ctx.lineTo(x, y);
+                rot += step;
+
+                x = cx + Math.cos(rot) * innerRadius;
+                y = cy + Math.sin(rot) * innerRadius;
+                ctx.lineTo(x, y);
+                rot += step;
+            }
+            ctx.lineTo(cx, cy - outerRadius);
+            ctx.closePath();
+        }
+
+        function endFallingStarsGame() {
+            clearInterval(miniGameInterval);
+            cancelAnimationFrame(animationFrameId);
+
+            currentLevel++;
+
+            if (currentLevel > 5) {
+                showEndScreen();
+            } else {
+                currentQuestionIdx = 0;
+                showScreen('quiz-screen');
+                loadQuestion();
+            }
+        }
+
+        function showEndScreen() {
+            playSound('win');
+            showScreen('end-screen');
+
+            document.getElementById('final-score').textContent = totalScore;
+            document.getElementById('final-stars').textContent = starsCaughtTotal;
+
+            if (totalScore > highScore) {
+                highScore = totalScore;
+                localStorage.setItem('quizler_high_score', highScore);
+                document.getElementById('high-score-display').textContent = highScore;
+            }
+
+            confetti({
+                particleCount: 100,
+                spread: 80,
+                origin: { y: 0.6 }
+            });
+        }
+
+        function createStarfield() {
+            const container = document.getElementById('stars');
+            container.innerHTML = '';
+            const starCount = 60;
+
+            for (let i = 0; i < starCount; i++) {
+                const star = document.createElement('div');
+                star.className = 'star';
+                const size = Math.random() * 3 + 1;
+                star.style.width = `${size}px`;
+                star.style.height = `${size}px`;
+                star.style.left = `${Math.random() * 100}%`;
+                star.style.top = `${Math.random() * 100}%`;
+                star.style.setProperty('--duration', `${Math.random() * 3 + 2}s`);
+                container.appendChild(star);
+            }
+        }
+
+        window.onload = function() {
+            createStarfield();
+        };
+    </script>
+</body>
+</html>

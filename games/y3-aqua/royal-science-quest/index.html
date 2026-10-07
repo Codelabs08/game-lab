@@ -1,0 +1,1125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Royal Science Quest</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Outfit:wght@500;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Fredoka', cursive, sans-serif;
+            background: #12041d;
+            color: #ffffff;
+            overflow-x: hidden;
+            touch-action: manipulation;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        .palace-bg {
+            background: radial-gradient(circle at 50% 20%, #3b074a 0%, #150326 70%, #080112 100%);
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            z-index: -2;
+        }
+
+        .gold-border {
+            border: 4px solid #ffd700;
+            box-shadow: 0 0 18px rgba(255, 215, 0, 0.4), inset 0 0 10px rgba(255, 215, 0, 0.2);
+        }
+
+        .gold-gradient-bg {
+            background: linear-gradient(135deg, #ffe57f 0%, #ffc107 50%, #ff8f00 100%);
+        }
+
+        .gold-text-glow {
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.6), 0 2px 4px rgba(0,0,0,0.8);
+        }
+
+        .royal-btn {
+            background: linear-gradient(180deg, #ffd700 0%, #ffa000 100%);
+            color: #3e2723;
+            border: 3px solid #fff59d;
+            box-shadow: 0 6px 0 #b78103, 0 10px 15px rgba(0,0,0,0.4);
+            transition: all 0.15s ease;
+        }
+
+        .royal-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 0 #b78103, 0 12px 20px rgba(0,0,0,0.5);
+            filter: brightness(1.08);
+        }
+
+        .royal-btn:active:not(:disabled) {
+            transform: translateY(4px);
+            box-shadow: 0 2px 0 #b78103, 0 4px 6px rgba(0,0,0,0.4);
+        }
+
+        .option-btn {
+            background: linear-gradient(180deg, #3a1c5c 0%, #25103e 100%);
+            border: 3px solid #7b2cbf;
+            box-shadow: 0 5px 0 #4a127a, 0 8px 12px rgba(0,0,0,0.3);
+            transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .option-btn:hover:not(:disabled) {
+            border-color: #ffd700;
+            transform: translateY(-3px) scale(1.01);
+            box-shadow: 0 8px 0 #4a127a, 0 12px 18px rgba(255, 215, 0, 0.2);
+        }
+
+        .option-btn.correct {
+            background: linear-gradient(180deg, #2e7d32 0%, #1b5e20 100%) !important;
+            border-color: #69f0ae !important;
+            box-shadow: 0 5px 0 #0d3b11 !important;
+            animation: pulse-green 0.6s infinite alternate;
+        }
+
+        .option-btn.wrong {
+            background: linear-gradient(180deg, #c62828 0%, #8e0000 100%) !important;
+            border-color: #ff8a80 !important;
+            box-shadow: 0 5px 0 #4a0000 !important;
+            animation: shake 0.4s ease-in-out;
+        }
+
+        @keyframes pulse-green {
+            0% { transform: scale(1); }
+            100% { transform: scale(1.03); }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-8px); }
+            40%, 80% { transform: translateX(8px); }
+        }
+
+        @keyframes float-slow {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-10px) rotate(2deg); }
+        }
+
+        .floating {
+            animation: float-slow 3s ease-in-out infinite;
+        }
+
+        .royal-card {
+            background: rgba(30, 9, 50, 0.9);
+            backdrop-filter: blur(12px);
+            border: 3px solid rgba(255, 215, 0, 0.5);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7), 0 0 30px rgba(123, 44, 191, 0.3);
+        }
+
+        /* Touch control buttons for game */
+        .touch-btn {
+            background: rgba(255, 215, 0, 0.25);
+            border: 2px solid #ffd700;
+            backdrop-filter: blur(4px);
+            color: #ffd700;
+            border-radius: 9999px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            user-select: none;
+            touch-action: manipulation;
+        }
+        .touch-btn:active {
+            background: rgba(255, 215, 0, 0.6);
+            transform: scale(0.92);
+        }
+
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #150326; }
+        ::-webkit-scrollbar-thumb { background: #ffd700; border-radius: 10px; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between items-center relative p-2 sm:p-4 md:p-6 overflow-y-auto">
+
+    <div class="palace-bg"></div>
+    <canvas id="particleCanvas" class="fixed top-0 left-0 w-full h-full pointer-events-none z-10"></canvas>
+
+    <!-- TOP HUD HEADER -->
+    <header class="w-full max-w-4xl flex items-center justify-between gap-2 p-3 md:p-4 rounded-2xl royal-card gold-border z-20 mb-3">
+        <div class="flex items-center gap-2 md:gap-3">
+            <div class="w-10 h-10 md:w-12 md:h-12 rounded-full gold-gradient-bg flex items-center justify-center text-2xl shadow-lg border-2 border-white floating">
+                👑
+            </div>
+            <div>
+                <h1 class="text-base md:text-xl font-bold text-yellow-300 tracking-wide gold-text-glow leading-none">Royal Science Quest</h1>
+                <p class="text-xs md:text-sm text-purple-200 font-medium">Royal Scientist</p>
+            </div>
+        </div>
+
+        <div class="flex-1 max-w-xs md:max-w-md mx-2 md:mx-6">
+            <div class="flex justify-between text-xs md:text-sm font-bold mb-1 text-yellow-200">
+                <span id="levelDisplay">Level 1 / 5</span>
+                <span id="qNumDisplay">Question 1/3</span>
+            </div>
+            <div class="w-full h-4 bg-purple-950 rounded-full p-0.5 border border-yellow-500/50 relative overflow-hidden shadow-inner">
+                <div id="progressBar" class="h-full gold-gradient-bg rounded-full transition-all duration-500 w-0 shadow-md"></div>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-2">
+            <div class="flex items-center gap-1.5 bg-purple-900/90 px-3 py-1.5 rounded-full border border-yellow-400/60 shadow-md">
+                <span class="text-xl animate-bounce">🪙</span>
+                <span id="coinCount" class="text-base md:text-lg font-black text-yellow-300">0</span>
+            </div>
+            <button id="muteBtn" onclick="toggleMute()" class="w-9 h-9 rounded-full bg-purple-800 border-2 border-yellow-400 text-yellow-300 flex items-center justify-center text-lg hover:bg-purple-700 active:scale-95 transition">
+                🔊
+            </button>
+        </div>
+    </header>
+
+    <!-- MAIN CONTAINER -->
+    <main class="w-full max-w-4xl flex-1 flex flex-col justify-center items-center z-20 my-auto">
+
+        <!-- VIEW 1: START SCREEN -->
+        <div id="startScreen" class="w-full royal-card rounded-3xl p-6 md:p-10 text-center flex flex-col items-center gap-6 shadow-2xl">
+            <div class="relative">
+                <span class="text-6xl md:text-8xl floating inline-block">👑</span>
+                <span class="text-4xl md:text-5xl absolute -bottom-2 -right-2">🦕</span>
+            </div>
+            <div class="space-y-2">
+                <h2 class="text-3xl md:text-5xl font-black text-yellow-300 gold-text-glow tracking-wide">
+                    King Your Royal Science Quest!
+                </h2>
+                <p class="text-base md:text-xl text-purple-200 max-w-xl mx-auto">
+                    Answer Year 3 Science questions, collect royal coins, and unlock <span class="text-yellow-300 font-bold">5-Minute Dinosaur Jumping Reward Rounds</span>!
+                </p>
+            </div>
+            <div class="bg-purple-900/60 p-4 rounded-2xl border border-yellow-500/30 text-left max-w-md w-full space-y-2 text-sm md:text-base">
+                <div class="flex items-center gap-3">
+                    <span class="text-2xl">🔬</span>
+                    <span><strong>5 Science Levels</strong> (3 questions per level)</span>
+                </div>
+                <div class="flex items-center gap-3">
+                    <span class="text-2xl">🦖</span>
+                    <span><strong>5-Minute Dino Jump Game</strong> after every 3 correct answers!</span>
+                </div>
+                <div class="flex items-center gap-3">
+                    <span class="text-2xl">🏆</span>
+                    <span>Win the <strong>Grand Golden Trophy</strong> at the end!</span>
+                </div>
+            </div>
+            <button onclick="startGame()" class="royal-btn px-8 py-4 rounded-2xl text-xl md:text-2xl font-black tracking-wider uppercase flex items-center gap-3 mt-2">
+                <span>Start Royal Quest!</span> ➔
+            </button>
+        </div>
+
+        <!-- VIEW 2: QUIZ SCREEN -->
+        <div id="quizScreen" class="w-full royal-card rounded-3xl p-5 md:p-8 hidden flex-col gap-5 shadow-2xl relative">
+            <div class="flex items-center justify-between bg-purple-900/80 px-4 py-2 rounded-xl border border-yellow-500/40">
+                <span id="levelTopicBadge" class="text-xs md:text-sm font-bold text-yellow-300 uppercase tracking-widest flex items-center gap-1.5">
+                    <span>🔬</span> Level 1: Animal Groups & Diets
+                </span>
+                <span class="text-xs font-semibold text-purple-300 bg-purple-950 px-2.5 py-1 rounded-md border border-purple-700">
+                    Year 3 Science
+                </span>
+            </div>
+
+            <div class="min-h-[110px] md:min-h-[130px] flex items-center justify-center p-4 bg-purple-950/60 rounded-2xl border-2 border-yellow-400/30 text-center">
+                <h3 id="questionText" class="text-lg md:text-2xl font-bold text-white leading-relaxed">
+                    Loading royal question...
+                </h3>
+            </div>
+
+            <div id="hintBox" class="hidden bg-amber-900/90 border-2 border-amber-400 text-amber-200 p-3 rounded-xl text-sm md:text-base text-center animate-pulse items-center justify-center gap-2">
+                <span>💡</span> <span id="hintText">Try again! Remember...</span>
+            </div>
+
+            <div id="feedbackBanner" class="hidden p-3 rounded-xl text-center font-bold text-lg md:text-xl border-2 transition-all duration-300"></div>
+
+            <div id="optionsGrid" class="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
+                <!-- Injected in JS -->
+            </div>
+        </div>
+
+        <!-- VIEW 3: DINOSAUR JUMP 5-MINUTE MINIGAME -->
+        <div id="dinoScreen" class="w-full royal-card rounded-3xl p-3 md:p-5 hidden flex-col items-center gap-3 shadow-2xl relative">
+            <!-- Header bar with 5-Minute Timer -->
+            <div class="w-full flex items-center justify-between bg-purple-950/90 p-3 rounded-2xl border-2 border-yellow-400">
+                <div>
+                    <span class="bg-yellow-400 text-purple-950 px-2.5 py-0.5 rounded-full font-black text-[11px] uppercase tracking-wider inline-block">
+                        Level Cleared! 🎉
+                    </span>
+                    <h2 class="text-base md:text-2xl font-extrabold text-yellow-300 gold-text-glow leading-tight">
+                        Dinosaur Rider Reward! 🦖
+                    </h2>
+                </div>
+
+                <!-- 5-MINUTE TIMER (300 seconds) -->
+                <div class="flex items-center gap-2 border-2 border-red-400 rounded-2xl px-3 py-1.5 bg-gradient-to-r from-red-900 to-purple-950 animate-pulse">
+                    <span class="text-2xl">⏱️</span>
+                    <div>
+                        <div class="text-[9px] uppercase tracking-widest font-black text-red-200 leading-none">Reward Time</div>
+                        <div id="rewardTimer" class="text-xl md:text-3xl font-black text-yellow-300 leading-none">05:00</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Canvas Container -->
+            <div class="relative w-full max-w-2xl h-64 md:h-80 bg-slate-900 rounded-2xl border-4 border-yellow-400 overflow-hidden shadow-2xl">
+                <canvas id="dinoCanvas" class="w-full h-full block"></canvas>
+                
+                <!-- Game Pause Overlay / Start Notice -->
+                <div id="dinoOverlay" class="absolute inset-0 bg-black/60 backdrop-blur-sm flex flex-col items-center justify-center p-4 text-center gap-3 z-10">
+                    <h3 class="text-2xl md:text-3xl font-black text-yellow-300 gold-text-glow">
+                        Jump On Moving Dinosaurs! 🦕
+                    </h3>
+                    <p class="text-xs md:text-sm text-purple-100 max-w-sm">
+                        Land on dinosaur backs, ride them, and collect floating golden crowns and coins for <strong>5 minutes</strong>!
+                    </p>
+                    <button onclick="startDinoGameLoop()" class="royal-btn px-6 py-3 rounded-xl text-lg font-black tracking-wider uppercase">
+                        🎮 Play Dino Rider!
+                    </button>
+                </div>
+            </div>
+
+            <!-- Touch Controls for Mobile & Exit Option -->
+            <div class="w-full max-w-2xl flex items-center justify-between gap-2">
+                <!-- Mobile Arrow Touch Buttons -->
+                <div class="flex items-center gap-2">
+                    <button id="btnLeft" class="touch-btn w-12 h-12">⬅️</button>
+                    <button id="btnRight" class="touch-btn w-12 h-12">➡️</button>
+                </div>
+
+                <!-- Jump Touch Button -->
+                <button id="btnJump" class="touch-btn px-6 h-12 font-black text-base bg-yellow-400 text-purple-950 flex items-center gap-1">
+                    🦘 JUMP
+                </button>
+
+                <!-- Back to Quiz Early -->
+                <button onclick="endDinoUpEarly()" class="royal-btn px-4 py-2 rounded-xl text-xs md:text-sm font-black">
+                    Back to Quiz ➔
+                </button>
+            </div>
+            <p class="text-[11px] text-purple-300 hidden md:block">
+                Controls: Use Keyboard <span class="text-yellow-300 font-bold">LEFT / RIGHT Arrows</span> to move, <span class="text-yellow-300 font-bold">SPACEBAR or UP Arrow</span> to Jump!
+            </p>
+        </div>
+
+        <!-- VIEW 4: GRAND FINALE / TROPHY SCREEN -->
+        <div id="victoryScreen" class="w-full royal-card rounded-3xl p-6 md:p-10 hidden flex-col items-center text-center gap-6 shadow-2xl relative overflow-hidden">
+            <div class="space-y-2 z-10">
+                <span class="bg-yellow-400 text-purple-950 px-4 py-1.5 rounded-full font-black text-xs md:text-sm uppercase tracking-widest inline-block shadow-md">
+                    👑 Grand Victory 👑
+                </span>
+                <h2 class="text-3xl md:text-5xl font-black text-yellow-300 gold-text-glow">
+                    Well Done, King Hero!
+                </h2>
+                <p class="text-base md:text-xl text-purple-200">
+                    You answered all Science questions & mastered the Dino Jump!
+                </p>
+            </div>
+
+            <div class="relative w-48 h-48 md:w-56 md:h-56 my-2 floating z-10">
+                <svg viewBox="0 0 200 200" class="w-full h-full drop-shadow-[0_10px_20px_rgba(255,215,0,0.5)]">
+                    <defs>
+                        <linearGradient id="trophyGold" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="#fff59d"/>
+                            <stop offset="50%" stop-color="#ffd700"/>
+                            <stop offset="100%" stop-color="#ff8f00"/>
+                        </linearGradient>
+                    </defs>
+                    <rect x="50" y="160" width="100" height="20" rx="5" fill="#3e2723" stroke="#ffd700" stroke-width="2"/>
+                    <rect x="65" y="140" width="70" height="22" rx="3" fill="#5d4037" stroke="#ffd700" stroke-width="2"/>
+                    <text x="100" y="175" font-size="11" font-weight="bold" fill="#ffd700" text-anchor="middle">KING HERO</text>
+                    <path d="M90 140 L90 115 C90 105 110 105 110 115 L110 140 Z" fill="url(#trophyGold)"/>
+                    <path d="M45 40 L155 40 C155 85 130 105 100 105 C70 105 45 85 45 40 Z" fill="url(#trophyGold)" stroke="#fff" stroke-width="2"/>
+                    <path d="M45 50 C25 50 25 80 47 85" fill="none" stroke="url(#trophyGold)" stroke-width="10" stroke-linecap="round"/>
+                    <path d="M155 50 C175 50 175 80 153 85" fill="none" stroke="url(#trophyGold)" stroke-width="10" stroke-linecap="round"/>
+                    <path d="M85 60 L92 75 L100 55 L108 75 L115 60 L115 80 L85 80 Z" fill="#ffffff" opacity="0.9"/>
+                    <polygon points="100,20 105,32 118,32 107,40 111,52 100,44 89,52 93,40 82,32 95,32" fill="#ffe082"/>
+                </svg>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4 w-full max-w-md bg-purple-950/70 p-4 rounded-2xl border border-yellow-500/40 z-10">
+                <div class="p-2">
+                    <div class="text-xs text-purple-300 uppercase font-bold">Total Royal Score</div>
+                    <div id="finalScore" class="text-2xl md:text-3xl font-black text-yellow-300">0 Coins</div>
+                </div>
+                <div class="p-2">
+                    <div class="text-xs text-purple-300 uppercase font-bold">Royal Title</div>
+                    <div class="text-sm md:text-base font-black text-green-300">Dino Champion Scientist</div>
+                </div>
+            </div>
+
+            <button onclick="startGame()" class="royal-btn px-8 py-4 rounded-2xl text-xl font-black tracking-wider uppercase z-10 mt-2">
+                🔄 Play Quest Again!
+            </button>
+        </div>
+
+    </main>
+
+    <footer class="w-full text-center text-xs text-purple-300/60 py-2 z-20">
+        King Hero Science Quest • Year 3 Animals & Humans • Safe & Child-Friendly Game
+    </footer>
+
+    <script>
+        /* ----------------------------------------------------
+           1. QUESTION DATABASE (Year 3 UK Science Curriculum)
+           ---------------------------------------------------- */
+        const quizData = [
+            // LEVEL 1: Animal Groups & Basic Diets
+            {
+                level: 1,
+                topic: "Level 1: Animal Groups & Diets",
+                question: "What do we call animals that ONLY eat plants?",
+                options: ["Herbivores", "Carnivores", "Omnivores", "Insectivores"],
+                correct: 0,
+                hint: "Think about cows and rabbits. They love eating grass and leaves!"
+            },
+            {
+                level: 1,
+                topic: "Level 1: Animal Groups & Diets",
+                question: "An animal WITH a backbone is called a...",
+                options: ["Invertebrate", "Vertebrate", "Insect", "Sponge"],
+                correct: 1,
+                hint: "Humans, dogs, and birds all have backbones inside their bodies!"
+            },
+            {
+                level: 1,
+                topic: "Level 1: Animal Groups & Diets",
+                question: "Which of these animals is an OMNIVORE (eats both plants and meat)?",
+                options: ["Lion", "Sheep", "Human", "Cow"],
+                correct: 2,
+                hint: "Most humans eat vegetables as well as meat or chicken!"
+            },
+
+            // LEVEL 2: Nutrition & Health
+            {
+                level: 2,
+                topic: "Level 2: Nutrition & Health",
+                question: "Which food group gives our body fuel and energy?",
+                options: ["Carbohydrates", "Water", "Vitamins", "Minerals"],
+                correct: 0,
+                hint: "Bread, pasta, and rice are great examples of this food group!"
+            },
+            {
+                level: 2,
+                topic: "Level 2: Nutrition & Health",
+                question: "Why do we need PROTEIN in our diet?",
+                options: ["To see in the dark", "To grow and repair muscles", "To turn our hair yellow", "To stay asleep"],
+                correct: 1,
+                hint: "Chicken, beans, and fish help your body grow strong muscles!"
+            },
+            {
+                level: 2,
+                topic: "Level 2: Nutrition & Health",
+                question: "Fruit and vegetables are rich in which important nutrients?",
+                options: ["Fats & Sugars", "Vitamins & Minerals", "Only Water", "Carbohydrates only"],
+                correct: 1,
+                hint: "Apples and carrots keep our immune system healthy with these!"
+            },
+
+            // LEVEL 3: Skeletons & Muscles
+            {
+                level: 3,
+                topic: "Level 3: Skeletons & Muscles",
+                question: "Which part of the skeleton protects our brain?",
+                options: ["Ribcage", "Spine", "Skull", "Pelvis"],
+                correct: 2,
+                hint: "It's the hard bony structure inside your head!"
+            },
+            {
+                level: 3,
+                topic: "Level 3: Skeletons & Muscles",
+                question: "How do muscles work to move our bones?",
+                options: ["They push only", "They pull by contracting", "They stay still", "They melt"],
+                correct: 1,
+                hint: "Muscles work in pairs: when one contracts (shortens), it pulls the bone!"
+            },
+            {
+                level: 3,
+                topic: "Level 3: Skeletons & Muscles",
+                question: "What does our ribcage protect?",
+                options: ["Brain and eyes", "Heart and lungs", "Stomach and feet", "Knees and elbows"],
+                correct: 1,
+                hint: "Your ribs shelter the organs that help you breathe and pump blood!"
+            },
+
+            // LEVEL 4: Teeth & Digestion
+            {
+                level: 4,
+                topic: "Level 4: Teeth & Digestion",
+                question: "Which teeth are sharp and pointed, used for tearing food?",
+                options: ["Incisors", "Molars", "Canines", "Wisdom teeth"],
+                correct: 2,
+                hint: "Lions have very large ones! They are right next to your front biting teeth."
+            },
+            {
+                level: 4,
+                topic: "Level 4: Teeth & Digestion",
+                question: "Flat, broad teeth at the back of the mouth used for crushing food are...",
+                options: ["Canines", "Molars", "Incisors", "Tusks"],
+                correct: 1,
+                hint: "These grind up bread and vegetables before you swallow!"
+            },
+            {
+                level: 4,
+                topic: "Level 4: Teeth & Digestion",
+                question: "Where does digestion FIRST begin in the human body?",
+                options: ["In the stomach", "In the mouth", "In the small intestine", "In the heart"],
+                correct: 1,
+                hint: "Chewing and saliva start breaking down food as soon as you take a bite!"
+            },
+
+            // LEVEL 5: Ecosystems & Movement
+            {
+                level: 5,
+                topic: "Level 5: Advanced Ecosystems",
+                question: "An animal with a hard outer shell instead of an internal skeleton has an...",
+                options: ["Endoskeleton", "Exoskeleton", "Hydrostatic skeleton", "Invisible skeleton"],
+                correct: 1,
+                hint: "Crabs, beetles, and spiders have this 'outer armor' frame!"
+            },
+            {
+                level: 5,
+                topic: "Level 5: Advanced Ecosystems",
+                question: "In a food chain, green plants are called...",
+                options: ["Consumers", "Producers", "Predators", "Prey"],
+                correct: 1,
+                hint: "They produce their own food using sunlight!"
+            },
+            {
+                level: 5,
+                topic: "Level 5: Advanced Ecosystems",
+                question: "An animal that hunts and eats other animals is a...",
+                options: ["Producer", "Predator", "Prey", "Herbivore"],
+                correct: 1,
+                hint: "Eagles and wolves are famous examples of this!"
+            }
+        ];
+
+        /* ----------------------------------------------------
+           2. WEB AUDIO API SYNTHESIZER
+           ---------------------------------------------------- */
+        let audioCtx = null;
+        let isMuted = false;
+
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        }
+
+        function playSound(type) {
+            if (isMuted) return;
+            initAudio();
+            if (!audioCtx) return;
+
+            const now = audioCtx.currentTime;
+
+            if (type === 'correct') {
+                const freqs = [523.25, 659.25, 783.99, 1046.50];
+                freqs.forEach((freq, idx) => {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(freq, now + idx * 0.08);
+                    gain.gain.setValueAtTime(0.15, now + idx * 0.08);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.08 + 0.3);
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.start(now + idx * 0.08);
+                    osc.stop(now + idx * 0.08 + 0.3);
+                });
+            } else if (type === 'wrong') {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(220, now);
+                osc.frequency.setValueAtTime(180, now + 0.15);
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.35);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start(now);
+                osc.stop(now + 0.35);
+            } else if (type === 'coin') {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(987.77, now);
+                osc.frequency.setValueAtTime(1318.51, now + 0.08);
+                gain.gain.setValueAtTime(0.15, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start(now);
+                osc.stop(now + 0.25);
+            } else if (type === 'jump') {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(300, now);
+                osc.frequency.exponentialRampToValueAtTime(700, now + 0.15);
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.18);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start(now);
+                osc.stop(now + 0.18);
+            } else if (type === 'fanfare') {
+                const notes = [261.63, 329.63, 392.00, 523.25, 659.25, 783.99];
+                notes.forEach((freq, idx) => {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = 'square';
+                    osc.frequency.setValueAtTime(freq, now + idx * 0.1);
+                    gain.gain.setValueAtTime(0.1, now + idx * 0.1);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.1 + 0.4);
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.start(now + idx * 0.1);
+                    osc.stop(now + idx * 0.1 + 0.4);
+                });
+            }
+        }
+
+        function toggleMute() {
+            isMuted = !isMuted;
+            document.getElementById('muteBtn').innerText = isMuted ? '🔇' : '🔊';
+        }
+
+        /* ----------------------------------------------------
+           3. QUIZ STATE & NAVIGATION
+           ---------------------------------------------------- */
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let retryAttempt = false;
+
+        const happyMessages = [
+            "Splendid Job, Your Majesty!",
+            "Royal Genius!",
+            "Hooray! Golden Knowledge!",
+            "Magnificent Science Power!",
+            "Brilliant Answer, King Hero!"
+        ];
+
+        function startGame() {
+            initAudio();
+            currentQuestionIndex = 0;
+            score = 0;
+            retryAttempt = false;
+            updateHUD();
+            showScreen('quizScreen');
+            loadQuestion();
+        }
+
+        function showScreen(screenId) {
+            ['startScreen', 'quizScreen', 'dinoScreen', 'victoryScreen'].forEach(id => {
+                const el = document.getElementById(id);
+                if (id === screenId) {
+                    el.classList.remove('hidden');
+                    el.classList.add('flex');
+                } else {
+                    el.classList.add('hidden');
+                    el.classList.remove('flex');
+                }
+            });
+        }
+
+        function updateHUD() {
+            const currentQ = quizData[currentQuestionIndex] || quizData[quizData.length - 1];
+            const currentLevel = currentQ.level;
+            
+            document.getElementById('levelDisplay').innerText = `Level ${currentLevel} / 5`;
+            const qInLevel = (currentQuestionIndex % 3) + 1;
+            document.getElementById('qNumDisplay').innerText = `Question ${qInLevel} / 3`;
+            document.getElementById('coinCount').innerText = score;
+
+            const progressPercent = ((currentQuestionIndex) / quizData.length) * 100;
+            document.getElementById('progressBar').style.width = `${progressPercent}%`;
+            document.getElementById('levelTopicBadge').innerHTML = `<span>🔬</span> ${currentQ.topic}`;
+        }
+
+        function loadQuestion() {
+            retryAttempt = false;
+            const qData = quizData[currentQuestionIndex];
+            
+            document.getElementById('questionText').innerText = qData.question;
+            document.getElementById('hintBox').classList.add('hidden');
+            document.getElementById('hintBox').classList.remove('flex');
+
+            const feedbackBanner = document.getElementById('feedbackBanner');
+            feedbackBanner.classList.add('hidden');
+
+            const grid = document.getElementById('optionsGrid');
+            grid.innerHTML = '';
+
+            qData.options.forEach((optionText, idx) => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn p-4 rounded-2xl text-left md:text-center text-base md:text-lg font-bold text-yellow-100 flex items-center justify-between md:justify-center gap-3';
+                btn.onclick = () => handleAnswer(idx, btn);
+                
+                const bullets = ['🅰️', '🅱️', '🅾️', '🅿'];
+                btn.innerHTML = `<span class="text-xl">${bullets[idx]}</span> <span class="flex-1">${optionText}</span>`;
+                grid.appendChild(btn);
+            });
+
+            updateHUD();
+        }
+
+        function handleAnswer(selectedIndex, btnElement) {
+            const qData = quizData[currentQuestionIndex];
+            const feedbackBanner = document.getElementById('feedbackBanner');
+
+            if (selectedIndex === qData.correct) {
+                playSound('correct');
+                playSound('coin');
+                btnElement.classList.add('correct');
+                
+                spawnParticles(15);
+                score += 100;
+                updateHUD();
+
+                const msg = happyMessages[Math.floor(Math.random() * happyMessages.length)];
+                feedbackBanner.className = 'p-3 rounded-xl text-center font-bold text-base md:text-lg bg-green-900/90 text-green-200 border-2 border-green-400 block animate-bounce';
+                feedbackBanner.innerText = `✨ ${msg} (+100 Gold Coins) ✨`;
+
+                const allBtns = document.querySelectorAll('.option-btn');
+                allBtns.forEach(b => b.disabled = true);
+
+                setTimeout(() => {
+                    currentQuestionIndex++;
+                    
+                    // Unlocks 5-Minute Dinosaur Game after every 3 questions (Level completion)
+                    if (currentQuestionIndex % 3 === 0 && currentQuestionIndex <= quizData.length) {
+                        openDinoRewardGame();
+                    } else if (currentQuestionIndex >= quizData.length) {
+                        finishGame();
+                    } else {
+                        loadQuestion();
+                    }
+                }, 1600);
+
+            } else {
+                playSound('wrong');
+                btnElement.classList.add('wrong');
+                btnElement.disabled = true;
+
+                if (!retryAttempt) {
+                    retryAttempt = true;
+                    const hintBox = document.getElementById('hintBox');
+                    document.getElementById('hintText').innerText = `Almost there, King Hero! Hint: ${qData.hint}`;
+                    hintBox.classList.remove('hidden');
+                    hintBox.classList.add('flex');
+                }
+            }
+        }
+
+        /* ----------------------------------------------------
+           4. 5-MINUTE DINOSAUR JUMP REWARD GAME ENGINE
+           ---------------------------------------------------- */
+        let dinoTimerInterval = null;
+        let dinoTimeLeft = 300; // 5 MINUTES = 300 SECONDS
+        let dinoAnimId = null;
+
+        const dinoCanvas = document.getElementById('dinoCanvas');
+        const dinoCtx = dinoCanvas.getContext('2d');
+
+        // Player State
+        const player = {
+            x: 80,
+            y: 180,
+            width: 32,
+            height: 44,
+            vx: 0,
+            vy: 0,
+            speed: 4.5,
+            jumpStrength: -11,
+            gravity: 0.55,
+            grounded: false,
+            ridingDino: null
+        };
+
+        // Controls
+        const keys = { left: false, right: false, jump: false };
+
+        // Game World
+        let dinosaurs = [];
+        let collectibles = [];
+
+        function openDinoRewardGame() {
+            playSound('fanfare');
+            showScreen('dinoScreen');
+            document.getElementById('dinoOverlay').classList.remove('hidden');
+
+            // Reset 5-Minute Timer (300 Seconds)
+            dinoTimeLeft = 300;
+            updateDinoTimerDisplay();
+
+            // Set canvas size
+            dinoCanvas.width = dinoCanvas.parentElement.clientWidth;
+            dinoCanvas.height = dinoCanvas.parentElement.clientHeight;
+
+            // Reset player & world
+            player.x = 80;
+            player.y = dinoCanvas.height - 80;
+            player.vx = 0;
+            player.vy = 0;
+            player.ridingDino = null;
+
+            initDinosAndCoins();
+        }
+
+        function updateDinoTimerDisplay() {
+            const minutes = Math.floor(dinoTimeLeft / 60);
+            const seconds = dinoTimeLeft % 60;
+            const formatted = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+            document.getElementById('rewardTimer').innerText = formatted;
+        }
+
+        function startDinoGameLoop() {
+            document.getElementById('dinoOverlay').classList.add('hidden');
+            
+            // Start 5-minute timer
+            clearInterval(dinoTimerInterval);
+            dinoTimerInterval = setInterval(() => {
+                dinoTimeLeft--;
+                updateDinoTimerDisplay();
+
+                if (dinoTimeLeft <= 0) {
+                    endDinoUpEarly();
+                }
+            }, 1000);
+
+            // Animation Loop
+            if (dinoAnimId) cancelAnimationFrame(dinoAnimId);
+            gameLoop();
+        }
+
+        function endDinoUpEarly() {
+            clearInterval(dinoTimerInterval);
+            if (dinoAnimId) cancelAnimationFrame(dinoAnimId);
+            
+            if (currentQuestionIndex >= quizData.length) {
+                finishGame();
+            } else {
+                showScreen('quizScreen');
+                loadQuestion();
+            }
+        }
+
+        function initDinosAndCoins() {
+            dinosaurs = [
+                { x: 100, y: dinoCanvas.height - 65, width: 90, height: 45, speed: 1.8, color: '#4caf50', type: 'Triceratops' },
+                { x: 320, y: dinoCanvas.height - 75, width: 110, height: 55, speed: -1.4, color: '#ff9800', type: 'Brachiosaurus' },
+                { x: 550, y: dinoCanvas.height - 65, width: 85, height: 42, speed: 2.2, color: '#e91e63', type: 'Stegosaurus' }
+            ];
+
+            collectibles = [];
+            for (let i = 0; i < 6; i++) {
+                collectibles.push({
+                    x: 60 + i * 110,
+                    y: dinoCanvas.height - 120 - Math.sin(i) * 40,
+                    size: 14,
+                    type: i % 2 === 0 ? 'crown' : 'coin',
+                    collected: false
+                });
+            }
+        }
+
+        function gameLoop() {
+            updateGame();
+            renderGame();
+            dinoAnimId = requestAnimationFrame(gameLoop);
+        }
+
+        function updateGame() {
+            // Horizontal Movement
+            if (keys.left) player.vx = -player.speed;
+            else if (keys.right) player.vx = player.speed;
+            else player.vx = 0;
+
+            // Jump
+            if (keys.jump && player.grounded) {
+                player.vy = player.jumpStrength;
+                player.grounded = false;
+                player.ridingDino = null;
+                playSound('jump');
+            }
+
+            // Apply Gravity
+            player.vy += player.gravity;
+
+            // Update Position
+            player.x += player.vx;
+            player.y += player.vy;
+
+            // Keep within horizontal bounds
+            if (player.x < 0) player.x = 0;
+            if (player.x + player.width > dinoCanvas.width) player.x = dinoCanvas.width - player.width;
+
+            // Ground Collision
+            const groundY = dinoCanvas.height - 30;
+            if (player.y + player.height >= groundY) {
+                player.y = groundY - player.height;
+                player.vy = 0;
+                player.grounded = true;
+                player.ridingDino = null;
+            }
+
+            // Move Dinosaurs & Check Riding Platform Collision
+            dinosaurs.forEach(dino => {
+                dino.x += dino.speed;
+
+                // Wrap around canvas
+                if (dino.speed > 0 && dino.x > dinoCanvas.width + 50) dino.x = -dino.width - 50;
+                if (dino.speed < 0 && dino.x < -dino.width - 50) dino.x = dinoCanvas.width + 50;
+
+                // Check if player lands ON TOP of dinosaur
+                const prevY = player.y - player.vy;
+                if (
+                    player.x + player.width > dino.x + 10 &&
+                    player.x < dino.x + dino.width - 10 &&
+                    prevY + player.height <= dino.y + 12 &&
+                    player.y + player.height >= dino.y
+                ) {
+                    player.y = dino.y - player.height;
+                    player.vy = 0;
+                    player.grounded = true;
+                    player.ridingDino = dino;
+                    player.x += dino.speed; // Ride along!
+                }
+            });
+
+            // Collect Crowns & Coins
+            collectibles.forEach(item => {
+                if (!item.collected) {
+                    const dx = (player.x + player.width / 2) - item.x;
+                    const dy = (player.y + player.height / 2) - item.y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+
+                    if (dist < player.width / 2 + item.size) {
+                        item.collected = true;
+                        score += (item.type === 'crown' ? 50 : 20);
+                        updateHUD();
+                        playSound('coin');
+                        spawnParticles(8);
+                    }
+                }
+            });
+
+            // Respawn collectibles if all gathered
+            if (collectibles.every(c => c.collected)) {
+                collectibles.forEach(c => c.collected = false);
+            }
+        }
+
+        function renderGame() {
+            // Background Jungle Sky & Ground
+            dinoCtx.fillStyle = '#1e1b4b';
+            dinoCtx.fillRect(0, 0, dinoCanvas.width, dinoCanvas.height);
+
+            // Ground
+            dinoCtx.fillStyle = '#2e7d32';
+            dinoCtx.fillRect(0, dinoCanvas.height - 30, dinoCanvas.width, 30);
+            dinoCtx.fillStyle = '#1b5e20';
+            dinoCtx.fillRect(0, dinoCanvas.height - 30, dinoCanvas.width, 6);
+
+            // Render Dinosaurs
+            dinosaurs.forEach(dino => {
+                dinoCtx.fillStyle = dino.color;
+                
+                // Body
+                dinoCtx.beginPath();
+                dinoCtx.roundRect(dino.x, dino.y, dino.width, dino.height, [15, 15, 5, 5]);
+                dinoCtx.fill();
+
+                // Head
+                const headX = dino.speed > 0 ? dino.x + dino.width - 10 : dino.x - 15;
+                dinoCtx.beginPath();
+                dinoCtx.arc(headX + 12, dino.y + 10, 16, 0, Math.PI * 2);
+                dinoCtx.fill();
+
+                // Eye
+                dinoCtx.fillStyle = '#ffffff';
+                dinoCtx.beginPath();
+                dinoCtx.arc(headX + (dino.speed > 0 ? 16 : 8), dino.y + 6, 4, 0, Math.PI * 2);
+                dinoCtx.fill();
+                dinoCtx.fillStyle = '#000000';
+                dinoCtx.beginPath();
+                dinoCtx.arc(headX + (dino.speed > 0 ? 17 : 7), dino.y + 6, 2, 0, Math.PI * 2);
+                dinoCtx.fill();
+
+                // Decorative Saddle / Ridge
+                dinoCtx.fillStyle = '#ffd700';
+                dinoCtx.fillRect(dino.x + 15, dino.y - 4, dino.width - 30, 4);
+            });
+
+            // Render Collectibles (Crowns / Coins)
+            collectibles.forEach(item => {
+                if (!item.collected) {
+                    dinoCtx.save();
+                    dinoCtx.translate(item.x, item.y);
+                    if (item.type === 'crown') {
+                        dinoCtx.fillStyle = '#ffd700';
+                        dinoCtx.beginPath();
+                        dinoCtx.moveTo(-10, 8);
+                        dinoCtx.lineTo(-12, -8);
+                        dinoCtx.lineTo(-4, 0);
+                        dinoCtx.lineTo(0, -10);
+                        dinoCtx.lineTo(4, 0);
+                        dinoCtx.lineTo(12, -8);
+                        dinoCtx.lineTo(10, 8);
+                        dinoCtx.closePath();
+                        dinoCtx.fill();
+                    } else {
+                        dinoCtx.fillStyle = '#ffc107';
+                        dinoCtx.beginPath();
+                        dinoCtx.arc(0, 0, item.size, 0, Math.PI * 2);
+                        dinoCtx.fill();
+                        dinoCtx.fillStyle = '#ffffff';
+                        dinoCtx.font = 'bold 11px Fredoka';
+                        dinoCtx.fillText('🪙', -6, 4);
+                    }
+                    dinoCtx.restore();
+                }
+            });
+
+            // Render Player (King Hero)
+            dinoCtx.save();
+            dinoCtx.translate(player.x, player.y);
+            
+            // King Robe
+            dinoCtx.fillStyle = '#9c27b0';
+            dinoCtx.fillRect(4, 14, player.width - 8, player.height - 14);
+
+            // Face
+            dinoCtx.fillStyle = '#ffcc80';
+            dinoCtx.beginPath();
+            dinoCtx.arc(player.width / 2, 12, 10, 0, Math.PI * 2);
+            dinoCtx.fill();
+
+            // Crown
+            dinoCtx.fillStyle = '#ffd700';
+            dinoCtx.beginPath();
+            dinoCtx.moveTo(6, 4);
+            dinoCtx.lineTo(player.width - 6, 4);
+            dinoCtx.lineTo(player.width - 4, -4);
+            dinoCtx.lineTo(player.width / 2, 1);
+            dinoCtx.lineTo(4, -4);
+            dinoCtx.closePath();
+            dinoCtx.fill();
+
+            dinoCtx.restore();
+        }
+
+        /* Keyboard Controls Listener */
+        window.addEventListener('keydown', e => {
+            if (e.code === 'ArrowLeft' || e.code === 'KeyA') keys.left = true;
+            if (e.code === 'ArrowRight' || e.code === 'KeyD') keys.right = true;
+            if (e.code === 'Space' || e.code === 'ArrowUp' || e.code === 'KeyW') keys.jump = true;
+        });
+
+        window.addEventListener('keyup', e => {
+            if (e.code === 'ArrowLeft' || e.code === 'KeyA') keys.left = false;
+            if (e.code === 'ArrowRight' || e.code === 'KeyD') keys.right = false;
+            if (e.code === 'Space' || e.code === 'ArrowUp' || e.code === 'KeyW') keys.jump = false;
+        });
+
+        /* Touch Controls Binding */
+        const bindTouch = (id, keyName) => {
+            const btn = document.getElementById(id);
+            if (!btn) return;
+            const start = (e) => { e.preventDefault(); keys[keyName] = true; };
+            const end = (e) => { e.preventDefault(); keys[keyName] = false; };
+            btn.addEventListener('touchstart', start);
+            btn.addEventListener('touchend', end);
+            btn.addEventListener('mousedown', start);
+            btn.addEventListener('mouseup', end);
+        };
+
+        bindTouch('btnLeft', 'left');
+        bindTouch('btnRight', 'right');
+        bindTouch('btnJump', 'jump');
+
+        function finishGame() {
+            playSound('fanfare');
+            document.getElementById('finalScore').innerText = `${score} Coins`;
+            showScreen('victoryScreen');
+            startVictoryFireworks();
+        }
+
+        /* ----------------------------------------------------
+           5. CANVAS PARTICLES & FIREWORKS
+           ---------------------------------------------------- */
+        const canvas = document.getElementById('particleCanvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        function spawnParticles(count) {
+            for (let i = 0; i < count; i++) {
+                particles.push({
+                    x: window.innerWidth / 2 + (Math.random() - 0.5) * 200,
+                    y: window.innerHeight / 2,
+                    vx: (Math.random() - 0.5) * 12,
+                    vy: (Math.random() - 0.8) * 14,
+                    size: Math.random() * 8 + 6,
+                    color: Math.random() > 0.3 ? '#ffd700' : '#ffffff',
+                    rotation: Math.random() * Math.PI * 2,
+                    vRot: (Math.random() - 0.5) * 0.2,
+                    opacity: 1
+                });
+            }
+        }
+
+        function startVictoryFireworks() {
+            setInterval(() => {
+                if (!document.getElementById('victoryScreen').classList.contains('hidden')) {
+                    spawnParticles(20);
+                }
+            }, 600);
+        }
+
+        function animateParticles() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            for (let i = particles.length - 1; i >= 0; i--) {
+                const p = particles[i];
+                p.x += p.vx;
+                p.y += p.vy;
+                p.vy += 0.3;
+                p.opacity -= 0.015;
+                p.rotation += p.vRot;
+
+                ctx.save();
+                ctx.translate(p.x, p.y);
+                ctx.rotate(p.rotation);
+                ctx.globalAlpha = Math.max(0, p.opacity);
+                ctx.fillStyle = p.color;
+
+                ctx.beginPath();
+                ctx.arc(0, 0, p.size, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.strokeStyle = '#b78103';
+                ctx.lineWidth = 1.5;
+                ctx.stroke();
+
+                ctx.restore();
+
+                if (p.opacity <= 0 || p.y > canvas.height) {
+                    particles.splice(i, 1);
+                }
+            }
+
+            requestAnimationFrame(animateParticles);
+        }
+
+        window.onload = function() {
+            animateParticles();
+        };
+    </script>
+</body>
+</html>

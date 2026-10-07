@@ -1,0 +1,993 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Space Shark Maths</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap');
+
+    * {
+      font-family: 'Fredoka', cursive, sans-serif;
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: manipulation;
+    }
+
+    body {
+      background: radial-gradient(circle at center, #1b1035 0%, #080314 100%);
+      color: #ffffff;
+      overflow-x: hidden;
+      min-height: 100vh;
+    }
+
+    /* Animated CSS Stars Background */
+    .stars-bg {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 0;
+      background: transparent;
+    }
+
+    .star {
+      position: absolute;
+      background-color: #ffffff;
+      border-radius: 50%;
+      animation: twinkle linear infinite;
+    }
+
+    @keyframes twinkle {
+      0%, 100% { opacity: 0.2; transform: scale(0.8); }
+      50% { opacity: 1; transform: scale(1.2); }
+    }
+
+    /* Floating animation for Hero & Planets */
+    @keyframes floatSlow {
+      0%, 100% { transform: translateY(0px) rotate(0deg); }
+      50% { transform: translateY(-12px) rotate(2deg); }
+    }
+
+    .animate-float {
+      animation: floatSlow 4s ease-in-out infinite;
+    }
+
+    @keyframes pulseGlow {
+      0%, 100% { filter: drop-shadow(0 0 10px rgba(56, 189, 248, 0.6)); }
+      50% { filter: drop-shadow(0 0 25px rgba(236, 72, 153, 0.9)); }
+    }
+
+    .glow-effect {
+      animation: pulseGlow 3s ease-in-out infinite;
+    }
+
+    /* Glassmorphic card containers */
+    .glass-card {
+      background: rgba(23, 15, 48, 0.75);
+      backdrop-filter: blur(12px);
+      border: 2px solid rgba(255, 255, 255, 0.15);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), inset 0 0 15px rgba(255, 255, 255, 0.05);
+    }
+
+    /* Custom tactile buttons */
+    .btn-3d {
+      transition: all 0.15s ease-out;
+      box-shadow: 0 6px 0 rgba(0, 0, 0, 0.4);
+    }
+    .btn-3d:active {
+      transform: translateY(4px);
+      box-shadow: 0 2px 0 rgba(0, 0, 0, 0.4);
+    }
+
+    /* Confetti Canvas */
+    #confettiCanvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 50;
+    }
+  </style>
+</head>
+<body class="flex flex-col min-h-screen justify-between items-center relative p-3 md:p-6 select-none">
+
+  <!-- Background Stars -->
+  <div id="starsContainer" class="stars-bg"></div>
+
+  <!-- Confetti Layer -->
+  <canvas id="confettiCanvas"></canvas>
+
+  <!-- Top Navigation / Scorebar -->
+  <header class="w-full max-w-4xl flex items-center justify-between z-10 mb-4 bg-slate-900/80 p-3 md:p-4 rounded-2xl border border-purple-500/30 backdrop-blur-md">
+    <div class="flex items-center space-x-3">
+      <!-- Mascot Mini Icon -->
+      <div class="w-10 h-10 md:w-12 md:h-12 bg-cyan-500/20 rounded-full flex items-center justify-center border border-cyan-400/50">
+        <svg class="w-8 h-8" viewBox="0 0 100 100">
+          <ellipse cx="50" cy="55" rx="35" ry="25" fill="#38bdf8"/>
+          <path d="M 50 15 L 65 35 L 35 35 Z" fill="#0284c7"/>
+          <circle cx="40" cy="48" r="4" fill="#000"/>
+          <ellipse cx="50" cy="50" rx="38" ry="30" fill="none" stroke="#a5f3fc" stroke-width="4"/>
+        </svg>
+      </div>
+      <div>
+        <h1 class="text-base md:text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-pink-400">Space Shark Maths</h1>
+        <p id="topSubtext" class="text-xs text-purple-300">Year 3 Math Adventure</p>
+      </div>
+    </div>
+
+    <!-- Mute & Reset Buttons -->
+    <div class="flex items-center space-x-2">
+      <button id="soundBtn" onclick="toggleAudio()" class="bg-purple-800/60 hover:bg-purple-700/80 text-yellow-300 p-2.5 rounded-xl border border-purple-400/40 btn-3d flex items-center space-x-1 text-xs md:text-sm">
+        <span id="soundIcon">🔊</span>
+        <span class="hidden sm:inline">Sound</span>
+      </button>
+      <button onclick="showScreen('startScreen')" class="bg-slate-800/80 hover:bg-slate-700 text-slate-300 p-2.5 rounded-xl border border-slate-600/40 btn-3d text-xs md:text-sm">
+        🏠 Menu
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Dynamic Screen Container -->
+  <main class="w-full max-w-4xl flex-grow flex items-center justify-center z-10 py-2">
+
+    <!-- 1. START SCREEN -->
+    <section id="startScreen" class="w-full flex flex-col items-center text-center space-y-6">
+      <div class="relative animate-float glow-effect mb-2">
+        <!-- Main Mascot Hero SVG -->
+        <svg class="w-48 h-48 md:w-64 md:h-64 drop-shadow-2xl" viewBox="0 0 200 200">
+          <!-- Jetpack -->
+          <rect x="50" y="110" width="25" height="40" rx="5" fill="#f43f5e"/>
+          <rect x="125" y="110" width="25" height="40" rx="5" fill="#f43f5e"/>
+          <path d="M 55 150 Q 62 175 70 150" fill="#f59e0b"/>
+          <path d="M 130 150 Q 137 175 145 150" fill="#f59e0b"/>
+          <!-- Shark Body -->
+          <ellipse cx="100" cy="115" rx="55" ry="45" fill="#0284c7"/>
+          <polygon points="100,30 125,80 75,80" fill="#0284c7"/> <!-- Fin -->
+          <path d="M 55 120 Q 100 150 145 120" fill="#e0f2fe"/> <!-- Belly -->
+          <!-- Tail -->
+          <polygon points="100,160 80,190 120,190" fill="#0369a1"/>
+          <!-- Suit Details -->
+          <rect x="75" y="125" width="50" height="20" rx="6" fill="#e2e8f0"/>
+          <circle cx="100" cy="135" r="5" fill="#10b981"/>
+          <!-- Eyes -->
+          <circle cx="82" cy="95" r="7" fill="#ffffff"/>
+          <circle cx="84" cy="95" r="3.5" fill="#0f172a"/>
+          <circle cx="118" cy="95" r="7" fill="#ffffff"/>
+          <circle cx="116" cy="95" r="3.5" fill="#0f172a"/>
+          <!-- Friendly Mouth -->
+          <path d="M 88 112 Q 100 122 112 112" fill="none" stroke="#0f172a" stroke-width="3" stroke-linecap="round"/>
+          <!-- Space Helmet Bubble -->
+          <circle cx="100" cy="100" r="62" fill="rgba(165, 243, 252, 0.25)" stroke="#67e8f9" stroke-width="4"/>
+          <ellipse cx="80" cy="65" rx="20" ry="8" fill="rgba(255, 255, 255, 0.4)" transform="rotate(-20 80 65)"/>
+        </svg>
+      </div>
+
+      <div class="space-y-3 max-w-xl">
+        <h2 class="text-3xl md:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 via-cyan-300 to-pink-400 drop-shadow-md">
+          Ready for Math Blast-Off?
+        </h2>
+        <p class="text-slate-300 text-sm md:text-lg">
+          Join Hero the Shark on a Space Mission! Solve Year 3 math puzzles, unlock galaxy planets, and shoot asteroids!
+        </p>
+      </div>
+
+      <button onclick="showScreen('mapScreen')" class="px-8 py-4 bg-gradient-to-r from-yellow-400 to-amber-500 hover:from-yellow-300 hover:to-amber-400 text-slate-950 text-xl md:text-2xl font-bold rounded-2xl border-2 border-yellow-200 btn-3d shadow-yellow-500/20 transform hover:scale-105">
+        🚀 Start Adventure!
+      </button>
+    </section>
+
+    <!-- 2. PLANET MAP / LEVEL SELECTOR SCREEN -->
+    <section id="mapScreen" class="w-full hidden flex-col items-center space-y-6">
+      <div class="text-center space-y-1">
+        <h2 class="text-2xl md:text-4xl font-bold text-cyan-300">Space Mission Map</h2>
+        <p class="text-sm text-purple-200">Select an unlocked planet to begin your math quest!</p>
+      </div>
+
+      <!-- Level Buttons List -->
+      <div id="levelMapGrid" class="w-full max-w-2xl grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 p-2">
+        <!-- Rendered dynamically via JavaScript -->
+      </div>
+    </section>
+
+    <!-- 3. MATH QUIZ SCREEN -->
+    <section id="quizScreen" class="w-full hidden flex-col items-center space-y-4 max-w-2xl">
+      <!-- Progress Bar & Stars -->
+      <div class="w-full glass-card p-4 rounded-2xl flex items-center justify-between">
+        <div class="flex items-center space-x-2">
+          <span class="text-xs md:text-sm font-semibold text-cyan-300" id="levelTitle">Level 1</span>
+          <span class="text-xs bg-purple-900/80 text-purple-200 px-2.5 py-1 rounded-full border border-purple-500/40" id="questionTracker">Q 1/3</span>
+        </div>
+        <!-- Star badges -->
+        <div class="flex space-x-1 text-xl" id="questionStars">
+          <span class="text-slate-600">★</span>
+          <span class="text-slate-600">★</span>
+          <span class="text-slate-600">★</span>
+        </div>
+      </div>
+
+      <!-- Hero Speech Dialog -->
+      <div class="w-full flex items-center space-x-3 bg-slate-900/90 border border-cyan-500/40 rounded-2xl p-3 md:p-4 shadow-lg">
+        <div class="w-16 h-16 md:w-20 md:h-20 flex-shrink-0 animate-float">
+          <svg class="w-full h-full" viewBox="0 0 100 100">
+            <ellipse cx="50" cy="55" rx="35" ry="25" fill="#38bdf8"/>
+            <path d="M 50 15 L 65 35 L 35 35 Z" fill="#0284c7"/>
+            <circle cx="40" cy="48" r="4" fill="#000"/>
+            <path d="M 38 60 Q 50 68 62 60" fill="none" stroke="#0f172a" stroke-width="3"/>
+            <ellipse cx="50" cy="50" rx="38" ry="30" fill="none" stroke="#a5f3fc" stroke-width="3"/>
+          </svg>
+        </div>
+        <div class="relative bg-cyan-950/80 border border-cyan-400/40 rounded-xl p-3 flex-grow text-xs md:text-base text-cyan-100">
+          <p id="eydenSpeech">"Let's tackle this math challenge together, Space Explorer!"</p>
+        </div>
+      </div>
+
+      <!-- Math Question Card -->
+      <div class="w-full glass-card p-6 md:p-8 rounded-3xl text-center space-y-6 border-2 border-indigo-500/30">
+        <div class="space-y-1">
+          <span class="text-xs uppercase tracking-widest text-indigo-300 font-bold">Math Target</span>
+          <div id="mathQuestionText" class="text-4xl md:text-6xl font-extrabold text-yellow-300 tracking-wider my-2">
+            24 + 5 = ?
+          </div>
+        </div>
+
+        <!-- 4 Multiple Choice Option Buttons -->
+        <div id="optionsGrid" class="grid grid-cols-2 gap-3 md:gap-4">
+          <!-- Rendered dynamically -->
+        </div>
+      </div>
+
+      <!-- Hint Box (shown on retry) -->
+      <div id="hintBox" class="w-full hidden bg-amber-950/70 border border-amber-500/50 text-amber-200 p-3 rounded-xl text-center text-xs md:text-sm">
+        💡 <span id="hintText">Remember to add the ones digits first!</span>
+      </div>
+    </section>
+
+    <!-- 4. ASTEROID SHOOTER MINI-GAME SCREEN -->
+    <section id="arcadeScreen" class="w-full hidden flex-col items-center space-y-3">
+      <!-- Arcade Header -->
+      <div class="w-full max-w-2xl flex justify-between items-center bg-slate-900/90 border border-pink-500/40 p-3 rounded-xl text-xs md:text-sm">
+        <div class="flex items-center space-x-2">
+          <span class="text-pink-400 font-bold">🎯 ASTEROID BLAST</span>
+          <span class="bg-pink-950 text-pink-200 px-2 py-0.5 rounded-md border border-pink-500/30">Level <span id="arcadeLevelNum">1</span> Bonus</span>
+        </div>
+        <div class="flex items-center space-x-4">
+          <div>Time Left: <span id="arcadeTimer" class="font-bold text-yellow-300 text-base">20</span>s</div>
+          <div>Score: <span id="arcadeScore" class="font-bold text-cyan-300 text-base">0</span></div>
+        </div>
+      </div>
+
+      <!-- Canvas Area -->
+      <div class="relative w-full max-w-2xl aspect-[4/3] bg-slate-950 rounded-2xl overflow-hidden border-2 border-pink-500/50 shadow-2xl">
+        <canvas id="gameCanvas" class="w-full h-full block cursor-crosshair"></canvas>
+
+        <!-- Overlay Instructions before start -->
+        <div id="arcadeOverlay" class="absolute inset-0 bg-slate-950/90 flex flex-col items-center justify-center p-6 text-center space-y-4">
+          <h3 class="text-2xl md:text-3xl font-bold text-pink-400">Asteroid Reward Round!</h3>
+          <p class="text-slate-300 text-xs md:text-sm max-w-md">
+            Move Your ship and shoot space rocks! Earn bonus points before time runs out!
+          </p>
+          <div class="text-xs text-cyan-300 bg-cyan-950/80 px-4 py-2 rounded-lg border border-cyan-500/30">
+            Controls: Arrow Keys or Drag to Move | Spacebar or Tap Screen to Shoot
+          </div>
+          <button onclick="startArcadeRound()" class="px-6 py-3 bg-gradient-to-r from-pink-500 to-purple-600 text-white font-bold text-lg rounded-xl btn-3d shadow-pink-500/30">
+            ⚡ Launch Laser Ship!
+          </button>
+        </div>
+      </div>
+
+      <!-- On-Screen Controls for Touch / Mobile -->
+      <div class="w-full max-w-2xl flex justify-between items-center gap-2 pt-1 md:hidden">
+        <div class="flex space-x-2">
+          <button id="btnMoveLeft" class="bg-slate-800 active:bg-slate-700 text-white font-bold py-3 px-6 rounded-xl border border-slate-600 text-xl">◀</button>
+          <button id="btnMoveRight" class="bg-slate-800 active:bg-slate-700 text-white font-bold py-3 px-6 rounded-xl border border-slate-600 text-xl">▶</button>
+        </div>
+        <button id="btnShoot" class="flex-grow bg-gradient-to-r from-pink-500 to-rose-600 active:from-pink-600 text-white font-bold py-3 px-6 rounded-xl text-base border border-pink-400 shadow-lg">
+          🔥 FIRE LASER
+        </button>
+      </div>
+    </section>
+
+    <!-- 5. LEVEL COMPLETED MODAL SCREEN -->
+    <section id="levelCompleteScreen" class="w-full hidden flex-col items-center text-center space-y-6 max-w-lg">
+      <div class="glass-card p-8 rounded-3xl w-full space-y-6 border-2 border-yellow-400/50">
+        <div class="text-5xl animate-bounce">🏆</div>
+        <h2 class="text-3xl md:text-4xl font-extrabold text-yellow-300">Planet Cleared!</h2>
+        <p id="completeSubtitle" class="text-slate-200">Super job! You solved all math problems on this planet!</p>
+
+        <!-- Stats breakdown -->
+        <div class="bg-slate-900/80 p-4 rounded-xl border border-slate-700 space-y-2 text-sm text-slate-300">
+          <div class="flex justify-between"><span>Math Accuracy:</span> <span class="text-emerald-400 font-bold">100%</span></div>
+          <div class="flex justify-between"><span>Asteroids Destroyed:</span> <span id="statsAsteroids" class="text-pink-400 font-bold">0</span></div>
+          <div class="flex justify-between"><span>Total Space Stars:</span> <span id="statsStars" class="text-yellow-300 font-bold">★★★</span></div>
+        </div>
+
+        <button id="nextLevelBtn" onclick="nextLevelOrFinish()" class="w-full py-4 bg-gradient-to-r from-emerald-400 to-teal-500 hover:from-emerald-300 hover:to-teal-400 text-slate-950 font-extrabold text-xl rounded-2xl btn-3d shadow-emerald-500/20">
+          Continue Mission 🚀
+        </button>
+      </div>
+    </section>
+
+    <!-- 6. FINAL VICTORY & DIPLOMA CERTIFICATE -->
+    <section id="victoryScreen" class="w-full hidden flex-col items-center text-center space-y-6 max-w-2xl">
+      <div class="text-center space-y-2">
+        <h2 class="text-3xl md:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 via-amber-200 to-yellow-500">
+          🎉 GALAXY MASTER RANGER! 🎉
+        </h2>
+        <p class="text-cyan-200 text-sm md:text-base">You completed all 5 Space Math Planets with Hero!</p>
+      </div>
+
+      <!-- Certificate Preview Container -->
+      <div id="certificateCard" class="w-full bg-slate-950 p-6 md:p-8 rounded-3xl border-4 border-yellow-400/80 shadow-2xl space-y-4 text-center relative overflow-hidden">
+        <div class="absolute -top-10 -right-10 w-32 h-32 bg-yellow-500/10 rounded-full blur-2xl"></div>
+        
+        <div class="border-2 border-dashed border-yellow-500/40 p-4 rounded-2xl space-y-3">
+          <span class="text-xs uppercase tracking-widest text-yellow-400 font-bold">Official Space Command Award</span>
+          <h3 class="text-2xl md:text-3xl font-bold text-white">Year 3 Math Ranger Certificate</h3>
+          <p class="text-xs text-slate-400">This certificate certifies that</p>
+          
+          <div class="text-2xl md:text-3xl font-extrabold text-cyan-300 underline decoration-yellow-400 underline-offset-8 py-1">
+            Space Explorer Hero
+          </div>
+          
+          <p class="text-xs md:text-sm text-slate-300 max-w-md mx-auto pt-2">
+            Has successfully mastered 2-Digit & 3-Digit Addition and Subtraction across all 5 Space Sector Planets!
+          </p>
+
+          <div class="flex justify-center items-center space-x-6 pt-4 text-xs text-yellow-300">
+            <div>⭐ 15/15 Math Solved</div>
+            <div>🚀 Official Ranger Seal</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-4 w-full">
+        <button onclick="printCertificate()" class="flex-1 py-3.5 bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold rounded-xl btn-3d">
+          🖨️ Print / Save Certificate
+        </button>
+        <button onclick="resetGameProgress()" class="flex-1 py-3.5 bg-purple-700 hover:bg-purple-600 text-white font-bold rounded-xl btn-3d">
+          🔄 Play Again
+        </button>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Footer Info -->
+  <footer class="w-full max-w-4xl text-center z-10 py-2 text-xs text-slate-400">
+    Year 3 Curriculum Math Game • Hero the Shark • Safe Educational App
+  </footer>
+
+  <script>
+    /* ===================================================================
+       1. SOUND SYNTHESIZER (WEB AUDIO API - 100% OFFLINE & SAFE)
+       =================================================================== */
+    let audioCtx = null;
+    let soundEnabled = true;
+
+    function initAudio() {
+      if (!audioCtx) {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        if (AudioContext) {
+          audioCtx = new AudioContext();
+        }
+      }
+      if (audioCtx && audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+    }
+
+    function toggleAudio() {
+      soundEnabled = !soundEnabled;
+      document.getElementById('soundIcon').textContent = soundEnabled ? '🔊' : '🔇';
+    }
+
+    function playSound(type) {
+      if (!soundEnabled) return;
+      initAudio();
+      if (!audioCtx) return;
+
+      const now = audioCtx.currentTime;
+
+      if (type === 'correct') {
+        // High upbeat melody
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(523.25, now); // C5
+        osc.frequency.setValueAtTime(659.25, now + 0.1); // E5
+        osc.frequency.setValueAtTime(783.99, now + 0.2); // G5
+        osc.frequency.setValueAtTime(1046.50, now + 0.3); // C6
+        gain.gain.setValueAtTime(0.15, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start(now);
+        osc.stop(now + 0.5);
+      } else if (type === 'wrong') {
+        // Soft encouraging boop
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(220, now);
+        osc.frequency.setValueAtTime(180, now + 0.12);
+        gain.gain.setValueAtTime(0.15, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start(now);
+        osc.stop(now + 0.3);
+      } else if (type === 'laser') {
+        // Laser pew
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(800, now);
+        osc.frequency.exponentialRampToValueAtTime(100, now + 0.12);
+        gain.gain.setValueAtTime(0.1, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.12);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start(now);
+        osc.stop(now + 0.12);
+      } else if (type === 'pop') {
+        // Asteroid explosion
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'square';
+        osc.frequency.setValueAtTime(120, now);
+        osc.frequency.exponentialRampToValueAtTime(30, now + 0.15);
+        gain.gain.setValueAtTime(0.12, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start(now);
+        osc.stop(now + 0.15);
+      }
+    }
+
+    /* ===================================================================
+       2. CURRICULUM MATH DATA (YEAR 3 - 5 LEVELS x 3 QUESTIONS)
+       =================================================================== */
+    const GAME_LEVELS = [
+      {
+        id: 1,
+        title: "Planet Warm-Up",
+        description: "2-Digit + 1-Digit Basics",
+        color: "from-blue-500 to-cyan-400",
+        questions: [
+          { q: "24 + 5", ans: 29, options: [29, 28, 30, 25], hint: "Add 4 and 5 together first!" },
+          { q: "38 - 6", ans: 32, options: [32, 34, 30, 36], hint: "Take away 6 from 8." },
+          { q: "15 + 7", ans: 22, options: [22, 21, 23, 20], hint: "15 plus 5 makes 20, then add 2 more!" }
+        ]
+      },
+      {
+        id: 2,
+        title: "Planet Tens",
+        description: "Multiples of 10 & Easy 2-Digits",
+        color: "from-purple-500 to-indigo-500",
+        questions: [
+          { q: "40 + 30", ans: 70, options: [70, 60, 80, 75], hint: "4 tens + 3 tens = ? tens" },
+          { q: "75 - 20", ans: 55, options: [55, 50, 65, 45], hint: "Count back by 2 tens from 75." },
+          { q: "36 + 14", ans: 50, options: [50, 48, 52, 40], hint: "6 + 4 makes a brand new ten!" }
+        ]
+      },
+      {
+        id: 3,
+        title: "Planet Carrying",
+        description: "Regrouping 2-Digit Numbers",
+        color: "from-emerald-500 to-green-400",
+        questions: [
+          { q: "47 + 25", ans: 72, options: [72, 62, 75, 68], hint: "40+20=60, and 7+5=12. 60+12 = ?" },
+          { q: "82 - 36", ans: 46, options: [46, 54, 48, 56], hint: "Take away 30 first to get 52, then subtract 6." },
+          { q: "58 + 29", ans: 87, options: [87, 85, 77, 90], hint: "Think of 29 as 30 minus 1!" }
+        ]
+      },
+      {
+        id: 4,
+        title: "Planet Hundreds",
+        description: "3-Digit Number Foundations",
+        color: "from-amber-500 to-orange-400",
+        questions: [
+          { q: "120 + 50", ans: 170, options: [170, 160, 180, 150], hint: "Focus on the tens: 2 tens + 5 tens = 7 tens!" },
+          { q: "350 - 40", ans: 310, options: [310, 320, 300, 340], hint: "5 tens minus 4 tens leaves 1 ten." },
+          { q: "215 + 30", ans: 245, options: [245, 235, 255, 240], hint: "Add 3 tens to 1 ten." }
+        ]
+      },
+      {
+        id: 5,
+        title: "Planet Challenge",
+        description: "Mixed 3-Digit Master Level",
+        color: "from-pink-500 to-rose-500",
+        questions: [
+          { q: "145 + 37", ans: 182, options: [182, 172, 192, 180], hint: "145 + 30 = 175, then add 7!" },
+          { q: "280 - 45", ans: 235, options: [235, 245, 225, 240], hint: "280 - 40 = 240, then take away 5." },
+          { q: "312 + 88", ans: 400, options: [400, 390, 410, 388], hint: "12 + 88 makes 100!" }
+        ]
+      }
+    ];
+
+    /* ===================================================================
+       3. GLOBAL GAME STATE
+       =================================================================== */
+    let currentLevelIdx = 0;
+    let currentQuestionIdx = 0;
+    let unlockedLevel = 0; // 0 to 4
+    let asteroidsBlastedTotal = 0;
+
+    const EYDEN_ENCOURAGEMENTS = [
+      "Awesome job, Space Explorer!",
+      "Super Math Powers!",
+      "You nailed it! Stellar work!",
+      "Full speed ahead, Space Ranger!",
+      "Cosmic genius math!"
+    ];
+
+    const EYDEN_GENTLE_RETRY = [
+      "Nice try! Let's count together...",
+      "Almost! Give it another shot!",
+      "No worries! You can do this!",
+      "Great attempt! Try the hint!"
+    ];
+
+    /* ===================================================================
+       4. SCREEN NAVIGATION & MAP UI
+       =================================================================== */
+    function showScreen(screenId) {
+      initAudio();
+      ['startScreen', 'mapScreen', 'quizScreen', 'arcadeScreen', 'levelCompleteScreen', 'victoryScreen'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.classList.add('hidden');
+      });
+      const target = document.getElementById(screenId);
+      if (target) {
+        target.classList.remove('hidden');
+        target.classList.add('flex');
+      }
+
+      if (screenId === 'mapScreen') {
+        renderLevelMap();
+      }
+    }
+
+    function renderLevelMap() {
+      const grid = document.getElementById('levelMapGrid');
+      grid.innerHTML = '';
+
+      GAME_LEVELS.forEach((level, idx) => {
+        const isUnlocked = idx <= unlockedLevel;
+        const card = document.createElement('div');
+        card.className = `glass-card p-5 rounded-2xl flex flex-col justify-between border-2 transition-all ${
+          isUnlocked 
+            ? 'border-cyan-400/50 hover:border-cyan-300 cursor-pointer transform hover:-translate-y-1' 
+            : 'border-slate-800 opacity-60 cursor-not-allowed'
+        }`;
+
+        card.innerHTML = `
+          <div class="flex justify-between items-start mb-3">
+            <span class="text-xs font-bold uppercase tracking-wider px-2.5 py-1 rounded-md bg-white/10 text-cyan-300">
+              Planet ${idx + 1}
+            </span>
+            <span>${isUnlocked ? '⭐ Unlocked' : '🔒 Locked'}</span>
+          </div>
+          <div>
+            <h3 class="text-xl font-bold text-white mb-1">${level.title}</h3>
+            <p class="text-xs text-slate-300 mb-4">${level.description}</p>
+          </div>
+          <button ${isUnlocked ? `onclick="startLevel(${idx})"` : 'disabled'} 
+            class="w-full py-2.5 rounded-xl font-bold text-sm ${
+              isUnlocked 
+                ? 'bg-gradient-to-r ' + level.color + ' text-white btn-3d' 
+                : 'bg-slate-800 text-slate-500'
+            }">
+            ${isUnlocked ? 'Explore Planet 🚀' : 'Complete Previous Planet'}
+          </button>
+        `;
+        grid.appendChild(card);
+      });
+    }
+
+    /* ===================================================================
+       5. MATH QUIZ GAMEPLAY LOGIC
+       =================================================================== */
+    function startLevel(levelIdx) {
+      currentLevelIdx = levelIdx;
+      currentQuestionIdx = 0;
+      showScreen('quizScreen');
+      loadQuestion();
+    }
+
+    function loadQuestion() {
+      const level = GAME_LEVELS[currentLevelIdx];
+      const qData = level.questions[currentQuestionIdx];
+
+      document.getElementById('levelTitle').textContent = `Planet ${currentLevelIdx + 1}: ${level.title}`;
+      document.getElementById('questionTracker').textContent = `Q ${currentQuestionIdx + 1}/3`;
+      document.getElementById('mathQuestionText').textContent = `${qData.q} = ?`;
+      document.getElementById('hintBox').classList.add('hidden');
+
+      // Update Star tracker
+      const starsContainer = document.getElementById('questionStars');
+      starsContainer.innerHTML = '';
+      for (let i = 0; i < 3; i++) {
+        const star = document.createElement('span');
+        star.textContent = '★';
+        star.className = i <= currentQuestionIdx ? 'text-yellow-400' : 'text-slate-600';
+        starsContainer.appendChild(star);
+      }
+
+      // Reset speech bubble
+      document.getElementById('eydenSpeech').textContent = `"Let's solve ${qData.q}! Choose the right answer!"`;
+
+      // Render Options (Shuffled copies)
+      const grid = document.getElementById('optionsGrid');
+      grid.innerHTML = '';
+
+      const shuffledOptions = [...qData.options].sort(() => Math.random() - 0.5);
+
+      shuffledOptions.forEach(opt => {
+        const btn = document.createElement('button');
+        btn.className = "py-4 md:py-6 bg-slate-800/90 hover:bg-slate-700/90 text-2xl md:text-3xl font-extrabold text-cyan-300 rounded-2xl border-2 border-slate-600/50 btn-3d hover:border-cyan-400/80 active:scale-95";
+        btn.textContent = opt;
+        btn.onclick = () => checkAnswer(opt, qData.ans, btn);
+        grid.appendChild(btn);
+      });
+    }
+
+    function checkAnswer(selected, correct, btnElement) {
+      const qData = GAME_LEVELS[currentLevelIdx].questions[currentQuestionIdx];
+
+      if (selected === correct) {
+        // Correct Answer!
+        playSound('correct');
+        btnElement.classList.remove('bg-slate-800/90', 'border-slate-600/50');
+        btnElement.classList.add('bg-emerald-600', 'border-emerald-300', 'text-white');
+
+        const randomEncouragement = EYDEN_ENCOURAGEMENTS[Math.floor(Math.random() * EYDEN_ENCOURAGEMENTS.length)];
+        document.getElementById('eydenSpeech').textContent = `"${randomEncouragement}"`;
+
+        triggerConfetti();
+
+        // Delay to progress
+        setTimeout(() => {
+          currentQuestionIdx++;
+          if (currentQuestionIdx < 3) {
+            loadQuestion();
+          } else {
+            // Level Math Complete -> Launch Arcade Shooter Reward
+            document.getElementById('arcadeLevelNum').textContent = currentLevelIdx + 1;
+            showScreen('arcadeScreen');
+            document.getElementById('arcadeOverlay').classList.remove('hidden');
+          }
+        }, 1200);
+
+      } else {
+        // Incorrect Answer (Gentle Retry)
+        playSound('wrong');
+        btnElement.classList.add('bg-rose-900/60', 'border-rose-500/50', 'opacity-50');
+        btnElement.disabled = true;
+
+        const randomRetry = EYDEN_GENTLE_RETRY[Math.floor(Math.random() * EYDEN_GENTLE_RETRY.length)];
+        document.getElementById('eydenSpeech').textContent = `"${randomRetry}"`;
+
+        // Show Hint
+        document.getElementById('hintText').textContent = qData.hint;
+        document.getElementById('hintBox').classList.remove('hidden');
+      }
+    }
+
+    /* ===================================================================
+       6. REWARD MINI-GAME: ASTEROID SHOOTER (CANVAS ARCADE)
+       =================================================================== */
+    let canvas, ctx;
+    let arcadeScore = 0;
+    let arcadeTimer = 20;
+    let arcadeInterval = null;
+    let isArcadeRunning = false;
+
+    let player = { x: 0, y: 0, w: 44, h: 44, speed: 6 };
+    let bullets = [];
+    let asteroids = [];
+    let keys = {};
+
+    function setupArcadeCanvas() {
+      canvas = document.getElementById('gameCanvas');
+      ctx = canvas.getContext('2d');
+
+      // Adjust canvas resolution internal scale
+      canvas.width = 600;
+      canvas.height = 450;
+
+      player.x = canvas.width / 2 - player.w / 2;
+      player.y = canvas.height - 60;
+
+      // Event Listeners for Keyboard Controls
+      window.addEventListener('keydown', e => {
+        keys[e.code] = true;
+        if (e.code === 'Space' && isArcadeRunning) {
+          shootLaser();
+          e.preventDefault();
+        }
+      });
+      window.addEventListener('keyup', e => { keys[e.code] = false; });
+
+      // Touch / Drag Controls on Canvas
+      canvas.addEventListener('touchmove', e => {
+        if (!isArcadeRunning) return;
+        const rect = canvas.getBoundingClientRect();
+        const touchX = e.touches[0].clientX - rect.left;
+        player.x = (touchX / rect.width) * canvas.width - player.w / 2;
+      });
+
+      canvas.addEventListener('touchstart', e => {
+        if (!isArcadeRunning) return;
+        shootLaser();
+      });
+
+      // On-screen mobile buttons
+      const btnL = document.getElementById('btnMoveLeft');
+      const btnR = document.getElementById('btnMoveRight');
+      const btnF = document.getElementById('btnShoot');
+
+      let leftInterval, rightInterval;
+      btnL.addEventListener('touchstart', (e) => { e.preventDefault(); keys['ArrowLeft'] = true; });
+      btnL.addEventListener('touchend', (e) => { e.preventDefault(); keys['ArrowLeft'] = false; });
+      btnR.addEventListener('touchstart', (e) => { e.preventDefault(); keys['ArrowRight'] = true; });
+      btnR.addEventListener('touchend', (e) => { e.preventDefault(); keys['ArrowRight'] = false; });
+      btnF.addEventListener('touchstart', (e) => { e.preventDefault(); shootLaser(); });
+    }
+
+    function shootLaser() {
+      if (!isArcadeRunning) return;
+      bullets.push({ x: player.x + player.w / 2 - 3, y: player.y, w: 6, h: 14, speed: 9 });
+      playSound('laser');
+    }
+
+    function startArcadeRound() {
+      document.getElementById('arcadeOverlay').classList.add('hidden');
+      arcadeScore = 0;
+      arcadeTimer = 20;
+      bullets = [];
+      asteroids = [];
+      isArcadeRunning = true;
+
+      document.getElementById('arcadeScore').textContent = arcadeScore;
+      document.getElementById('arcadeTimer').textContent = arcadeTimer;
+
+      // Timer countdown
+      clearInterval(arcadeInterval);
+      arcadeInterval = setInterval(() => {
+        arcadeTimer--;
+        document.getElementById('arcadeTimer').textContent = arcadeTimer;
+        if (arcadeTimer <= 0) {
+          endArcadeRound();
+        }
+      }, 1000);
+
+      requestAnimationFrame(arcadeGameLoop);
+    }
+
+    function spawnAsteroid() {
+      if (Math.random() < 0.04) {
+        const size = Math.random() * 20 + 25;
+        asteroids.push({
+          x: Math.random() * (canvas.width - size),
+          y: -size,
+          size: size,
+          speed: Math.random() * 2 + 1.5,
+          rot: 0,
+          rotSpeed: (Math.random() - 0.5) * 0.05
+        });
+      }
+    }
+
+    function arcadeGameLoop() {
+      if (!isArcadeRunning) return;
+
+      // Update positions
+      if (keys['ArrowLeft'] && player.x > 0) player.x -= player.speed;
+      if (keys['ArrowRight'] && player.x < canvas.width - player.w) player.x += player.speed;
+
+      spawnAsteroid();
+
+      // Bullets move
+      bullets.forEach((b, i) => {
+        b.y -= b.speed;
+        if (b.y < -20) bullets.splice(i, 1);
+      });
+
+      // Asteroids move
+      asteroids.forEach((ast, i) => {
+        ast.y += ast.speed;
+        ast.rot += ast.rotSpeed;
+
+        // Check collision with bullets
+        bullets.forEach((b, bi) => {
+          if (b.x < ast.x + ast.size && b.x + b.w > ast.x &&
+              b.y < ast.y + ast.size && b.y + b.h > ast.y) {
+            // Destroy asteroid
+            playSound('pop');
+            asteroids.splice(i, 1);
+            bullets.splice(bi, 1);
+            arcadeScore += 10;
+            asteroidsBlastedTotal++;
+            document.getElementById('arcadeScore').textContent = arcadeScore;
+          }
+        });
+
+        if (ast.y > canvas.height + 50) asteroids.splice(i, 1);
+      });
+
+      // Render Screen
+      ctx.fillStyle = '#090514';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // Draw background stars inside canvas
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+      for (let i = 0; i < 20; i++) {
+        ctx.fillRect((i * 37) % canvas.width, (i * 73 + Date.now() * 0.02) % canvas.height, 2, 2);
+      }
+
+      // Draw Player Ship (Hero in Spaceship)
+      ctx.save();
+      ctx.translate(player.x + player.w / 2, player.y + player.h / 2);
+      // Ship wings
+      ctx.fillStyle = '#ec4899';
+      ctx.beginPath();
+      ctx.moveTo(0, -22);
+      ctx.lineTo(22, 18);
+      ctx.lineTo(-22, 18);
+      ctx.closePath();
+      ctx.fill();
+      // Cockpit dome
+      ctx.fillStyle = '#38bdf8';
+      ctx.beginPath();
+      ctx.arc(0, -2, 10, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+
+      // Draw Lasers
+      ctx.fillStyle = '#f43f5e';
+      bullets.forEach(b => {
+        ctx.fillRect(b.x, b.y, b.w, b.h);
+      });
+
+      // Draw Asteroids
+      asteroids.forEach(ast => {
+        ctx.save();
+        ctx.translate(ast.x + ast.size / 2, ast.y + ast.size / 2);
+        ctx.rotate(ast.rot);
+        ctx.fillStyle = '#a855f7';
+        ctx.strokeStyle = '#c084fc';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.rect(-ast.size / 2, -ast.size / 2, ast.size, ast.size);
+        ctx.fill();
+        ctx.stroke();
+        ctx.restore();
+      });
+
+      requestAnimationFrame(arcadeGameLoop);
+    }
+
+    function endArcadeRound() {
+      isArcadeRunning = false;
+      clearInterval(arcadeInterval);
+
+      // Unlock next planet progress
+      if (currentLevelIdx >= unlockedLevel) {
+        unlockedLevel = Math.min(GAME_LEVELS.length - 1, currentLevelIdx + 1);
+      }
+
+      // Populate summary screen
+      document.getElementById('statsAsteroids').textContent = arcadeScore / 10;
+      document.getElementById('statsStars').textContent = "★★★";
+
+      showScreen('levelCompleteScreen');
+    }
+
+    /* ===================================================================
+       7. FINISH & CERTIFICATE LOGIC
+       =================================================================== */
+    function nextLevelOrFinish() {
+      if (currentLevelIdx < GAME_LEVELS.length - 1) {
+        startLevel(currentLevelIdx + 1);
+      } else {
+        // Finished all 5 Levels!
+        showScreen('victoryScreen');
+        triggerConfetti();
+      }
+    }
+
+    function resetGameProgress() {
+      unlockedLevel = 0;
+      currentLevelIdx = 0;
+      currentQuestionIdx = 0;
+      showScreen('startScreen');
+    }
+
+    function printCertificate() {
+      window.print();
+    }
+
+    /* ===================================================================
+       8. VISUAL EFFECTS (STARS & CONFETTI)
+       =================================================================== */
+    function createStars() {
+      const container = document.getElementById('starsContainer');
+      const count = 45;
+      for (let i = 0; i < count; i++) {
+        const star = document.createElement('div');
+        star.className = 'star';
+        const size = Math.random() * 3 + 1;
+        star.style.width = `${size}px`;
+        star.style.height = `${size}px`;
+        star.style.left = `${Math.random() * 100}%`;
+        star.style.top = `${Math.random() * 100}%`;
+        star.style.animationDuration = `${Math.random() * 3 + 2}s`;
+        star.style.animationDelay = `${Math.random() * 2}s`;
+        container.appendChild(star);
+      }
+    }
+
+    // Confetti System
+    let confettiParticles = [];
+    function triggerConfetti() {
+      const c = document.getElementById('confettiCanvas');
+      c.width = window.innerWidth;
+      c.height = window.innerHeight;
+      const ctxC = c.getContext('2d');
+
+      confettiParticles = [];
+      const colors = ['#38bdf8', '#f43f5e', '#eab308', '#a855f7', '#10b981'];
+
+      for (let i = 0; i < 70; i++) {
+        confettiParticles.push({
+          x: c.width / 2,
+          y: c.height / 2,
+          vx: (Math.random() - 0.5) * 12,
+          vy: (Math.random() - 0.7) * 12,
+          size: Math.random() * 8 + 4,
+          color: colors[Math.floor(Math.random() * colors.length)],
+          life: 100
+        });
+      }
+
+      function animateConfetti() {
+        ctxC.clearRect(0, 0, c.width, c.height);
+        let active = false;
+
+        confettiParticles.forEach(p => {
+          if (p.life > 0) {
+            active = true;
+            p.x += p.vx;
+            p.y += p.vy;
+            p.vy += 0.2; // Gravity
+            p.life--;
+
+            ctxC.fillStyle = p.color;
+            ctxC.beginPath();
+            ctxC.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+            ctxC.fill();
+          }
+        });
+
+        if (active) requestAnimationFrame(animateConfetti);
+      }
+
+      animateConfetti();
+    }
+
+    /* Initialize Application on Window Load */
+    window.onload = function () {
+      createStars();
+      setupArcadeCanvas();
+    };
+  </script>
+</body>
+</html>

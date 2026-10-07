@@ -1,0 +1,1086 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Parkour Maths Obby</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Three.js for 3D Graphics -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <!-- Canvas Confetti for Victory Screen -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Quicksand:wght@600;700;800&display=swap" rel="stylesheet">
+
+    <style>
+        * {
+            font-family: 'Quicksand', sans-serif;
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: manipulation;
+        }
+        .font-game {
+            font-family: 'Fredoka One', cursive;
+        }
+        .btn-bounce {
+            transition: transform 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.15s ease;
+        }
+        .btn-bounce:hover {
+            transform: translateY(-3px) scale(1.02);
+        }
+        .btn-bounce:active {
+            transform: translateY(2px) scale(0.96);
+        }
+        @keyframes floatSlow {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-8px) rotate(2deg); }
+        }
+        .animate-float {
+            animation: floatSlow 3s ease-in-out infinite;
+        }
+        @keyframes pulseGlow {
+            0%, 100% { filter: drop-shadow(0 0 10px rgba(255, 223, 0, 0.8)); }
+            50% { filter: drop-shadow(0 0 25px rgba(255, 223, 0, 1)); }
+        }
+        .glow-star {
+            animation: pulseGlow 2s infinite;
+        }
+        /* Glassmorphism containers */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 3px solid rgba(255, 255, 255, 0.6);
+        }
+    </style>
+</head>
+<body class="bg-slate-900 h-screen w-screen overflow-hidden flex items-center justify-center p-2 sm:p-4">
+
+    <!-- Main Outer Container -->
+    <div id="game-container" class="relative w-full max-w-5xl h-full max-h-[820px] bg-slate-800 rounded-3xl overflow-hidden shadow-2xl border-4 border-white/80 flex flex-col justify-between">
+        
+        <!-- TOP HUD -->
+        <div class="relative z-20 flex justify-between items-center p-3 sm:p-4 glass-panel rounded-b-3xl shadow-lg mx-2 mt-2">
+            <!-- Left Info Block: Stars & Level -->
+            <div class="flex items-center gap-2 sm:gap-4">
+                <div class="bg-gradient-to-r from-amber-400 to-yellow-500 text-yellow-950 font-game px-3 sm:px-4 py-1.5 sm:py-2 rounded-2xl border-2 border-yellow-200 shadow-md text-base sm:text-xl flex items-center gap-2">
+                    <span class="text-xl sm:text-2xl animate-bounce">⭐</span>
+                    <span id="star-count">0</span>
+                </div>
+                <div class="bg-indigo-600 text-white font-game px-3 sm:px-4 py-1.5 sm:py-2 rounded-2xl border-2 border-indigo-300 shadow-md text-xs sm:text-base">
+                    LEVEL <span id="level-num">1</span> / 5
+                </div>
+                <!-- Mode Badge -->
+                <div id="mode-badge" class="hidden sm:block bg-purple-600 text-white font-game px-3 py-1.5 rounded-2xl border-2 border-purple-300 text-xs uppercase tracking-wider">
+                    MULTIPLICATION
+                </div>
+            </div>
+
+            <!-- Title Header -->
+            <div class="hidden md:flex items-center gap-2 font-game text-indigo-900 text-lg">
+                <span>🥷</span> PARKOUR HERO PARKOUR OBBY 🍄
+            </div>
+
+            <!-- Right Controls: Audio & Voice Toggle -->
+            <div class="flex items-center gap-2">
+                <button id="voice-btn" onclick="toggleVoice()" title="Toggle Your Voice" class="btn-bounce bg-white/90 hover:bg-white text-indigo-900 p-2 sm:p-2.5 rounded-2xl shadow-md border-2 border-indigo-200 font-game text-lg sm:text-xl">
+                    🗣️
+                </button>
+                <button id="sound-btn" onclick="toggleSound()" title="Toggle Sound FX" class="btn-bounce bg-white/90 hover:bg-white text-indigo-900 p-2 sm:p-2.5 rounded-2xl shadow-md border-2 border-indigo-200 font-game text-lg sm:text-xl">
+                    🔊
+                </button>
+            </div>
+        </div>
+
+        <!-- 3D CANVAS VIEWPORT & FLOATING SPEECH BUBBLE -->
+        <div class="relative flex-1 w-full overflow-hidden flex items-center justify-center">
+            <canvas id="threeCanvas" class="w-full h-full block cursor-grab active:cursor-grabbing"></canvas>
+
+            <!-- Parkour Hero's Floating 3D Speech Bubble -->
+            <div id="pasha-speech-bubble" class="absolute top-6 left-1/2 transform -translate-x-1/2 z-30 transition-all duration-300 pointer-events-none opacity-0 scale-95">
+                <div class="glass-panel px-6 py-3 rounded-3xl border-4 border-amber-400 shadow-2xl flex items-center gap-3">
+                    <div class="text-3xl animate-bounce">🥷</div>
+                    <div>
+                        <p class="text-xs font-bold text-amber-800 uppercase tracking-wide">Parkour Hero says:</p>
+                        <p id="speech-text" class="font-game text-indigo-900 text-base sm:text-lg">"Let's jump into math!"</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Retry Encouragement Modal -->
+            <div id="retry-modal" class="hidden absolute z-40 inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4">
+                <div class="glass-panel border-4 border-yellow-400 rounded-3xl p-6 sm:p-8 max-w-sm w-full text-center shadow-2xl transform transition-all scale-100">
+                    <div class="text-6xl mb-3 animate-bounce">💪</div>
+                    <h3 class="font-game text-2xl text-indigo-900 mb-2">Parkour Hero believes in you!</h3>
+                    <p id="retry-msg-body" class="text-slate-700 font-bold text-sm sm:text-base mb-6">"Nice try! Give it another shot, you've got this!"</p>
+                    <button onclick="closeRetryModal()" class="w-full bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-game text-xl py-3 rounded-2xl border-b-4 border-emerald-800 btn-bounce shadow-lg">
+                        TRY AGAIN 🚀
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- MATH QUESTION & CONTROLS INTERFACE -->
+        <div id="math-ui" class="relative z-20 p-3 sm:p-5 glass-panel rounded-t-3xl shadow-2xl flex flex-col items-center gap-3 border-t-4 border-white/80 mx-2 mb-2">
+            
+            <!-- Question Counter Bar -->
+            <div class="flex items-center justify-between w-full max-w-2xl px-2">
+                <div class="flex items-center gap-2 bg-indigo-100/90 text-indigo-900 px-3 py-1 rounded-full font-bold text-xs sm:text-sm border border-indigo-200">
+                    🎯 Question <span id="q-num">1</span> of 3
+                </div>
+                <!-- Speed Run Timer Display -->
+                <div id="speedrun-timer-container" class="hidden flex items-center gap-2 bg-rose-100 text-rose-900 px-3 py-1 rounded-full font-bold text-xs sm:text-sm border border-rose-300">
+                    ⚡ Time: <span id="speedrun-timer" class="font-game text-base text-rose-600">00:00</span>
+                </div>
+            </div>
+
+            <!-- Question Display -->
+            <div class="text-center my-1">
+                <h2 id="question-text" class="font-game text-3xl sm:text-5xl text-indigo-950 tracking-wider drop-shadow-md">
+                    3 × 4 = ?
+                </h2>
+            </div>
+
+            <!-- Answer Buttons Container -->
+            <div id="answers-container" class="grid grid-cols-3 gap-3 sm:gap-5 w-full max-w-2xl">
+                <!-- Dynamically Generated Buttons -->
+            </div>
+        </div>
+
+        <!-- MODE SELECTION OVERLAY -->
+        <div id="mode-select-overlay" class="absolute inset-0 z-50 bg-gradient-to-b from-indigo-950 via-purple-900 to-slate-900 text-white flex flex-col items-center justify-center p-4 sm:p-6 text-center">
+            
+            <!-- Hero Intro Character Banner -->
+            <div class="flex items-center justify-center gap-3 mb-2 animate-float">
+                <span class="text-5xl sm:text-7xl">🥷</span>
+                <div class="text-left">
+                    <h1 class="font-game text-3xl sm:text-5xl text-yellow-300 drop-shadow-lg">Parkour Maths Obby</h1>
+                    <p class="text-amber-200 font-bold text-sm sm:text-lg">3D Math Parkour Obby Champion</p>
+                </div>
+            </div>
+
+            <p class="text-slate-200 font-semibold text-xs sm:text-base max-w-md mb-6">
+                Help <span class="text-yellow-300 font-bold">Parkour Hero</span> jump across floating mushroom islands by solving math challenges!
+            </p>
+
+            <!-- Mode Buttons Grid -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 w-full max-w-lg mb-6">
+                <button onclick="startGame('multiplication')" class="btn-bounce bg-gradient-to-r from-amber-400 to-yellow-500 hover:from-amber-500 hover:to-yellow-600 text-yellow-950 font-game text-lg sm:text-xl p-4 rounded-2xl border-b-4 border-yellow-700 shadow-xl flex items-center justify-between">
+                    <span>✖️ Multiplication</span>
+                    <span class="text-xs bg-yellow-900/20 px-2 py-1 rounded-lg">Tables 2–10</span>
+                </button>
+
+                <button onclick="startGame('division')" class="btn-bounce bg-gradient-to-r from-cyan-400 to-blue-500 hover:from-cyan-500 hover:to-blue-600 text-slate-950 font-game text-lg sm:text-xl p-4 rounded-2xl border-b-4 border-blue-700 shadow-xl flex items-center justify-between">
+                    <span>➗ Division</span>
+                    <span class="text-xs bg-blue-900/20 px-2 py-1 rounded-lg">Year 3 Math</span>
+                </button>
+
+                <button onclick="startGame('mixed')" class="btn-bounce bg-gradient-to-r from-purple-400 to-indigo-500 hover:from-purple-500 hover:to-indigo-600 text-white font-game text-lg sm:text-xl p-4 rounded-2xl border-b-4 border-indigo-800 shadow-xl flex items-center justify-between">
+                    <span>🎲 Mixed Math</span>
+                    <span class="text-xs bg-indigo-900/40 px-2 py-1 rounded-lg">✖️ & ➗</span>
+                </button>
+
+                <button onclick="startGame('speedrun')" class="btn-bounce bg-gradient-to-r from-rose-500 to-red-600 hover:from-rose-600 hover:to-red-700 text-white font-game text-lg sm:text-xl p-4 rounded-2xl border-b-4 border-red-900 shadow-xl flex items-center justify-between">
+                    <span>⚡ Speed Run</span>
+                    <span class="text-xs bg-red-950/40 px-2 py-1 rounded-lg">Timer Bonus</span>
+                </button>
+            </div>
+
+            <div class="text-amber-200/80 text-xs font-bold">
+                ⭐ Earn star rewards after every level with Parkour Hero!
+            </div>
+        </div>
+
+        <!-- REWARD MINI-GAME OVERLAY (Catch the Falling Stars in 3D) -->
+        <div id="reward-overlay" class="hidden absolute inset-0 z-50 bg-slate-950/90 backdrop-blur-md flex flex-col items-center justify-between p-4 sm:p-6">
+            <div class="text-center mt-2 z-10">
+                <h2 class="font-game text-2xl sm:text-4xl text-yellow-300 drop-shadow-lg animate-pulse">
+                    ⭐ PARKOUR HERO'S STAR CATCHER! ⭐
+                </h2>
+                <p class="text-white text-xs sm:text-base font-semibold mt-1">Click or tap the 3D falling stars to catch them!</p>
+                <div class="mt-2 flex gap-4 sm:gap-8 justify-center text-base sm:text-xl font-game text-white">
+                    <div class="bg-black/50 px-4 py-1.5 rounded-2xl border border-yellow-400">⏱️ Time: <span id="mini-timer" class="text-yellow-300">15</span>s</div>
+                    <div class="bg-black/50 px-4 py-1.5 rounded-2xl border border-yellow-400">⭐ Caught: <span id="mini-caught" class="text-yellow-300">0</span></div>
+                </div>
+            </div>
+
+            <canvas id="miniCanvas" class="w-full h-full absolute inset-0 z-10 cursor-pointer"></canvas>
+
+            <div class="relative z-20 mb-2">
+                <p class="text-yellow-200/90 font-bold text-xs bg-black/60 px-4 py-1.5 rounded-full border border-yellow-400/40">
+                    Fast catching earns extra bonus stars for Parkour Hero!
+                </p>
+            </div>
+        </div>
+
+        <!-- VICTORY OVERLAY -->
+        <div id="victory-overlay" class="hidden absolute inset-0 z-50 bg-gradient-to-b from-indigo-900 via-purple-900 to-slate-950 text-white flex flex-col items-center justify-center p-6 text-center">
+            <div class="glow-star text-7xl sm:text-8xl mb-3">👑</div>
+            <h1 class="font-game text-3xl sm:text-6xl text-yellow-300 drop-shadow-lg mb-1">PARKOUR HERO WINS!</h1>
+            <p class="text-lg sm:text-2xl text-slate-200 font-bold mb-4">You completed all 5 Parkour Obby levels!</p>
+            
+            <div class="bg-white/10 backdrop-blur-lg border-2 border-white/20 rounded-3xl p-6 mb-6 w-full max-w-md shadow-2xl">
+                <p class="text-sm sm:text-base text-slate-300 font-bold uppercase tracking-wider">TOTAL STARS COLLECTED</p>
+                <p id="final-stars-count" class="font-game text-5xl sm:text-6xl text-yellow-400 my-2">0</p>
+                <p id="final-time-text" class="hidden text-rose-300 font-bold text-sm mb-2">⚡ Speed Run Time: <span id="final-time-val">00:00</span></p>
+                <p class="text-emerald-400 font-bold text-sm flex items-center justify-center gap-1">
+                    <span>🏅</span> Official Parkour Hero Math Champion Trophy!
+                </p>
+            </div>
+
+            <button onclick="returnToMenu()" class="btn-bounce bg-yellow-400 hover:bg-yellow-300 text-yellow-950 font-game text-xl sm:text-2xl px-8 py-3.5 rounded-2xl border-b-8 border-yellow-600 shadow-2xl">
+                PLAY AGAIN 🔄
+            </button>
+        </div>
+
+    </div>
+
+    <script>
+        /* SYNTHESIZED WEB AUDIO SYSTEM (Self-Contained Offline Audio) */
+        let audioCtx = null;
+        let soundMuted = false;
+        let voiceMuted = false;
+
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        }
+
+        function playSound(type) {
+            if (soundMuted) return;
+            initAudio();
+            if (!audioCtx) return;
+
+            const ctx = audioCtx;
+            const now = ctx.currentTime;
+
+            if (type === 'jump') {
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(160, now);
+                osc.frequency.exponentialRampToValueAtTime(480, now + 0.18);
+                gain.gain.setValueAtTime(0.25, now);
+                gain.gain.linearRampToValueAtTime(0.01, now + 0.18);
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.start(now);
+                osc.stop(now + 0.18);
+            } else if (type === 'correct') {
+                [261.63, 329.63, 392.00, 523.25, 659.25].forEach((freq, idx) => {
+                    const osc = ctx.createOscillator();
+                    const gain = ctx.createGain();
+                    osc.type = 'triangle';
+                    osc.frequency.value = freq;
+                    gain.gain.setValueAtTime(0.18, now + idx * 0.07);
+                    gain.gain.linearRampToValueAtTime(0.01, now + idx * 0.07 + 0.14);
+                    osc.connect(gain);
+                    gain.connect(ctx.destination);
+                    osc.start(now + idx * 0.07);
+                    osc.stop(now + idx * 0.07 + 0.14);
+                });
+            } else if (type === 'retry') {
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(240, now);
+                osc.frequency.exponentialRampToValueAtTime(170, now + 0.22);
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.linearRampToValueAtTime(0.01, now + 0.22);
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.start(now);
+                osc.stop(now + 0.22);
+            } else if (type === 'star') {
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(750 + Math.random() * 350, now);
+                gain.gain.setValueAtTime(0.22, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.12);
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.start(now);
+                osc.stop(now + 0.12);
+            } else if (type === 'fanfare') {
+                const notes = [440, 554.37, 659.25, 880, 1108.73];
+                notes.forEach((freq, idx) => {
+                    const osc = ctx.createOscillator();
+                    const gain = ctx.createGain();
+                    osc.type = 'triangle';
+                    osc.frequency.value = freq;
+                    gain.gain.setValueAtTime(0.25, now + idx * 0.1);
+                    gain.gain.linearRampToValueAtTime(0.01, now + idx * 0.1 + 0.35);
+                    osc.connect(gain);
+                    gain.connect(ctx.destination);
+                    osc.start(now + idx * 0.1);
+                    osc.stop(now + idx * 0.1 + 0.35);
+                });
+            }
+        }
+
+        function toggleSound() {
+            soundMuted = !soundMuted;
+            document.getElementById('sound-btn').innerText = soundMuted ? '🔇' : '🔊';
+        }
+
+        function toggleVoice() {
+            voiceMuted = !voiceMuted;
+            document.getElementById('voice-btn').innerText = voiceMuted ? '🤐' : '🗣️';
+            if (voiceMuted && window.speechSynthesis) {
+                window.speechSynthesis.cancel();
+            }
+        }
+
+        /* WEB SPEECH API & SPEECH BUBBLE SYSTEM FOR PARKOUR HERO */
+        function speakPasha(text) {
+            // Show Floating Speech Bubble UI
+            const bubble = document.getElementById('pasha-speech-bubble');
+            const speechText = document.getElementById('speech-text');
+            speechText.innerText = `"${text}"`;
+
+            bubble.classList.remove('opacity-0', 'scale-95');
+            bubble.classList.add('opacity-100', 'scale-100');
+
+            // Trigger Parkour Hero's Jaw Lip-Sync
+            pashaIsSpeaking = true;
+
+            clearTimeout(window.speechBubbleTimer);
+            window.speechBubbleTimer = setTimeout(() => {
+                bubble.classList.remove('opacity-100', 'scale-100');
+                bubble.classList.add('opacity-0', 'scale-95');
+                pashaIsSpeaking = false;
+            }, 3500);
+
+            // Voice synthesis if available and enabled
+            if ('speechSynthesis' in window && !voiceMuted) {
+                window.speechSynthesis.cancel(); // Stop prior speech
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.pitch = 1.35; // Energetic hero tone
+                utterance.rate = 1.05;
+                
+                // Select a friendly English voice if available
+                const voices = window.speechSynthesis.getVoices();
+                const preferredVoice = voices.find(v => v.lang.startsWith('en') && (v.name.includes('Natural') || v.name.includes('Child') || v.name.includes('Google') || v.name.includes('Samantha')));
+                if (preferredVoice) utterance.voice = preferredVoice;
+
+                utterance.onend = () => { pashaIsSpeaking = false; };
+                window.speechSynthesis.speak(utterance);
+            }
+        }
+
+        // Preload voices
+        if ('speechSynthesis' in window) {
+            window.speechSynthesis.onvoiceschanged = () => { window.speechSynthesis.getVoices(); };
+        }
+
+        /* MATH QUESTION GENERATION SYSTEM */
+        let currentMode = 'multiplication';
+        let currentLevel = 0;
+        let currentQIndex = 0;
+        let totalStars = 0;
+        let activeQuestions = [];
+
+        // Speed Run Timer
+        let speedrunStartTime = 0;
+        let speedrunTimerInterval = null;
+
+        function generateQuestionsForMode(mode) {
+            const levelsData = [];
+            
+            for (let lvl = 0; lvl < 5; lvl++) {
+                const levelQuestions = [];
+                for (let q = 0; q < 3; q++) {
+                    let num1, num2, correctAns, questionStr;
+
+                    if (mode === 'multiplication') {
+                        const tables = [2, 3, 4, 5, 8, 10];
+                        num1 = tables[Math.floor(Math.random() * tables.length)];
+                        num2 = Math.floor(Math.random() * 9) + 2;
+                        correctAns = num1 * num2;
+                        questionStr = `${num1} × ${num2} = ?`;
+                    } else if (mode === 'division') {
+                        const divisors = [2, 3, 4, 5, 8, 10];
+                        num2 = divisors[Math.floor(Math.random() * divisors.length)];
+                        correctAns = Math.floor(Math.random() * 9) + 2;
+                        num1 = num2 * correctAns;
+                        questionStr = `${num1} ÷ ${num2} = ?`;
+                    } else if (mode === 'mixed') {
+                        if (Math.random() > 0.5) {
+                            num1 = [2, 3, 4, 5, 8, 10][Math.floor(Math.random() * 6)];
+                            num2 = Math.floor(Math.random() * 9) + 2;
+                            correctAns = num1 * num2;
+                            questionStr = `${num1} × ${num2} = ?`;
+                        } else {
+                            num2 = [2, 3, 4, 5, 8, 10][Math.floor(Math.random() * 6)];
+                            correctAns = Math.floor(Math.random() * 9) + 2;
+                            num1 = num2 * correctAns;
+                            questionStr = `${num1} ÷ ${num2} = ?`;
+                        }
+                    } else { // Speedrun mode
+                        num1 = [2, 3, 4, 5, 8, 10][Math.floor(Math.random() * 6)];
+                        num2 = Math.floor(Math.random() * 8) + 2;
+                        correctAns = num1 * num2;
+                        questionStr = `${num1} × ${num2} = ?`;
+                    }
+
+                    // Generate distractor options
+                    const options = new Set([correctAns]);
+                    while (options.size < 3) {
+                        const offset = (Math.floor(Math.random() * 5) + 1) * (Math.random() < 0.5 ? 1 : -1);
+                        const fakeAns = Math.max(1, correctAns + offset);
+                        options.add(fakeAns);
+                    }
+
+                    levelQuestions.push({
+                        q: questionStr,
+                        a: correctAns,
+                        opts: Array.from(options).sort(() => Math.random() - 0.5)
+                    });
+                }
+                levelsData.push(levelQuestions);
+            }
+            return levelsData;
+        }
+
+        /* THREE.JS 3D WORLD & ARTICULATED PARKOUR HERO MODEL */
+        let scene, camera, renderer;
+        let pashaGroup, pashaHead, pashaJaw, pashaLeftArm, pashaRightArm, pashaLeftLeg, pashaRightLeg;
+        let ribbonLeft, ribbonRight;
+        let platforms3D = [];
+        let pashaIsSpeaking = false;
+
+        // Hero Parkour Physics State
+        const pashaState = {
+            gridX: 0,
+            x: -12,
+            y: 0,
+            z: 0,
+            targetX: -12,
+            targetY: 0,
+            targetZ: 0,
+            vx: 0,
+            vy: 0,
+            vz: 0,
+            isJumping: false,
+            jumpProgress: 0
+        };
+
+        function init3DWorld() {
+            const container = document.getElementById('threeCanvas').parentElement;
+            scene = new THREE.Scene();
+
+            // Vibrant Sky Fog
+            scene.background = new THREE.Color(0x38bdf8);
+            scene.fog = new THREE.FogExp2(0x38bdf8, 0.015);
+
+            // Camera Setup
+            camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 1000);
+            camera.position.set(0, 10, 24);
+            camera.lookAt(0, 2, 0);
+
+            // Renderer Setup
+            renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('threeCanvas'), antialias: true });
+            renderer.setSize(container.clientWidth, container.clientHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+            // Lighting
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
+            scene.add(ambientLight);
+
+            const sunLight = new THREE.DirectionalLight(0xfff7ed, 1.2);
+            sunLight.position.set(20, 40, 20);
+            sunLight.castShadow = true;
+            sunLight.shadow.mapSize.width = 1024;
+            sunLight.shadow.mapSize.height = 1024;
+            scene.add(sunLight);
+
+            // Build Parkour Hero Model
+            createPashaModel();
+
+            // Add Sky Clouds & Floating Particles
+            createSkyDecorations();
+
+            window.addEventListener('resize', onWindowResize);
+        }
+
+        function createPashaModel() {
+            pashaGroup = new THREE.Group();
+
+            // Materials
+            const suitMat = new THREE.MeshToonMaterial({ color: 0x312e81 }); // Deep Indigo Ninja Suit
+            const cowlMat = new THREE.MeshToonMaterial({ color: 0x1e1b4b }); // Darker Cowl Accent
+            const skinMat = new THREE.MeshToonMaterial({ color: 0xfde047 }); // Cute Yellow Face Tone
+            const headbandMat = new THREE.MeshToonMaterial({ color: 0xef4444 }); // Red Ninja Ribbon
+            const eyeMat = new THREE.MeshBasicMaterial({ color: 0x0f172a });
+            const bootMat = new THREE.MeshToonMaterial({ color: 0x0284c7 }); // Bright Blue Boots
+
+            // TORSO
+            const torsoGeo = new THREE.CylinderGeometry(0.7, 0.5, 1.5, 12);
+            const torso = new THREE.Mesh(torsoGeo, suitMat);
+            torso.position.y = 1.2;
+            torso.castShadow = true;
+            pashaGroup.add(torso);
+
+            // RED BELT
+            const beltGeo = new THREE.CylinderGeometry(0.55, 0.55, 0.2, 12);
+            const belt = new THREE.Mesh(beltGeo, headbandMat);
+            belt.position.y = 0.7;
+            pashaGroup.add(belt);
+
+            // HEAD GROUP
+            pashaHead = new THREE.Group();
+            pashaHead.position.y = 2.2;
+
+            // Head Sphere (Masked)
+            const headGeo = new THREE.SphereGeometry(0.85, 16, 16);
+            const headMesh = new THREE.Mesh(headGeo, cowlMat);
+            headMesh.castShadow = true;
+            pashaHead.add(headMesh);
+
+            // Face Cutout (Skin)
+            const faceGeo = new THREE.BoxGeometry(0.9, 0.5, 0.4);
+            const faceMesh = new THREE.Mesh(faceGeo, skinMat);
+            faceMesh.position.set(0, -0.05, 0.55);
+            pashaHead.add(faceMesh);
+
+            // Eyes
+            const eyeGeo = new THREE.SphereGeometry(0.12, 8, 8);
+            const leftEye = new THREE.Mesh(eyeGeo, eyeMat);
+            leftEye.position.set(-0.25, 0.05, 0.78);
+            const rightEye = new THREE.Mesh(eyeGeo, eyeMat);
+            rightEye.position.set(0.25, 0.05, 0.78);
+            pashaHead.add(leftEye, rightEye);
+
+            // Red Headband Strap
+            const headbandGeo = new THREE.CylinderGeometry(0.88, 0.88, 0.25, 16);
+            const headbandMesh = new THREE.Mesh(headbandGeo, headbandMat);
+            headbandMesh.position.y = 0.35;
+            pashaHead.add(headbandMesh);
+
+            // Animated Headband Ribbons (Back of head)
+            const ribbonGeo = new THREE.BoxGeometry(0.15, 0.8, 0.04);
+            ribbonLeft = new THREE.Mesh(ribbonGeo, headbandMat);
+            ribbonLeft.position.set(-0.2, 0.3, -0.85);
+            ribbonLeft.rotation.x = -0.4;
+            ribbonRight = new THREE.Mesh(ribbonGeo, headbandMat);
+            ribbonRight.position.set(0.2, 0.3, -0.85);
+            ribbonRight.rotation.x = -0.4;
+            pashaHead.add(ribbonLeft, ribbonRight);
+
+            // Mouth / Animated Jaw
+            const jawGeo = new THREE.BoxGeometry(0.3, 0.08, 0.1);
+            pashaJaw = new THREE.Mesh(jawGeo, eyeMat);
+            pashaJaw.position.set(0, -0.22, 0.78);
+            pashaHead.add(pashaJaw);
+
+            pashaGroup.add(pashaHead);
+
+            // ARMS
+            const armGeo = new THREE.CylinderGeometry(0.2, 0.18, 0.9, 8);
+            
+            pashaLeftArm = new THREE.Mesh(armGeo, suitMat);
+            pashaLeftArm.position.set(-0.95, 1.5, 0);
+            pashaLeftArm.castShadow = true;
+            
+            pashaRightArm = new THREE.Mesh(armGeo, suitMat);
+            pashaRightArm.position.set(0.95, 1.5, 0);
+            pashaRightArm.castShadow = true;
+
+            pashaGroup.add(pashaLeftArm, pashaRightArm);
+
+            // LEGS & BOOTS
+            const legGeo = new THREE.CylinderGeometry(0.22, 0.2, 0.8, 8);
+
+            pashaLeftLeg = new THREE.Group();
+            pashaLeftLeg.position.set(-0.35, 0.5, 0);
+            const lLegMesh = new THREE.Mesh(legGeo, suitMat);
+            const lBootMesh = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.3, 0.5), bootMat);
+            lBootMesh.position.set(0, -0.35, 0.1);
+            pashaLeftLeg.add(lLegMesh, lBootMesh);
+
+            pashaRightLeg = new THREE.Group();
+            pashaRightLeg.position.set(0.35, 0.5, 0);
+            const rLegMesh = new THREE.Mesh(legGeo, suitMat);
+            const rBootMesh = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.3, 0.5), bootMat);
+            rBootMesh.position.set(0, -0.35, 0.1);
+            pashaRightLeg.add(rLegMesh, rBootMesh);
+
+            pashaGroup.add(pashaLeftLeg, pashaRightLeg);
+
+            // Position Hero in scene
+            pashaGroup.position.set(pashaState.x, pashaState.y, pashaState.z);
+            scene.add(pashaGroup);
+        }
+
+        function createSkyDecorations() {
+            // Floating Fluffy Clouds
+            const cloudMat = new THREE.MeshLambertMaterial({ color: 0xffffff, transparent: true, opacity: 0.85 });
+            for (let i = 0; i < 12; i++) {
+                const cloudGroup = new THREE.Group();
+                const count = 3 + Math.floor(Math.random() * 3);
+                for (let j = 0; j < count; j++) {
+                    const pGeo = new THREE.SphereGeometry(2 + Math.random() * 2, 8, 8);
+                    const pMesh = new THREE.Mesh(pGeo, cloudMat);
+                    pMesh.position.set(j * 1.8, Math.random() * 0.8, Math.random() * 1.5);
+                    cloudGroup.add(pMesh);
+                }
+                cloudGroup.position.set(
+                    (Math.random() - 0.5) * 80,
+                    12 + Math.random() * 15,
+                    (Math.random() - 0.5) * 50 - 20
+                );
+                scene.add(cloudGroup);
+            }
+        }
+
+        function build3DPlatforms() {
+            // Remove existing platforms
+            platforms3D.forEach(p => scene.remove(p.mesh));
+            platforms3D = [];
+
+            const platformXPositions = [-12, -4, 4, 12];
+            
+            platformXPositions.forEach((xPos, idx) => {
+                const platformGroup = new THREE.Group();
+
+                if (idx === 3) {
+                    // Golden Goal Platform with Shiny Star
+                    const baseGeo = new THREE.CylinderGeometry(2.5, 2.2, 1.2, 16);
+                    const baseMat = new THREE.MeshToonMaterial({ color: 0xeab308 });
+                    const baseMesh = new THREE.Mesh(baseGeo, baseMat);
+                    baseMesh.receiveShadow = true;
+                    platformGroup.add(baseMesh);
+
+                    // Golden Star
+                    const starGeo = new THREE.OctahedronGeometry(1.2, 0);
+                    const starMat = new THREE.MeshBasicMaterial({ color: 0xfacc15 });
+                    const starMesh = new THREE.Mesh(starGeo, starMat);
+                    starMesh.position.y = 2.5;
+                    starMesh.name = 'floatingStar';
+                    platformGroup.add(starMesh);
+
+                } else if (idx % 2 === 0) {
+                    // Mushroom Island Platform
+                    const stemGeo = new THREE.CylinderGeometry(0.8, 1.1, 2, 12);
+                    const stemMat = new THREE.MeshToonMaterial({ color: 0xfef08a });
+                    const stemMesh = new THREE.Mesh(stemGeo, stemMat);
+                    stemMesh.position.y = -1;
+                    stemMesh.receiveShadow = true;
+                    platformGroup.add(stemMesh);
+
+                    const capGeo = new THREE.SphereGeometry(2.2, 16, 12, 0, Math.PI * 2, 0, Math.PI * 0.5);
+                    const capMat = new THREE.MeshToonMaterial({ color: 0xef4444 });
+                    const capMesh = new THREE.Mesh(capGeo, capMat);
+                    capMesh.position.y = 0;
+                    capMesh.castShadow = true;
+                    platformGroup.add(capMesh);
+
+                    // White Spots
+                    const spotGeo = new THREE.SphereGeometry(0.3, 8, 8);
+                    const spotMat = new THREE.MeshToonMaterial({ color: 0xffffff });
+                    [-1, 0.8, 0].forEach((sx, sIdx) => {
+                        const spot = new THREE.Mesh(spotGeo, spotMat);
+                        spot.position.set(sx, 0.8, (sIdx - 1) * 0.8);
+                        platformGroup.add(spot);
+                    });
+
+                } else {
+                    // Cloud Island Platform
+                    const cloudPlatformMat = new THREE.MeshLambertMaterial({ color: 0xe0f2fe });
+                    [-1.2, 0, 1.2].forEach(cx => {
+                        const cGeo = new THREE.SphereGeometry(1.4, 12, 12);
+                        const cMesh = new THREE.Mesh(cGeo, cloudPlatformMat);
+                        cMesh.position.set(cx, 0, 0);
+                        cMesh.receiveShadow = true;
+                        platformGroup.add(cMesh);
+                    });
+                }
+
+                platformGroup.position.set(xPos, 0, 0);
+                scene.add(platformGroup);
+
+                platforms3D.push({
+                    mesh: platformGroup,
+                    x: xPos,
+                    y: 0,
+                    z: 0
+                });
+            });
+
+            // Reset Hero position
+            pashaState.gridX = 0;
+            pashaState.x = platforms3D[0].x;
+            pashaState.y = 1.2;
+            pashaState.z = 0;
+            pashaState.targetX = pashaState.x;
+            pashaState.targetY = 1.2;
+            pashaGroup.position.set(pashaState.x, pashaState.y, pashaState.z);
+            pashaGroup.rotation.y = Math.PI * 0.5; // Facing forward right
+        }
+
+        /* ANIMATION LOOP & HERO PHYSICS */
+        let clock = new THREE.Clock();
+
+        function animate3D() {
+            requestAnimationFrame(animate3D);
+
+            const delta = clock.getDelta();
+            const time = clock.getElapsedTime();
+
+            // Animate Parkour Hero Idle & Speech
+            if (!pashaState.isJumping) {
+                pashaGroup.position.y = pashaState.targetY + Math.sin(time * 3) * 0.08; // Idle breathing float
+                pashaHead.rotation.x = Math.sin(time * 2) * 0.05;
+                
+                // Headband ribbon sway
+                ribbonLeft.rotation.z = Math.sin(time * 4) * 0.15;
+                ribbonRight.rotation.z = -Math.sin(time * 4) * 0.15;
+
+                // Jaw lip-sync if talking
+                if (pashaIsSpeaking) {
+                    pashaJaw.scale.y = 1 + Math.sin(time * 25) * 1.5;
+                } else {
+                    pashaJaw.scale.y = 1;
+                }
+            } else {
+                // Hero Jump Physics Animation
+                pashaState.jumpProgress += delta * 2.2;
+                
+                if (pashaState.jumpProgress >= 1) {
+                    pashaState.jumpProgress = 1;
+                    pashaState.isJumping = false;
+                    pashaState.x = pashaState.targetX;
+                    pashaState.y = pashaState.targetY;
+                    pashaGroup.position.set(pashaState.x, pashaState.y, pashaState.z);
+                    pashaGroup.rotation.x = 0; // Reset double flip rotation
+                    pashaGroup.rotation.y = Math.PI * 0.5;
+                    onJumpComplete();
+                } else {
+                    // Arc trajectory
+                    const t = pashaState.jumpProgress;
+                    pashaState.x = THREE.MathUtils.lerp(pashaState.x, pashaState.targetX, t);
+                    pashaState.y = pashaState.targetY + Math.sin(t * Math.PI) * 4.5; // Jump height arc
+                    pashaGroup.position.set(pashaState.x, pashaState.y, pashaState.z);
+
+                    // Front Double-Flip Spin!
+                    pashaGroup.rotation.z = -t * Math.PI * 2;
+
+                    // Arm and leg spread during jump
+                    pashaLeftArm.rotation.z = Math.sin(t * Math.PI) * 1.2;
+                    pashaRightArm.rotation.z = -Math.sin(t * Math.PI) * 1.2;
+                }
+            }
+
+            // Animate Golden Goal Stars
+            platforms3D.forEach(p => {
+                const star = p.mesh.getObjectByName('floatingStar');
+                if (star) {
+                    star.rotation.y += delta * 2;
+                    star.position.y = 2.5 + Math.sin(time * 3) * 0.2;
+                }
+            });
+
+            // Smooth Camera Follow Parkour Hero
+            camera.position.x = THREE.MathUtils.lerp(camera.position.x, pashaGroup.position.x * 0.6, 0.05);
+            camera.lookAt(pashaGroup.position.x * 0.4, 2, 0);
+
+            renderer.render(scene, camera);
+        }
+
+        function onWindowResize() {
+            const container = document.getElementById('threeCanvas').parentElement;
+            camera.aspect = container.clientWidth / container.clientHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(container.clientWidth, container.clientHeight);
+        }
+
+        /* GAME LOGIC & CONTROLLER */
+        function startGame(mode) {
+            initAudio();
+            currentMode = mode;
+            document.getElementById('mode-select-overlay').classList.add('hidden');
+            document.getElementById('mode-badge').innerText = mode.toUpperCase();
+
+            // Toggle Speed Run UI Timer
+            const speedContainer = document.getElementById('speedrun-timer-container');
+            if (mode === 'speedrun') {
+                speedContainer.classList.remove('hidden');
+                speedrunStartTime = Date.now();
+                speedrunTimerInterval = setInterval(updateSpeedrunTimer, 1000);
+            } else {
+                speedContainer.classList.add('hidden');
+                if (speedrunTimerInterval) clearInterval(speedrunTimerInterval);
+            }
+
+            // Reset Game State
+            currentLevel = 0;
+            currentQIndex = 0;
+            totalStars = 0;
+
+            activeQuestions = generateQuestionsForMode(mode);
+            
+            build3DPlatforms();
+            loadQuestion();
+
+            // Hero Intro Speech
+            setTimeout(() => {
+                speakPasha(`Hi! I'm Parkour Hero! Let's solve math and parkour across the mushrooms!`);
+            }, 600);
+        }
+
+        function updateSpeedrunTimer() {
+            const elapsedSec = Math.floor((Date.now() - speedrunStartTime) / 1000);
+            const mins = String(Math.floor(elapsedSec / 60)).padStart(2, '0');
+            const secs = String(elapsedSec % 60).padStart(2, '0');
+            document.getElementById('speedrun-timer').innerText = `${mins}:${secs}`;
+        }
+
+        function loadQuestion() {
+            const currentQData = activeQuestions[currentLevel][currentQIndex];
+            document.getElementById('question-text').innerText = currentQData.q;
+            document.getElementById('q-num').innerText = currentQIndex + 1;
+            document.getElementById('level-num').innerText = currentLevel + 1;
+            document.getElementById('star-count').innerText = totalStars;
+
+            const answersContainer = document.getElementById('answers-container');
+            answersContainer.innerHTML = '';
+
+            currentQData.opts.forEach(opt => {
+                const btn = document.createElement('button');
+                btn.className = "btn-bounce bg-gradient-to-r from-indigo-500 to-indigo-700 hover:from-indigo-600 hover:to-indigo-800 text-white font-game text-2xl sm:text-4xl py-3.5 sm:py-5 rounded-2xl shadow-xl border-b-4 border-indigo-950";
+                btn.innerText = opt;
+                btn.onclick = () => checkAnswer(opt, currentQData.a);
+                answersContainer.appendChild(btn);
+            });
+
+            // Speak Question as Parkour Hero
+            const readText = currentQData.q.replace('×', 'times').replace('÷', 'divided by').replace('=', 'equals');
+            speakPasha(`What is ${readText}`);
+        }
+
+        function checkAnswer(selected, correct) {
+            if (pashaState.isJumping) return;
+
+            if (selected === correct) {
+                playSound('correct');
+                playSound('jump');
+
+                // Hero Jumps to Next 3D Platform!
+                currentQIndex++;
+                pashaState.gridX = currentQIndex;
+                const nextPlatform = platforms3D[currentQIndex];
+                
+                pashaState.targetX = nextPlatform.x;
+                pashaState.targetY = 1.2;
+                pashaState.jumpProgress = 0;
+                pashaState.isJumping = true;
+
+                totalStars += 5;
+                document.getElementById('star-count').innerText = totalStars;
+
+                const cheerMsgs = ["Awesome job!", "Great jump!", "You rock!", "Super math skills!"];
+                const cheer = cheerMsgs[Math.floor(Math.random() * cheerMsgs.length)];
+                speakPasha(cheer);
+
+            } else {
+                playSound('retry');
+                const retrySpeech = ["Nice try! Give it another shot!", "So close! Try one more time!", "You can do it!"];
+                const selectedMsg = retrySpeech[Math.floor(Math.random() * retrySpeech.length)];
+                speakPasha(selectedMsg);
+
+                // Show retry modal
+                document.getElementById('retry-msg-body').innerText = `"${selectedMsg}"`;
+                document.getElementById('retry-modal').classList.remove('hidden');
+            }
+        }
+
+        function closeRetryModal() {
+            document.getElementById('retry-modal').classList.add('hidden');
+        }
+
+        function onJumpComplete() {
+            if (currentQIndex >= 3) {
+                // Level Completed -> Start 3D Catch the Falling Stars Reward Game
+                setTimeout(() => {
+                    playSound('fanfare');
+                    speakPasha(`Level complete! Time for Parkour Hero's Star Catcher mini-game!`);
+                    start3DRewardGame();
+                }, 400);
+            } else {
+                loadQuestion();
+            }
+        }
+
+        /* 3D CATCH THE FALLING STARS MINI-GAME ENGINE */
+        let miniScene, miniCamera, miniRenderer;
+        let miniStars = [];
+        let miniTimer = 15;
+        let miniCaught = 0;
+        let miniInterval = null;
+        let miniAnimFrame = null;
+        const raycaster = new THREE.Raycaster();
+        const mouse = new THREE.Vector2();
+
+        function start3DRewardGame() {
+            const overlay = document.getElementById('reward-overlay');
+            overlay.classList.remove('hidden');
+
+            const miniCanvas = document.getElementById('miniCanvas');
+            miniCanvas.width = overlay.clientWidth;
+            miniCanvas.height = overlay.clientHeight;
+
+            // Setup 3D Mini-Scene
+            miniScene = new THREE.Scene();
+            miniScene.background = new THREE.Color(0x0f172a); // Deep Night Sky
+
+            miniCamera = new THREE.PerspectiveCamera(50, miniCanvas.width / miniCanvas.height, 0.1, 100);
+            miniCamera.position.set(0, 0, 15);
+
+            miniRenderer = new THREE.WebGLRenderer({ canvas: miniCanvas, antialias: true });
+            miniRenderer.setSize(miniCanvas.width, miniCanvas.height);
+
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.9);
+            miniScene.add(ambientLight);
+
+            miniStars = [];
+            miniTimer = 15;
+            miniCaught = 0;
+            document.getElementById('mini-timer').innerText = miniTimer;
+            document.getElementById('mini-caught').innerText = miniCaught;
+
+            miniInterval = setInterval(() => {
+                miniTimer--;
+                document.getElementById('mini-timer').innerText = miniTimer;
+
+                if (miniTimer <= 0) {
+                    end3DRewardGame();
+                }
+            }, 1000);
+
+            miniCanvas.onclick = handle3DStarClick;
+
+            update3DMiniGame();
+        }
+
+        function handle3DStarClick(e) {
+            const rect = miniCanvas.getBoundingClientRect();
+            mouse.x = ((e.clientX - rect.left) / miniCanvas.clientWidth) * 2 - 1;
+            mouse.y = -((e.clientY - rect.top) / miniCanvas.clientHeight) * 2 + 1;
+
+            raycaster.setFromCamera(mouse, miniCamera);
+            const intersects = raycaster.intersectObjects(miniStars.map(s => s.mesh));
+
+            if (intersects.length > 0) {
+                const hitMesh = intersects[0].object;
+                const starIdx = miniStars.findIndex(s => s.mesh === hitMesh);
+                if (starIdx !== -1) {
+                    playSound('star');
+                    miniScene.remove(hitMesh);
+                    miniStars.splice(starIdx, 1);
+
+                    miniCaught++;
+                    totalStars += 2; // Bonus stars
+                    document.getElementById('mini-caught').innerText = miniCaught;
+                    document.getElementById('star-count').innerText = totalStars;
+                }
+            }
+        }
+
+        function update3DMiniGame() {
+            // Spawn 3D Stars
+            if (Math.random() < 0.1 && miniStars.length < 12) {
+                const starGeo = new THREE.OctahedronGeometry(0.8, 0);
+                const starMat = new THREE.MeshBasicMaterial({
+                    color: [0xfacc15, 0x38bdf8, 0xf43f5e, 0xa855f7][Math.floor(Math.random() * 4)]
+                });
+                const starMesh = new THREE.Mesh(starGeo, starMat);
+                starMesh.position.set((Math.random() - 0.5) * 16, 9, (Math.random() - 0.5) * 4);
+
+                miniScene.add(starMesh);
+                miniStars.push({
+                    mesh: starMesh,
+                    speed: 0.08 + Math.random() * 0.07,
+                    rotSpeed: 0.03 + Math.random() * 0.05
+                });
+            }
+
+            // Animate Falling 3D Stars
+            for (let i = miniStars.length - 1; i >= 0; i--) {
+                const s = miniStars[i];
+                s.mesh.position.y -= s.speed;
+                s.mesh.rotation.y += s.rotSpeed;
+                s.mesh.rotation.x += s.rotSpeed;
+
+                if (s.mesh.position.y < -9) {
+                    miniScene.remove(s.mesh);
+                    miniStars.splice(i, 1);
+                }
+            }
+
+            miniRenderer.render(miniScene, miniCamera);
+
+            if (!document.getElementById('reward-overlay').classList.contains('hidden')) {
+                miniAnimFrame = requestAnimationFrame(update3DMiniGame);
+            }
+        }
+
+        function end3DRewardGame() {
+            clearInterval(miniInterval);
+            cancelAnimationFrame(miniAnimFrame);
+            document.getElementById('reward-overlay').classList.add('hidden');
+
+            currentLevel++;
+            currentQIndex = 0;
+
+            if (currentLevel >= 5) {
+                showVictoryScreen();
+            } else {
+                build3DPlatforms();
+                loadQuestion();
+                speakPasha(`Level ${currentLevel + 1}! Let's go!`);
+            }
+        }
+
+        function showVictoryScreen() {
+            playSound('fanfare');
+            if (speedrunTimerInterval) clearInterval(speedrunTimerInterval);
+
+            document.getElementById('final-stars-count').innerText = totalStars;
+
+            if (currentMode === 'speedrun') {
+                document.getElementById('final-time-text').classList.remove('hidden');
+                document.getElementById('final-time-val').innerText = document.getElementById('speedrun-timer').innerText;
+            } else {
+                document.getElementById('final-time-text').classList.add('hidden');
+            }
+
+            document.getElementById('victory-overlay').classList.remove('hidden');
+
+            // Trigger Victory Confetti Explosions!
+            if (typeof confetti === 'function') {
+                confetti({ particleCount: 120, spread: 80, origin: { y: 0.6 } });
+                setTimeout(() => confetti({ particleCount: 80, angle: 60, spread: 55, origin: { x: 0 } }), 300);
+                setTimeout(() => confetti({ particleCount: 80, angle: 120, spread: 55, origin: { x: 1 } }), 600);
+            }
+
+            speakPasha(`Hooray! You helped Parkour Hero complete all 5 Parkour Obby levels! You are a Math Champion!`);
+        }
+
+        function returnToMenu() {
+            document.getElementById('victory-overlay').classList.add('hidden');
+            document.getElementById('mode-select-overlay').classList.remove('hidden');
+        }
+
+        /* WINDOW LOAD INIT */
+        window.onload = () => {
+            init3DWorld();
+            animate3D();
+        };
+    </script>
+</body>
+</html>

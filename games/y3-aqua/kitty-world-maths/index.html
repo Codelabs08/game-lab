@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kitty World Maths Quiz</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        hkPink: '#FFB7C5',
+                        hkDarkPink: '#FF69B4',
+                        hkRed: '#FF2A4B',
+                        hkSoftRed: '#FF4D6D',
+                        hkCream: '#FFF5F6',
+                        hkPastelYellow: '#FFF275',
+                    },
+                    fontFamily: {
+                        sans: ['Comic Sans MS', 'Chalkboard SE', 'Fredoka', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Canvas Confetti CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <!-- FontAwesome for cute icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap');
+
+        body {
+            font-family: 'Fredoka', 'Comic Sans MS', cursive, sans-serif;
+            background-color: #FFB7C5;
+            background-image: radial-gradient(#FF69B4 15%, transparent 16%), radial-gradient(#FF2A4B 15%, transparent 16%);
+            background-size: 60px 60px;
+            background-position: 0 0, 30px 30px;
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: manipulation;
+        }
+
+        /* Cute Bouncy Buttons & Animations */
+        .btn-bounce {
+            transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .btn-bounce:hover {
+            transform: scale(1.05) translateY(-3px);
+        }
+        .btn-bounce:active {
+            transform: scale(0.95) translateY(2px);
+        }
+
+        @keyframes pulse-slow {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        .animate-pulse-slow {
+            animation: pulse-slow 3s infinite ease-in-out;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-10px) rotate(3deg); }
+        }
+        .animate-float {
+            animation: float 4s ease-in-out infinite;
+        }
+
+        .hk-card {
+            background: rgba(255, 255, 255, 0.95);
+            border: 5px solid #FF4D6D;
+            box-shadow: 0 10px 25px -5px rgba(255, 42, 75, 0.3), 0 0 15px rgba(255, 183, 197, 0.8);
+            border-radius: 2rem;
+        }
+
+        .hk-btn-red {
+            background: linear-gradient(180deg, #FF6B8B 0%, #FF2A4B 100%);
+            border: 3px solid #FFF;
+            box-shadow: 0 6px 0 #C41E3A, 0 10px 10px rgba(0,0,0,0.15);
+            color: white;
+        }
+        .hk-btn-red:active {
+            box-shadow: 0 2px 0 #C41E3A, 0 4px 5px rgba(0,0,0,0.15);
+        }
+
+        .hk-btn-pink {
+            background: linear-gradient(180deg, #FFB7C5 0%, #FF69B4 100%);
+            border: 3px solid #FFF;
+            box-shadow: 0 6px 0 #C71585, 0 10px 10px rgba(0,0,0,0.15);
+            color: white;
+        }
+        .hk-btn-pink:active {
+            box-shadow: 0 2px 0 #C71585, 0 4px 5px rgba(0,0,0,0.15);
+        }
+
+        .hk-btn-yellow {
+            background: linear-gradient(180deg, #FFF59D 0%, #FBC02D 100%);
+            border: 3px solid #FFF;
+            box-shadow: 0 6px 0 #F57F17, 0 10px 10px rgba(0,0,0,0.15);
+            color: #5D4037;
+        }
+
+        /* SVG Kawaii Bow Styles */
+        .bow-shadow {
+            filter: drop-shadow(0px 4px 4px rgba(0,0,0,0.15));
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 10px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #FFF5F6;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #FF69B4;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-2 sm:p-4 text-gray-800">
+
+    <!-- Audio Control floating top-right -->
+    <div class="fixed top-4 right-4 z-50 flex gap-2">
+        <button id="soundToggleBtn" onclick="toggleSound()" class="hk-btn-yellow p-3 rounded-full btn-bounce shadow-lg flex items-center justify-center w-12 h-12">
+            <i id="soundIcon" class="fas fa-volume-up text-xl"></i>
+        </button>
+    </div>
+
+    <!-- MAIN CONTAINER -->
+    <div class="w-full max-w-4xl min-h-[600px] relative">
+        
+        <!-- ========================================== -->
+        <!-- SCREEN 1: WELCOME / TITLE SCREEN           -->
+        <!-- ========================================== -->
+        <div id="welcomeScreen" class="hk-card p-6 sm:p-10 text-center relative overflow-hidden my-auto">
+            <!-- Decorative Cloud & Ribbon -->
+            <div class="absolute -top-10 -left-10 text-pink-200 text-8xl opacity-40 animate-float">☁️</div>
+            <div class="absolute -bottom-10 -right-10 text-pink-200 text-8xl opacity-40 animate-float" style="animation-delay: 2s;">☁️</div>
+            
+            <!-- Kawaii Bow Banner Header -->
+            <div class="flex justify-center mb-4">
+                <svg class="w-24 h-24 bow-shadow animate-pulse-slow" viewBox="0 0 100 100">
+                    <!-- Left Loop -->
+                    <path d="M 50 50 C 20 20, 10 60, 45 55 Z" fill="#FF2A4B" stroke="#FFF" stroke-width="3"/>
+                    <path d="M 45 48 C 25 30, 20 50, 42 52 Z" fill="#FF69B4"/>
+                    <!-- Right Loop -->
+                    <path d="M 50 50 C 80 20, 90 60, 55 55 Z" fill="#FF2A4B" stroke="#FFF" stroke-width="3"/>
+                    <path d="M 55 48 C 75 30, 80 50, 58 52 Z" fill="#FF69B4"/>
+                    <!-- Center Knot -->
+                    <circle cx="50" cy="52" r="12" fill="#FF2A4B" stroke="#FFF" stroke-width="3"/>
+                    <circle cx="48" cy="49" r="4" fill="#FFF" opacity="0.6"/>
+                    <!-- Tails -->
+                    <path d="M 45 58 L 30 85 L 42 80 L 48 60 Z" fill="#FF2A4B" stroke="#FFF" stroke-width="2"/>
+                    <path d="M 55 58 L 70 85 L 58 80 L 52 60 Z" fill="#FF2A4B" stroke="#FFF" stroke-width="2"/>
+                </svg>
+            </div>
+
+            <h1 class="text-3xl sm:text-5xl font-extrabold text-red-600 tracking-wide drop-shadow-md mb-2">Kitty World Maths Quiz</h1>
+            <p class="text-lg sm:text-2xl text-pink-600 font-semibold mb-6">
+                🎀 Year 3 Times Tables Maths Adventure! 🎀
+            </p>
+
+            <!-- Mascot Display -->
+            <div class="bg-pink-100 rounded-3xl p-6 mb-8 max-w-sm mx-auto border-4 border-pink-300 flex flex-col items-center shadow-inner">
+                <div class="text-7xl mb-2 animate-float">🐱✨</div>
+                <div class="bg-white px-4 py-2 rounded-full text-pink-600 font-bold border-2 border-pink-300 shadow-sm text-sm sm:text-base">
+                    5 Levels • 15 Fun Questions • Unlock Dress-Up Game!
+                </div>
+            </div>
+
+            <!-- Start Button -->
+            <button onclick="startQuiz()" class="hk-btn-red text-2xl sm:text-3xl font-extrabold px-10 py-5 rounded-full btn-bounce w-full max-w-md shadow-2xl flex items-center justify-center gap-3 mx-auto">
+                <span>START QUIZ</span>
+                <i class="fas fa-play-circle text-3xl"></i>
+            </button>
+            
+            <div class="mt-6 text-pink-500 font-medium text-sm sm:text-base">
+                Practicing 2x, 3x, 4x, 5x, 8x & 10x tables! 🌟
+            </div>
+        </div>
+
+        <!-- ========================================== -->
+        <!-- SCREEN 2: QUIZ GAME SCREEN                 -->
+        <!-- ========================================== -->
+        <div id="quizScreen" class="hk-card p-4 sm:p-8 hidden relative">
+            <!-- Top Bar (Level, Progress, Score) -->
+            <div class="flex flex-wrap justify-between items-center bg-pink-100 p-3 sm:p-4 rounded-2xl border-2 border-pink-300 mb-6 gap-2">
+                <!-- Level Badge -->
+                <div class="bg-red-500 text-white font-bold px-4 py-2 rounded-xl text-base sm:text-lg shadow-sm flex items-center gap-2">
+                    <span id="levelBadge">Level 1/5</span> 🎀
+                </div>
+                
+                <!-- Progress Tracker -->
+                <div class="text-pink-700 font-bold text-sm sm:text-base">
+                    Question <span id="questionNumText">1</span> of 3
+                </div>
+
+                <!-- Score Badge -->
+                <div class="bg-yellow-300 text-red-700 font-extrabold px-4 py-2 rounded-xl text-base sm:text-lg shadow-sm flex items-center gap-1">
+                    <span>⭐ Score:</span>
+                    <span id="scoreText">0</span>
+                </div>
+            </div>
+
+            <!-- Level Topic Indicator -->
+            <div class="text-center mb-4">
+                <span id="levelTopicBadge" class="bg-pink-200 text-pink-800 font-bold px-4 py-1 rounded-full text-xs sm:text-sm">
+                    Level Topic: 2x & 10x Tables
+                </span>
+            </div>
+
+            <!-- Question Box -->
+            <div class="bg-white rounded-3xl p-6 sm:p-10 border-4 border-pink-300 text-center mb-6 shadow-md relative overflow-hidden">
+                <div class="text-xs sm:text-sm uppercase tracking-widest text-pink-400 font-extrabold mb-1">Maths Challenge</div>
+                <div id="questionText" class="text-3xl sm:text-5xl font-black text-gray-800 tracking-wider">
+                    2 × 5 = ?
+                </div>
+                <div class="text-4xl absolute bottom-2 right-2 opacity-20 pointer-events-none">🐱</div>
+            </div>
+
+            <!-- Answer Buttons Grid -->
+            <div id="answersGrid" class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+                <!-- Populated dynamically via JavaScript -->
+            </div>
+
+            <!-- Feedback Message Banner -->
+            <div id="feedbackBanner" class="min-h-[60px] flex items-center justify-center rounded-2xl p-3 text-center text-lg sm:text-xl font-extrabold transition-all duration-300 opacity-0 transform scale-95">
+                <span id="feedbackText">Super Star! 🌟</span>
+            </div>
+        </div>
+
+        <!-- ========================================== -->
+        <!-- SCREEN 3: DRESS-UP REWARD GAME             -->
+        <!-- ========================================== -->
+        <div id="rewardScreen" class="hk-card p-4 sm:p-8 hidden">
+            <!-- Header Banner -->
+            <div class="text-center mb-4">
+                <div class="inline-block bg-red-500 text-white font-extrabold text-xs sm:text-sm px-4 py-1 rounded-full uppercase tracking-wider mb-1">
+                    🎉 Quiz Completed! Reward Unlocked 🎉
+                </div>
+                <h2 class="text-2xl sm:text-4xl font-extrabold text-red-600">
+                    Dress My Quizmaster Hero 👑
+                </h2>
+                <p id="finalScoreCelebration" class="text-pink-600 font-bold text-sm sm:text-lg">
+                    You scored 15/15! You are a Math Super Star! ⭐
+                </p>
+            </div>
+
+            <!-- Main Interactive Studio -->
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-4 items-start">
+                
+                <!-- Left/Center Stage: Paper Doll Character Viewport -->
+                <div id="dollStage" class="md:col-span-6 bg-gradient-to-b from-sky-100 to-pink-100 rounded-3xl border-4 border-pink-300 p-4 min-h-[420px] flex flex-col items-center justify-center relative overflow-hidden shadow-inner">
+                    
+                    <!-- Background Theme Element -->
+                    <div id="stageBackground" class="absolute inset-0 flex items-center justify-center opacity-30 text-9xl pointer-events-none">
+                        ☁️🌸
+                    </div>
+
+                    <!-- Character Canvas Stack -->
+                    <div class="relative w-64 h-80 flex items-center justify-center">
+                        
+                        <!-- 1. Background Aura / Wings -->
+                        <div id="layerWings" class="absolute text-7xl z-0 transition-all duration-300 opacity-0 transform scale-90">
+                            🪽
+                        </div>
+
+                        <!-- 2. Base Character Body (Hello Kitty Style Mascot) -->
+                        <div class="relative z-10 flex flex-col items-center">
+                            <!-- Ears & Head Frame -->
+                            <div class="relative w-40 h-32 bg-white rounded-[50%] border-4 border-gray-800 flex items-center justify-center shadow-md">
+                                <!-- Left Ear -->
+                                <div class="absolute -top-4 left-2 w-10 h-12 bg-white border-4 border-gray-800 rounded-tl-full transform -rotate-12"></div>
+                                <!-- Right Ear -->
+                                <div class="absolute -top-4 right-2 w-10 h-12 bg-white border-4 border-gray-800 rounded-tr-full transform rotate-12"></div>
+                                
+                                <!-- Cute Face Features -->
+                                <!-- Eyes -->
+                                <div class="absolute top-14 left-10 w-3.5 h-5 bg-gray-800 rounded-full"></div>
+                                <div class="absolute top-14 right-10 w-3.5 h-5 bg-gray-800 rounded-full"></div>
+                                <!-- Nose -->
+                                <div class="absolute top-16 w-3 h-2 bg-yellow-400 rounded-full border border-gray-800"></div>
+                                <!-- Whiskers Left -->
+                                <div class="absolute top-12 left-1 w-6 h-1 bg-gray-800 transform -rotate-6 rounded"></div>
+                                <div class="absolute top-16 left-1 w-6 h-1 bg-gray-800 rounded"></div>
+                                <div class="absolute top-20 left-2 w-6 h-1 bg-gray-800 transform rotate-6 rounded"></div>
+                                <!-- Whiskers Right -->
+                                <div class="absolute top-12 right-1 w-6 h-1 bg-gray-800 transform rotate-6 rounded"></div>
+                                <div class="absolute top-16 right-1 w-6 h-1 bg-gray-800 rounded"></div>
+                                <div class="absolute top-20 right-2 w-6 h-1 bg-gray-800 transform -rotate-6 rounded"></div>
+
+                                <!-- LAYER: Headwear / Hats -->
+                                <div id="layerHeadwear" class="absolute -top-8 z-30 text-5xl transition-all duration-300">
+                                    🎀
+                                </div>
+                            </div>
+
+                            <!-- Body Base -->
+                            <div id="baseBody" class="w-24 h-24 bg-white border-4 border-gray-800 rounded-b-3xl -mt-2 relative z-10 flex justify-center items-end pb-2">
+                                <!-- Feet -->
+                                <div class="flex gap-4">
+                                    <div class="w-7 h-4 bg-white border-2 border-gray-800 rounded-full"></div>
+                                    <div class="w-7 h-4 bg-white border-2 border-gray-800 rounded-full"></div>
+                                </div>
+
+                                <!-- LAYER: Outfit / Dress -->
+                                <div id="layerOutfit" class="absolute inset-0 z-20 flex items-center justify-center text-6xl">
+                                    👗
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 3. LAYER: Hand Accessory -->
+                        <div id="layerAccessory" class="absolute right-2 bottom-12 z-30 text-5xl transition-all duration-300">
+                            🪄
+                        </div>
+                    </div>
+
+                    <!-- Character Name Title -->
+                    <div class="mt-2 bg-white/90 border-2 border-pink-400 px-4 py-1 rounded-full font-extrabold text-pink-700 text-sm shadow-sm z-10">
+                        Quizmaster Hero ✨
+                    </div>
+                </div>
+
+                <!-- Right Side: Closet Customization Tabs & Options -->
+                <div class="md:col-span-6 flex flex-col gap-3">
+                    
+                    <!-- Closet Category Tabs -->
+                    <div class="flex gap-1 bg-pink-200 p-1.5 rounded-2xl border-2 border-pink-300 overflow-x-auto">
+                        <button onclick="switchClosetTab('hats')" id="tab-hats" class="closet-tab flex-1 py-2 px-3 rounded-xl font-bold text-xs sm:text-sm bg-white text-red-600 shadow-sm border border-pink-300">
+                            👑 Hats
+                        </button>
+                        <button onclick="switchClosetTab('outfits')" id="tab-outfits" class="closet-tab flex-1 py-2 px-3 rounded-xl font-bold text-xs sm:text-sm text-pink-700 hover:bg-white/50">
+                            👗 Dresses
+                        </button>
+                        <button onclick="switchClosetTab('props')" id="tab-props" class="closet-tab flex-1 py-2 px-3 rounded-xl font-bold text-xs sm:text-sm text-pink-700 hover:bg-white/50">
+                            🪄 Props
+                        </button>
+                        <button onclick="switchClosetTab('themes')" id="tab-themes" class="closet-tab flex-1 py-2 px-3 rounded-xl font-bold text-xs sm:text-sm text-pink-700 hover:bg-white/50">
+                            🖼️ World
+                        </button>
+                    </div>
+
+                    <!-- Items Display Grid -->
+                    <div class="bg-white rounded-3xl border-4 border-pink-300 p-4 min-h-[260px]">
+                        
+                        <!-- Category: Hats -->
+                        <div id="panel-hats" class="closet-panel grid grid-cols-3 gap-3">
+                            <button onclick="equipItem('headwear', '🎀')" class="item-btn bg-pink-50 hover:bg-pink-100 p-3 rounded-2xl border-2 border-pink-200 text-3xl btn-bounce flex flex-col items-center">
+                                <span>🎀</span>
+                                <span class="text-xs font-bold text-gray-600 mt-1">Red Bow</span>
+                            </button>
+                            <button onclick="equipItem('headwear', '👑')" class="item-btn bg-pink-50 hover:bg-pink-100 p-3 rounded-2xl border-2 border-pink-200 text-3xl btn-bounce flex flex-col items-center">
+                                <span>👑</span>
+                                <span class="text-xs font-bold text-gray-600 mt-1">Crown</span>
+                            </button>
+                            <button onclick="equipItem('headwear', '🌸')" class="item-btn bg-pink-50 hover:bg-pink-100 p-3 rounded-2xl border-2 border-pink-200 text-3xl btn-bounce flex flex-col items-center">
+                                <span>🌸</span>
+                                <span class="text-xs font-bold text-gray-600 mt-1">Flowers</span>
+                            </button>
+                            <button onclick="equipItem('headwear', '🐰')" class="item-btn bg-pink-50 hover:bg-pink-100 p-3 rounded-2xl border-2 border-pink-200 text-3xl btn-bounce flex flex-col items-center">
+                                <span>🐰</span>
+                                <span class="text-xs font-bold text-gray-600 mt-1">Bunny</span>
+                            </button>
+                            <button onclick="equipItem('headwear', '🥳')" class="item-btn bg-pink-50 hover:bg-pink-100 p-3 rounded-2xl border-2 border-pink-200 text-3xl btn-bounce flex flex-col items-center">
+                                <span>🥳</span>
+                                <span class="text-xs font-bold text-gray-600 mt-1">Party</span>
+                            </button>
+                            <button onclick="equipItem('headwear', '')" class="item-btn bg-gray-100 hover:bg-gray-200 p-3 rounded-2xl border-2 border-gray-300 text-xl font-bold text-gray-500 btn-bounce flex flex-col items-center justify-center">
+                                🚫
+                                <span class="text-xs font-bold mt-1">None</span>
+                            </button>
+                        </div>
+
+                        <!-- Category: Outfits -->
+                        <div id="panel-outfits" class="closet-panel hidden grid grid-cols-3 gap-3">
+                            <button onclick="equipItem('outfit', '👗')" class="item-btn bg-pink-50 hover:bg-pink-100 p-3 rounded-2xl border-2 border-pink-200 text-3xl btn-bounce flex flex-col items-center">
+                                <span>👗</span>
+                                <span class="text-xs font-bold text-gray-600 mt-1">Pink Dress</span>
+                            </button>
+                            <button onclick="equipItem('outfit', '🍓')" class="item-btn bg-pink-50 hover:bg-pink-100 p-3 rounded-2xl border-2 border-pink-200 text-3xl btn-bounce flex flex-col items-center">
+                                <span>🍓</span>
+                                <span class="text-xs font-bold text-gray-600 mt-1">Strawberry</span>
+                            </button>
+                            <button onclick="equipItem('outfit', '🥋')" class="item-btn bg-pink-50 hover:bg-pink-100 p-3 rounded-2xl border-2 border-pink-200 text-3xl btn-bounce flex flex-col items-center">
+                                <span>🥋</span>
+                                <span class="text-xs font-bold text-gray-600 mt-1">Kimono</span>
+                            </button>
+                            <button onclick="equipItem('outfit', '🦸‍♀️️')" class="item-btn bg-pink-50 hover:bg-pink-100 p-3 rounded-2xl border-2 border-pink-200 text-3xl btn-bounce flex flex-col items-center">
+                                <span>🦸‍♀️</span>
+                                <span class="text-xs font-bold text-gray-600 mt-1">Hero Cape</span>
+                            </button>
+                            <button onclick="equipItem('outfit', '🧚‍♀️')" class="item-btn bg-pink-50 hover:bg-pink-100 p-3 rounded-2xl border-2 border-pink-200 text-3xl btn-bounce flex flex-col items-center">
+                                <span>🧚‍♀️</span>
+                                <span class="text-xs font-bold text-gray-600 mt-1">Fairy Wings</span>
+                            </button>
+                        </div>
+
+                        <!-- Category: Hand Accessories -->
+                        <div id="panel-props" class="closet-panel hidden grid grid-cols-3 gap-3">
+                            <button onclick="equipItem('accessory', '🪄')" class="item-btn bg-pink-50 hover:bg-pink-100 p-3 rounded-2xl border-2 border-pink-200 text-3xl btn-bounce flex flex-col items-center">
+                                <span>🪄</span>
+                                <span class="text-xs font-bold text-gray-600 mt-1">Magic Wand</span>
+                            </button>
+                            <button onclick="equipItem('accessory', '🍭')" class="item-btn bg-pink-50 hover:bg-pink-100 p-3 rounded-2xl border-2 border-pink-200 text-3xl btn-bounce flex flex-col items-center">
+                                <span>🍭</span>
+                                <span class="text-xs font-bold text-gray-600 mt-1">Lollipop</span>
+                            </button>
+                            <button onclick="equipItem('accessory', '🏆')" class="item-btn bg-pink-50 hover:bg-pink-100 p-3 rounded-2xl border-2 border-pink-200 text-3xl btn-bounce flex flex-col items-center">
+                                <span>🏆</span>
+                                <span class="text-xs font-bold text-gray-600 mt-1">Math Trophy</span>
+                            </button>
+                            <button onclick="equipItem('accessory', '⭐')" class="item-btn bg-pink-50 hover:bg-pink-100 p-3 rounded-2xl border-2 border-pink-200 text-3xl btn-bounce flex flex-col items-center">
+                                <span>⭐</span>
+                                <span class="text-xs font-bold text-gray-600 mt-1">Glitter Star</span>
+                            </button>
+                            <button onclick="equipItem('accessory', '🧁')" class="item-btn bg-pink-50 hover:bg-pink-100 p-3 rounded-2xl border-2 border-pink-200 text-3xl btn-bounce flex flex-col items-center">
+                                <span>🧁</span>
+                                <span class="text-xs font-bold text-gray-600 mt-1">Cupcake</span>
+                            </button>
+                            <button onclick="equipItem('accessory', '')" class="item-btn bg-gray-100 hover:bg-gray-200 p-3 rounded-2xl border-2 border-gray-300 text-xl font-bold text-gray-500 btn-bounce flex flex-col items-center justify-center">
+                                🚫
+                                <span class="text-xs font-bold mt-1">None</span>
+                            </button>
+                        </div>
+
+                        <!-- Category: World Themes -->
+                        <div id="panel-themes" class="closet-panel hidden grid grid-cols-2 gap-3">
+                            <button onclick="equipItem('theme', '☁️🌸', 'from-sky-100 to-pink-100')" class="item-btn bg-pink-50 hover:bg-pink-100 p-3 rounded-2xl border-2 border-pink-200 text-2xl btn-bounce flex flex-col items-center">
+                                <span>☁️🌸</span>
+                                <span class="text-xs font-bold text-gray-600 mt-1">Pastel Cloud</span>
+                            </button>
+                            <button onclick="equipItem('theme', '🍓🌿', 'from-red-100 to-pink-200')" class="item-btn bg-pink-50 hover:bg-pink-100 p-3 rounded-2xl border-2 border-pink-200 text-2xl btn-bounce flex flex-col items-center">
+                                <span>🍓🌿</span>
+                                <span class="text-xs font-bold text-gray-600 mt-1">Strawberry Garden</span>
+                            </button>
+                            <button onclick="equipItem('theme', '🎀⭐', 'from-yellow-100 to-pink-200')" class="item-btn bg-pink-50 hover:bg-pink-100 p-3 rounded-2xl border-2 border-pink-200 text-2xl btn-bounce flex flex-col items-center">
+                                <span>🎀⭐</span>
+                                <span class="text-xs font-bold text-gray-600 mt-1">Bow Kingdom</span>
+                            </button>
+                            <button onclick="equipItem('theme', '🏰✨', 'from-purple-100 to-pink-200')" class="item-btn bg-pink-50 hover:bg-pink-100 p-3 rounded-2xl border-2 border-pink-200 text-2xl btn-bounce flex flex-col items-center">
+                                <span>🏰✨</span>
+                                <span class="text-xs font-bold text-gray-600 mt-1">Magic Castle</span>
+                            </button>
+                        </div>
+
+                    </div>
+
+                    <!-- Bottom Action Controls -->
+                    <div class="flex gap-3 mt-2">
+                        <button onclick="playAgain()" class="hk-btn-pink py-3 px-4 rounded-2xl font-extrabold text-sm sm:text-base btn-bounce flex-1 flex items-center justify-center gap-2">
+                            <i class="fas fa-redo"></i> Play Quiz Again
+                        </button>
+                        <button onclick="showCelebrationPoster()" class="hk-btn-red py-3 px-4 rounded-2xl font-extrabold text-sm sm:text-base btn-bounce flex-1 flex items-center justify-center gap-2">
+                            <i class="fas fa-camera"></i> Show Poster
+                        </button>
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ========================================== -->
+    <!-- MODAL: POSTER CELEBRATION MODAL           -->
+    <!-- ========================================== -->
+    <div id="posterModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="hk-card max-w-md w-full p-6 text-center relative animate-pulse-slow">
+            <button onclick="closePosterModal()" class="absolute top-4 right-4 bg-red-500 text-white w-10 h-10 rounded-full font-bold text-xl border-2 border-white shadow-md">✕</button>
+            
+            <div class="text-3xl font-black text-red-600 mb-1">OFFICIAL CERTIFICATE</div>
+            <div class="text-pink-500 font-bold mb-4">🎀 Hero Hello Kitty World 🎀</div>
+
+            <div id="posterCardContent" class="bg-gradient-to-b from-pink-100 to-white p-6 rounded-3xl border-4 border-dashed border-pink-400 mb-6 shadow-inner">
+                <div class="text-6xl mb-2">👑🐱✨</div>
+                <h3 class="text-2xl font-extrabold text-red-600">Math Super Star!</h3>
+                <p class="text-pink-700 font-bold mt-1">Hero</p>
+                <div class="my-4 bg-yellow-200 text-yellow-900 py-2 px-4 rounded-xl font-black text-lg border-2 border-yellow-400">
+                    Final Quiz Score: <span id="posterScore">15/15</span>
+                </div>
+                <p class="text-xs text-gray-600 italic">"Master of 2x, 3x, 4x, 5x, 8x & 10x Times Tables!"</p>
+            </div>
+
+            <button onclick="closePosterModal()" class="hk-btn-red py-3 px-8 rounded-full font-extrabold text-lg btn-bounce">
+                Awesome! 💕
+            </button>
+        </div>
+    </div>
+
+    <script>
+        /* ===================================================================
+           QUESTION BANK (Year 3 Times Tables: 2x, 3x, 4x, 5x, 8x, 10x)
+           5 Levels x 3 Questions = 15 Total Questions
+        =================================================================== */
+        const quizLevels = [
+            {
+                level: 1,
+                topic: "Level 1: 2x & 10x Tables 🌸",
+                questions: [
+                    { q: "2 × 4 = ?", options: ["6", "8", "10", "12"], answer: 1 },
+                    { q: "10 × 3 = ?", options: ["20", "25", "30", "35"], answer: 2 },
+                    { q: "2 × 7 = ?", options: ["14", "12", "16", "18"], answer: 0 }
+                ]
+            },
+            {
+                level: 2,
+                topic: "Level 2: 5x & 2x Tables 🍓",
+                questions: [
+                    { q: "5 × 5 = ?", options: ["20", "25", "30", "15"], answer: 1 },
+                    { q: "2 × 9 = ?", options: ["16", "20", "18", "14"], answer: 2 },
+                    { q: "5 × 8 = ?", options: ["35", "45", "40", "50"], answer: 2 }
+                ]
+            },
+            {
+                level: 3,
+                topic: "Level 3: 3x & 4x Tables 🎀",
+                questions: [
+                    { q: "3 × 4 = ?", options: ["12", "9", "15", "16"], answer: 0 },
+                    { q: "4 × 4 = ?", options: ["12", "14", "16", "20"], answer: 2 },
+                    { q: "3 × 7 = ?", options: ["24", "21", "18", "27"], answer: 1 }
+                ]
+            },
+            {
+                level: 4,
+                topic: "Level 4: 8x Tables Challenge ⭐",
+                questions: [
+                    { q: "8 × 2 = ?", options: ["14", "18", "16", "20"], answer: 2 },
+                    { q: "8 × 5 = ?", options: ["40", "35", "48", "32"], answer: 0 },
+                    { q: "3 × 8 = ?", options: ["21", "24", "28", "30"], answer: 1 }
+                ]
+            },
+            {
+                level: 5,
+                topic: "Level 5: Grand Master Mix! 👑",
+                questions: [
+                    { q: "4 × 8 = ?", options: ["32", "28", "36", "40"], answer: 0 },
+                    { q: "10 × 8 = ?", options: ["80", "70", "90", "100"], answer: 0 },
+                    { q: "5 × 9 = ?", options: ["40", "50", "45", "35"], answer: 2 }
+                ]
+            }
+        ];
+
+        /* Encouragement Compliments */
+        const happyEncouragements = [
+            "Super Star! 🌟",
+            "Kawaii Math Princess! 🎀",
+            "Brilliant Work! 💖",
+            "You are Amazing! ✨",
+            "Math Genius! 👑",
+            "So Smart! 🌸"
+        ];
+
+        /* Application State */
+        let currentLevelIdx = 0;
+        let currentQuestionIdx = 0;
+        let score = 0;
+        let soundEnabled = true;
+
+        /* Web Audio API Synthesizer Sound Effects */
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        function playSound(type) {
+            if (!soundEnabled) return;
+            try {
+                if (audioCtx.state === 'suspended') {
+                    audioCtx.resume();
+                }
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+
+                if (type === 'correct') {
+                    // Cute Happy Arpeggio Sound
+                    const now = audioCtx.currentTime;
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(523.25, now); // C5
+                    osc.frequency.setValueAtTime(659.25, now + 0.08); // E5
+                    osc.frequency.setValueAtTime(783.99, now + 0.16); // G5
+                    osc.frequency.setValueAtTime(1046.50, now + 0.24); // C6
+                    gain.gain.setValueAtTime(0.2, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+                    osc.start(now);
+                    osc.stop(now + 0.4);
+                } else if (type === 'wrong') {
+                    // Gentle Oops Sound
+                    const now = audioCtx.currentTime;
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(300, now);
+                    osc.frequency.setValueAtTime(220, now + 0.15);
+                    gain.gain.setValueAtTime(0.2, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+                    osc.start(now);
+                    osc.stop(now + 0.3);
+                } else if (type === 'click') {
+                    // Pop sound
+                    const now = audioCtx.currentTime;
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(400, now);
+                    osc.frequency.exponentialRampToValueAtTime(800, now + 0.05);
+                    gain.gain.setValueAtTime(0.15, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.08);
+                    osc.start(now);
+                    osc.stop(now + 0.08);
+                } else if (type === 'win') {
+                    // Fanfare
+                    const now = audioCtx.currentTime;
+                    const notes = [523.25, 659.25, 783.99, 1046.50, 1318.51];
+                    notes.forEach((freq, idx) => {
+                        const noteOsc = audioCtx.createOscillator();
+                        const noteGain = audioCtx.createGain();
+                        noteOsc.type = 'triangle';
+                        noteOsc.frequency.setValueAtTime(freq, now + idx * 0.1);
+                        noteGain.gain.setValueAtTime(0.2, now + idx * 0.1);
+                        noteGain.gain.exponentialRampToValueAtTime(0.01, now + idx * 0.1 + 0.3);
+                        noteOsc.connect(noteGain);
+                        noteGain.connect(audioCtx.destination);
+                        noteOsc.start(now + idx * 0.1);
+                        noteOsc.stop(now + idx * 0.1 + 0.3);
+                    });
+                }
+            } catch (e) {
+                console.log("Audio play error:", e);
+            }
+        }
+
+        function toggleSound() {
+            soundEnabled = !soundEnabled;
+            const icon = document.getElementById('soundIcon');
+            if (soundEnabled) {
+                icon.className = 'fas fa-volume-up text-xl';
+                playSound('click');
+            } else {
+                icon.className = 'fas fa-volume-mute text-xl';
+            }
+        }
+
+        function startQuiz() {
+            playSound('click');
+            currentLevelIdx = 0;
+            currentQuestionIdx = 0;
+            score = 0;
+            document.getElementById('welcomeScreen').classList.add('hidden');
+            document.getElementById('rewardScreen').classList.add('hidden');
+            document.getElementById('quizScreen').classList.remove('hidden');
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            const levelData = quizLevels[currentLevelIdx];
+            const qData = levelData.questions[currentQuestionIdx];
+
+            // Update UI Counters
+            document.getElementById('levelBadge').innerText = `Level ${levelData.level}/5`;
+            document.getElementById('questionNumText').innerText = `${currentQuestionIdx + 1}`;
+            document.getElementById('scoreText').innerText = score;
+            document.getElementById('levelTopicBadge').innerText = levelData.topic;
+            document.getElementById('questionText').innerText = qData.q;
+
+            // Reset Feedback Banner
+            const feedbackBanner = document.getElementById('feedbackBanner');
+            feedbackBanner.className = 'min-h-[60px] flex items-center justify-center rounded-2xl p-3 text-center text-lg sm:text-xl font-extrabold transition-all duration-300 opacity-0 transform scale-95';
+
+            // Populate Answer Buttons
+            const answersGrid = document.getElementById('answersGrid');
+            answersGrid.innerHTML = '';
+
+            qData.options.forEach((optText, idx) => {
+                const btn = document.createElement('button');
+                btn.className = 'hk-btn-pink py-4 sm:py-5 px-6 rounded-2xl text-2xl sm:text-3xl font-extrabold btn-bounce w-full shadow-md flex items-center justify-center gap-2';
+                btn.innerHTML = `<span>${optText}</span>`;
+                btn.onclick = () => checkAnswer(idx);
+                answersGrid.appendChild(btn);
+            });
+        }
+
+        function checkAnswer(selectedIndex) {
+            const levelData = quizLevels[currentLevelIdx];
+            const qData = levelData.questions[currentQuestionIdx];
+            const feedbackBanner = document.getElementById('feedbackBanner');
+            const feedbackText = document.getElementById('feedbackText');
+            
+            // Disable answer buttons temporarily
+            const buttons = document.querySelectorAll('#answersGrid button');
+            buttons.forEach(b => b.disabled = true);
+
+            if (selectedIndex === qData.answer) {
+                score += 1;
+                document.getElementById('scoreText').innerText = score;
+                playSound('correct');
+
+                // Trigger Confetti
+                try {
+                    confetti({
+                        particleCount: 50,
+                        spread: 60,
+                        origin: { y: 0.7 },
+                        colors: ['#FF2A4B', '#FF69B4', '#FFF275']
+                    });
+                } catch(e) {}
+
+                // Random Happy Compliment
+                const compliment = happyEncouragements[Math.floor(Math.random() * happyEncouragements.length)];
+                feedbackText.innerText = compliment;
+                feedbackBanner.className = 'min-h-[60px] flex items-center justify-center rounded-2xl p-3 text-center text-xl font-extrabold transition-all duration-300 bg-green-100 text-green-700 border-2 border-green-400 opacity-100 transform scale-100';
+            } else {
+                playSound('wrong');
+                feedbackText.innerText = "So Close! Try Next Time! 💕";
+                feedbackBanner.className = 'min-h-[60px] flex items-center justify-center rounded-2xl p-3 text-center text-xl font-extrabold transition-all duration-300 bg-pink-100 text-pink-700 border-2 border-pink-400 opacity-100 transform scale-100';
+            }
+
+            // Progress to next question or level
+            setTimeout(() => {
+                currentQuestionIdx++;
+                if (currentQuestionIdx >= levelData.questions.length) {
+                    currentQuestionIdx = 0;
+                    currentLevelIdx++;
+                }
+
+                if (currentLevelIdx >= quizLevels.length) {
+                    finishQuiz();
+                } else {
+                    loadQuestion();
+                }
+            }, 1500);
+        }
+
+        function finishQuiz() {
+            playSound('win');
+            
+            // Grand Celebration Confetti Burst
+            try {
+                confetti({
+                    particleCount: 150,
+                    spread: 100,
+                    origin: { y: 0.6 }
+                });
+            } catch(e) {}
+
+            document.getElementById('quizScreen').classList.add('hidden');
+            document.getElementById('rewardScreen').classList.remove('hidden');
+
+            document.getElementById('finalScoreCelebration').innerText = `You scored ${score}/15! Math Super Star Hero! 👑`;
+            document.getElementById('posterScore').innerText = `${score}/15`;
+        }
+
+        /* Dress-Up Studio Closet Tab Navigation */
+        function switchClosetTab(tabName) {
+            playSound('click');
+            // Hide all panels
+            document.querySelectorAll('.closet-panel').forEach(panel => panel.classList.add('hidden'));
+            // Reset tab styles
+            document.querySelectorAll('.closet-tab').forEach(tab => {
+                tab.className = 'closet-tab flex-1 py-2 px-3 rounded-xl font-bold text-xs sm:text-sm text-pink-700 hover:bg-white/50';
+            });
+
+            // Show target panel & highlight tab
+            document.getElementById(`panel-${tabName}`).classList.remove('hidden');
+            const activeTab = document.getElementById(`tab-${tabName}`);
+            activeTab.className = 'closet-tab flex-1 py-2 px-3 rounded-xl font-bold text-xs sm:text-sm bg-white text-red-600 shadow-sm border border-pink-300';
+        }
+
+        /* Equip Items onto Quizmaster Hero Doll */
+        function equipItem(category, emoji, extraClass) {
+            playSound('click');
+            if (category === 'headwear') {
+                document.getElementById('layerHeadwear').innerText = emoji;
+            } else if (category === 'outfit') {
+                document.getElementById('layerOutfit').innerText = emoji;
+            } else if (category === 'accessory') {
+                document.getElementById('layerAccessory').innerText = emoji;
+            } else if (category === 'theme') {
+                document.getElementById('stageBackground').innerText = emoji;
+                if (extraClass) {
+                    const stage = document.getElementById('dollStage');
+                    stage.className = `md:col-span-6 bg-gradient-to-b ${extraClass} rounded-3xl border-4 border-pink-300 p-4 min-h-[420px] flex flex-col items-center justify-center relative overflow-hidden shadow-inner`;
+                }
+            }
+        }
+
+        /* Poster Modal Functions */
+        function showCelebrationPoster() {
+            playSound('click');
+            document.getElementById('posterModal').classList.remove('hidden');
+        }
+
+        function closePosterModal() {
+            playSound('click');
+            document.getElementById('posterModal').classList.add('hidden');
+        }
+
+        function playAgain() {
+            playSound('click');
+            startQuiz();
+        }
+    </script>
+</body>
+</html>

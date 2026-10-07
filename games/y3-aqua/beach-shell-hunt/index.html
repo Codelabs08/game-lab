@@ -1,0 +1,878 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Beach Shell Hunt</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Quicksand:wght@600;800&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        body {
+            font-family: 'Quicksand', sans-serif;
+            background: linear-gradient(180deg, #38bec9 0%, #70e0d6 30%, #fef3c7 70%, #fde047 100%);
+            touch-action: manipulation;
+            user-select: none;
+            overflow: hidden;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            width: 100vw;
+        }
+
+        .font-fun {
+            font-family: 'Fredoka One', cursive;
+        }
+
+        .btn-beach {
+            transition: all 0.15s ease;
+            box-shadow: 0 6px 0 #d97706, 0 10px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn-beach:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 0 #d97706, 0 12px 20px rgba(0, 0, 0, 0.25);
+        }
+
+        .btn-beach:active {
+            transform: translateY(4px);
+            box-shadow: 0 2px 0 #d97706, 0 4px 6px rgba(0, 0, 0, 0.15);
+        }
+
+        .glow-shell {
+            filter: drop-shadow(0 0 12px rgba(251, 191, 36, 0.9));
+        }
+
+        canvas {
+            display: block;
+            touch-action: none;
+        }
+
+        /* Float animation for decorative UI elements */
+        @keyframes floatSlow {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-10px) rotate(4deg); }
+        }
+
+        .float-anim {
+            animation: floatSlow 3s ease-in-out infinite;
+        }
+    </style>
+</head>
+<body class="flex flex-col h-screen w-screen relative select-none">
+
+    <!-- Top UI HUD Bar -->
+    <header class="w-full bg-amber-300/90 backdrop-blur-md border-b-4 border-amber-500 py-2 px-4 shadow-lg z-20 flex-shrink-0">
+        <div class="max-w-5xl mx-auto flex items-center justify-between">
+            <!-- Logo / Title -->
+            <div class="flex items-center space-x-2 cursor-pointer" onclick="showScreen('screenWelcome')">
+                <span class="text-3xl float-anim">🦀</span>
+                <span class="text-xl md:text-3xl font-fun text-amber-950 tracking-wide drop-shadow">Golden Shell</span>
+            </div>
+
+            <!-- Stats Bar -->
+            <div class="flex items-center space-x-3 sm:space-x-6 bg-amber-100/90 px-3 py-1.5 rounded-full border-2 border-amber-400 shadow-inner">
+                <!-- Level Indicator -->
+                <div class="flex items-center space-x-1">
+                    <span class="text-xs sm:text-sm font-bold text-amber-900">Level:</span>
+                    <span id="uiLevel" class="text-base sm:text-lg font-fun text-amber-600">1</span>
+                </div>
+
+                <!-- Golden Shells Collected -->
+                <div class="flex items-center space-x-1">
+                    <span class="text-lg">🐚</span>
+                    <span id="uiShells" class="text-base sm:text-lg font-fun text-amber-600">0 / 5</span>
+                </div>
+
+                <!-- Score -->
+                <div class="flex items-center space-x-1">
+                    <span class="text-lg">⭐</span>
+                    <span id="uiScore" class="text-base sm:text-lg font-fun text-amber-700">0</span>
+                </div>
+            </div>
+
+            <!-- Sound Toggle Button -->
+            <button id="btnMute" onclick="toggleMute()" class="w-10 h-10 bg-amber-400 hover:bg-amber-500 rounded-full border-2 border-amber-600 flex items-center justify-center text-amber-950 font-bold shadow-md">
+                <i id="muteIcon" class="fa-solid fa-volume-high"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="flex-grow relative w-full h-full flex items-center justify-center overflow-hidden">
+
+        <!-- SCREEN 1: Welcome Screen -->
+        <div id="screenWelcome" class="absolute z-30 max-w-lg w-11/12 bg-white/95 backdrop-blur-md rounded-3xl p-6 md:p-8 text-center shadow-2xl border-4 border-amber-300">
+            <div class="w-24 h-24 mx-auto mb-3 bg-gradient-to-tr from-yellow-300 to-amber-500 rounded-full flex items-center justify-center glow-shell border-4 border-white">
+                <span class="text-5xl">🐚</span>
+            </div>
+
+            <h1 class="text-3xl md:text-5xl text-amber-600 mb-2 font-fun tracking-wide">Beach Shell Hunt!</h1>
+            <p class="text-slate-600 text-sm md:text-base font-semibold mb-5">
+                Guide Barnaby the Crab across the sunny tidepools! Collect <span class="text-amber-600 font-bold">5 Golden Shells</span> in each level, and tag happy bouncy crabs for high-five bonuses!
+            </p>
+
+            <!-- Friendly Controls Info Box -->
+            <div class="bg-sky-50 border-2 border-sky-200 rounded-2xl p-3 mb-6 text-left text-xs md:text-sm text-sky-900 font-semibold space-y-1.5">
+                <p>🎮 <strong>Keyboard:</strong> Arrow keys or WASD to move.</p>
+                <p>🖱️ <strong>Mouse/Touch:</strong> Click or drag on screen to guide Barnaby!</p>
+                <p>✋ <strong>High-Five Bump:</strong> Tag yellow/pink crabs for happy bonus points!</p>
+            </div>
+
+            <button onclick="startGame()" class="btn-beach w-full py-3.5 bg-gradient-to-r from-amber-400 to-yellow-500 text-amber-950 font-fun text-xl md:text-2xl rounded-full border-2 border-amber-200 uppercase tracking-wider flex items-center justify-center space-x-2">
+                <span>Play Game!</span>
+                <i class="fa-solid fa-play"></i>
+            </button>
+        </div>
+
+        <!-- SCREEN 2: Level Complete Overlay -->
+        <div id="screenLevelComplete" class="hidden absolute z-30 max-w-md w-11/12 bg-white/95 backdrop-blur-md rounded-3xl p-6 text-center shadow-2xl border-4 border-amber-400">
+            <div class="text-5xl mb-2 float-anim">🎉🐚🎉</div>
+            <h2 class="text-3xl text-amber-600 font-fun mb-2">Claw-some Job!</h2>
+            <p id="levelCompleteText" class="text-slate-600 font-bold text-sm md:text-base mb-5">
+                You collected all 5 Golden Shells!
+            </p>
+
+            <button onclick="nextLevel()" class="btn-beach w-full py-3 bg-gradient-to-r from-amber-400 to-yellow-500 text-amber-950 font-fun text-xl rounded-full mb-3">
+                Next Level <i class="fa-solid fa-arrow-right ml-2"></i>
+            </button>
+        </div>
+
+        <!-- SCREEN 3: Victory / Game Finished Screen -->
+        <div id="screenVictory" class="hidden absolute z-30 max-w-md w-11/12 bg-white/95 backdrop-blur-md rounded-3xl p-6 text-center shadow-2xl border-4 border-amber-400">
+            <div class="text-6xl mb-2 float-anim">🏆🦀👑</div>
+            <h2 class="text-3xl text-amber-600 font-fun mb-2">Beach Champion!</h2>
+            <p class="text-slate-600 font-bold text-base mb-2">
+                You completed all levels and gathered all the Golden Shells!
+            </p>
+            <p class="text-amber-800 font-fun text-2xl mb-6">
+                Final Score: <span id="finalScore" class="text-amber-600">0</span>
+            </p>
+
+            <button onclick="startGame()" class="btn-beach w-full py-3 bg-gradient-to-r from-amber-400 to-yellow-500 text-amber-950 font-fun text-xl rounded-full">
+                Play Again! <i class="fa-solid fa-rotate-right ml-2"></i>
+            </button>
+        </div>
+
+        <!-- Game Canvas Layer -->
+        <canvas id="gameCanvas" class="w-full h-full absolute inset-0 z-10"></canvas>
+
+        <!-- Touch Controls Helper Overlay for Mobile -->
+        <div id="touchJoyPad" class="hidden sm:hidden absolute bottom-6 left-6 z-20 w-32 h-32 bg-amber-400/30 rounded-full border-2 border-amber-400/50 flex items-center justify-center pointer-events-none">
+            <div class="w-12 h-12 bg-amber-500/60 rounded-full"></div>
+        </div>
+    </main>
+
+    <script>
+        /* Web Audio API Sound Effects Engine (No MP3 files required) */
+        class SoundEngine {
+            constructor() {
+                this.ctx = null;
+                this.muted = false;
+            }
+
+            init() {
+                if (!this.ctx) {
+                    this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+                }
+            }
+
+            playPop() {
+                if (this.muted) return;
+                this.init();
+                const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(400, now);
+                osc.frequency.exponentialRampToValueAtTime(800, now + 0.1);
+
+                gain.gain.setValueAtTime(0.25, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
+
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(now);
+                osc.stop(now + 0.1);
+            }
+
+            playTagSound() {
+                if (this.muted) return;
+                this.init();
+                const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(523.25, now); // C5
+                osc.frequency.setValueAtTime(659.25, now + 0.08); // E5
+                osc.frequency.setValueAtTime(783.99, now + 0.16); // G5
+
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(now);
+                osc.stop(now + 0.25);
+            }
+
+            playShellCollect() {
+                if (this.muted) return;
+                this.init();
+                const now = this.ctx.currentTime;
+                const notes = [587.33, 739.99, 880, 1174.66]; // D5, F#5, A5, D6
+
+                notes.forEach((freq, idx) => {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(freq, now + idx * 0.07);
+
+                    gain.gain.setValueAtTime(0.2, now + idx * 0.07);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.07 + 0.2);
+
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start(now + idx * 0.07);
+                    osc.stop(now + idx * 0.07 + 0.2);
+                });
+            }
+
+            playLevelComplete() {
+                if (this.muted) return;
+                this.init();
+                const now = this.ctx.currentTime;
+                const notes = [523.25, 659.25, 783.99, 1046.50];
+
+                notes.forEach((freq, idx) => {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(freq, now + idx * 0.1);
+
+                    gain.gain.setValueAtTime(0.3, now + idx * 0.1);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.1 + 0.3);
+
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start(now + idx * 0.1);
+                    osc.stop(now + idx * 0.1 + 0.3);
+                });
+            }
+        }
+
+        const sound = new SoundEngine();
+
+        function toggleMute() {
+            sound.muted = !sound.muted;
+            const icon = document.getElementById('muteIcon');
+            icon.className = sound.muted ? "fa-solid fa-volume-xmark text-red-700" : "fa-solid fa-volume-high";
+        }
+    </script>
+
+    <script>
+        // Canvas & World state
+        let canvas, ctx;
+        let animationFrameId = null;
+        let lastTime = 0;
+
+        // Game parameters
+        let currentLevel = 1;
+        const maxLevels = 3;
+        let score = 0;
+        let shellsCollected = 0;
+        const shellsNeededPerLevel = 5;
+        let isGameRunning = false;
+
+        // Input Handler
+        const keys = { ArrowUp: false, ArrowDown: false, ArrowLeft: false, ArrowRight: false, w: false, a: false, s: false, d: false };
+        let pointerTarget = null; // Mouse/Touch Target Position
+
+        // Particles List
+        let particles = [];
+        let floatingTexts = [];
+
+        // Game Entities
+        let player;
+        let npcs = [];
+        let collectibles = [];
+
+        // Player Barnaby Class
+        class PlayerCrab {
+            constructor(x, y) {
+                this.x = x;
+                this.y = y;
+                this.radius = 26;
+                this.speed = 4.5;
+                this.vx = 0;
+                this.vy = 0;
+                this.wobble = 0;
+                this.facingLeft = false;
+            }
+
+            update(width, height) {
+                // Keyboard Input Logic
+                let dx = 0;
+                let dy = 0;
+
+                if (keys.ArrowUp || keys.w) dy -= 1;
+                if (keys.ArrowDown || keys.s) dy += 1;
+                if (keys.ArrowLeft || keys.a) dx -= 1;
+                if (keys.ArrowRight || keys.d) dx += 1;
+
+                // Handle Pointer/Touch destination
+                if (pointerTarget && dx === 0 && dy === 0) {
+                    const pdx = pointerTarget.x - this.x;
+                    const pdy = pointerTarget.y - this.y;
+                    const dist = Math.hypot(pdx, pdy);
+
+                    if (dist > 8) {
+                        dx = pdx / dist;
+                        dy = pdy / dist;
+                    } else {
+                        pointerTarget = null; // Reached target
+                    }
+                } else if (dx !== 0 || dy !== 0) {
+                    // Reset pointer target if keyboard used
+                    pointerTarget = null;
+                    // Normalize velocity vector
+                    const len = Math.hypot(dx, dy);
+                    dx /= len;
+                    dy /= len;
+                }
+
+                this.vx = dx * this.speed;
+                this.vy = dy * this.speed;
+
+                this.x += this.vx;
+                this.y += this.vy;
+
+                if (this.vx < 0) this.facingLeft = true;
+                if (this.vx > 0) this.facingLeft = false;
+
+                // Animate wobble when moving
+                if (this.vx !== 0 || this.vy !== 0) {
+                    this.wobble += 0.2;
+                }
+
+                // Bound inside beach water area
+                this.x = Math.max(this.radius + 10, Math.min(width - this.radius - 10, this.x));
+                this.y = Math.max(this.radius + 60, Math.min(height - this.radius - 20, this.y));
+            }
+
+            draw(ctx) {
+                ctx.save();
+                ctx.translate(this.x, this.y);
+                const rot = Math.sin(this.wobble) * 0.12;
+                ctx.rotate(rot);
+
+                if (this.facingLeft) {
+                    ctx.scale(-1, 1);
+                }
+
+                // Cute Red Player Crab Body
+                ctx.fillStyle = '#ef4444';
+                ctx.beginPath();
+                ctx.ellipse(0, 0, this.radius, this.radius * 0.75, 0, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.strokeStyle = '#b91c1c';
+                ctx.lineWidth = 3;
+                ctx.stroke();
+
+                // Big Cute Eyes
+                ctx.fillStyle = '#ffffff';
+                ctx.beginPath();
+                ctx.arc(-10, -18, 9, 0, Math.PI * 2);
+                ctx.arc(10, -18, 9, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Pupils
+                ctx.fillStyle = '#1e293b';
+                ctx.beginPath();
+                ctx.arc(-8, -18, 4, 0, Math.PI * 2);
+                ctx.arc(12, -18, 4, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Eye highlights
+                ctx.fillStyle = '#ffffff';
+                ctx.beginPath();
+                ctx.arc(-10, -20, 1.5, 0, Math.PI * 2);
+                ctx.arc(10, -20, 1.5, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Playful Claws
+                ctx.fillStyle = '#dc2626';
+                ctx.beginPath();
+                ctx.arc(-24, -8, 10, 0, Math.PI * 2);
+                ctx.arc(24, -8, 10, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Smile
+                ctx.beginPath();
+                ctx.arc(0, 2, 8, 0.1 * Math.PI, 0.9 * Math.PI);
+                ctx.strokeStyle = '#7f1d1d';
+                ctx.lineWidth = 2.5;
+                ctx.stroke();
+
+                ctx.restore();
+            }
+        }
+
+        // Bouncy Friendly Crab NPC Class
+        class NpcCrab {
+            constructor(x, y, color, typeName) {
+                this.x = x;
+                this.y = y;
+                this.radius = 22;
+                this.color = color;
+                this.typeName = typeName;
+                this.vx = (Math.random() - 0.5) * 3;
+                this.vy = (Math.random() - 0.5) * 3;
+                this.wobble = Math.random() * 10;
+                this.taggedCooldown = 0;
+            }
+
+            update(width, height) {
+                this.x += this.vx;
+                this.y += this.vy;
+                this.wobble += 0.1;
+
+                if (this.taggedCooldown > 0) {
+                    this.taggedCooldown--;
+                }
+
+                // Bounce off canvas edges
+                if (this.x < this.radius + 10 || this.x > width - this.radius - 10) {
+                    this.vx *= -1;
+                }
+                if (this.y < this.radius + 60 || this.y > height - this.radius - 20) {
+                    this.vy *= -1;
+                }
+            }
+
+            draw(ctx) {
+                ctx.save();
+                ctx.translate(this.x, this.y);
+                ctx.rotate(Math.sin(this.wobble) * 0.15);
+
+                // Crab Body
+                ctx.fillStyle = this.color;
+                ctx.beginPath();
+                ctx.ellipse(0, 0, this.radius, this.radius * 0.7, 0, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.strokeStyle = '#334155';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+
+                // Eyes
+                ctx.fillStyle = '#ffffff';
+                ctx.beginPath();
+                ctx.arc(-8, -14, 7, 0, Math.PI * 2);
+                ctx.arc(8, -14, 7, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Pupils
+                ctx.fillStyle = '#0f172a';
+                ctx.beginPath();
+                ctx.arc(-8, -14, 3, 0, Math.PI * 2);
+                ctx.arc(8, -14, 3, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Claws
+                ctx.fillStyle = this.color;
+                ctx.beginPath();
+                ctx.arc(-20, -5, 8, 0, Math.PI * 2);
+                ctx.arc(20, -5, 8, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.restore();
+            }
+        }
+
+        // Collectible Item Class (Golden Shells & Starfish)
+        class Collectible {
+            constructor(x, y, type) {
+                this.x = x;
+                this.y = y;
+                this.type = type; // 'golden_shell' or 'starfish'
+                this.radius = 18;
+                this.bobble = Math.random() * 5;
+            }
+
+            update() {
+                this.bobble += 0.08;
+            }
+
+            draw(ctx) {
+                ctx.save();
+                ctx.translate(this.x, this.y + Math.sin(this.bobble) * 4);
+
+                if (this.type === 'golden_shell') {
+                    // Shiny Golden Shell
+                    ctx.shadowBlur = 12;
+                    ctx.shadowColor = '#fbbf24';
+                    ctx.fillStyle = '#f59e0b';
+
+                    ctx.beginPath();
+                    ctx.arc(0, 0, 16, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    ctx.fillStyle = '#fef08a';
+                    ctx.beginPath();
+                    ctx.arc(-3, -3, 10, 0, Math.PI * 2);
+                    ctx.fill();
+                } else {
+                    // Cute Pink Starfish
+                    ctx.fillStyle = '#ec4899';
+                    ctx.beginPath();
+                    for (let i = 0; i < 5; i++) {
+                        ctx.lineTo(Math.cos((18 + i * 72) * Math.PI / 180) * 16, -Math.sin((18 + i * 72) * Math.PI / 180) * 16);
+                        ctx.lineTo(Math.cos((54 + i * 72) * Math.PI / 180) * 7, -Math.sin((54 + i * 72) * Math.PI / 180) * 7);
+                    }
+                    ctx.closePath();
+                    ctx.fill();
+                }
+
+                ctx.restore();
+            }
+        }
+
+        // Particle Effects Class for Tagging / Shell Collecting
+        class Particle {
+            constructor(x, y, color) {
+                this.x = x;
+                this.y = y;
+                this.color = color;
+                this.radius = Math.random() * 5 + 3;
+                this.vx = (Math.random() - 0.5) * 6;
+                this.vy = (Math.random() - 0.5) * 6;
+                this.life = 1.0;
+            }
+
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                this.life -= 0.03;
+            }
+
+            draw(ctx) {
+                ctx.save();
+                ctx.globalAlpha = Math.max(0, this.life);
+                ctx.fillStyle = this.color;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            }
+        }
+
+        // Floating Text FX (+100! Tag! You're It!)
+        class FloatingText {
+            constructor(x, y, text, color) {
+                this.x = x;
+                this.y = y;
+                this.text = text;
+                this.color = color;
+                this.life = 1.0;
+            }
+
+            update() {
+                this.y -= 1.5;
+                this.life -= 0.025;
+            }
+
+            draw(ctx) {
+                ctx.save();
+                ctx.globalAlpha = Math.max(0, this.life);
+                ctx.font = 'bold 20px "Fredoka One", cursive';
+                ctx.fillStyle = this.color;
+                ctx.textAlign = 'center';
+                ctx.fillText(this.text, this.x, this.y);
+                ctx.restore();
+            }
+        }
+    </script>
+
+    <script>
+        function initCanvas() {
+            canvas = document.getElementById('gameCanvas');
+            ctx = canvas.getContext('2d');
+
+            resizeCanvas();
+            window.addEventListener('resize', resizeCanvas);
+            setupInputListeners();
+        }
+
+        function resizeCanvas() {
+            if (!canvas) return;
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+
+        function setupInputListeners() {
+            window.addEventListener('keydown', (e) => {
+                if (keys.hasOwnProperty(e.key)) {
+                    keys[e.key] = true;
+                }
+            });
+
+            window.addEventListener('keyup', (e) => {
+                if (keys.hasOwnProperty(e.key)) {
+                    keys[e.key] = false;
+                }
+            });
+
+            // Pointer/Touch Listeners
+            canvas.addEventListener('pointerdown', (e) => {
+                pointerTarget = { x: e.clientX, y: e.clientY };
+            });
+
+            canvas.addEventListener('pointermove', (e) => {
+                if (e.buttons > 0) {
+                    pointerTarget = { x: e.clientX, y: e.clientY };
+                }
+            });
+        }
+
+        function showScreen(screenId) {
+            const screens = ['screenWelcome', 'screenLevelComplete', 'screenVictory'];
+            screens.forEach(id => document.getElementById(id).classList.add('hidden'));
+
+            if (screenId) {
+                document.getElementById(screenId).classList.remove('hidden');
+            }
+        }
+
+        function startGame() {
+            currentLevel = 1;
+            score = 0;
+            showScreen(null);
+            setupLevel();
+            isGameRunning = true;
+
+            if (!animationFrameId) {
+                lastTime = performance.now();
+                animationFrameId = requestAnimationFrame(gameLoop);
+            }
+        }
+
+        function nextLevel() {
+            currentLevel++;
+            if (currentLevel > maxLevels) {
+                document.getElementById('finalScore').innerText = score;
+                showScreen('screenVictory');
+                isGameRunning = false;
+            } else {
+                showScreen(null);
+                setupLevel();
+                isGameRunning = true;
+            }
+        }
+
+        function setupLevel() {
+            shellsCollected = 0;
+            updateHUD();
+
+            const width = canvas.width;
+            const height = canvas.height;
+
+            // Player starting position
+            player = new PlayerCrab(width / 2, height / 2);
+
+            // Spawn Friendly NPC Crabs based on level
+            npcs = [];
+            const npcColors = ['#f59e0b', '#ec4899', '#8b5cf6', '#10b981'];
+            const npcCount = 3 + currentLevel * 2;
+
+            for (let i = 0; i < npcCount; i++) {
+                const rx = Math.random() * (width - 100) + 50;
+                const ry = Math.random() * (height - 200) + 100;
+                npcs.push(new NpcCrab(rx, ry, npcColors[i % npcColors.length], `Crab ${i + 1}`));
+            }
+
+            // Spawn Golden Shells & Starfish
+            spawnCollectibles();
+        }
+
+        function spawnCollectibles() {
+            collectibles = [];
+            const width = canvas.width;
+            const height = canvas.height;
+
+            // Spawn 5 Golden Shells
+            for (let i = 0; i < shellsNeededPerLevel; i++) {
+                const cx = Math.random() * (width - 120) + 60;
+                const cy = Math.random() * (height - 220) + 120;
+                collectibles.push(new Collectible(cx, cy, 'golden_shell'));
+            }
+
+            // Spawn Bonus Starfish
+            for (let i = 0; i < 3; i++) {
+                const cx = Math.random() * (width - 120) + 60;
+                const cy = Math.random() * (height - 220) + 120;
+                collectibles.push(new Collectible(cx, cy, 'starfish'));
+            }
+        }
+
+        function updateHUD() {
+            document.getElementById('uiLevel').innerText = currentLevel;
+            document.getElementById('uiShells').innerText = `${shellsCollected} / ${shellsNeededPerLevel}`;
+            document.getElementById('uiScore').innerText = score;
+        }
+
+        // Main Animation Frame Loop
+        function gameLoop(timestamp) {
+            if (isGameRunning) {
+                updateGameLogic();
+                renderGame();
+            }
+            animationFrameId = requestAnimationFrame(gameLoop);
+        }
+
+        function updateGameLogic() {
+            const width = canvas.width;
+            const height = canvas.height;
+
+            // Update Player
+            player.update(width, height);
+
+            // Update NPCs
+            npcs.forEach(npc => npc.update(width, height));
+
+            // Update Collectibles
+            collectibles.forEach(item => item.update());
+
+            // Check Collision: Player with Collectibles
+            collectibles = collectibles.filter(item => {
+                const dist = Math.hypot(player.x - item.x, player.y - item.y);
+                if (dist < player.radius + item.radius) {
+                    if (item.type === 'golden_shell') {
+                        shellsCollected++;
+                        score += 200;
+                        sound.playShellCollect();
+                        spawnBurstParticles(item.x, item.y, '#f59e0b');
+                        floatingTexts.push(new FloatingText(item.x, item.y, '🐚 Golden Shell!', '#f59e0b'));
+
+                        if (shellsCollected >= shellsNeededPerLevel) {
+                            sound.playLevelComplete();
+                            isGameRunning = false;
+                            setTimeout(() => {
+                                showScreen('screenLevelComplete');
+                            }, 400);
+                        }
+                    } else {
+                        score += 50;
+                        sound.playPop();
+                        spawnBurstParticles(item.x, item.y, '#ec4899');
+                        floatingTexts.push(new FloatingText(item.x, item.y, '+50 Star!', '#ec4899'));
+                    }
+                    updateHUD();
+                    return false; // Remove collected item
+                }
+                return true;
+            });
+
+            // Check Friendly Tag / High-Five Bump with NPC Crabs
+            npcs.forEach(npc => {
+                const dist = Math.hypot(player.x - npc.x, player.y - npc.y);
+                if (dist < player.radius + npc.radius) {
+                    if (npc.taggedCooldown === 0) {
+                        npc.taggedCooldown = 60; // 1 second cooldown
+                        score += 100;
+                        sound.playTagSound();
+
+                        // Bounce NPC away playfully
+                        npc.vx *= -1.5;
+                        npc.vy *= -1.5;
+
+                        spawnBurstParticles((player.x + npc.x) / 2, (player.y + npc.y) / 2, '#38bec9');
+                        floatingTexts.push(new FloatingText(npc.x, npc.y - 10, "🙌 Shell Bump! +100", '#0284c7'));
+                        updateHUD();
+                    }
+                }
+            });
+
+            // Update Particles
+            particles.forEach(p => p.update());
+            particles = particles.filter(p => p.life > 0);
+
+            // Update Floating Texts
+            floatingTexts.forEach(ft => ft.update());
+            floatingTexts = floatingTexts.filter(ft => ft.life > 0);
+        }
+
+        function spawnBurstParticles(x, y, color) {
+            for (let i = 0; i < 12; i++) {
+                particles.push(new Particle(x, y, color));
+            }
+        }
+
+        function renderGame() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Draw Sunny Beach Water Background
+            drawBeachBackground();
+
+            // Draw Collectibles
+            collectibles.forEach(item => item.draw(ctx));
+
+            // Draw Friendly NPCs
+            npcs.forEach(npc => npc.draw(ctx));
+
+            // Draw Player Barnaby
+            player.draw(ctx);
+
+            // Draw Particle Effects
+            particles.forEach(p => p.draw(ctx));
+
+            // Draw Floating Texts
+            floatingTexts.forEach(ft => ft.draw(ctx));
+        }
+
+        function drawBeachBackground() {
+            const w = canvas.width;
+            const h = canvas.height;
+
+            // Ocean Shallow Water Gradient
+            const bgGrad = ctx.createLinearGradient(0, 0, 0, h);
+            bgGrad.addColorStop(0, '#38bec9');
+            bgGrad.addColorStop(0.5, '#6ee7b7');
+            bgGrad.addColorStop(1, '#fde047');
+            ctx.fillStyle = bgGrad;
+            ctx.fillRect(0, 0, w, h);
+
+            // Decorative Tide Water Ripples
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
+            for (let i = 0; i < 5; i++) {
+                ctx.beginPath();
+                ctx.arc((i * 250 + Date.now() * 0.05) % (w + 200) - 100, 150 + i * 80, 70, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            // Sandy Shore Edge
+            ctx.fillStyle = '#fef08a';
+            ctx.beginPath();
+            ctx.moveTo(0, h - 80);
+            ctx.quadraticCurveTo(w / 2, h - 120, w, h - 70);
+            ctx.lineTo(w, h);
+            ctx.lineTo(0, h);
+            ctx.closePath();
+            ctx.fill();
+        }
+
+        // Initialize on window load
+        window.onload = () => {
+            initCanvas();
+            showScreen('screenWelcome');
+        };
+    </script>
+</body>
+</html>

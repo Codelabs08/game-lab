@@ -1,0 +1,988 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ocean Science Quiz</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Quicksand:wght@500;700&display=swap" rel="stylesheet">
+  
+  <style>
+    body {
+      font-family: 'Quicksand', sans-serif;
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: manipulation;
+      overflow-x: hidden;
+    }
+
+    h1, h2, h3, .font-fun {
+      font-family: 'Fredoka One', cursive;
+    }
+
+    /* Gradient animated background for ocean */
+    .ocean-bg {
+      background: linear-gradient(180deg, #1A365D 0%, #0D9488 40%, #0284C7 80%, #0369A1 100%);
+      background-size: 100% 200%;
+      animation: oceanFlow 12s ease infinite alternate;
+    }
+
+    @keyframes oceanFlow {
+      0% { background-position: 0% 0%; }
+      100% { background-position: 0% 100%; }
+    }
+
+    /* Button hover and bounce effects */
+    .btn-bounce {
+      transition: transform 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.15s ease;
+    }
+    .btn-bounce:hover {
+      transform: translateY(-4px) scale(1.02);
+    }
+    .btn-bounce:active {
+      transform: translateY(2px) scale(0.98);
+    }
+
+    /* Soft pulse for badges */
+    .star-pulse {
+      animation: starPulse 1.5s ease-in-out infinite alternate;
+    }
+    @keyframes starPulse {
+      0% { transform: scale(1); filter: drop-shadow(0 0 4px #FBBF24); }
+      100% { transform: scale(1.15); filter: drop-shadow(0 0 12px #F59E0B); }
+    }
+
+    /* Floating bubbles overlay animation */
+    .bubble {
+      position: absolute;
+      background: rgba(255, 255, 255, 0.25);
+      border: 1px solid rgba(255, 255, 255, 0.5);
+      border-radius: 50%;
+      pointer-events: none;
+      animation: floatUp 8s infinite linear;
+    }
+
+    @keyframes floatUp {
+      0% {
+        transform: translateY(105vh) scale(0.5);
+        opacity: 0.2;
+      }
+      50% {
+        opacity: 0.8;
+      }
+      100% {
+        transform: translateY(-10vh) scale(1.2);
+        opacity: 0;
+      }
+    }
+
+    /* Wiggle effect for Mascot */
+    .mascot-wiggle {
+      animation: wiggle 3s infinite ease-in-out;
+    }
+    @keyframes wiggle {
+      0%, 100% { transform: rotate(-3deg) translateY(0px); }
+      50% { transform: rotate(3deg) translateY(-8px); }
+    }
+  </style>
+</head>
+<body class="ocean-bg min-h-screen text-slate-800 flex flex-col justify-between relative overflow-hidden">
+
+  <div id="bubblesContainer" class="fixed inset-0 pointer-events-none z-0"></div>
+
+  <header class="relative z-10 w-full max-w-5xl mx-auto p-4 flex justify-between items-center bg-white/20 backdrop-blur-md rounded-b-3xl border-b border-white/30 shadow-lg">
+    <div class="flex items-center gap-3">
+      <div class="w-12 h-12 bg-sky-400 rounded-full border-2 border-white flex items-center justify-center text-2xl shadow-inner shadow-sky-600">
+        🌐
+      </div>
+      <div>
+        <h1 class="text-xl md:text-2xl text-white drop-shadow-md tracking-wide">Country Ball World <span class="text-yellow-300">io.gaym</span></h1>
+        <p class="text-xs text-sky-100 font-bold tracking-wider uppercase">Year 3 Science • Animals & Humans</p>
+      </div>
+    </div>
+
+    <!-- Top Controls: Stars Counter & Mute Button -->
+    <div class="flex items-center gap-4">
+      <div class="flex items-center gap-2 bg-yellow-400/90 text-amber-950 font-fun px-4 py-2 rounded-full border-2 border-yellow-200 shadow-md">
+        <span class="text-2xl star-pulse">⭐</span>
+        <span id="starScore" class="text-xl font-bold">0</span>
+      </div>
+
+      <button id="soundToggleBtn" class="bg-white/80 hover:bg-white text-sky-900 p-2.5 rounded-full border border-sky-300 shadow-md transition-all btn-bounce text-xl" title="Toggle Sound">
+        🔊
+      </button>
+    </div>
+  </header>
+
+  <main class="relative z-10 flex-grow flex items-center justify-center p-4 max-w-4xl mx-auto w-full">
+
+    <!-- SCREEN 1: START SCREEN -->
+    <div id="startScreen" class="w-full bg-white/95 backdrop-blur-lg rounded-3xl p-6 md:p-10 shadow-2xl border-4 border-sky-300 text-center flex flex-col items-center">
+      <div class="flex justify-center items-center gap-4 my-4 flex-wrap">
+        <!-- SVG Country Balls with Ocean Gear -->
+        <div class="w-20 h-20 relative mascot-wiggle">
+          <!-- UK Ball -->
+          <svg viewBox="0 0 100 100" class="w-full h-full drop-shadow-md">
+            <circle cx="50" cy="50" r="45" fill="#012169"/>
+            <path d="M 5,5 L 95,95 M 95,5 L 5,95" stroke="#FFFFFF" stroke-width="12"/>
+            <path d="M 5,5 L 95,95 M 95,5 L 5,95" stroke="#C8102E" stroke-width="6"/>
+            <path d="M 50,0 V 100 M 0,50 H 100" stroke="#FFFFFF" stroke-width="20"/>
+            <path d="M 50,0 V 100 M 0,50 H 100" stroke="#C8102E" stroke-width="12"/>
+            <!-- Eyes -->
+            <ellipse cx="38" cy="45" rx="5" ry="7" fill="#000"/>
+            <ellipse cx="62" cy="45" rx="5" ry="7" fill="#000"/>
+            <!-- Sailor Hat -->
+            <path d="M 25 20 Q 50 5 75 20 L 80 28 L 20 28 Z" fill="#FFFFFF"/>
+            <rect x="20" y="26" width="60" height="5" fill="#0284C7"/>
+          </svg>
+        </div>
+
+        <div class="w-20 h-20 relative mascot-wiggle" style="animation-delay: 0.5s;">
+          <!-- USA Ball with Scuba Mask -->
+          <svg viewBox="0 0 100 100" class="w-full h-full drop-shadow-md">
+            <circle cx="50" cy="50" r="45" fill="#B22234"/>
+            <path d="M0,25 H100 M0,50 H100 M0,75 H100" stroke="#FFFFFF" stroke-width="10"/>
+            <rect x="5" y="5" width="45" height="45" fill="#3C3B6E"/>
+            <circle cx="27" cy="27" r="4" fill="#FFF"/>
+            <!-- Scuba Goggles -->
+            <rect x="25" y="38" width="50" height="20" rx="10" fill="#0284C7" opacity="0.8" stroke="#1E293B" stroke-width="3"/>
+            <ellipse cx="38" cy="48" rx="6" ry="4" fill="#E0F2FE"/>
+            <ellipse cx="62" cy="48" rx="6" ry="4" fill="#E0F2FE"/>
+          </svg>
+        </div>
+
+        <div class="w-20 h-20 relative mascot-wiggle" style="animation-delay: 1s;">
+          <!-- Japan Ball with Snorkel -->
+          <svg viewBox="0 0 100 100" class="w-full h-full drop-shadow-md">
+            <circle cx="50" cy="50" r="45" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="2"/>
+            <circle cx="50" cy="50" r="18" fill="#BC002D"/>
+            <!-- Eyes -->
+            <ellipse cx="38" cy="42" rx="4" ry="6" fill="#000"/>
+            <ellipse cx="62" cy="42" rx="4" ry="6" fill="#000"/>
+            <!-- Snorkel -->
+            <path d="M 70 45 C 85 45 85 15 85 15" stroke="#F59E0B" stroke-width="6" fill="none" stroke-linecap="round"/>
+          </svg>
+        </div>
+      </div>
+
+      <h2 class="text-3xl md:text-4xl text-sky-900 font-fun mb-2">Welcome Under the Sea! 🐠</h2>
+      <p class="text-slate-600 font-semibold mb-6 max-w-lg text-lg">
+        Join your Country Ball friends on an ocean adventure! Answer 15 fun Year 3 Science questions about animals, bones, nutrition & muscles to unlock the <span class="text-amber-500 font-bold">Star Catcher Mini-Game!</span>
+      </p>
+
+      <button id="startGameBtn" class="bg-gradient-to-r from-emerald-400 to-teal-500 hover:from-emerald-500 hover:to-teal-600 text-white font-fun text-2xl px-10 py-4 rounded-2xl shadow-xl border-b-4 border-teal-700 btn-bounce flex items-center gap-3">
+        <span>Dive In & Play!</span> 🌊
+      </button>
+
+      <div class="mt-8 flex gap-6 text-sm font-bold text-slate-500">
+        <span class="flex items-center gap-1">✅ 5 Levels</span>
+        <span class="flex items-center gap-1">✅ Earn Stars</span>
+        <span class="flex items-center gap-1">✅ 100% Safe</span>
+      </div>
+    </div>
+
+
+    <!-- SCREEN 2: QUIZ SCREEN -->
+    <div id="quizScreen" class="hidden w-full bg-white/95 backdrop-blur-lg rounded-3xl p-5 md:p-8 shadow-2xl border-4 border-sky-300 flex-col">
+      
+      <!-- Progress Bar & Level Info -->
+      <div class="mb-6">
+        <div class="flex justify-between items-center mb-2">
+          <span id="levelBadge" class="bg-sky-500 text-white font-fun px-4 py-1 rounded-full text-base shadow">
+            Level 1: Diets & Animal Groups
+          </span>
+          <span id="questionCount" class="text-sky-900 font-bold text-sm">
+            Question 1 of 3
+          </span>
+        </div>
+        
+        <div class="w-full bg-sky-100 h-4 rounded-full overflow-hidden p-0.5 border border-sky-200">
+          <div id="progressBar" class="bg-gradient-to-r from-amber-400 to-emerald-400 h-full rounded-full transition-all duration-500" style="width: 6.66%;"></div>
+        </div>
+      </div>
+
+      <!-- Country Ball Guide Mascot Speech Bubble -->
+      <div class="flex items-start gap-4 mb-6 bg-sky-50/80 p-4 rounded-2xl border border-sky-200 shadow-sm">
+        <div id="mascotIcon" class="w-16 h-16 flex-shrink-0 mascot-wiggle">
+          <!-- JS dynamic SVG inserting here -->
+        </div>
+        <div class="flex-grow">
+          <div class="flex items-center justify-between">
+            <span id="mascotName" class="font-fun text-sky-800 text-sm">UK Ball Captain</span>
+            <span class="text-xs text-sky-600 font-bold">Science Guide</span>
+          </div>
+          <p id="mascotSpeech" class="text-slate-700 text-base font-semibold mt-1">
+            "Welcome recruit! Let's explore what animals eat!"
+          </p>
+        </div>
+      </div>
+
+      <!-- Question Text -->
+      <div class="bg-gradient-to-r from-sky-500 to-indigo-600 text-white rounded-2xl p-5 mb-6 text-center shadow-md">
+        <h3 id="questionText" class="text-xl md:text-2xl font-fun leading-relaxed">
+          Loading question...
+        </h3>
+      </div>
+
+      <!-- Multiple Choice Options -->
+      <div id="optionsGrid" class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+        <!-- Buttons added dynamically -->
+      </div>
+
+      <!-- Feedback Toast Message -->
+      <div id="feedbackBox" class="hidden rounded-xl p-3 text-center font-bold text-base transition-all duration-300">
+        <!-- Dynamic feedback text -->
+      </div>
+    </div>
+
+
+    <!-- SCREEN 3: GRAND CELEBRATION & MINI-GAME UNLOCK -->
+    <div id="celebrationScreen" class="hidden w-full bg-white/95 backdrop-blur-lg rounded-3xl p-6 md:p-10 shadow-2xl border-4 border-yellow-300 text-center flex-col items-center">
+      <div class="text-6xl mb-2 animate-bounce">🏆</div>
+      <h2 class="text-4xl text-amber-500 font-fun mb-2 drop-shadow">WELL DONE!</h2>
+      <p class="text-2xl font-fun text-sky-900 mb-4">You are an Ocean Science Superstar!</p>
+
+      <div class="bg-amber-50 border-2 border-amber-200 rounded-2xl p-4 mb-6 max-w-md w-full flex items-center justify-around shadow-inner">
+        <div>
+          <p class="text-xs text-amber-700 uppercase font-bold">Questions Cleared</p>
+          <p class="text-2xl font-fun text-amber-900">15 / 15</p>
+        </div>
+        <div class="h-10 border-r border-amber-200"></div>
+        <div>
+          <p class="text-xs text-amber-700 uppercase font-bold">Total Stars Earned</p>
+          <p id="finalStarCount" class="text-2xl font-fun text-amber-900">⭐ 15</p>
+        </div>
+      </div>
+
+      <p class="text-slate-600 font-semibold mb-6">
+        🎉 You unlocked the bonus mini-game: <br><strong class="text-emerald-600 text-lg">"Catch the Falling Stars"</strong>!
+      </p>
+
+      <button id="startMiniGameBtn" class="bg-gradient-to-r from-amber-400 to-yellow-500 hover:from-amber-500 hover:to-yellow-600 text-slate-900 font-fun text-2xl px-8 py-4 rounded-2xl shadow-xl border-b-4 border-yellow-600 btn-bounce flex items-center gap-3">
+        <span>Play Catch the Stars!</span> ⭐
+      </button>
+    </div>
+
+
+    <!-- SCREEN 4: CATCH THE FALLING STARS MINI-GAME -->
+    <div id="miniGameScreen" class="hidden w-full bg-slate-900/90 backdrop-blur-md rounded-3xl p-4 shadow-2xl border-4 border-yellow-400 flex-col items-center">
+      
+      <!-- Mini Game Bar -->
+      <div class="w-full flex justify-between items-center mb-3 bg-white/10 px-4 py-2 rounded-xl text-white font-fun text-lg">
+        <div class="flex items-center gap-2">
+          <span>Timer:</span>
+          <span id="miniGameTimer" class="text-yellow-300 text-2xl">30s</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <span>Bonus Points:</span>
+          <span id="miniGameScore" class="text-emerald-300 text-2xl">0</span>
+        </div>
+      </div>
+
+      <!-- Canvas Area -->
+      <div class="relative w-full aspect-[4/3] max-h-[420px] rounded-2xl overflow-hidden border-2 border-sky-400/50 shadow-inner bg-gradient-to-b from-sky-900 via-sky-800 to-indigo-950">
+        <canvas id="miniGameCanvas" class="w-full h-full block cursor-pointer"></canvas>
+      </div>
+
+      <p class="text-xs text-sky-200 font-semibold mt-3">
+        💡 Move your mouse or drag your finger across the canvas to guide your basket!
+      </p>
+    </div>
+
+
+    <!-- SCREEN 5: FINAL SUMMARY SCREEN -->
+    <div id="finalScreen" class="hidden w-full bg-white/95 backdrop-blur-lg rounded-3xl p-6 md:p-10 shadow-2xl border-4 border-emerald-400 text-center flex-col items-center">
+      <div class="text-6xl mb-2">🌟</div>
+      <h2 class="text-4xl text-emerald-600 font-fun mb-2">Awesome Job!</h2>
+      <p class="text-slate-600 font-semibold mb-6">You completed all quizzes and the star catcher game!</p>
+
+      <div class="bg-emerald-50 border-2 border-emerald-200 rounded-2xl p-6 mb-8 max-w-sm w-full space-y-3">
+        <div class="flex justify-between items-center text-lg">
+          <span class="text-slate-600 font-bold">Quiz Stars:</span>
+          <span id="summaryQuizStars" class="font-fun text-amber-500">⭐ 15</span>
+        </div>
+        <div class="flex justify-between items-center text-lg">
+          <span class="text-slate-600 font-bold">Bonus Mini-Game Stars:</span>
+          <span id="summaryBonusStars" class="font-fun text-amber-500">⭐ 0</span>
+        </div>
+        <hr class="border-emerald-200">
+        <div class="flex justify-between items-center text-xl font-bold">
+          <span class="text-emerald-900 font-fun">Grand Total Score:</span>
+          <span id="summaryTotalScore" class="font-fun text-emerald-600 text-2xl">0</span>
+        </div>
+      </div>
+
+      <button id="restartGameBtn" class="bg-gradient-to-r from-sky-400 to-blue-500 hover:from-sky-500 hover:to-blue-600 text-white font-fun text-xl px-8 py-3 rounded-2xl shadow-lg border-b-4 border-blue-700 btn-bounce">
+        Play Again 🔄
+      </button>
+    </div>
+
+  </main>
+
+  <footer class="relative z-10 w-full text-center py-3 text-sky-100 text-xs font-semibold bg-black/20 backdrop-blur-sm">
+    Country Ball World io.gaym • Safe Kids Science Learning • No Ads • No Accounts
+  </footer>
+
+
+  <script>
+    // Web Audio API Synthesizer for self-contained, high-compatibility audio
+    class SoundFX {
+      constructor() {
+        this.ctx = null;
+        this.muted = false;
+      }
+
+      init() {
+        if (!this.ctx) {
+          const AudioContext = window.AudioContext || window.webkitAudioContext;
+          this.ctx = new AudioContext();
+        }
+      }
+
+      playPop() {
+        if (this.muted) return;
+        this.init();
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(400, this.ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(800, this.ctx.currentTime + 0.08);
+        gain.gain.setValueAtTime(0.3, this.ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.08);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start();
+        osc.stop(this.ctx.currentTime + 0.08);
+      }
+
+      playCorrect() {
+        if (this.muted) return;
+        this.init();
+        const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+        notes.forEach((freq, idx) => {
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(freq, this.ctx.currentTime + idx * 0.08);
+          gain.gain.setValueAtTime(0.2, this.ctx.currentTime + idx * 0.08);
+          gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + idx * 0.08 + 0.25);
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          osc.start(this.ctx.currentTime + idx * 0.08);
+          osc.stop(this.ctx.currentTime + idx * 0.08 + 0.25);
+        });
+      }
+
+      playTryAgain() {
+        if (this.muted) return;
+        this.init();
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(300, this.ctx.currentTime);
+        osc.frequency.linearRampToValueAtTime(200, this.ctx.currentTime + 0.25);
+        gain.gain.setValueAtTime(0.25, this.ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.25);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start();
+        osc.stop(this.ctx.currentTime + 0.25);
+      }
+
+      playFanfare() {
+        if (this.muted) return;
+        this.init();
+        const melody = [
+          { f: 523.25, d: 0.15 }, { f: 659.25, d: 0.15 }, { f: 783.99, d: 0.15 },
+          { f: 1046.50, d: 0.4 }
+        ];
+        let now = this.ctx.currentTime;
+        melody.forEach(note => {
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(note.f, now);
+          gain.gain.setValueAtTime(0.3, now);
+          gain.gain.exponentialRampToValueAtTime(0.01, now + note.d);
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          osc.start(now);
+          osc.stop(now + note.d);
+          now += note.d + 0.05;
+        });
+      }
+
+      playStarCatch() {
+        if (this.muted) return;
+        this.init();
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(880, this.ctx.currentTime); // A5
+        osc.frequency.exponentialRampToValueAtTime(1760, this.ctx.currentTime + 0.1); // A6
+        gain.gain.setValueAtTime(0.2, this.ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.1);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start();
+        osc.stop(this.ctx.currentTime + 0.1);
+      }
+    }
+
+    const sound = new SoundFX();
+
+    // 15 Year 3 Science Questions (Animals and Humans) across 5 Levels
+    const quizData = [
+      // LEVEL 1: Animal Groups & Diets
+      {
+        level: 1,
+        title: "Level 1: Animal Diets",
+        questions: [
+          {
+            q: "An animal that eats ONLY plants (like grass, leaves, and fruit) is called a...",
+            options: ["Herbivore", "Carnivore", "Omnivore", "Insectivore"],
+            correct: 0,
+            hint: "Think of cows, rabbits, and sheep! They only eat plants."
+          },
+          {
+            q: "An animal that eats ONLY other animals (meat) is called a...",
+            options: ["Herbivore", "Carnivore", "Omnivore", "Vegetarian"],
+            correct: 1,
+            hint: "Lions and sharks eat meat. They are carnivores!"
+          },
+          {
+            q: "Humans and bears eat BOTH plants and meat. That makes us...",
+            options: ["Herbivores", "Carnivores", "Omnivores", "Autotrophs"],
+            correct: 2,
+            hint: "'Omni' means all! We eat berries AND meat/fish."
+          }
+        ]
+      },
+      // LEVEL 2: Human Body & Skeletons
+      {
+        level: 2,
+        title: "Level 2: Bones & Skeletons",
+        questions: [
+          {
+            q: "Why do humans and many animals have a skeleton inside their body?",
+            options: [
+              "To support the body and protect inside organs",
+              "To help us change color",
+              "To digest food quickly",
+              "To store water like a sponge"
+            ],
+            correct: 0,
+            hint: "Bones keep us standing tall and protect our brain and heart!"
+          },
+          {
+            q: "Which hard bone box protects your brain from getting hurt?",
+            options: ["Ribcage", "Skull", "Spine", "Pelvis"],
+            correct: 1,
+            hint: "It's inside your head! Your skull protects your brain."
+          },
+          {
+            q: "Animals with a backbone inside (like fish, dogs, and humans) are called...",
+            options: ["Invertebrates", "Vertebrates", "Insects", "Molluscs"],
+            correct: 1,
+            hint: "Vertebrates have a spine/backbone!"
+          }
+        ]
+      },
+      // LEVEL 3: Muscles & Movement
+      {
+        level: 3,
+        title: "Level 3: Muscles & Movement",
+        questions: [
+          {
+            q: "How do muscles move our bones?",
+            options: [
+              "Muscles pull on bones by contracting (getting shorter)",
+              "Muscles push bones away like springs",
+              "Muscles blow air against the bones",
+              "Muscles melt and freeze"
+            ],
+            correct: 0,
+            hint: "Muscles can only PULL! They get shorter to pull bones."
+          },
+          {
+            q: "Muscles work together in pairs. When your biceps muscle bends your arm, it...",
+            options: ["Relaxes", "Contracts (tightens)", "Disappears", "Sleeps"],
+            correct: 1,
+            hint: "Contracting means tightening up to pull the bone!"
+          },
+          {
+            q: "What helps keep our bones and muscles strong and healthy?",
+            options: [
+              "Exercise and eating healthy foods with calcium",
+              "Sleeping all day long",
+              "Eating only sweets and soda",
+              "Sitting still for hours"
+            ],
+            correct: 0,
+            hint: "Running, playing, and drinking milk or eating green veggies helps!"
+          }
+        ]
+      },
+      // LEVEL 4: Nutrition & Healthy Eating
+      {
+        level: 4,
+        title: "Level 4: Healthy Food & Nutrition",
+        questions: [
+          {
+            q: "Which food group gives our body quick energy to run and play?",
+            options: ["Carbohydrates (bread, pasta, rice)", "Fats only", "Salt", "Sweets"],
+            correct: 0,
+            hint: "Bread, pasta, and rice give us long-lasting energy!"
+          },
+          {
+            q: "Which food group helps our muscles grow big and repair injuries?",
+            options: ["Proteins (fish, beans, chicken, eggs)", "Water", "Sugar", "Butter"],
+            correct: 0,
+            hint: "Fish, chicken, beans, and eggs build strong muscles!"
+          },
+          {
+            q: "Why is water important for humans and animals?",
+            options: [
+              "It keeps us hydrated and helps our body work properly",
+              "It makes us glow in the dark",
+              "It turns our hair blue",
+              "We don't actually need water"
+            ],
+            correct: 0,
+            hint: "Drinking water keeps every cell in our body happy!"
+          }
+        ]
+      },
+      // LEVEL 5: Food Chains & Habitats
+      {
+        level: 5,
+        title: "Level 5: Ocean Food Chains",
+        questions: [
+          {
+            q: "At the start of almost every food chain, green plants (or sea algae) are called...",
+            options: ["Producers (they make their own food)", "Consumers", "Predators", "Prey"],
+            correct: 0,
+            hint: "Plants PRODUCE food using sunlight!"
+          },
+          {
+            q: "An animal that hunts and eats other animals is called a...",
+            options: ["Predator", "Prey", "Producer", "Plant"],
+            correct: 0,
+            hint: "A shark hunting fish is a top predator!"
+          },
+          {
+            q: "In an ocean food chain: Sun ➔ Seaweed ➔ Small Fish ➔ Big Fish. What is the Small Fish?",
+            options: ["Prey to the big fish", "A producer", "The sun", "An apex predator"],
+            correct: 0,
+            hint: "The small fish gets eaten by the big fish, so it is prey!"
+          }
+        ]
+      }
+    ];
+
+    const countryBallMascots = [
+      {
+        name: "UK Ball Captain 🇬🇧",
+        svg: `<svg viewBox="0 0 100 100" class="w-full h-full drop-shadow">
+          <circle cx="50" cy="50" r="45" fill="#012169"/>
+          <path d="M 5,5 L 95,95 M 95,5 L 5,95" stroke="#FFFFFF" stroke-width="12"/>
+          <path d="M 5,5 L 95,95 M 95,5 L 5,95" stroke="#C8102E" stroke-width="6"/>
+          <path d="M 50,0 V 100 M 0,50 H 100" stroke="#FFFFFF" stroke-width="20"/>
+          <path d="M 50,0 V 100 M 0,50 H 100" stroke="#C8102E" stroke-width="12"/>
+          <ellipse cx="38" cy="45" rx="5" ry="7" fill="#000"/>
+          <ellipse cx="62" cy="45" rx="5" ry="7" fill="#000"/>
+          <path d="M 25 20 Q 50 5 75 20 L 80 28 L 20 28 Z" fill="#FFFFFF"/>
+          <rect x="20" y="26" width="60" height="5" fill="#0284C7"/>
+        </svg>`
+      },
+      {
+        name: "USA Ball Diver 🇺🇸",
+        svg: `<svg viewBox="0 0 100 100" class="w-full h-full drop-shadow">
+          <circle cx="50" cy="50" r="45" fill="#B22234"/>
+          <path d="M0,25 H100 M0,50 H100 M0,75 H100" stroke="#FFFFFF" stroke-width="10"/>
+          <rect x="5" y="5" width="45" height="45" fill="#3C3B6E"/>
+          <rect x="25" y="38" width="50" height="20" rx="10" fill="#0284C7" opacity="0.8" stroke="#1E293B" stroke-width="3"/>
+          <ellipse cx="38" cy="48" rx="6" ry="4" fill="#E0F2FE"/>
+          <ellipse cx="62" cy="48" rx="6" ry="4" fill="#E0F2FE"/>
+        </svg>`
+      },
+      {
+        name: "Canada Ball Sailor 🇨🇦",
+        svg: `<svg viewBox="0 0 100 100" class="w-full h-full drop-shadow">
+          <circle cx="50" cy="50" r="45" fill="#FFFFFF"/>
+          <rect x="0" y="0" width="25" height="100" fill="#FF0000"/>
+          <rect x="75" y="0" width="25" height="100" fill="#FF0000"/>
+          <path d="M50 30 L53 40 L62 38 L56 46 L62 55 L52 52 L50 62 L48 52 L38 55 L44 46 L38 38 L47 40 Z" fill="#FF0000"/>
+          <ellipse cx="40" cy="45" rx="4" ry="6" fill="#000"/>
+          <ellipse cx="60" cy="45" rx="4" ry="6" fill="#000"/>
+        </svg>`
+      },
+      {
+        name: "Japan Ball Snorkeler 🇯🇵",
+        svg: `<svg viewBox="0 0 100 100" class="w-full h-full drop-shadow">
+          <circle cx="50" cy="50" r="45" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="2"/>
+          <circle cx="50" cy="50" r="18" fill="#BC002D"/>
+          <ellipse cx="38" cy="42" rx="4" ry="6" fill="#000"/>
+          <ellipse cx="62" cy="42" rx="4" ry="6" fill="#000"/>
+          <path d="M 70 45 C 85 45 85 15 85 15" stroke="#F59E0B" stroke-width="6" fill="none" stroke-linecap="round"/>
+        </svg>`
+      },
+      {
+        name: "Aussie Ball Submariner 🇦🇺",
+        svg: `<svg viewBox="0 0 100 100" class="w-full h-full drop-shadow">
+          <circle cx="50" cy="50" r="45" fill="#000080"/>
+          <ellipse cx="38" cy="45" rx="5" ry="7" fill="#FFF"/>
+          <ellipse cx="62" cy="45" rx="5" ry="7" fill="#FFF"/>
+          <circle cx="38" cy="45" r="3" fill="#000"/>
+          <circle cx="62" cy="45" r="3" fill="#000"/>
+          <path d="M 20 20 L 40 20 L 30 35 Z" fill="#FFD700"/>
+        </svg>`
+      }
+    ];
+
+    let currentLevelIndex = 0;
+    let currentQuestionIndex = 0;
+    let totalQuestionsAnswered = 0;
+    let starsEarned = 0;
+
+    // DOM Elements
+    const startScreen = document.getElementById('startScreen');
+    const quizScreen = document.getElementById('quizScreen');
+    const celebrationScreen = document.getElementById('celebrationScreen');
+    const miniGameScreen = document.getElementById('miniGameScreen');
+    const finalScreen = document.getElementById('finalScreen');
+
+    const starScoreEl = document.getElementById('starScore');
+    const soundToggleBtn = document.getElementById('soundToggleBtn');
+    const startGameBtn = document.getElementById('startGameBtn');
+
+    const levelBadge = document.getElementById('levelBadge');
+    const questionCount = document.getElementById('questionCount');
+    const progressBar = document.getElementById('progressBar');
+    const mascotIcon = document.getElementById('mascotIcon');
+    const mascotName = document.getElementById('mascotName');
+    const mascotSpeech = document.getElementById('mascotSpeech');
+    const questionText = document.getElementById('questionText');
+    const optionsGrid = document.getElementById('optionsGrid');
+    const feedbackBox = document.getElementById('feedbackBox');
+
+    const startMiniGameBtn = document.getElementById('startMiniGameBtn');
+    const restartGameBtn = document.getElementById('restartGameBtn');
+
+    // Generate floating bubbles
+    const bubblesContainer = document.getElementById('bubblesContainer');
+    for (let i = 0; i < 20; i++) {
+      const bubble = document.createElement('div');
+      bubble.className = 'bubble';
+      const size = Math.random() * 30 + 10;
+      bubble.style.width = `${size}px`;
+      bubble.style.height = `${size}px`;
+      bubble.style.left = `${Math.random() * 100}%`;
+      bubble.style.animationDelay = `${Math.random() * 8}s`;
+      bubble.style.animationDuration = `${Math.random() * 6 + 6}s`;
+      bubblesContainer.appendChild(bubble);
+    }
+
+    soundToggleBtn.addEventListener('click', () => {
+      sound.muted = !sound.muted;
+      soundToggleBtn.textContent = sound.muted ? '🔇' : '🔊';
+    });
+
+    startGameBtn.addEventListener('click', () => {
+      sound.playPop();
+      startScreen.classList.add('hidden');
+      quizScreen.classList.remove('hidden');
+      quizScreen.classList.add('flex');
+      loadQuestion();
+    });
+
+    function loadQuestion() {
+      // Clear old feedback
+      feedbackBox.classList.add('hidden');
+      feedbackBox.className = "hidden rounded-xl p-3 text-center font-bold text-base transition-all duration-300";
+
+      const currentLevelData = quizData[currentLevelIndex];
+      const qData = currentLevelData.questions[currentQuestionIndex];
+
+      // Update Top Status
+      levelBadge.textContent = currentLevelData.title;
+      questionCount.textContent = `Question ${currentQuestionIndex + 1} of 3`;
+      
+      const totalProgress = ((totalQuestionsAnswered) / 15) * 100;
+      progressBar.style.width = `${Math.max(totalProgress, 6.66)}%`;
+
+      // Update Mascot Guide
+      const mascot = countryBallMascots[currentLevelIndex % countryBallMascots.length];
+      mascotIcon.innerHTML = mascot.svg;
+      mascotName.textContent = mascot.name;
+      mascotSpeech.textContent = `"${qData.hint}"`;
+
+      // Set Question
+      questionText.textContent = qData.q;
+
+      // Render Answer Option Buttons
+      optionsGrid.innerHTML = '';
+      qData.options.forEach((optText, index) => {
+        const btn = document.createElement('button');
+        btn.className = 'w-full bg-slate-100 hover:bg-sky-100 text-slate-800 font-bold p-4 rounded-2xl border-2 border-slate-200 shadow-sm transition-all btn-bounce text-left flex items-center justify-between text-base md:text-lg';
+        btn.innerHTML = `<span>${optText}</span> <span class="text-xs bg-sky-200 text-sky-800 px-2.5 py-1 rounded-full font-fun">${['A','B','C','D'][index]}</span>`;
+        btn.addEventListener('click', () => handleAnswerSelect(index, qData.correct, btn));
+        optionsGrid.appendChild(btn);
+      });
+    }
+
+    function handleAnswerSelect(selectedIndex, correctIndex, clickedBtn) {
+      if (selectedIndex === correctIndex) {
+        // Correct Answer!
+        sound.playCorrect();
+        clickedBtn.className = 'w-full bg-emerald-500 text-white font-bold p-4 rounded-2xl border-2 border-emerald-600 shadow-md text-left flex items-center justify-between text-base md:text-lg scale-105 transition-all';
+        
+        // Show Feedback
+        feedbackBox.textContent = "🌟 Magnificent! You got it right!";
+        feedbackBox.className = "rounded-xl p-3 text-center font-bold text-base bg-emerald-100 text-emerald-800 border border-emerald-300 block mb-4 animate-bounce";
+
+        // Increment Stars & Progress
+        starsEarned++;
+        totalQuestionsAnswered++;
+        starScoreEl.textContent = starsEarned;
+
+        // Disable all option buttons temporarily
+        const allBtns = optionsGrid.querySelectorAll('button');
+        allBtns.forEach(b => b.style.pointerEvents = 'none');
+
+        setTimeout(() => {
+          currentQuestionIndex++;
+          if (currentQuestionIndex >= 3) {
+            // Level Completed!
+            currentLevelIndex++;
+            currentQuestionIndex = 0;
+
+            if (currentLevelIndex >= quizData.length) {
+              // Entire Quiz Finished -> Go to Celebration
+              showCelebration();
+            } else {
+              sound.playFanfare();
+              loadQuestion();
+            }
+          } else {
+            loadQuestion();
+          }
+        }, 1200);
+
+      } else {
+        // Incorrect - Safe Retry Mechanic
+        sound.playTryAgain();
+        clickedBtn.className = 'w-full bg-rose-100 text-rose-700 font-bold p-4 rounded-2xl border-2 border-rose-300 shadow-sm text-left flex items-center justify-between text-base md:text-lg opacity-60';
+        clickedBtn.style.pointerEvents = 'none';
+
+        feedbackBox.textContent = "Oops! Try again! You can do it! 🌟";
+        feedbackBox.className = "rounded-xl p-3 text-center font-bold text-base bg-amber-100 text-amber-800 border border-amber-300 block mb-4";
+      }
+    }
+
+    function showCelebration() {
+      sound.playFanfare();
+      quizScreen.classList.add('hidden');
+      quizScreen.classList.remove('flex');
+      
+      document.getElementById('finalStarCount').textContent = `⭐ ${starsEarned}`;
+      celebrationScreen.classList.remove('hidden');
+      celebrationScreen.classList.add('flex');
+    }
+
+    startMiniGameBtn.addEventListener('click', () => {
+      sound.playPop();
+      celebrationScreen.classList.add('hidden');
+      celebrationScreen.classList.remove('flex');
+      miniGameScreen.classList.remove('hidden');
+      miniGameScreen.classList.add('flex');
+      initMiniGame();
+    });
+
+    let canvas, ctx;
+    let basket = { x: 0, y: 0, width: 80, height: 30 };
+    let fallingStars = [];
+    let miniGameScore = 0;
+    let miniGameTimer = 30;
+    let miniGameInterval = null;
+    let animationFrameId = null;
+
+    function initMiniGame() {
+      canvas = document.getElementById('miniGameCanvas');
+      ctx = canvas.getContext('2d');
+
+      // Adjust Canvas size
+      const rect = canvas.getBoundingClientRect();
+      canvas.width = rect.width;
+      canvas.height = rect.height;
+
+      basket.x = canvas.width / 2 - basket.width / 2;
+      basket.y = canvas.height - 45;
+
+      fallingStars = [];
+      miniGameScore = 0;
+      miniGameTimer = 30;
+
+      document.getElementById('miniGameScore').textContent = miniGameScore;
+      document.getElementById('miniGameTimer').textContent = `${miniGameTimer}s`;
+
+      // Event Listeners for Movement (Mouse & Touch)
+      const updateBasketPos = (e) => {
+        const cRect = canvas.getBoundingClientRect();
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const relativeX = clientX - cRect.left;
+        basket.x = Math.max(0, Math.min(canvas.width - basket.width, relativeX - basket.width / 2));
+      };
+
+      canvas.addEventListener('mousemove', updateBasketPos);
+      canvas.addEventListener('touchmove', updateBasketPos);
+
+      // Start Countdown Timer
+      miniGameInterval = setInterval(() => {
+        miniGameTimer--;
+        document.getElementById('miniGameTimer').textContent = `${miniGameTimer}s`;
+        if (miniGameTimer <= 0) {
+          endMiniGame();
+        }
+      }, 1000);
+
+      // Main Canvas Animation Loop
+      gameLoop();
+    }
+
+    function spawnStar() {
+      if (Math.random() < 0.05) {
+        const isRainbow = Math.random() < 0.2; // 20% chance for rainbow star
+        fallingStars.push({
+          x: Math.random() * (canvas.width - 30) + 15,
+          y: -20,
+          speed: Math.random() * 2 + 2,
+          size: isRainbow ? 22 : 16,
+          isRainbow: isRainbow,
+          rotation: 0
+        });
+      }
+    }
+
+    function gameLoop() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Draw Underwater Background Decor
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
+      ctx.beginPath();
+      ctx.arc(60, 80, 12, 0, Math.PI * 2);
+      ctx.arc(120, 200, 8, 0, Math.PI * 2);
+      ctx.arc(canvas.width - 80, 150, 15, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Spawn and Render Falling Stars
+      spawnStar();
+
+      for (let i = fallingStars.length - 1; i >= 0; i--) {
+        const star = fallingStars[i];
+        star.y += star.speed;
+        star.rotation += 0.03;
+
+        // Render Star Shape
+        ctx.save();
+        ctx.translate(star.x, star.y);
+        ctx.rotate(star.rotation);
+
+        ctx.fillStyle = star.isRainbow ? '#F43F5E' : '#FBBF24';
+        if (star.isRainbow) {
+          const gradient = ctx.createLinearGradient(-10, -10, 10, 10);
+          gradient.addColorStop(0, '#EF4444');
+          gradient.addColorStop(0.5, '#F59E0B');
+          gradient.addColorStop(1, '#10B981');
+          ctx.fillStyle = gradient;
+        }
+
+        ctx.beginPath();
+        for (let j = 0; j < 5; j++) {
+          ctx.lineTo(Math.cos((18 + j * 72) * Math.PI / 180) * star.size, -Math.sin((18 + j * 72) * Math.PI / 180) * star.size);
+          ctx.lineTo(Math.cos((54 + j * 72) * Math.PI / 180) * (star.size / 2), -Math.sin((54 + j * 72) * Math.PI / 180) * (star.size / 2));
+        }
+        ctx.closePath();
+        ctx.fill();
+        ctx.restore();
+
+        // Collision Check with Basket
+        if (
+          star.y + star.size >= basket.y &&
+          star.y - star.size <= basket.y + basket.height &&
+          star.x >= basket.x &&
+          star.x <= basket.x + basket.width
+        ) {
+          // Caught Star!
+          sound.playStarCatch();
+          const points = star.isRainbow ? 5 : 1;
+          miniGameScore += points;
+          document.getElementById('miniGameScore').textContent = miniGameScore;
+          fallingStars.splice(i, 1);
+        } else if (star.y > canvas.height + 30) {
+          // Missed star
+          fallingStars.splice(i, 1);
+        }
+      }
+
+      // Draw Player Basket (Ocean Net)
+      ctx.fillStyle = '#0284C7';
+      ctx.beginPath();
+      ctx.roundRect(basket.x, basket.y, basket.width, basket.height, 10);
+      ctx.fill();
+      ctx.lineWidth = 3;
+      ctx.strokeStyle = '#FFFFFF';
+      ctx.stroke();
+
+      // Net Netting Effect
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(basket.x + 20, basket.y);
+      ctx.lineTo(basket.x + 20, basket.y + basket.height);
+      ctx.moveTo(basket.x + 40, basket.y);
+      ctx.lineTo(basket.x + 40, basket.y + basket.height);
+      ctx.moveTo(basket.x + 60, basket.y);
+      ctx.lineTo(basket.x + 60, basket.y + basket.height);
+      ctx.stroke();
+
+      if (miniGameTimer > 0) {
+        animationFrameId = requestAnimationFrame(gameLoop);
+      }
+    }
+
+    function endMiniGame() {
+      clearInterval(miniGameInterval);
+      cancelAnimationFrame(animationFrameId);
+
+      miniGameScreen.classList.add('hidden');
+      miniGameScreen.classList.remove('flex');
+
+      document.getElementById('summaryQuizStars').textContent = `⭐ ${starsEarned}`;
+      document.getElementById('summaryBonusStars').textContent = `⭐ ${miniGameScore}`;
+      document.getElementById('summaryTotalScore').textContent = `⭐ ${starsEarned + miniGameScore}`;
+
+      finalScreen.classList.remove('hidden');
+      finalScreen.classList.add('flex');
+      sound.playFanfare();
+    }
+
+    // Restart Whole Game
+    restartGameBtn.addEventListener('click', () => {
+      sound.playPop();
+      currentLevelIndex = 0;
+      currentQuestionIndex = 0;
+      totalQuestionsAnswered = 0;
+      starsEarned = 0;
+      starScoreEl.textContent = '0';
+
+      finalScreen.classList.add('hidden');
+      finalScreen.classList.remove('flex');
+      startScreen.classList.remove('hidden');
+      startScreen.classList.add('flex');
+    });
+  </script>
+</body>
+</html>

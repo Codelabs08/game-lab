@@ -1,0 +1,836 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panda Party Rocks &amp; Soil Quiz</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Quicksand:wght@500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Quicksand', sans-serif;
+            background: linear-gradient(135deg, #FF9A9E 0%, #FECFEF 30%, #a1c4fd 70%, #c2e9fb 100%);
+            min-height: 100vh;
+            user-select: none;
+        }
+        h1, h2, h3, .font-heading {
+            font-family: 'Fredoka One', cursive;
+        }
+        
+        /* Custom Animations */
+        @keyframes pandaBounce {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-10px) rotate(2deg); }
+        }
+        .animate-panda {
+            animation: pandaBounce 2.5s infinite ease-in-out;
+        }
+
+        @keyframes confettiFloat {
+            0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(100px) rotate(360deg); opacity: 0; }
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.4);
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #f43f5e;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body class="p-2 md:p-6 flex flex-col items-center justify-center min-h-screen text-slate-800">
+
+    <div id="app" class="w-full max-w-4xl bg-white/95 backdrop-blur-md border-4 border-white shadow-2xl rounded-3xl overflow-hidden flex flex-col min-h-[620px] relative">
+        
+        <!-- Header Bar -->
+        <header class="bg-gradient-to-r from-amber-300 via-rose-300 via-sky-300 to-purple-300 p-4 border-b-4 border-white flex justify-between items-center shadow-md">
+            <div class="flex items-center space-x-3 cursor-pointer" onclick="showScreen('start-screen')">
+                <span class="text-3xl md:text-4xl animate-bounce">🐼</span>
+                <span class="font-heading text-xl md:text-2xl text-rose-600 drop-shadow-sm">Your Panda Party!</span>
+            </div>
+            
+            <div class="flex items-center space-x-2 md:space-x-3">
+                <button onclick="showScreen('dressup-screen')" class="bg-pink-100 hover:bg-pink-200 text-pink-700 font-heading px-3 py-1.5 rounded-2xl border-2 border-pink-400 shadow text-xs md:text-sm flex items-center space-x-1 transition transform hover:scale-105 active:scale-95">
+                    <span>👗</span> <span class="hidden sm:inline">Dress-Up</span> Studio
+                </button>
+                <button id="sound-btn" onclick="toggleSound()" class="bg-white hover:bg-yellow-100 p-2 rounded-2xl shadow border-2 border-amber-300 text-xl md:text-2xl transition transform hover:scale-105 active:scale-95">
+                    🔊
+                </button>
+                <div class="bg-amber-100 border-2 border-amber-400 rounded-2xl px-3 py-1.5 flex items-center space-x-2 font-bold text-amber-800 shadow-inner">
+                    <span>🎋</span>
+                    <span id="star-count" class="text-lg md:text-xl">0</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Dynamic Content Body -->
+        <main class="flex-1 p-3 md:p-6 flex flex-col items-center justify-center relative overflow-y-auto">
+
+            <!-- Start Screen -->
+            <section id="start-screen" class="w-full flex flex-col items-center text-center space-y-6 my-auto py-4">
+                <div class="relative">
+                    <!-- Hero Panda SVG Mascot -->
+                    <div class="w-44 h-44 md:w-52 md:h-52 animate-panda relative">
+                        <svg viewBox="0 0 200 200" class="w-full h-full drop-shadow-xl">
+                            <circle cx="45" cy="45" r="28" fill="#1e293b"/>
+                            <circle cx="155" cy="45" r="28" fill="#1e293b"/>
+                            <circle cx="45" cy="45" r="16" fill="#f43f5e"/>
+                            <circle cx="155" cy="45" r="16" fill="#f43f5e"/>
+                            <circle cx="100" cy="105" r="75" fill="#ffffff" stroke="#e2e8f0" stroke-width="3"/>
+                            <ellipse cx="65" cy="100" rx="22" ry="28" fill="#1e293b" transform="rotate(-15 65 100)"/>
+                            <ellipse cx="135" cy="100" rx="22" ry="28" fill="#1e293b" transform="rotate(15 135 100)"/>
+                            <circle cx="68" cy="98" r="8" fill="#ffffff"/>
+                            <circle cx="132" cy="98" r="8" fill="#ffffff"/>
+                            <circle cx="70" cy="98" r="4" fill="#000000"/>
+                            <circle cx="130" cy="98" r="4" fill="#000000"/>
+                            <circle cx="45" cy="120" r="12" fill="#fca5a5" opacity="0.6"/>
+                            <circle cx="155" cy="120" r="12" fill="#fca5a5" opacity="0.6"/>
+                            <ellipse cx="100" cy="115" rx="10" ry="7" fill="#1e293b"/>
+                            <path d="M 90 125 Q 100 135 110 125" stroke="#1e293b" stroke-width="4" fill="none" stroke-linecap="round"/>
+                            <polygon points="100,10 70,60 130,60" fill="#f43f5e"/>
+                            <polygon points="100,10 85,60 115,60" fill="#fbbf24"/>
+                            <circle cx="100" cy="10" r="8" fill="#38bdf8"/>
+                        </svg>
+                    </div>
+                    <span class="absolute -top-2 -right-4 bg-yellow-300 text-yellow-900 border-2 border-yellow-500 font-heading px-3 py-1 rounded-full text-xs md:text-sm animate-bounce shadow-md">Year 3 Science!</span>
+                </div>
+
+                <div class="space-y-2 max-w-md">
+                    <h1 class="text-3xl md:text-5xl font-heading text-rose-500 tracking-wide drop-shadow">Panda Party Rocks &amp; Soil Quiz</h1>
+                    <p class="text-base md:text-lg text-slate-600 font-medium">Explore the magic of <strong class="text-emerald-600">Rocks & Soil</strong>, earn bamboo stars, and dress up Hero with huge wardrobe items!</p>
+                </div>
+
+                <div class="flex flex-col sm:flex-row gap-4 w-full max-w-md pt-2">
+                    <button onclick="startQuiz()" class="flex-1 bg-gradient-to-b from-emerald-400 to-emerald-500 hover:from-emerald-500 hover:to-emerald-600 text-white font-heading text-xl py-4 px-6 rounded-3xl border-b-8 border-emerald-700 shadow-xl transition transform hover:-translate-y-1 active:translate-y-1">
+                        PLAY QUIZ! 🚀
+                    </button>
+                    <button onclick="showScreen('dressup-screen')" class="flex-1 bg-gradient-to-b from-pink-400 to-purple-500 hover:from-pink-500 hover:to-purple-600 text-white font-heading text-xl py-4 px-6 rounded-3xl border-b-8 border-purple-700 shadow-xl transition transform hover:-translate-y-1 active:translate-y-1">
+                        DRESS UP! 👗
+                    </button>
+                </div>
+            </section>
+
+            <!-- Level Select Screen -->
+            <section id="level-select-screen" class="w-full flex flex-col items-center space-y-5 hidden my-auto py-2">
+                <div class="text-center">
+                    <h2 class="text-3xl font-heading text-sky-600">Choose a Level</h2>
+                    <p class="text-slate-600">Solve Year 3 Science puzzles to unlock certificate stars!</p>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 w-full max-w-2xl">
+                    <!-- Populated dynamically -->
+                </div>
+
+                <button onclick="showScreen('dressup-screen')" class="bg-gradient-to-r from-pink-400 to-purple-500 text-white font-heading px-6 py-3 rounded-2xl shadow-lg border-b-4 border-purple-700 hover:opacity-90 transition transform hover:scale-105">
+                    👗 Go to Dress-Up Studio!
+                </button>
+            </section>
+
+            <!-- Quiz Screen -->
+            <section id="quiz-screen" class="w-full max-w-2xl flex flex-col items-center space-y-5 hidden my-auto">
+                <div class="w-full bg-slate-200 h-6 rounded-full overflow-hidden border-2 border-white shadow-inner relative">
+                    <div id="progress-bar" class="bg-gradient-to-r from-emerald-400 to-teal-400 h-full transition-all duration-500 w-0"></div>
+                    <span id="level-indicator" class="absolute inset-0 flex items-center justify-center font-bold text-xs text-slate-700 drop-shadow">Level 1 - Question 1/3</span>
+                </div>
+
+                <div class="w-full bg-amber-50/90 border-4 border-amber-200 rounded-3xl p-5 md:p-8 shadow-lg text-center relative">
+                    <span id="topic-badge" class="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-amber-400 text-amber-900 font-heading text-xs uppercase px-4 py-1 rounded-full border-2 border-white shadow">
+                        Types of Rocks
+                    </span>
+                    <h3 id="question-text" class="text-lg md:text-2xl font-bold text-slate-800 my-2 leading-relaxed">
+                        Loading Question...
+                    </h3>
+                </div>
+
+                <div id="options-container" class="grid grid-cols-1 sm:grid-cols-2 gap-3.5 w-full">
+                    <!-- Dynamic Buttons -->
+                </div>
+
+                <div id="feedback-banner" class="hidden w-full p-4 rounded-2xl font-bold text-center text-base md:text-lg shadow-md transition-all duration-300">
+                </div>
+
+                <button id="next-btn" onclick="nextQuestion()" class="hidden bg-gradient-to-r from-sky-400 to-blue-500 hover:from-sky-500 hover:to-blue-600 text-white font-heading text-xl py-3 px-8 rounded-2xl border-b-4 border-blue-700 shadow-lg transform active:translate-y-1">
+                    Next Question ➔
+                </button>
+            </section>
+
+            <!-- Dress Up Screen -->
+            <section id="dressup-screen" class="w-full flex flex-col items-center space-y-4 hidden my-auto">
+                <div class="text-center">
+                    <h2 class="text-3xl md:text-4xl font-heading text-pink-500">Dress My Quizmaster! 🎉</h2>
+                    <p class="text-slate-600 text-sm md:text-base font-medium">Mix and match awesome clothes, hats, glasses, shoes & backgrounds!</p>
+                </div>
+
+                <div class="flex flex-col lg:flex-row items-center justify-center gap-4 w-full max-w-4xl">
+                    
+                    <!-- SVG Display Canvas Container -->
+                    <div id="panda-canvas-wrapper" class="relative border-4 border-white rounded-3xl shadow-xl p-2 flex items-center justify-center w-72 h-80 overflow-hidden transition-all duration-300 bg-gradient-to-b from-sky-200 via-rose-100 to-amber-100">
+                        
+                        <!-- Celebration photo sparkle overlay -->
+                        <div id="photo-flash" class="absolute inset-0 bg-white opacity-0 pointer-events-none transition-opacity duration-300 z-40"></div>
+
+                        <svg id="panda-dressup-svg" viewBox="0 0 200 220" class="w-full h-full drop-shadow-md z-10">
+                            <!-- Background elements layer -->
+                            <g id="layer-bg"></g>
+
+                            <!-- Base Panda Body -->
+                            <g id="panda-body">
+                                <circle cx="45" cy="55" r="26" fill="#1e293b"/>
+                                <circle cx="155" cy="55" r="26" fill="#1e293b"/>
+                                <circle cx="45" cy="55" r="14" fill="#f43f5e"/>
+                                <circle cx="155" cy="55" r="14" fill="#f43f5e"/>
+                                <circle cx="100" cy="110" r="70" fill="#ffffff" stroke="#cbd5e1" stroke-width="2"/>
+                                <ellipse cx="68" cy="105" rx="20" ry="25" fill="#1e293b" transform="rotate(-15 68 105)"/>
+                                <ellipse cx="132" cy="105" rx="20" ry="25" fill="#1e293b" transform="rotate(15 132 105)"/>
+                                <circle cx="70" cy="103" r="7" fill="#ffffff"/>
+                                <circle cx="130" cy="103" r="7" fill="#ffffff"/>
+                                <circle cx="72" cy="103" r="3" fill="#000000"/>
+                                <circle cx="128" cy="103" r="3" fill="#000000"/>
+                                <circle cx="48" cy="125" r="10" fill="#fca5a5" opacity="0.6"/>
+                                <circle cx="152" cy="125" r="10" fill="#fca5a5" opacity="0.6"/>
+                                <ellipse cx="100" cy="118" rx="9" ry="6" fill="#1e293b"/>
+                                <path d="M 92 127 Q 100 135 108 127" stroke="#1e293b" stroke-width="3" fill="none" stroke-linecap="round"/>
+                            </g>
+
+                            <!-- Dynamic Layer Order -->
+                            <g id="layer-shoes"></g>
+                            <g id="layer-shirts"></g>
+                            <g id="layer-glasses"></g>
+                            <g id="layer-hats"></g>
+                            <g id="layer-props"></g>
+                        </svg>
+                    </div>
+
+                    <!-- Wardrobe Selector Panel -->
+                    <div class="flex-1 w-full bg-white/90 rounded-3xl p-3 border-2 border-slate-200 shadow-md flex flex-col space-y-3">
+                        
+                        <!-- Category Bar (Horizontal Scrollable) -->
+                        <div class="flex space-x-1.5 overflow-x-auto pb-2 border-b-2 border-slate-100">
+                            <button onclick="setOutfitCategory('hats')" id="tab-hats" class="font-heading px-3 py-1.5 rounded-xl text-xs md:text-sm whitespace-nowrap bg-rose-100 text-rose-600">👑 Hats</button>
+                            <button onclick="setOutfitCategory('shirts')" id="tab-shirts" class="font-heading px-3 py-1.5 rounded-xl text-xs md:text-sm whitespace-nowrap text-slate-600">👕 Tops</button>
+                            <button onclick="setOutfitCategory('glasses')" id="tab-glasses" class="font-heading px-3 py-1.5 rounded-xl text-xs md:text-sm whitespace-nowrap text-slate-600">🕶️ Glasses</button>
+                            <button onclick="setOutfitCategory('props')" id="tab-props" class="font-heading px-3 py-1.5 rounded-xl text-xs md:text-sm whitespace-nowrap text-slate-600">🪄 Props</button>
+                            <button onclick="setOutfitCategory('shoes')" id="tab-shoes" class="font-heading px-3 py-1.5 rounded-xl text-xs md:text-sm whitespace-nowrap text-slate-600">👟 Shoes</button>
+                            <button onclick="setOutfitCategory('bg')" id="tab-bg" class="font-heading px-3 py-1.5 rounded-xl text-xs md:text-sm whitespace-nowrap text-slate-600">🖼️ Scenes</button>
+                        </div>
+
+                        <!-- Item Grid Selection -->
+                        <div id="outfit-options-grid" class="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-3 gap-2.5 p-1 max-h-52 overflow-y-auto">
+                            <!-- Populated dynamically with 8-10 items per category -->
+                        </div>
+
+                        <!-- Wardrobe Actions -->
+                        <div class="flex justify-between items-center pt-2 border-t border-slate-100">
+                            <button onclick="randomizeOutfit()" class="bg-amber-100 hover:bg-amber-200 text-amber-800 font-heading text-xs px-3 py-1.5 rounded-xl border border-amber-300 shadow-sm flex items-center space-x-1">
+                                <span>🎲</span> <span>Randomize!</span>
+                            </button>
+                            <button onclick="clearCategoryOutfit()" class="text-xs font-bold text-rose-500 underline hover:text-rose-700">Remove Current Layer</button>
+                            <button onclick="resetOutfit()" class="text-xs font-bold text-slate-500 underline hover:text-slate-700">Clear All</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bottom Action Controls -->
+                <div class="flex flex-wrap gap-3 justify-center pt-1">
+                    <button onclick="snapPhoto()" class="bg-gradient-to-r from-purple-400 to-pink-500 text-white font-heading px-5 py-2.5 rounded-2xl shadow-lg border-b-4 border-purple-700 hover:scale-105 transition flex items-center space-x-1.5">
+                        <span>📸</span> <span>Photo Snap!</span>
+                    </button>
+                    <button onclick="downloadCertificate()" class="bg-gradient-to-r from-emerald-400 to-green-500 text-white font-heading px-5 py-2.5 rounded-2xl shadow-lg border-b-4 border-green-700 hover:scale-105 transition flex items-center space-x-1.5">
+                        <span>📜</span> <span>Award Certificate</span>
+                    </button>
+                    <button onclick="showScreen('level-select-screen')" class="bg-gradient-to-r from-sky-400 to-blue-500 text-white font-heading px-5 py-2.5 rounded-2xl shadow-lg border-b-4 border-blue-700 hover:scale-105 transition flex items-center space-x-1.5">
+                        <span>🗺️</span> <span>Quiz Map</span>
+                    </button>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <!-- Celebration Modal -->
+    <div id="level-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-3xl border-4 border-amber-300 p-6 md:p-8 max-w-sm w-full text-center space-y-5 shadow-2xl transform transition-all scale-95">
+            <div class="text-6xl animate-bounce">🎉</div>
+            <h3 id="modal-title" class="text-3xl font-heading text-amber-500">Level Cleared!</h3>
+            <p id="modal-desc" class="text-slate-600 font-medium">You answered all questions correctly!</p>
+            <div class="flex justify-center space-x-2 text-4xl" id="modal-stars">
+                <span>⭐</span><span>⭐</span><span>⭐</span>
+            </div>
+            <button onclick="closeModal()" class="w-full bg-gradient-to-r from-amber-400 to-orange-400 text-white font-heading text-xl py-3 rounded-2xl border-b-4 border-orange-600 shadow-lg active:translate-y-1">
+                Continue!
+            </button>
+        </div>
+    </div>
+
+    <script>
+        let soundEnabled = true;
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        let audioCtx = null;
+
+        function playSound(type) {
+            if (!soundEnabled) return;
+            try {
+                if (!audioCtx) audioCtx = new AudioCtx();
+                if (audioCtx.state === 'suspended') audioCtx.resume();
+
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+
+                const now = audioCtx.currentTime;
+
+                if (type === 'correct') {
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(523.25, now);
+                    osc.frequency.exponentialRampToValueAtTime(659.25, now + 0.1);
+                    osc.frequency.exponentialRampToValueAtTime(783.99, now + 0.2);
+                    gain.gain.setValueAtTime(0.3, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+                    osc.start(now);
+                    osc.stop(now + 0.4);
+                } else if (type === 'wrong') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(220, now);
+                    osc.frequency.exponentialRampToValueAtTime(180, now + 0.2);
+                    gain.gain.setValueAtTime(0.2, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
+                    osc.start(now);
+                    osc.stop(now + 0.25);
+                } else if (type === 'fanfare') {
+                    [523.25, 659.25, 783.99, 1046.50].forEach((freq, idx) => {
+                        const o = audioCtx.createOscillator();
+                        const g = audioCtx.createGain();
+                        o.connect(g);
+                        g.connect(audioCtx.destination);
+                        o.frequency.setValueAtTime(freq, now + idx * 0.12);
+                        g.gain.setValueAtTime(0.2, now + idx * 0.12);
+                        g.gain.exponentialRampToValueAtTime(0.01, now + idx * 0.12 + 0.25);
+                        o.start(now + idx * 0.12);
+                        o.stop(now + idx * 0.12 + 0.25);
+                    });
+                } else if (type === 'pop') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(400, now);
+                    osc.frequency.exponentialRampToValueAtTime(800, now + 0.08);
+                    gain.gain.setValueAtTime(0.2, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.08);
+                    osc.start(now);
+                    osc.stop(now + 0.08);
+                }
+            } catch (e) {}
+        }
+
+        function toggleSound() {
+            soundEnabled = !soundEnabled;
+            document.getElementById('sound-btn').innerText = soundEnabled ? '🔊' : '🔇';
+        }
+
+        // Year 3 Rocks & Soil Questions (15 Total)
+        const quizData = [
+            {
+                level: 1,
+                title: "Rock Basics & Properties",
+                badge: "🪨 Level 1",
+                questions: [
+                    {
+                        question: "Which rock is soft and leaves white marks on blackboards for writing?",
+                        options: ["Granite", "Chalk", "Marble", "Slate"],
+                        correct: 1,
+                        hint: "Think about what teachers use to write on blackboards!"
+                    },
+                    {
+                        question: "If water can soak through a rock, we say the rock is...",
+                        options: ["Permeable", "Waterproof", "Metallic", "Shiny"],
+                        correct: 0,
+                        hint: "Permeable rocks have tiny gaps that let water pass through!"
+                    },
+                    {
+                        question: "Which of these materials is natural and NOT made by humans?",
+                        options: ["Plastic bottle", "Granite rock", "Brick wall", "Concrete driveway"],
+                        correct: 1,
+                        hint: "Granite forms deep underground in the Earth all by itself!"
+                    }
+                ]
+            },
+            {
+                level: 2,
+                title: "Types of Rocks",
+                badge: "🌋 Level 2",
+                questions: [
+                    {
+                        question: "Which type of rock forms when hot liquid volcano lava cools down?",
+                        options: ["Sedimentary rock", "Igneous rock", "Metamorphic rock", "Glass rock"],
+                        correct: 1,
+                        hint: "Igneous comes from a Latin word meaning 'fire'!"
+                    },
+                    {
+                        question: "Sedimentary rocks are often formed in layers from tiny bits of...",
+                        options: ["Sand and mud squashed together", "Melted ice", "Tree leaves only", "Metal bolts"],
+                        correct: 0,
+                        hint: "Over millions of years, layers of sand and mud get pressed tight!"
+                    },
+                    {
+                        question: "Metamorphic rocks are rocks that have been changed by high heat and...",
+                        options: ["Cold wind", "Pressure deep underground", "Bubbles", "Ocean salt"],
+                        correct: 1,
+                        hint: "Squashing and heat deep underground change existing rocks!"
+                    }
+                ]
+            },
+            {
+                level: 3,
+                title: "Uses of Rocks",
+                badge: "🏛️ Level 3",
+                questions: [
+                    {
+                        question: "Which waterproof rock splits easily into thin sheets and is used for house roofs?",
+                        options: ["Chalk", "Slate", "Sandstone", "Pumice"],
+                        correct: 1,
+                        hint: "Slate is dark grey and keeps the rain out of houses!"
+                    },
+                    {
+                        question: "Why is granite often chosen to make kitchen worktops and counters?",
+                        options: ["It is soft and squishy", "It dissolves in water", "It is very hard and tough", "It floats"],
+                        correct: 2,
+                        hint: "Granite does not scratch easily because it is super hard!"
+                    },
+                    {
+                        question: "Smooth, white Marble rock is famous for being carved into...",
+                        options: ["Paper sheets", "Beautiful statues and pillars", "Car tires", "Bed pillows"],
+                        correct: 1,
+                        hint: "Artists love sculpting beautiful statues out of smooth marble!"
+                    }
+                ]
+            },
+            {
+                level: 4,
+                title: "Soil & Earthworms",
+                badge: "🌱 Level 4",
+                questions: [
+                    {
+                        question: "What is soil mostly made of?",
+                        options: ["Tiny rock pieces, decayed leaves, air & water", "Pure sugar", "Melted plastic", "Cardboard"],
+                        correct: 0,
+                        hint: "Soil is a mix of ground-up rock bits and rotten plant material!"
+                    },
+                    {
+                        question: "The dark, rich part of soil made from old leaves and plants is called...",
+                        options: ["Humus", "Lava", "Chalk", "Crystal"],
+                        correct: 0,
+                        hint: "Humus helps plants grow healthy and strong!"
+                    },
+                    {
+                        question: "How do earthworms help make good soil for plants?",
+                        options: ["They eat all the flowers", "They dig tunnels that let air & water in", "They paint the soil green", "They make rocks harder"],
+                        correct: 1,
+                        hint: "Worm tunnels let water and air reach plant roots!"
+                    }
+                ]
+            },
+            {
+                level: 5,
+                title: "Fossils & History",
+                badge: "🦴 Level 5",
+                questions: [
+                    {
+                        question: "What is a fossil?",
+                        options: ["A living animal in a zoo", "The preserved remains of ancient plants or animals in rock", "A piece of wood", "A newly made brick"],
+                        correct: 1,
+                        hint: "Fossils show us creatures like dinosaurs that lived long ago!"
+                    },
+                    {
+                        question: "Which rock type is most likely to contain dinosaur fossils?",
+                        options: ["Igneous (volcano) rock", "Sedimentary (layered) rock", "Melted rock", "Glass rock"],
+                        correct: 1,
+                        hint: "Gentle layers of mud and sand preserve bones without burning them!"
+                    },
+                    {
+                        question: "Who was Mary Anning?",
+                        options: ["A famous fossil hunter who discovered dinosaur fossils", "The first panda in space", "A queen who built stone castles", "A chef who baked rock cakes"],
+                        correct: 0,
+                        hint: "Mary Anning found amazing sea monster fossils on beaches in England!"
+                    }
+                ]
+            }
+        ];
+
+        let currentLevelIdx = 0;
+        let currentQuestionIdx = 0;
+        let starPoints = 0;
+        let completedLevels = new Set();
+        let currentCategory = 'hats';
+
+        // Equipped Wardrobe State
+        let equippedOutfit = {
+            hats: 'party',
+            shirts: 'vest',
+            glasses: null,
+            props: 'bamboo',
+            shoes: null,
+            bg: 'party'
+        };
+
+        // 8-10 Items per category
+        const outfitCatalog = {
+            hats: [
+                { id: 'party', name: 'Party Cone', svg: '<polygon points="100,10 70,60 130,60" fill="#f43f5e"/><polygon points="100,10 85,60 115,60" fill="#fbbf24"/><circle cx="100" cy="10" r="7" fill="#38bdf8"/>' },
+                { id: 'crown', name: 'Royal Crown', svg: '<polygon points="65,65 70,25 85,45 100,20 115,45 130,25 135,65" fill="#facc15" stroke="#ca8a04" stroke-width="2"/><circle cx="70" cy="25" r="4" fill="#ef4444"/><circle cx="100" cy="20" r="4" fill="#3b82f6"/><circle cx="130" cy="25" r="4" fill="#ef4444"/>' },
+                { id: 'space', name: 'Space Helmet', svg: '<circle cx="100" cy="105" r="74" fill="none" stroke="#38bdf8" stroke-width="6" opacity="0.8"/><ellipse cx="100" cy="95" rx="60" ry="45" fill="#38bdf8" opacity="0.3"/>' },
+                { id: 'chef', name: 'Chef Toque', svg: '<path d="M 65 60 C 50 30 80 15 100 25 C 120 15 150 30 135 60 Z" fill="#ffffff" stroke="#cbd5e1" stroke-width="2"/><rect x="70" y="55" width="60" height="15" fill="#ffffff" stroke="#cbd5e1" stroke-width="2"/>' },
+                { id: 'wizard', name: 'Wizard Hat', svg: '<path d="M 55 65 Q 100 0 145 65 Z" fill="#6366f1"/><polygon points="100,15 103,25 110,25 105,30 107,40 100,35 93,40 95,30 90,25 97,25" fill="#facc15"/>' },
+                { id: 'detective', name: 'Sleuth Hat', svg: '<ellipse cx="100" cy="60" rx="50" ry="12" fill="#78350f"/><path d="M 65 60 C 65 35 135 35 135 60 Z" fill="#92400e"/>' },
+                { id: 'flower', name: 'Flower Band', svg: '<circle cx="65" cy="55" r="9" fill="#f43f5e"/><circle cx="88" cy="45" r="10" fill="#ec4899"/><circle cx="112" cy="45" r="10" fill="#a855f7"/><circle cx="135" cy="55" r="9" fill="#f43f5e"/>' },
+                { id: 'dino', name: 'Dino Spikes', svg: '<polygon points="80,45 88,15 96,45" fill="#22c55e"/><polygon points="100,40 108,10 116,40" fill="#16a34a"/><polygon points="120,48 128,20 136,48" fill="#15803d"/>' },
+                { id: 'bow', name: 'Big Red Bow', svg: '<polygon points="70,35 100,50 70,65" fill="#f43f5e"/><polygon points="130,35 100,50 130,65" fill="#f43f5e"/><circle cx="100" cy="50" r="8" fill="#9f1239"/>' }
+            ],
+            shirts: [
+                { id: 'vest', name: 'Party Vest', svg: '<path d="M 65 148 Q 100 138 135 148 L 145 195 L 55 195 Z" fill="#38bdf8"/><circle cx="100" cy="160" r="4" fill="#ffffff"/><circle cx="100" cy="178" r="4" fill="#ffffff"/>' },
+                { id: 'hero', name: 'Super Suit', svg: '<path d="M 55 145 L 145 145 L 150 195 L 50 195 Z" fill="#ef4444"/><polygon points="100,155 112,165 108,180 92,180 88,165" fill="#facc15"/><text x="100" y="173" font-size="14" font-weight="bold" text-anchor="middle" fill="#ef4444">S</text>' },
+                { id: 'hoodie', name: 'Rainbow Top', svg: '<path d="M 55 145 L 145 145 L 148 195 L 52 195 Z" fill="#a855f7"/><path d="M 70 145 L 130 145 L 125 195 L 75 195 Z" fill="#38bdf8"/><path d="M 85 145 L 115 145 L 112 195 L 88 195 Z" fill="#facc15"/>' },
+                { id: 'coat', name: 'Lab Coat', svg: '<path d="M 58 145 L 142 145 L 146 195 L 54 195 Z" fill="#ffffff" stroke="#cbd5e1" stroke-width="2"/><line x1="100" y1="145" x2="100" y2="195" stroke="#94a3b8" stroke-width="2"/><rect x="68" y="165" width="18" height="20" fill="#f1f5f9" stroke="#cbd5e1"/>' },
+                { id: 'tux', name: 'Fancy Tux', svg: '<path d="M 58 145 L 142 145 L 146 195 L 54 195 Z" fill="#0f172a"/><polygon points="80,145 100,175 120,145" fill="#ffffff"/><polygon points="92,148 100,154 92,160" fill="#f43f5e"/><polygon points="108,148 100,154 108,160" fill="#f43f5e"/>' },
+                { id: 'detective_coat', name: 'Trenchcoat', svg: '<path d="M 55 145 L 145 145 L 150 195 L 50 195 Z" fill="#b45309"/><line x1="100" y1="145" x2="100" y2="195" stroke="#78350f" stroke-width="3"/>' },
+                { id: 'overalls', name: 'Denim Suit', svg: '<path d="M 65 148 L 135 148 L 140 195 L 60 195 Z" fill="#0284c7"/><rect x="80" y="148" width="40" height="25" fill="#0369a1"/><circle cx="75" cy="155" r="3" fill="#facc15"/><circle cx="125" cy="155" r="3" fill="#facc15"/>' },
+                { id: 'scout', name: 'Explorer Sash', svg: '<path d="M 58 145 L 142 145 L 145 195 L 55 195 Z" fill="#15803d"/><polygon points="58,145 135,195 145,195 68,145" fill="#ca8a04"/>' }
+            ],
+            glasses: [
+                { id: 'cool', name: 'Shades', svg: '<rect x="52" y="95" width="38" height="22" rx="6" fill="#0f172a"/><rect x="110" y="95" width="38" height="22" rx="6" fill="#0f172a"/><line x1="90" y1="104" x2="110" y2="104" stroke="#0f172a" stroke-width="4"/>' },
+                { id: 'star', name: 'Star Glasses', svg: '<polygon points="70,90 76,102 88,102 78,110 82,122 70,114 58,122 62,110 52,102 64,102" fill="#facc15"/><polygon points="130,90 136,102 148,102 138,110 142,122 130,114 118,122 122,110 112,102 124,102" fill="#facc15"/>' },
+                { id: 'round', name: 'Pink Glasses', svg: '<circle cx="70" cy="105" r="17" fill="none" stroke="#ec4899" stroke-width="4"/><circle cx="130" cy="105" r="17" fill="none" stroke="#ec4899" stroke-width="4"/><line x1="87" y1="105" x2="113" y2="105" stroke="#ec4899" stroke-width="4"/>' },
+                { id: 'heart', name: 'Heart Specs', svg: '<path d="M 55 100 C 55 90 70 90 70 100 C 70 90 85 90 85 100 C 85 112 70 120 70 120 C 70 120 55 112 55 100 Z" fill="#f43f5e"/><path d="M 115 100 C 115 90 130 90 130 100 C 130 90 145 90 145 100 C 145 112 130 120 130 120 C 130 120 115 112 115 100 Z" fill="#f43f5e"/>' },
+                { id: 'monocle', name: 'Monocle', svg: '<circle cx="130" cy="103" r="16" fill="none" stroke="#facc15" stroke-width="4"/><line x1="130" y1="119" x2="135" y2="150" stroke="#facc15" stroke-width="2"/>' },
+                { id: 'mask', name: 'Hero Mask', svg: '<path d="M 50 100 Q 100 115 150 100 Q 130 125 100 120 Q 70 125 50 100 Z" fill="#1e1b4b"/><ellipse cx="70" cy="106" rx="8" ry="5" fill="#ffffff"/><ellipse cx="130" cy="106" rx="8" ry="5" fill="#ffffff"/>' },
+                { id: 'goggles', name: 'Dino Goggles', svg: '<rect x="55" y="94" width="34" height="24" rx="10" fill="#0284c7" stroke="#0369a1" stroke-width="3"/><rect x="111" y="94" width="34" height="24" rx="10" fill="#0284c7" stroke="#0369a1" stroke-width="3"/><line x1="89" y1="106" x2="111" y2="106" stroke="#0369a1" stroke-width="5"/>' },
+                { id: '3d', name: '3D Glasses', svg: '<rect x="52" y="96" width="38" height="20" fill="#ef4444"/><rect x="110" y="96" width="38" height="20" fill="#06b6d4"/><rect x="50" y="92" width="100" height="6" fill="#ffffff"/>' }
+            ],
+            props: [
+                { id: 'bamboo', name: 'Bamboo Stalk', svg: '<rect x="155" y="120" width="12" height="70" rx="3" fill="#22c55e"/><line x1="155" y1="140" x2="167" y2="140" stroke="#15803d" stroke-width="3"/><line x1="155" y1="160" x2="167" y2="160" stroke="#15803d" stroke-width="3"/>' },
+                { id: 'wand', name: 'Magic Wand', svg: '<line x1="155" y1="175" x2="175" y2="125" stroke="#a855f7" stroke-width="5" stroke-linecap="round"/><polygon points="175,120 178,127 185,127 180,132 182,139 175,135 168,139 170,132 165,127 172,127" fill="#facc15"/>' },
+                { id: 'magnifier', name: 'Magnifier', svg: '<circle cx="45" cy="140" r="16" fill="none" stroke="#f59e0b" stroke-width="5"/><line x1="35" y1="152" x2="20" y2="175" stroke="#78350f" stroke-width="8" stroke-linecap="round"/>' },
+                { id: 'icecream', name: 'Ice Cream', svg: '<polygon points="160,160 170,195 180,160" fill="#d97706"/><circle cx="170" cy="150" r="14" fill="#ec4899"/><circle cx="170" cy="138" r="10" fill="#38bdf8"/>' },
+                { id: 'horn', name: 'Party Horn', svg: '<polygon points="35,135 10,120 10,150" fill="#f43f5e"/><polygon points="35,135 55,130 55,140" fill="#facc15"/>' },
+                { id: 'fossil', name: 'Fossil Rock', svg: '<ellipse cx="35" cy="155" rx="18" ry="14" fill="#94a3b8"/><path d="M 28 155 Q 35 148 42 155 Q 35 162 28 155" fill="none" stroke="#475569" stroke-width="3"/>' },
+                { id: 'balloon', name: 'Red Balloon', svg: '<ellipse cx="175" cy="110" rx="16" ry="20" fill="#ef4444"/><line x1="175" y1="130" x2="165" y2="180" stroke="#cbd5e1" stroke-width="2"/>' },
+                { id: 'trophy', name: 'Gold Trophy', svg: '<path d="M 25 140 L 45 140 L 42 165 L 28 165 Z" fill="#facc15" stroke="#ca8a04" stroke-width="2"/><rect x="30" y="165" width="10" height="15" fill="#ca8a04"/>' }
+            ],
+            shoes: [
+                { id: 'sneakers', name: 'Red Sneakers', svg: '<ellipse cx="70" cy="198" rx="16" ry="8" fill="#ef4444"/><ellipse cx="130" cy="198" rx="16" ry="8" fill="#ef4444"/><rect x="54" y="198" width="32" height="4" fill="#ffffff"/><rect x="114" y="198" width="32" height="4" fill="#ffffff"/>' },
+                { id: 'boots', name: 'Yellow Boots', svg: '<rect x="56" y="185" width="26" height="22" rx="5" fill="#facc15"/><rect x="118" y="185" width="26" height="22" rx="5" fill="#facc15"/>' },
+                { id: 'rainbow_shoes', name: 'Rainbow Kicks', svg: '<ellipse cx="70" cy="198" rx="16" ry="8" fill="#a855f7"/><ellipse cx="130" cy="198" rx="16" ry="8" fill="#a855f7"/><circle cx="65" cy="198" r="4" fill="#f43f5e"/><circle cx="125" cy="198" r="4" fill="#f43f5e"/>' },
+                { id: 'slippers', name: 'Bunny Slippers', svg: '<ellipse cx="68" cy="198" rx="16" ry="10" fill="#fbcfe8"/><ellipse cx="132" cy="198" rx="16" ry="10" fill="#fbcfe8"/><circle cx="58" cy="192" r="4" fill="#f43f5e"/><circle cx="122" cy="192" r="4" fill="#f43f5e"/>' },
+                { id: 'cleats', name: 'Green Cleats', svg: '<ellipse cx="70" cy="198" rx="16" ry="8" fill="#22c55e"/><ellipse cx="130" cy="198" rx="16" ry="8" fill="#22c55e"/>' },
+                { id: 'roller', name: 'Roller Skates', svg: '<rect x="56" y="188" width="26" height="12" fill="#38bdf8"/><rect x="118" y="188" width="26" height="12" fill="#38bdf8"/><circle cx="60" cy="204" r="4" fill="#f43f5e"/><circle cx="78" cy="204" r="4" fill="#f43f5e"/><circle cx="122" cy="204" r="4" fill="#f43f5e"/><circle cx="140" cy="204" r="4" fill="#f43f5e"/>' }
+            ],
+            bg: [
+                { id: 'party', name: 'Confetti Party', style: 'bg-gradient-to-b from-sky-200 via-rose-100 to-amber-100', svg: '<circle cx="20" cy="30" r="3" fill="#f43f5e"/><circle cx="180" cy="40" r="4" fill="#3b82f6"/><circle cx="170" cy="180" r="3" fill="#eab308"/><circle cx="30" cy="170" r="5" fill="#10b981"/>' },
+                { id: 'volcano', name: 'Lava Volcano', style: 'bg-gradient-to-b from-orange-300 via-red-200 to-amber-200', svg: '<polygon points="0,220 50,150 100,220" fill="#78350f"/><polygon points="40,150 50,130 60,150" fill="#ef4444"/>' },
+                { id: 'dino_land', name: 'Dino Jungle', style: 'bg-gradient-to-b from-emerald-200 via-teal-100 to-lime-200', svg: '<path d="M 0 220 Q 40 160 80 220" fill="#15803d"/><path d="M 120 220 Q 160 150 200 220" fill="#16a34a"/>' },
+                { id: 'space_bg', name: 'Galaxy Stars', style: 'bg-gradient-to-b from-slate-900 via-purple-950 to-indigo-900', svg: '<circle cx="30" cy="40" r="2" fill="#fff"/><circle cx="150" cy="30" r="3" fill="#fff"/><circle cx="170" cy="120" r="2" fill="#fff"/><circle cx="40" cy="160" r="2" fill="#fff"/>' },
+                { id: 'rainbow_bg', name: 'Rainbow Sky', style: 'bg-gradient-to-b from-pink-200 via-purple-100 to-sky-200', svg: '<path d="M 10 220 A 90 90 0 0 1 190 220" fill="none" stroke="#f43f5e" stroke-width="8"/><path d="M 20 220 A 80 80 0 0 1 180 220" fill="none" stroke="#facc15" stroke-width="8"/><path d="M 30 220 A 70 70 0 0 1 170 220" fill="none" stroke="#38bdf8" stroke-width="8"/>' }
+            ]
+        };
+
+        function showScreen(screenId) {
+            ['start-screen', 'level-select-screen', 'quiz-screen', 'dressup-screen'].forEach(id => {
+                document.getElementById(id).classList.add('hidden');
+            });
+            document.getElementById(screenId).classList.remove('hidden');
+
+            if (screenId === 'level-select-screen') {
+                renderLevelMap();
+            } else if (screenId === 'dressup-screen') {
+                renderOutfitPicker();
+                updatePandaOutfitDisplay();
+            }
+        }
+
+        function startQuiz() {
+            showScreen('level-select-screen');
+        }
+
+        function renderLevelMap() {
+            const container = document.querySelector('#level-select-screen .grid');
+            container.innerHTML = '';
+
+            quizData.forEach((lvl, idx) => {
+                const isUnlocked = idx === 0 || completedLevels.has(idx - 1);
+                const isCompleted = completedLevels.has(idx);
+
+                const card = document.createElement('div');
+                card.className = `p-4 rounded-3xl border-4 text-center flex flex-col justify-between space-y-2 transition transform shadow-md ${
+                    isCompleted
+                        ? 'bg-emerald-100 border-emerald-400 text-emerald-900'
+                        : isUnlocked
+                        ? 'bg-white border-amber-300 hover:scale-105 cursor-pointer'
+                        : 'bg-slate-100 border-slate-300 opacity-60 cursor-not-allowed'
+                }`;
+
+                card.innerHTML = `
+                    <div class="flex justify-between items-center">
+                        <span class="font-heading text-base">${lvl.badge}</span>
+                        <span class="text-xs font-bold">${isCompleted ? '⭐ Done' : isUnlocked ? '🔓 Ready' : '🔒 Locked'}</span>
+                    </div>
+                    <h4 class="font-bold text-slate-800 text-base">${lvl.title}</h4>
+                    <button ${!isUnlocked ? 'disabled' : ''} onclick="loadLevel(${idx})" class="w-full py-2 rounded-2xl font-heading text-white shadow transition text-sm ${
+                        isCompleted
+                            ? 'bg-emerald-500 hover:bg-emerald-600'
+                            : isUnlocked
+                            ? 'bg-amber-400 hover:bg-amber-500 text-amber-900'
+                            : 'bg-slate-400'
+                    }">
+                        ${isCompleted ? 'Replay Level' : isUnlocked ? 'Start Level!' : 'Locked'}
+                    </button>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function loadLevel(levelIdx) {
+            currentLevelIdx = levelIdx;
+            currentQuestionIdx = 0;
+            showScreen('quiz-screen');
+            displayQuestion();
+        }
+
+        function displayQuestion() {
+            const levelObj = quizData[currentLevelIdx];
+            const qObj = levelObj.questions[currentQuestionIdx];
+
+            const totalQ = levelObj.questions.length;
+            const progressPercent = ((currentQuestionIdx) / totalQ) * 100;
+            document.getElementById('progress-bar').style.width = `${progressPercent}%`;
+            document.getElementById('level-indicator').innerText = `${levelObj.badge} - Question ${currentQuestionIdx + 1}/${totalQ}`;
+            document.getElementById('topic-badge').innerText = levelObj.title;
+
+            document.getElementById('question-text').innerText = qObj.question;
+
+            const feedback = document.getElementById('feedback-banner');
+            feedback.className = 'hidden w-full p-4 rounded-2xl font-bold text-center text-base md:text-lg shadow-md';
+            document.getElementById('next-btn').classList.add('hidden');
+
+            const container = document.getElementById('options-container');
+            container.innerHTML = '';
+
+            qObj.options.forEach((optText, optIdx) => {
+                const btn = document.createElement('button');
+                btn.className = "option-btn bg-white hover:bg-sky-50 text-slate-800 font-bold text-base md:text-lg p-3.5 rounded-2xl border-4 border-sky-200 shadow-md transition transform hover:-translate-y-0.5 active:translate-y-1 text-left flex items-center space-x-3";
+                btn.innerHTML = `
+                    <span class="w-7 h-7 rounded-full bg-sky-200 text-sky-800 flex items-center justify-center font-heading text-xs">${['A','B','C','D'][optIdx]}</span>
+                    <span>${optText}</span>
+                `;
+                btn.onclick = () => checkAnswer(optIdx, btn);
+                container.appendChild(btn);
+            });
+        }
+
+        function checkAnswer(selectedIdx, selectedBtn) {
+            const levelObj = quizData[currentLevelIdx];
+            const qObj = levelObj.questions[currentQuestionIdx];
+            const buttons = document.querySelectorAll('.option-btn');
+
+            buttons.forEach(b => b.disabled = true);
+
+            const feedback = document.getElementById('feedback-banner');
+            feedback.classList.remove('hidden');
+
+            if (selectedIdx === qObj.correct) {
+                playSound('correct');
+                selectedBtn.classList.remove('bg-white', 'border-sky-200');
+                selectedBtn.classList.add('bg-emerald-100', 'border-emerald-500', 'text-emerald-900');
+                
+                feedback.classList.add('bg-emerald-100', 'text-emerald-800', 'border-2', 'border-emerald-300');
+                feedback.innerHTML = `🎉 <strong>Panda-tastic!</strong> That is correct!`;
+
+                starPoints += 10;
+                document.getElementById('star-count').innerText = starPoints;
+            } else {
+                playSound('wrong');
+                selectedBtn.classList.remove('bg-white', 'border-sky-200');
+                selectedBtn.classList.add('bg-rose-100', 'border-rose-400', 'text-rose-900');
+
+                buttons[qObj.correct].classList.add('bg-emerald-50', 'border-emerald-300');
+
+                feedback.classList.add('bg-amber-100', 'text-amber-800', 'border-2', 'border-amber-300');
+                feedback.innerHTML = `💡 <strong>Nice try!</strong> ${qObj.hint}`;
+            }
+
+            document.getElementById('next-btn').classList.remove('hidden');
+        }
+
+        function nextQuestion() {
+            const levelObj = quizData[currentLevelIdx];
+            currentQuestionIdx++;
+
+            if (currentQuestionIdx < levelObj.questions.length) {
+                displayQuestion();
+            } else {
+                completedLevels.add(currentLevelIdx);
+                playSound('fanfare');
+                
+                const modal = document.getElementById('level-modal');
+                const isFinal = completedLevels.size >= 5;
+
+                document.getElementById('modal-title').innerText = isFinal ? "ALL LEVELS CLEARED! 🏆" : "Level Complete!";
+                document.getElementById('modal-desc').innerText = isFinal 
+                    ? "Panda-monium! You unlocked all Certificate stars and the full Wardrobe!" 
+                    : `Great job completing ${levelObj.title}!`;
+                
+                modal.classList.remove('hidden');
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('level-modal').classList.add('hidden');
+            if (completedLevels.size >= 5) {
+                showScreen('dressup-screen');
+            } else {
+                showScreen('level-select-screen');
+            }
+        }
+
+        function setOutfitCategory(cat) {
+            currentCategory = cat;
+            ['hats', 'shirts', 'glasses', 'props', 'shoes', 'bg'].forEach(c => {
+                const tab = document.getElementById(`tab-${c}`);
+                if (c === cat) {
+                    tab.className = "font-heading px-3 py-1.5 rounded-xl text-xs md:text-sm whitespace-nowrap bg-rose-100 text-rose-600";
+                } else {
+                    tab.className = "font-heading px-3 py-1.5 rounded-xl text-xs md:text-sm whitespace-nowrap text-slate-600 hover:bg-slate-100";
+                }
+            });
+            renderOutfitPicker();
+        }
+
+        function renderOutfitPicker() {
+            const grid = document.getElementById('outfit-options-grid');
+            grid.innerHTML = '';
+
+            const items = outfitCatalog[currentCategory];
+            items.forEach(item => {
+                const isEquipped = equippedOutfit[currentCategory] === item.id;
+                const card = document.createElement('button');
+                card.className = `p-2 rounded-2xl border-2 flex flex-col items-center justify-center space-y-1 transition transform hover:scale-105 ${
+                    isEquipped ? 'bg-rose-100 border-rose-400 ring-2 ring-rose-300' : 'bg-slate-50 border-slate-200'
+                }`;
+                card.onclick = () => equipItem(currentCategory, item.id);
+
+                card.innerHTML = `
+                    <div class="w-10 h-10 flex items-center justify-center">
+                        <svg viewBox="0 0 200 200" class="w-full h-full">${item.svg || ''}</svg>
+                    </div>
+                    <span class="text-[10px] md:text-xs font-bold text-slate-700 leading-tight">${item.name}</span>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function equipItem(category, itemId) {
+            if (equippedOutfit[category] === itemId) {
+                equippedOutfit[category] = null;
+            } else {
+                equippedOutfit[category] = itemId;
+            }
+            playSound('pop');
+            updatePandaOutfitDisplay();
+            renderOutfitPicker();
+        }
+
+        function clearCategoryOutfit() {
+            equippedOutfit[currentCategory] = null;
+            playSound('pop');
+            updatePandaOutfitDisplay();
+            renderOutfitPicker();
+        }
+
+        function resetOutfit() {
+            equippedOutfit = { hats: null, shirts: null, glasses: null, props: null, shoes: null, bg: 'party' };
+            playSound('pop');
+            updatePandaOutfitDisplay();
+            renderOutfitPicker();
+        }
+
+        function randomizeOutfit() {
+            Object.keys(outfitCatalog).forEach(cat => {
+                const items = outfitCatalog[cat];
+                const randomItem = items[Math.floor(Math.random() * items.length)];
+                equippedOutfit[cat] = randomItem.id;
+            });
+            playSound('fanfare');
+            updatePandaOutfitDisplay();
+            renderOutfitPicker();
+        }
+
+        function updatePandaOutfitDisplay() {
+            // Update Background Style
+            const bgWrapper = document.getElementById('panda-canvas-wrapper');
+            const bgItem = outfitCatalog.bg.find(b => b.id === equippedOutfit.bg);
+            bgWrapper.className = `relative border-4 border-white rounded-3xl shadow-xl p-2 flex items-center justify-center w-72 h-80 overflow-hidden transition-all duration-300 ${bgItem ? bgItem.style : 'bg-gradient-to-b from-sky-200 via-rose-100 to-amber-100'}`;
+
+            // Update Layers
+            ['bg', 'shoes', 'shirts', 'glasses', 'hats', 'props'].forEach(type => {
+                const layer = document.getElementById(`layer-${type}`);
+                const equippedId = equippedOutfit[type];
+                
+                if (equippedId) {
+                    const itemObj = outfitCatalog[type].find(i => i.id === equippedId);
+                    layer.innerHTML = itemObj ? itemObj.svg : '';
+                } else {
+                    layer.innerHTML = '';
+                }
+            });
+        }
+
+        function snapPhoto() {
+            playSound('fanfare');
+            const flash = document.getElementById('photo-flash');
+            flash.style.opacity = '1';
+            setTimeout(() => { flash.style.opacity = '0'; }, 300);
+        }
+
+        function downloadCertificate() {
+            const certWindow = window.open('', '_blank');
+            certWindow.document.write(`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>Hero Panda Certificate</title>
+                    <style>
+                        body { font-family: 'Comic Sans MS', cursive, sans-serif; text-align: center; padding: 40px; background: #fffbeb; }
+                        .border-box { border: 10px solid #f43f5e; padding: 30px; border-radius: 25px; background: white; }
+                        h1 { color: #f43f5e; font-size: 38px; }
+                        p { font-size: 20px; color: #334155; }
+                        .badge { font-size: 60px; margin: 20px 0; }
+                    </style>
+                </head>
+                <body>
+                    <div class="border-box">
+                        <div class="badge">🐼🏆⭐</div>
+                        <h1>CERTIFICATE OF EXCELLENCE!</h1>
+                        <p>This certifies that an awesome Year 3 Scientist has completed</p>
+                        <h2>Your Panda Party: Rocks & Soil Quiz</h2>
+                        <p>Total Bamboo Star Score: <strong>${starPoints} Points</strong>!</p>
+                        <p><em>"You are officially a Rock & Soil Expert!"</em></p>
+                    </div>
+                </body>
+                </html>
+            `);
+            certWindow.document.close();
+            certWindow.print();
+        }
+
+        window.onload = function() {
+            renderLevelMap();
+            updatePandaOutfitDisplay();
+        };
+    </script>
+</body>
+</html>

@@ -1,0 +1,1082 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rambows Yay! Stone Age Quiz</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            blue: '#0284c7',
+                            'blue-dark': '#0369a1',
+                            'blue-light': '#e0f2fe',
+                            'blue-deep': '#0c4a6e',
+                            orange: '#f97316',
+                            'orange-dark': '#ea580c',
+                            'orange-light': '#ffedd5',
+                            white: '#ffffff',
+                            slate: '#f8fafc'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #e0f2fe;
+            color: #0c4a6e;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        .btn-bounce {
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+        }
+        .btn-bounce:hover {
+            transform: translateY(-3px) scale(1.02);
+        }
+        .btn-bounce:active {
+            transform: translateY(1px) scale(0.98);
+        }
+
+        .card-shadow {
+            box-shadow: 0 12px 30px -8px rgba(2, 132, 199, 0.25);
+        }
+
+        .orange-shadow {
+            box-shadow: 0 8px 20px -4px rgba(249, 115, 22, 0.4);
+        }
+
+        /* Canvas particles for celebrate animations */
+        #confettiCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            z-index: 100;
+        }
+
+        /* Pulse animation for current unlocked level */
+        @keyframes pulseGlow {
+            0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(249, 115, 22, 0.6); }
+            50% { transform: scale(1.05); box-shadow: 0 0 0 14px rgba(249, 115, 22, 0); }
+        }
+        .level-active {
+            animation: pulseGlow 2s infinite;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between items-center p-3 sm:p-6 overflow-x-hidden">
+
+    <canvas id="confettiCanvas"></canvas>
+
+    <!-- App Container -->
+    <div class="w-full max-w-4xl mx-auto flex flex-col min-h-[90vh] justify-between">
+        
+        <header class="bg-white rounded-3xl p-4 sm:p-5 mb-4 card-shadow border-4 border-brand-blue flex flex-wrap items-center justify-between gap-3">
+            <div class="flex items-center gap-3 cursor-pointer" onclick="showScreen('home')">
+                <div class="w-12 h-12 bg-brand-orange text-white rounded-2xl flex items-center justify-center font-black text-2xl shadow-md transform -rotate-3">
+                    Y!
+                </div>
+                <div>
+                    <h1 class="text-2xl sm:text-3xl font-extrabold text-brand-blue tracking-wide">RAMBOWS YAY!</h1>
+                    <p class="text-xs font-bold text-brand-orange tracking-wider uppercase">Year 3 Stone Age Quiz & Dress-Up</p>
+                </div>
+            </div>
+
+            <!-- Score & Sound Controls -->
+            <div class="flex items-center gap-3 ml-auto">
+                <div class="bg-brand-orange-light border-2 border-brand-orange text-brand-orange-dark px-4 py-2 rounded-2xl font-extrabold text-lg flex items-center gap-2 shadow-sm">
+                    <span>⭐</span>
+                    <span id="globalScore">0</span> Pts
+                </div>
+                <button id="soundToggle" onclick="toggleSound()" class="w-11 h-11 bg-brand-blue text-white rounded-2xl font-bold flex items-center justify-center shadow-md btn-bounce text-xl" title="Toggle Sound">
+                    🔊
+                </button>
+            </div>
+        </header>
+
+        <main class="flex-grow flex flex-col justify-center">
+
+            <!-- SCREEN 1: HOME / START -->
+            <section id="screenHome" class="bg-white rounded-3xl p-6 sm:p-10 card-shadow border-4 border-brand-blue text-center flex flex-col items-center">
+                <div class="w-32 h-32 sm:w-40 sm:h-40 mb-4 bg-brand-blue-light rounded-full flex items-center justify-center border-4 border-brand-blue p-2">
+                    <!-- SVG Rambow Preview -->
+                    <svg viewBox="0 0 100 100" class="w-full h-full">
+                        <circle cx="50" cy="50" r="40" fill="#fde047" />
+                        <circle cx="38" cy="42" r="5" fill="#0c4a6e" />
+                        <circle cx="62" cy="42" r="5" fill="#0c4a6e" />
+                        <ellipse cx="50" cy="62" rx="12" ry="8" fill="#ea580c" />
+                        <!-- Bone accessory -->
+                        <path d="M 30 20 Q 50 15 70 20 Q 75 18 73 24 Q 50 20 27 24 Q 25 18 30 20 Z" fill="#ffffff" stroke="#0c4a6e" stroke-width="1.5"/>
+                    </svg>
+                </div>
+                
+                <h2 class="text-3xl sm:text-4xl font-black text-brand-blue mb-2">Welcome, Stone Age Explorer!</h2>
+                <p class="text-base sm:text-lg text-brand-blue-dark max-w-lg mb-8 font-semibold">
+                    Test your knowledge on 5 levels of the Stone Age, earn cool outfits, and dress up Rambow the Quizmaster!
+                </p>
+
+                <div class="flex flex-col sm:flex-row gap-4 w-full max-w-md">
+                    <button onclick="showScreen('map')" class="flex-1 bg-brand-orange hover:bg-brand-orange-dark text-white font-black text-xl py-4 px-6 rounded-2xl orange-shadow btn-bounce uppercase tracking-wide border-b-4 border-orange-700">
+                        Play Quiz! 🚀
+                    </button>
+                    <button onclick="openDressUp(0)" class="flex-1 bg-brand-blue hover:bg-brand-blue-dark text-white font-black text-xl py-4 px-6 rounded-2xl card-shadow btn-bounce uppercase tracking-wide border-b-4 border-blue-900">
+                        Dress Rambow 👕
+                    </button>
+                </div>
+            </section>
+
+            <!-- SCREEN 2: LEVEL SELECT MAP -->
+            <section id="screenMap" class="hidden bg-white rounded-3xl p-6 sm:p-8 card-shadow border-4 border-brand-blue">
+                <div class="text-center mb-6">
+                    <h2 class="text-3xl font-black text-brand-blue">Select Your Level</h2>
+                    <p class="text-brand-orange font-bold text-sm sm:text-base">Complete each level to unlock fun outfits!</p>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-5 gap-4 my-4" id="levelGrid">
+                    <!-- Dynamic level buttons generated by JS -->
+                </div>
+
+                <div class="mt-8 text-center">
+                    <button onclick="showScreen('home')" class="bg-brand-blue-light text-brand-blue-dark font-extrabold px-6 py-3 rounded-2xl btn-bounce">
+                        ⬅️ Back to Main Menu
+                    </button>
+                </div>
+            </section>
+
+            <!-- SCREEN 3: QUIZ QUESTION DISPLAY -->
+            <section id="screenQuiz" class="hidden bg-white rounded-3xl p-5 sm:p-8 card-shadow border-4 border-brand-blue flex flex-col justify-between min-h-[450px]">
+                <div>
+                    <!-- Top Bar: Level Badge & Progress -->
+                    <div class="flex justify-between items-center mb-4 pb-3 border-b-2 border-brand-blue-light">
+                        <span id="quizLevelBadge" class="bg-brand-blue text-white px-4 py-1.5 rounded-full font-black text-sm uppercase">
+                            Level 1 - Question 1/3
+                        </span>
+                        <div class="flex items-center gap-1 text-amber-500 font-bold" id="quizStars">
+                            <!-- Stars -->
+                        </div>
+                    </div>
+
+                    <!-- Progress Bar -->
+                    <div class="w-full bg-brand-blue-light rounded-full h-3 mb-6 overflow-hidden border border-brand-blue">
+                        <div id="quizProgressBar" class="bg-brand-orange h-full w-0 transition-all duration-300"></div>
+                    </div>
+
+                    <!-- SVG Scene Illustration -->
+                    <div id="questionIllustration" class="w-full h-32 mb-4 bg-brand-blue-light rounded-2xl flex items-center justify-center p-2 border-2 border-brand-blue">
+                        <!-- Dynamic SVG art injected here -->
+                    </div>
+
+                    <!-- Question Text -->
+                    <h3 id="questionText" class="text-xl sm:text-2xl font-black text-brand-blue-deep mb-6 text-center leading-snug">
+                        Loading question...
+                    </h3>
+
+                    <!-- 4 Option Buttons -->
+                    <div id="optionsGrid" class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+                        <!-- Dynamic options here -->
+                    </div>
+                </div>
+
+                <!-- Friendly Feedback Banner -->
+                <div id="feedbackBanner" class="hidden p-4 rounded-2xl mb-2 text-center animate-fade-in">
+                    <p id="feedbackTitle" class="font-black text-lg mb-1"></p>
+                    <p id="feedbackDesc" class="font-semibold text-sm sm:text-base"></p>
+                    <button id="nextBtn" onclick="nextQuestion()" class="mt-3 bg-brand-orange text-white font-black px-6 py-2.5 rounded-xl btn-bounce orange-shadow">
+                        Next Question ➔
+                    </button>
+                </div>
+            </section>
+
+            <!-- SCREEN 4: LEVEL COMPLETE SUMMARY -->
+            <section id="screenLevelComplete" class="hidden bg-white rounded-3xl p-6 sm:p-10 card-shadow border-4 border-brand-orange text-center">
+                <div class="text-5xl mb-2">🎉</div>
+                <h2 class="text-3xl sm:text-4xl font-black text-brand-orange mb-2">Level Complete!</h2>
+                <p id="levelCompleteSub" class="text-brand-blue font-bold text-lg mb-6">You are a Stone Age superstar!</p>
+
+                <div class="bg-brand-blue-light p-6 rounded-2xl mb-6 max-w-md mx-auto border-2 border-brand-blue">
+                    <div class="text-4xl font-black text-brand-blue mb-1" id="levelScoreText">3 / 3</div>
+                    <div class="text-sm font-bold text-brand-blue-dark">Questions Answered Correctly</div>
+                    <div class="mt-3 text-amber-500 text-2xl" id="levelStarsText">⭐⭐⭐</div>
+                </div>
+
+                <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                    <button id="rewardGameBtn" onclick="openDressUpFromLevel()" class="bg-brand-orange hover:bg-brand-orange-dark text-white font-black text-lg py-3 px-6 rounded-2xl orange-shadow btn-bounce uppercase">
+                        🎁 Play Dress-Up Reward!
+                    </button>
+                    <button onclick="showScreen('map')" class="bg-brand-blue hover:bg-brand-blue-dark text-white font-black text-lg py-3 px-6 rounded-2xl card-shadow btn-bounce uppercase">
+                        🗺️ Level Select
+                    </button>
+                </div>
+            </section>
+
+            <!-- SCREEN 5: DRESS MY QUIZMASTER REWARD GAME -->
+            <section id="screenDressUp" class="hidden bg-white rounded-3xl p-4 sm:p-6 card-shadow border-4 border-brand-blue">
+                <div class="flex flex-wrap justify-between items-center mb-4 gap-2 border-b-2 border-brand-blue-light pb-3">
+                    <div>
+                        <h2 class="text-2xl font-black text-brand-blue">Dress My Quizmaster!</h2>
+                        <p class="text-xs font-bold text-brand-orange">Customize Rambow with unlocked Stone Age outfits</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="resetDressUp()" class="bg-brand-blue-light text-brand-blue-dark font-extrabold text-xs px-3 py-2 rounded-xl border border-brand-blue btn-bounce">
+                            🔄 Reset
+                        </button>
+                        <button onclick="finishDressUp()" class="bg-brand-orange text-white font-extrabold text-xs px-4 py-2 rounded-xl orange-shadow btn-bounce">
+                            ✅ Done
+                        </button>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-12 gap-4 items-center">
+                    <!-- Quizmaster Canvas Preview -->
+                    <div class="md:col-span-5 flex flex-col items-center bg-brand-blue-light p-4 rounded-2xl border-2 border-brand-blue relative">
+                        <div class="w-full max-w-[260px] aspect-square relative bg-white rounded-2xl p-2 border-2 border-brand-blue shadow-inner flex items-center justify-center">
+                            <svg id="rambowAvatar" viewBox="0 0 200 240" class="w-full h-full">
+                                <!-- Dynamic SVG Avatar Layers generated by JS -->
+                            </svg>
+                        </div>
+                        <span class="mt-2 text-xs font-black text-brand-blue-dark tracking-wider uppercase">RAMBOW THE QUIZMASTER</span>
+                    </div>
+
+                    <!-- Outfit Item Selector -->
+                    <div class="md:col-span-7 flex flex-col gap-3">
+                        <!-- Category Tabs -->
+                        <div class="flex gap-1 overflow-x-auto pb-1" id="itemCategoryTabs">
+                            <button onclick="switchCategory('hats')" class="cat-tab bg-brand-blue text-white px-3 py-1.5 rounded-xl font-bold text-xs btn-bounce" data-cat="hats">Hats & Hair</button>
+                            <button onclick="switchCategory('clothes')" class="cat-tab bg-brand-blue-light text-brand-blue-dark px-3 py-1.5 rounded-xl font-bold text-xs btn-bounce" data-cat="clothes">Outfits</button>
+                            <button onclick="switchCategory('necklaces')" class="cat-tab bg-brand-blue-light text-brand-blue-dark px-3 py-1.5 rounded-xl font-bold text-xs btn-bounce" data-cat="necklaces">Necklaces</button>
+                            <button onclick="switchCategory('held')" class="cat-tab bg-brand-blue-light text-brand-blue-dark px-3 py-1.5 rounded-xl font-bold text-xs btn-bounce" data-cat="held">Hand Tools</button>
+                        </div>
+
+                        <!-- Item Grid -->
+                        <div id="itemsGrid" class="grid grid-cols-3 sm:grid-cols-4 gap-2 max-h-[220px] overflow-y-auto p-1">
+                            <!-- Items populated by JS -->
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+
+        <footer class="mt-4 bg-white rounded-2xl p-3 text-center border-2 border-brand-blue-light flex justify-between items-center text-xs font-bold text-brand-blue-dark">
+            <span>🛡️ Safe & Kid-Friendly Year 3 Learning</span>
+            <span>✨ Rambows Yay! © 2026</span>
+        </footer>
+
+    </div>
+
+    <script>
+        /* --------------------------------------------------
+         * WEB AUDIO API SOUND GENERATOR (100% Standalone)
+         * -------------------------------------------------- */
+        let soundEnabled = true;
+        let audioCtx = null;
+
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        }
+
+        function toggleSound() {
+            soundEnabled = !soundEnabled;
+            const btn = document.getElementById('soundToggle');
+            btn.textContent = soundEnabled ? '🔊' : '🔇';
+        }
+
+        function playSound(type) {
+            if (!soundEnabled) return;
+            initAudio();
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+
+            const now = audioCtx.currentTime;
+
+            if (type === 'correct') {
+                // Cheerful rising notes
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(523.25, now); // C5
+                osc.frequency.exponentialRampToValueAtTime(659.25, now + 0.1); // E5
+                osc.frequency.exponentialRampToValueAtTime(783.99, now + 0.2); // G5
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start(now);
+                osc.stop(now + 0.3);
+            } else if (type === 'wrong') {
+                // Gentle low synth bounce
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(220, now);
+                osc.frequency.exponentialRampToValueAtTime(150, now + 0.2);
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start(now);
+                osc.stop(now + 0.25);
+            } else if (type === 'dress') {
+                // Pop sound for dressing up
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(400, now);
+                osc.frequency.exponentialRampToValueAtTime(800, now + 0.08);
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.09);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start(now);
+                osc.stop(now + 0.09);
+            } else if (type === 'complete') {
+                // Happy fan fare
+                [523.25, 659.25, 783.99, 1046.50].forEach((freq, i) => {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(freq, now + (i * 0.1));
+                    gain.gain.setValueAtTime(0.15, now + (i * 0.1));
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + (i * 0.1) + 0.25);
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.start(now + (i * 0.1));
+                    osc.stop(now + (i * 0.1) + 0.25);
+                });
+            }
+        }
+
+        /* --------------------------------------------------
+         * YEAR 3 STONE AGE QUESTION BANK (15 Questions, 5 Levels)
+         * -------------------------------------------------- */
+        const quizData = [
+            // Level 1: Old Stone Age (Paleolithic)
+            {
+                level: 1,
+                title: "Old Stone Age (Paleolithic)",
+                art: "cave",
+                question: "What did early Stone Age people use caves for?",
+                options: [
+                    "Shelter and protection from weather",
+                    "Building high-rise apartments",
+                    "Parking their cars safely",
+                    "Shopping for new clothes"
+                ],
+                answer: 0,
+                explain: "Stone Age humans lived in caves to stay warm and safe from wild animals!"
+            },
+            {
+                level: 1,
+                title: "Old Stone Age (Paleolithic)",
+                art: "fire",
+                question: "How did fire help Stone Age people the most?",
+                options: [
+                    "It provided light, warmth, and cooked food",
+                    "It was used to play video games",
+                    "It made giant ice cubes",
+                    "It was used to build plastic toys"
+                ],
+                answer: 0,
+                explain: "Fire kept people warm in cold weather and made meat safe and tasty to eat!"
+            },
+            {
+                level: 1,
+                title: "Old Stone Age (Paleolithic)",
+                art: "mammoth",
+                question: "Which large, woolly animal lived during the Ice Age?",
+                options: [
+                    "Woolly Mammoth",
+                    "Giraffe",
+                    "Flamingo",
+                    "Dolphin"
+                ],
+                answer: 0,
+                explain: "Woolly Mammoths had thick fur coats and long tusks to survive the freezing cold!"
+            },
+
+            // Level 2: Middle Stone Age (Mesolithic & Hunter-Gatherers)
+            {
+                level: 2,
+                title: "Middle Stone Age (Mesolithic)",
+                art: "hunt",
+                question: "What does 'Hunter-Gatherer' mean?",
+                options: [
+                    "Hunting animals and gathering wild berries and plants",
+                    "Buying food from a supermarket",
+                    "Ordering pizza online",
+                    "Growing vegetables in huge glass houses"
+                ],
+                answer: 0,
+                explain: "Before farming, people had to hunt wild animals and search for berries, nuts, and roots!"
+            },
+            {
+                level: 2,
+                title: "Middle Stone Age (Mesolithic)",
+                art: "shelter",
+                question: "Why did Mesolithic people move from place to place?",
+                options: [
+                    "To follow the animals they hunted for food",
+                    "To catch a flight on an airplane",
+                    "Because they got bored of the scenery",
+                    "To go on summer holiday"
+                ],
+                answer: 0,
+                explain: "They were nomads who moved around so they could always find fresh food and animals!"
+            },
+            {
+                level: 2,
+                title: "Middle Stone Age (Mesolithic)",
+                art: "dog",
+                question: "Which animal was the very first to become a human friend and pet?",
+                options: [
+                    "Dogs (from tame wolves)",
+                    "Goldfish",
+                    "Parrots",
+                    "Hamsters"
+                ],
+                answer: 0,
+                explain: "Tamed wolves became early dogs that helped humans hunt and guard their camps!"
+            },
+
+            // Level 3: New Stone Age (Neolithic & Farming)
+            {
+                level: 3,
+                title: "New Stone Age (Neolithic)",
+                art: "farm",
+                question: "What major discovery changed human life in the New Stone Age?",
+                options: [
+                    "Farming crops and keeping farm animals",
+                    "Inventing smartphones",
+                    "Building metal trains",
+                    "Discovering electricity"
+                ],
+                answer: 0,
+                explain: "Learning to plant crops like wheat meant people could stay in one place and build villages!"
+            },
+            {
+                level: 3,
+                title: "New Stone Age (Neolithic)",
+                art: "pottery",
+                question: "What did Neolithic farmers make out of clay to store grain and water?",
+                options: [
+                    "Clay Pots and Jars",
+                    "Plastic bottles",
+                    "Glass cups",
+                    "Cardboard boxes"
+                ],
+                answer: 0,
+                explain: "Shaping and baking clay created sturdy pots to store food and fresh water!"
+            },
+            {
+                level: 3,
+                title: "New Stone Age (Neolithic)",
+                art: "house",
+                question: "Because people started farming, what kind of houses did they build?",
+                options: [
+                    "Permanent houses made of stone, wood, and mud",
+                    "Tents made of plastic sheets",
+                    "Inflatable bouncy castles",
+                    "Metal skyscrapers"
+                ],
+                answer: 0,
+                explain: "Instead of moving constantly, farmers built sturdy permanent houses to live in villages!"
+            },
+
+            // Level 4: Stone Tools, Cave Art & Skara Brae
+            {
+                level: 4,
+                title: "Tools, Art & Skara Brae",
+                art: "axe",
+                question: "Which sharp stone was most famous for making axes and arrowheads?",
+                options: [
+                    "Flint",
+                    "Chalk",
+                    "Sand",
+                    "Clay"
+                ],
+                answer: 0,
+                explain: "Flint chips into very sharp edges when struck, making it perfect for tools!"
+            },
+            {
+                level: 4,
+                title: "Tools, Art & Skara Brae",
+                art: "art",
+                question: "What did Stone Age artists use to paint on cave walls?",
+                options: [
+                    "Crushed rocks, charcoal, and animal fat",
+                    "Acrylic neon paint from a shop",
+                    "Colored felt-tip pens",
+                    "Crayons"
+                ],
+                answer: 0,
+                explain: "They ground up natural earth minerals, charcoal, and berries to make rich paints!"
+            },
+            {
+                level: 4,
+                title: "Tools, Art & Skara Brae",
+                art: "skara",
+                question: "Where in Scotland can you find the famous preserved Stone Age village Skara Brae?",
+                options: [
+                    "The Orkney Islands",
+                    "London",
+                    "Edinburgh Castle",
+                    "The Isle of Wight"
+                ],
+                answer: 0,
+                explain: "Skara Brae is an amazingly preserved Neolithic stone village on Orkney!"
+            },
+
+            // Level 5: Stonehenge & Bronze Age Transition
+            {
+                level: 5,
+                title: "Stonehenge & Metals",
+                art: "stonehenge",
+                question: "What famous ancient monument made of massive standing stones was built in England?",
+                options: [
+                    "Stonehenge",
+                    "Eiffel Tower",
+                    "Big Ben",
+                    "Great Wall of China"
+                ],
+                answer: 0,
+                explain: "Stonehenge was built thousands of years ago using giant standing stones!"
+            },
+            {
+                level: 5,
+                title: "Stonehenge & Metals",
+                art: "bronze",
+                question: "What period came right after the Stone Age when people discovered metal?",
+                options: [
+                    "The Bronze Age",
+                    "The Plastic Age",
+                    "The Space Age",
+                    "The Digital Age"
+                ],
+                answer: 0,
+                explain: "When people learned to mix copper and tin to create bronze, the Bronze Age began!"
+            },
+            {
+                level: 5,
+                title: "Stonehenge & Metals",
+                art: "review",
+                question: "Which order shows the 3 parts of the Stone Age from oldest to newest?",
+                options: [
+                    "Paleolithic ➔ Mesolithic ➔ Neolithic",
+                    "Neolithic ➔ Paleolithic ➔ Mesolithic",
+                    "Mesolithic ➔ Neolithic ➔ Paleolithic",
+                    "Bronze ➔ Stone ➔ Iron"
+                ],
+                answer: 0,
+                explain: "Paleolithic (Old), Mesolithic (Middle), and Neolithic (New) is the correct order!"
+            }
+        ];
+
+        /* --------------------------------------------------
+         * GAME STATE MANAGEMENT
+         * -------------------------------------------------- */
+        let state = {
+            currentLevel: 1,
+            unlockedLevel: 1,
+            questionIndexInLevel: 0, // 0 to 2
+            score: 0,
+            levelScores: [0, 0, 0, 0, 0],
+            outfit: {
+                hat: 'none',
+                clothes: 'default',
+                necklace: 'none',
+                held: 'none'
+            }
+        };
+
+        /* --------------------------------------------------
+         * SVG ILLUSTRATIONS FOR QUIZ QUESTIONS
+         * -------------------------------------------------- */
+        function getSVGIllustration(type) {
+            switch(type) {
+                case 'cave':
+                    return `<svg viewBox="0 0 200 100" class="h-full"><path d="M 10 90 Q 30 10 100 10 Q 170 10 190 90 Z" fill="#94a3b8"/><path d="M 60 90 Q 75 40 100 40 Q 125 40 140 90 Z" fill="#334155"/><circle cx="150" cy="30" r="12" fill="#f97316"/></svg>`;
+                case 'fire':
+                    return `<svg viewBox="0 0 200 100" class="h-full"><path d="M 70 85 L 130 85 L 120 75 L 80 75 Z" fill="#78350f"/><path d="M 85 75 Q 100 20 115 75 Z" fill="#f97316"/><path d="M 92 75 Q 100 35 108 75 Z" fill="#fde047"/></svg>`;
+                case 'mammoth':
+                    return `<svg viewBox="0 0 200 100" class="h-full"><ellipse cx="100" cy="55" rx="45" ry="30" fill="#78350f"/><circle cx="60" cy="45" r="22" fill="#78350f"/><path d="M 50 50 Q 35 60 40 80 Q 55 80 55 60" fill="none" stroke="#f8fafc" stroke-width="5"/><rect x="70" y="70" width="12" height="25" fill="#582f0e"/><rect x="110" y="70" width="12" height="25" fill="#582f0e"/></svg>`;
+                case 'hunt':
+                    return `<svg viewBox="0 0 200 100" class="h-full"><circle cx="70" cy="40" r="15" fill="#0284c7"/><path d="M 70 55 L 70 85 M 55 65 L 85 65" stroke="#0284c7" stroke-width="5"/><line x1="85" y1="50" x2="150" y2="30" stroke="#ea580c" stroke-width="4"/></svg>`;
+                case 'shelter':
+                    return `<svg viewBox="0 0 200 100" class="h-full"><polygon points="100,20 40,85 160,85" fill="#ea580c"/><polygon points="100,20 80,85 120,85" fill="#78350f"/></svg>`;
+                case 'dog':
+                    return `<svg viewBox="0 0 200 100" class="h-full"><ellipse cx="100" cy="60" rx="25" ry="18" fill="#94a3b8"/><circle cx="75" cy="45" r="14" fill="#94a3b8"/><path d="M 70 35 L 75 25 L 82 37 Z" fill="#64748b"/></svg>`;
+                case 'farm':
+                    return `<svg viewBox="0 0 200 100" class="h-full"><rect x="0" y="70" width="200" height="30" fill="#22c55e"/><path d="M 40 70 L 40 40 M 50 70 L 50 35 M 60 70 L 60 42" stroke="#eab308" stroke-width="4"/></svg>`;
+                case 'pottery':
+                    return `<svg viewBox="0 0 200 100" class="h-full"><path d="M 75 30 Q 60 60 75 85 L 125 85 Q 140 60 125 30 Z" fill="#ea580c" stroke="#0369a1" stroke-width="3"/></svg>`;
+                case 'house':
+                    return `<svg viewBox="0 0 200 100" class="h-full"><rect x="60" y="45" width="80" height="45" fill="#cbd5e1"/><polygon points="50,45 100,15 150,45" fill="#78350f"/><rect x="90" y="60" width="20" height="30" fill="#0369a1"/></svg>`;
+                case 'axe':
+                    return `<svg viewBox="0 0 200 100" class="h-full"><rect x="95" y="15" width="10" height="75" fill="#78350f" transform="rotate(-20 100 50)"/><path d="M 80 25 Q 110 15 120 40 Q 90 45 80 25 Z" fill="#64748b"/></svg>`;
+                case 'art':
+                    return `<svg viewBox="0 0 200 100" class="h-full"><rect x="30" y="15" width="140" height="70" rx="10" fill="#fdba74"/><path d="M 60 50 Q 80 30 100 50 T 140 50" fill="none" stroke="#ea580c" stroke-width="6"/><circle cx="80" cy="40" r="4" fill="#0284c7"/></svg>`;
+                case 'skara':
+                    return `<svg viewBox="0 0 200 100" class="h-full"><ellipse cx="100" cy="60" rx="60" ry="30" fill="none" stroke="#64748b" stroke-width="10"/><rect x="80" y="40" width="40" height="25" fill="#94a3b8"/></svg>`;
+                case 'stonehenge':
+                    return `<svg viewBox="0 0 200 100" class="h-full"><rect x="50" y="40" width="18" height="45" fill="#64748b"/><rect x="80" y="40" width="18" height="45" fill="#64748b"/><rect x="110" y="40" width="18" height="45" fill="#64748b"/><rect x="140" y="40" width="18" height="45" fill="#64748b"/><rect x="45" y="30" width="120" height="15" fill="#94a3b8"/></svg>`;
+                case 'bronze':
+                    return `<svg viewBox="0 0 200 100" class="h-full"><circle cx="100" cy="50" r="30" fill="#d97706" stroke="#f59e0b" stroke-width="4"/><path d="M 90 50 L 110 50 M 100 40 L 100 60" stroke="#ffffff" stroke-width="4"/></svg>`;
+                default:
+                    return `<svg viewBox="0 0 200 100" class="h-full"><circle cx="100" cy="50" r="35" fill="#0284c7"/></svg>`;
+            }
+        }
+
+        /* --------------------------------------------------
+         * UI SCREEN SWITCHING
+         * -------------------------------------------------- */
+        function showScreen(screenId) {
+            ['screenHome', 'screenMap', 'screenQuiz', 'screenLevelComplete', 'screenDressUp'].forEach(id => {
+                document.getElementById(id).classList.add('hidden');
+            });
+
+            if (screenId === 'home') {
+                document.getElementById('screenHome').classList.remove('hidden');
+            } else if (screenId === 'map') {
+                renderLevelMap();
+                document.getElementById('screenMap').classList.remove('hidden');
+            } else if (screenId === 'quiz') {
+                document.getElementById('screenQuiz').classList.remove('hidden');
+            } else if (screenId === 'levelComplete') {
+                document.getElementById('screenLevelComplete').classList.remove('hidden');
+            } else if (screenId === 'dressUp') {
+                document.getElementById('screenDressUp').classList.remove('hidden');
+            }
+        }
+
+        /* --------------------------------------------------
+         * LEVEL SELECT MAP RENDERER
+         * -------------------------------------------------- */
+        function renderLevelMap() {
+            const grid = document.getElementById('levelGrid');
+            grid.innerHTML = '';
+
+            for (let i = 1; i <= 5; i++) {
+                const isUnlocked = i <= state.unlockedLevel;
+                const isCurrent = i === state.unlockedLevel;
+                const score = state.levelScores[i - 1];
+
+                const card = document.createElement('button');
+                card.onclick = () => { if (isUnlocked) startLevel(i); };
+                card.className = `p-4 rounded-2xl flex flex-col items-center justify-between border-4 transition-all ${
+                    isUnlocked
+                        ? (isCurrent ? 'bg-brand-orange-light border-brand-orange text-brand-orange-dark level-active cursor-pointer' : 'bg-brand-blue-light border-brand-blue text-brand-blue-dark cursor-pointer btn-bounce')
+                        : 'bg-gray-100 border-gray-300 text-gray-400 opacity-60 cursor-not-allowed'
+                }`;
+
+                card.innerHTML = `
+                    <div class="text-2xl font-black mb-1">Lvl ${i}</div>
+                    <div class="text-xs font-bold mb-2 text-center">${getLevelName(i)}</div>
+                    <div class="text-xl mb-2">${isUnlocked ? (isCurrent ? '⭐' : '✅') : '🔒'}</div>
+                    <div class="text-xs font-black">${isUnlocked ? `${score}/3 Stars` : 'Locked'}</div>
+                `;
+                grid.appendChild(card);
+            }
+        }
+
+        function getLevelName(lvl) {
+            switch(lvl) {
+                case 1: return "Old Stone Age";
+                case 2: return "Hunter Gatherers";
+                case 3: return "New Stone Age";
+                case 4: return "Tools & Art";
+                case 5: return "Stonehenge";
+            }
+        }
+
+        /* --------------------------------------------------
+         * QUIZ ENGINE LOGIC
+         * -------------------------------------------------- */
+        function startLevel(levelNum) {
+            state.currentLevel = levelNum;
+            state.questionIndexInLevel = 0;
+            showScreen('quiz');
+            loadQuestion();
+        }
+
+        function getCurrentQuestionObject() {
+            const globalIdx = (state.currentLevel - 1) * 3 + state.questionIndexInLevel;
+            return quizData[globalIdx];
+        }
+
+        function loadQuestion() {
+            const q = getCurrentQuestionObject();
+
+            // Reset UI states
+            document.getElementById('feedbackBanner').classList.add('hidden');
+            
+            // Header Info
+            document.getElementById('quizLevelBadge').textContent = `Level ${state.currentLevel} • Question ${state.questionIndexInLevel + 1}/3`;
+            document.getElementById('quizProgressBar').style.width = `${((state.questionIndexInLevel) / 3) * 100}%`;
+            
+            // Illustration & Question Text
+            document.getElementById('questionIllustration').innerHTML = getSVGIllustration(q.art);
+            document.getElementById('questionText').textContent = q.question;
+
+            // Options Buttons
+            const grid = document.getElementById('optionsGrid');
+            grid.innerHTML = '';
+
+            q.options.forEach((optText, index) => {
+                const btn = document.createElement('button');
+                btn.className = "opt-btn bg-brand-blue-light hover:bg-brand-blue hover:text-white border-2 border-brand-blue text-brand-blue-deep font-bold text-base sm:text-lg p-4 rounded-2xl text-left transition-all btn-bounce flex items-center gap-3";
+                btn.innerHTML = `
+                    <span class="w-8 h-8 rounded-xl bg-white text-brand-blue font-black flex items-center justify-center shrink-0 border border-brand-blue">
+                        ${['A', 'B', 'C', 'D'][index]}
+                    </span>
+                    <span>${optText}</span>
+                `;
+                btn.onclick = () => checkAnswer(index, btn);
+                grid.appendChild(btn);
+            });
+        }
+
+        function checkAnswer(selectedIndex, clickedBtn) {
+            const q = getCurrentQuestionObject();
+            const allOptionBtns = document.querySelectorAll('.opt-btn');
+            
+            // Disable all buttons once selected
+            allOptionBtns.forEach(btn => btn.disabled = true);
+
+            const feedbackBanner = document.getElementById('feedbackBanner');
+            const feedbackTitle = document.getElementById('feedbackTitle');
+            const feedbackDesc = document.getElementById('feedbackDesc');
+
+            feedbackBanner.classList.remove('hidden');
+
+            if (selectedIndex === q.answer) {
+                // CORRECT ANSWER
+                playSound('correct');
+                triggerConfetti();
+                clickedBtn.classList.remove('bg-brand-blue-light');
+                clickedBtn.classList.add('bg-green-500', 'text-white', 'border-green-600');
+                
+                feedbackBanner.className = "p-4 rounded-2xl mb-2 text-center bg-green-100 border-2 border-green-500 text-green-900";
+                feedbackTitle.textContent = "🌟 YAY! That's Correct!";
+                feedbackDesc.textContent = q.explain;
+
+                // Update score
+                state.score += 100;
+                document.getElementById('globalScore').textContent = state.score;
+                state.levelScores[state.currentLevel - 1]++;
+            } else {
+                // WRONG ANSWER
+                playSound('wrong');
+                clickedBtn.classList.remove('bg-brand-blue-light');
+                clickedBtn.classList.add('bg-red-100', 'text-red-700', 'border-red-400');
+
+                // Highlight correct option
+                allOptionBtns[q.answer].classList.remove('bg-brand-blue-light');
+                allOptionBtns[q.answer].classList.add('bg-green-500', 'text-white', 'border-green-600');
+
+                feedbackBanner.className = "p-4 rounded-2xl mb-2 text-center bg-orange-100 border-2 border-brand-orange text-brand-orange-dark";
+                feedbackTitle.textContent = "💡 Good Try!";
+                feedbackDesc.textContent = `The right answer was "${q.options[q.answer]}". ${q.explain}`;
+            }
+
+            // Update Progress bar to full for question
+            document.getElementById('quizProgressBar').style.width = `${((state.questionIndexInLevel + 1) / 3) * 100}%`;
+        }
+
+        function nextQuestion() {
+            state.questionIndexInLevel++;
+            if (state.questionIndexInLevel < 3) {
+                loadQuestion();
+            } else {
+                finishLevel();
+            }
+        }
+
+        function finishLevel() {
+            playSound('complete');
+            triggerConfetti();
+
+            // Unlock next level if available
+            if (state.currentLevel === state.unlockedLevel && state.unlockedLevel < 5) {
+                state.unlockedLevel++;
+            }
+
+            const currentScore = state.levelScores[state.currentLevel - 1];
+            document.getElementById('levelScoreText').textContent = `${currentScore} / 3`;
+            document.getElementById('levelStarsText').textContent = '⭐'.repeat(currentScore) || '🌟';
+
+            showScreen('levelComplete');
+        }
+
+        /* --------------------------------------------------
+         * DRESS MY QUIZMASTER REWARD GAME LOGIC
+         * -------------------------------------------------- */
+        const dressItems = {
+            hats: [
+                { id: 'none', name: 'None', icon: '❌', reqLvl: 0 },
+                { id: 'bone_hair', name: 'Bone Hairpin', icon: '🦴', reqLvl: 1 },
+                { id: 'leaf_crown', name: 'Leaf Crown', icon: '🌿', reqLvl: 2 },
+                { id: 'stone_crown', name: 'Stone Crown', icon: '👑', reqLvl: 3 },
+                { id: 'fur_hat', name: 'Mammoth Cap', icon: '🧢', reqLvl: 4 }
+            ],
+            clothes: [
+                { id: 'default', name: 'Tunic', icon: '👕', reqLvl: 0 },
+                { id: 'fur_coat', name: 'Mammoth Fur', icon: '🧥', reqLvl: 1 },
+                { id: 'tiger_print', name: 'Saber-Tooth Hide', icon: '🐆', reqLvl: 3 },
+                { id: 'chieftain', name: 'Leader Robe', icon: '🥋', reqLvl: 5 }
+            ],
+            necklaces: [
+                { id: 'none', name: 'None', icon: '❌', reqLvl: 0 },
+                { id: 'shell_necklace', name: 'Shell Chain', icon: '🐚', reqLvl: 1 },
+                { id: 'fang_necklace', name: 'Fang Necklace', icon: '🦷', reqLvl: 2 }
+            ],
+            held: [
+                { id: 'none', name: 'None', icon: '❌', reqLvl: 0 },
+                { id: 'wooden_club', name: 'Wooden Club', icon: '🪵', reqLvl: 1 },
+                { id: 'flint_spear', name: 'Flint Spear', icon: '🗡️', reqLvl: 2 },
+                { id: 'flower_stick', name: 'Flower Wand', icon: '🌸', reqLvl: 4 }
+            ]
+        };
+
+        let currentCategory = 'hats';
+
+        function openDressUpFromLevel() {
+            showScreen('dressUp');
+            switchCategory('hats');
+            renderAvatar();
+        }
+
+        function openDressUp(lvl) {
+            showScreen('dressUp');
+            switchCategory('hats');
+            renderAvatar();
+        }
+
+        function switchCategory(cat) {
+            currentCategory = cat;
+            
+            // Tab styling
+            document.querySelectorAll('.cat-tab').forEach(btn => {
+                if (btn.dataset.cat === cat) {
+                    btn.className = "cat-tab bg-brand-blue text-white px-3 py-1.5 rounded-xl font-bold text-xs btn-bounce";
+                } else {
+                    btn.className = "cat-tab bg-brand-blue-light text-brand-blue-dark px-3 py-1.5 rounded-xl font-bold text-xs btn-bounce";
+                }
+            });
+
+            // Populate Item Grid
+            const grid = document.getElementById('itemsGrid');
+            grid.innerHTML = '';
+
+            dressItems[cat].forEach(item => {
+                const isUnlocked = state.unlockedLevel >= item.reqLvl;
+                const isSelected = state.outfit[cat] === item.id;
+
+                const btn = document.createElement('button');
+                btn.className = `p-3 rounded-2xl flex flex-col items-center justify-center border-2 transition-all ${
+                    isSelected
+                        ? 'bg-brand-orange-light border-brand-orange text-brand-orange-dark font-extrabold'
+                        : isUnlocked
+                            ? 'bg-white border-brand-blue-light hover:border-brand-blue text-brand-blue-dark btn-bounce'
+                            : 'bg-gray-100 border-gray-200 text-gray-400 cursor-not-allowed opacity-60'
+                }`;
+
+                btn.onclick = () => {
+                    if (isUnlocked) {
+                        state.outfit[cat] = item.id;
+                        playSound('dress');
+                        switchCategory(cat); // Re-render grid state
+                        renderAvatar();
+                    }
+                };
+
+                btn.innerHTML = `
+                    <span class="text-2xl mb-1">${item.icon}</span>
+                    <span class="text-[10px] font-bold text-center leading-tight">${item.name}</span>
+                    ${!isUnlocked ? `<span class="text-[9px] text-brand-orange font-black mt-1">Lvl ${item.reqLvl}</span>` : ''}
+                `;
+                grid.appendChild(btn);
+            });
+        }
+
+        /* Render SVG Quizmaster Rambow Avatar Layers */
+        function renderAvatar() {
+            const svg = document.getElementById('rambowAvatar');
+            const { hat, clothes, necklace, held } = state.outfit;
+
+            svg.innerHTML = `
+                <!-- Background Shadow -->
+                <ellipse cx="100" cy="225" rx="55" ry="10" fill="#cbd5e1"/>
+
+                <!-- Left Arm & Hand -->
+                <rect x="40" y="125" width="20" height="50" rx="10" fill="#fde047" transform="rotate(15 50 125)"/>
+
+                <!-- Right Arm -->
+                <rect x="140" y="125" width="20" height="50" rx="10" fill="#fde047" transform="rotate(-15 150 125)"/>
+
+                <!-- Body / Torso Base -->
+                <rect x="65" y="115" width="70" height="85" rx="20" fill="#fde047"/>
+
+                <!-- CLOTHES LAYER -->
+                ${getClothesSVG(clothes)}
+
+                <!-- Feet / Shoes -->
+                <ellipse cx="80" cy="210" rx="16" ry="10" fill="#78350f"/>
+                <ellipse cx="120" cy="210" rx="16" ry="10" fill="#78350f"/>
+
+                <!-- Head Base -->
+                <circle cx="100" cy="75" r="45" fill="#fde047"/>
+
+                <!-- Cute Face Eyes & Smile -->
+                <circle cx="85" cy="70" r="6" fill="#0c4a6e"/>
+                <circle cx="115" cy="70" r="6" fill="#0c4a6e"/>
+                <circle cx="87" cy="68" r="2" fill="#ffffff"/>
+                <circle cx="117" cy="68" r="2" fill="#ffffff"/>
+                <!-- Rosy Cheeks -->
+                <circle cx="75" cy="82" r="6" fill="#f97316" opacity="0.4"/>
+                <circle cx="125" cy="82" r="6" fill="#f97316" opacity="0.4"/>
+                <!-- Smile -->
+                <path d="M 88 88 Q 100 102 112 88" fill="none" stroke="#ea580c" stroke-width="4" stroke-linecap="round"/>
+
+                <!-- NECKLACE LAYER -->
+                ${getNecklaceSVG(necklace)}
+
+                <!-- HATS & HAIR LAYER -->
+                ${getHatSVG(hat)}
+
+                <!-- HELD ITEM LAYER -->
+                ${getHeldSVG(held)}
+            `;
+        }
+
+        function getClothesSVG(type) {
+            switch(type) {
+                case 'default':
+                    return `<path d="M 65 125 L 135 125 L 140 190 L 60 190 Z" fill="#ea580c"/><path d="M 60 190 L 70 180 L 80 190 L 90 180 L 100 190 L 110 180 L 120 190 L 130 180 L 140 190 Z" fill="#0284c7"/>`;
+                case 'fur_coat':
+                    return `<path d="M 60 120 L 140 120 L 145 195 L 55 195 Z" fill="#78350f"/><circle cx="100" cy="125" r="8" fill="#f8fafc"/>`;
+                case 'tiger_print':
+                    return `<path d="M 65 120 L 135 120 L 135 190 L 65 190 Z" fill="#f97316"/><path d="M 70 130 L 85 140 L 70 150 M 130 140 L 115 150 L 130 160" stroke="#0c4a6e" stroke-width="4" fill="none"/>`;
+                case 'chieftain':
+                    return `<path d="M 60 115 L 140 115 L 140 200 L 60 200 Z" fill="#0284c7"/><rect x="92" y="115" width="16" height="85" fill="#f97316"/>`;
+                default: return '';
+            }
+        }
+
+        function getNecklaceSVG(type) {
+            switch(type) {
+                case 'shell_necklace':
+                    return `<path d="M 75 115 Q 100 140 125 115" fill="none" stroke="#0284c7" stroke-width="3"/><circle cx="100" cy="132" r="5" fill="#ffffff" stroke="#0284c7"/>`;
+                case 'fang_necklace':
+                    return `<path d="M 75 115 Q 100 140 125 115" fill="none" stroke="#78350f" stroke-width="3"/><polygon points="100,128 95,140 105,140" fill="#ffffff"/>`;
+                default: return '';
+            }
+        }
+
+        function getHatSVG(type) {
+            switch(type) {
+                case 'bone_hair':
+                    return `<path d="M 70 35 Q 100 20 130 35 Q 140 30 135 42 Q 100 30 65 42 Z" fill="#ffffff" stroke="#0c4a6e" stroke-width="2"/>`;
+                case 'leaf_crown':
+                    return `<path d="M 60 45 Q 100 35 140 45" stroke="#15803d" stroke-width="4" fill="none"/><circle cx="80" cy="38" r="8" fill="#22c55e"/><circle cx="100" cy="32" r="9" fill="#22c55e"/><circle cx="120" cy="38" r="8" fill="#22c55e"/>`;
+                case 'stone_crown':
+                    return `<polygon points="65,45 80,20 100,35 120,20 135,45" fill="#0284c7" stroke="#0369a1" stroke-width="2"/>`;
+                case 'fur_hat':
+                    return `<path d="M 55 50 Q 100 10 145 50 Z" fill="#78350f"/>`;
+                default: return '';
+            }
+        }
+
+        function getHeldSVG(type) {
+            switch(type) {
+                case 'wooden_club':
+                    return `<rect x="155" y="100" width="12" height="60" rx="6" fill="#78350f" transform="rotate(-15 155 100)"/>`;
+                case 'flint_spear':
+                    return `<rect x="158" y="80" width="6" height="90" fill="#78350f"/><polygon points="161,60 151,82 171,82" fill="#64748b"/>`;
+                case 'flower_stick':
+                    return `<rect x="158" y="90" width="6" height="70" fill="#22c55e"/><circle cx="161" cy="85" r="12" fill="#f97316"/><circle cx="161" cy="85" r="5" fill="#fde047"/>`;
+                default: return '';
+            }
+        }
+
+        function resetDressUp() {
+            state.outfit = { hat: 'none', clothes: 'default', necklace: 'none', held: 'none' };
+            switchCategory(currentCategory);
+            renderAvatar();
+        }
+
+        function finishDressUp() {
+            showScreen('map');
+        }
+
+        /* --------------------------------------------------
+         * CONFETTI CELEBRATION ENGINE
+         * -------------------------------------------------- */
+        const confettiCanvas = document.getElementById('confettiCanvas');
+        const ctx = confettiCanvas.getContext('2d');
+        let particles = [];
+
+        function resizeCanvas() {
+            confettiCanvas.width = window.innerWidth;
+            confettiCanvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        function triggerConfetti() {
+            particles = [];
+            const colors = ['#0284c7', '#f97316', '#ffffff', '#fde047'];
+            for (let i = 0; i < 70; i++) {
+                particles.push({
+                    x: window.innerWidth / 2,
+                    y: window.innerHeight / 2,
+                    vx: (Math.random() - 0.5) * 12,
+                    vy: (Math.random() - 0.7) * 12,
+                    size: Math.random() * 8 + 4,
+                    color: colors[Math.floor(Math.random() * colors.length)],
+                    life: 100
+                });
+            }
+        }
+
+        function animateParticles() {
+            ctx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+            particles.forEach((p, idx) => {
+                p.x += p.vx;
+                p.y += p.vy;
+                p.vy += 0.2; // Gravity
+                p.life -= 1.5;
+
+                ctx.fillStyle = p.color;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                ctx.fill();
+
+                if (p.life <= 0) particles.splice(idx, 1);
+            });
+            requestAnimationFrame(animateParticles);
+        }
+
+        window.onload = function() {
+            animateParticles();
+            renderLevelMap();
+        };
+    </script>
+</body>
+</html>

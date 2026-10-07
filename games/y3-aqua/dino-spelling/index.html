@@ -1,0 +1,1005 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Dino Spelling Adventure</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Font Fredoka for child-friendly, rounded typography -->
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: manipulation;
+            font-family: 'Fredoka', cursive, sans-serif;
+        }
+        body {
+            background: linear-gradient(180deg, #BAE6FD 0%, #E0F2FE 40%, #86EFAC 100%);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        @keyframes bounce-gentle {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        @keyframes happy-dino {
+            0%, 100% { transform: scale(1) rotate(0deg); }
+            25% { transform: scale(1.15) rotate(-6deg); }
+            75% { transform: scale(1.15) rotate(6deg); }
+        }
+        @keyframes pulse-btn {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.06); }
+        }
+        @keyframes nitro-flash {
+            0%, 100% { opacity: 0.8; }
+            50% { opacity: 1; transform: scale(1.1); }
+        }
+        .animate-bounce-gentle {
+            animation: bounce-gentle 2s infinite ease-in-out;
+        }
+        .animate-happy-dino {
+            animation: happy-dino 0.6s ease-in-out infinite;
+        }
+        .animate-pulse-btn {
+            animation: pulse-btn 1.5s infinite ease-in-out;
+        }
+        .animate-nitro {
+            animation: nitro-flash 0.3s infinite ease-in-out;
+        }
+        /* Stone style custom button UI */
+        .stone-button {
+            background: linear-gradient(180deg, #FDE047 0%, #EAB308 100%);
+            box-shadow: 0 8px 0 #CA8A04, 0 12px 15px rgba(0,0,0,0.2);
+            border: 4px solid #FEF08A;
+        }
+        .stone-button:active {
+            transform: translateY(4px);
+            box-shadow: 0 4px 0 #CA8A04, 0 6px 10px rgba(0,0,0,0.2);
+        }
+        .stone-card {
+            background: #FEF3C7;
+            border: 6px solid #F59E0B;
+            box-shadow: 0 10px 0 #D97706, 0 15px 25px rgba(0,0,0,0.15);
+            border-radius: 2rem;
+        }
+        canvas {
+            touch-action: none;
+        }
+    </style>
+</head>
+<body class="flex flex-col items-center justify-between p-2 sm:p-4 min-h-screen text-slate-800">
+
+    <!-- Top HUD Bar -->
+    <header class="w-full max-w-2xl flex items-center justify-between bg-white/80 backdrop-blur-md p-3 sm:p-4 rounded-3xl shadow-lg border-4 border-amber-300 my-2">
+        <!-- Level Badge -->
+        <div class="flex items-center space-x-2">
+            <span class="text-2xl sm:text-3xl">🌴</span>
+            <div>
+                <div class="text-xs font-bold text-amber-700 uppercase tracking-wider">Level</div>
+                <div id="hud-level" class="text-xl sm:text-2xl font-black text-amber-600">1 / 5</div>
+            </div>
+        </div>
+
+        <!-- Stars Counter -->
+        <div class="flex items-center space-x-2 bg-yellow-100 px-3 py-1.5 rounded-2xl border-2 border-yellow-300">
+            <span class="text-2xl sm:text-3xl animate-bounce-gentle">⭐</span>
+            <span id="hud-stars" class="text-2xl font-black text-yellow-600">0</span>
+        </div>
+
+        <!-- Score Counter -->
+        <div class="flex items-center space-x-2 bg-emerald-100 px-3 py-1.5 rounded-2xl border-2 border-emerald-300">
+            <span class="text-2xl sm:text-3xl">🦴</span>
+            <div>
+                <div class="text-xs font-bold text-emerald-700 uppercase tracking-wider">Score</div>
+                <div id="hud-score" class="text-xl sm:text-2xl font-black text-emerald-600">0</div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Game Container -->
+    <main class="w-full max-w-2xl flex-1 flex flex-col justify-center items-center my-2 relative">
+
+        <!-- SCREEN 1: WELCOME SCREEN -->
+        <section id="screen-welcome" class="stone-card w-full p-6 text-center flex flex-col items-center">
+            <div class="text-6xl sm:text-7xl mb-2 animate-bounce-gentle">🦕🏎️💨</div>
+            <h1 class="text-3xl sm:text-5xl font-black text-amber-800 mb-2 drop-shadow">Dino Spelling Adventure!</h1>
+            <p class="text-lg sm:text-xl font-semibold text-amber-900 mb-6 max-w-md">
+                Spell Year 3 words and drive Rex's super-fast Stone-Age Turbo Car to dodge boulders!
+            </p>
+            <button id="btn-start" class="stone-button text-2xl sm:text-3xl font-black text-amber-950 px-8 py-4 rounded-full transition-transform animate-pulse-btn w-full max-w-xs">
+                START ADVENTURE! 🚀
+            </button>
+        </section>
+
+        <!-- SCREEN 2: SPELLING QUESTION SCREEN -->
+        <section id="screen-spelling" class="stone-card w-full p-4 sm:p-6 text-center flex flex-col items-center hidden">
+            <!-- Progress Bar -->
+            <div class="w-full bg-amber-200 h-4 rounded-full mb-4 overflow-hidden border-2 border-amber-400">
+                <div id="spelling-progress-bar" class="bg-emerald-500 h-full rounded-full transition-all duration-300" style="width: 33%"></div>
+            </div>
+
+            <!-- Question Number Indicator -->
+            <div id="spelling-q-num" class="text-base sm:text-lg font-bold text-amber-800 bg-amber-200 px-4 py-1 rounded-full mb-3">
+                Question 1 of 3
+            </div>
+
+            <!-- Question Prompt Title -->
+            <h2 id="spelling-prompt" class="text-2xl sm:text-3xl font-black text-amber-900 mb-4">
+                Choose the correct spelling:
+            </h2>
+
+            <!-- Word Display Banner -->
+            <div class="bg-white/90 border-4 border-amber-400 rounded-2xl p-4 sm:p-6 w-full mb-6 shadow-inner flex items-center justify-center min-h-[110px]">
+                <div id="word-display" class="text-4xl sm:text-5xl font-black tracking-wider text-slate-800 flex items-center justify-center space-x-1 sm:space-x-2">
+                    <!-- Word missing letters or choices rendered dynamically -->
+                </div>
+            </div>
+
+            <!-- Option Buttons Grid -->
+            <div id="options-container" class="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 w-full mb-4">
+                <!-- Option buttons injected here -->
+            </div>
+
+            <!-- Dinosaur Reaction Area -->
+            <div id="dino-feedback" class="hidden my-2 flex flex-col items-center justify-center bg-white/95 p-4 rounded-2xl border-4 w-full animate-bounce-gentle">
+                <div id="dino-avatar" class="text-6xl mb-1">🦕</div>
+                <div id="dino-message" class="text-2xl font-black mb-2">Great Job!</div>
+                <button id="btn-next-spelling" class="stone-button text-xl font-bold px-6 py-2 rounded-full">
+                    Next Question ➔
+                </button>
+            </div>
+        </section>
+
+        <!-- SCREEN 3: HIGH-SPEED CAR DODGER REWARD MINI-GAME -->
+        <section id="screen-dodger" class="stone-card w-full p-4 text-center flex flex-col items-center hidden">
+            <div class="flex items-center justify-between w-full mb-2 px-2">
+                <div class="text-lg font-black text-amber-800 flex items-center gap-1">
+                    🏎️ <span class="hidden sm:inline">TURBO</span> DRIFT DRIVE!
+                </div>
+                <div class="text-lg font-black text-amber-900 bg-amber-200 px-3 py-1 rounded-full">
+                    Time: <span id="game-timer" class="text-emerald-700">15</span>s
+                </div>
+            </div>
+
+            <!-- Canvas Container -->
+            <div class="relative w-full aspect-[4/3] max-h-[380px] bg-amber-100 rounded-2xl overflow-hidden border-4 border-amber-500 shadow-inner">
+                <canvas id="dodger-canvas" class="w-full h-full"></canvas>
+
+                <!-- Dynamic Speed & Boost Badges -->
+                <div id="drift-badge" class="absolute top-3 left-3 bg-red-600 text-yellow-300 font-black text-sm sm:text-base px-3 py-1.5 rounded-full shadow-lg border-2 border-yellow-300 hidden">
+                    💨 DRIFT POWER! x2
+                </div>
+                <div id="boost-badge" class="absolute top-3 right-3 bg-cyan-500 text-white font-black text-sm sm:text-base px-3 py-1.5 rounded-full shadow-lg border-2 border-white animate-nitro hidden">
+                    ⚡ TURBO SPEED BOOST!
+                </div>
+
+                <!-- Start Overlay for Mini-game -->
+                <div id="dodger-start-overlay" class="absolute inset-0 bg-amber-950/80 backdrop-blur-xs flex flex-col items-center justify-center p-4">
+                    <div class="text-5xl mb-2">⚡🏎️💨🪨</div>
+                    <h3 class="text-2xl sm:text-3xl font-black text-white mb-2">High-Speed Car Dodger!</h3>
+                    <p class="text-white/90 text-sm sm:text-base mb-4 max-w-xs">
+                        Drive fast and drift into corners! Collect stars for huge bonus points!
+                    </p>
+                    <button id="btn-start-dodger" class="stone-button text-xl font-black px-6 py-3 rounded-full">
+                        GO FAST! 🚀
+                    </button>
+                </div>
+            </div>
+
+            <!-- Super Responsive Touch Controls -->
+            <div class="flex justify-between items-center w-full mt-3 gap-2 sm:gap-4">
+                <button id="btn-drive-left" class="flex-1 bg-amber-500 active:bg-amber-600 text-white font-black text-2xl sm:text-3xl py-4 rounded-2xl border-b-4 border-amber-700 shadow-lg active:translate-y-1">
+                    ◀ LEFT
+                </button>
+                <button id="btn-drift" class="bg-red-500 active:bg-red-600 text-yellow-200 font-black text-xl sm:text-2xl px-5 py-4 rounded-2xl border-b-4 border-red-800 shadow-lg active:translate-y-1">
+                    💨 DRIFT
+                </button>
+                <button id="btn-drive-right" class="flex-1 bg-amber-500 active:bg-amber-600 text-white font-black text-2xl sm:text-3xl py-4 rounded-2xl border-b-4 border-amber-700 shadow-lg active:translate-y-1">
+                    RIGHT ▶
+                </button>
+            </div>
+        </section>
+
+        <!-- SCREEN 4: LEVEL COMPLETED MODAL -->
+        <section id="screen-level-complete" class="stone-card w-full p-6 text-center flex flex-col items-center hidden">
+            <div class="text-6xl mb-2 animate-bounce-gentle">🎉🦕</div>
+            <h2 class="text-3xl sm:text-4xl font-black text-amber-800 mb-2">Level Complete!</h2>
+            <p id="level-complete-msg" class="text-xl font-semibold text-amber-900 mb-6">
+                Awesome work! You completed Level 1!
+            </p>
+            <button id="btn-next-level" class="stone-button text-2xl font-black text-amber-950 px-8 py-4 rounded-full transition-transform animate-pulse-btn w-full max-w-xs">
+                NEXT LEVEL ➔
+            </button>
+        </section>
+
+        <!-- SCREEN 5: GRAND VICTORY CELEBRATION -->
+        <section id="screen-victory" class="stone-card w-full p-6 text-center flex flex-col items-center hidden">
+            <div class="text-7xl mb-2 animate-happy-dino">👑🦖👑</div>
+            <h1 class="text-3xl sm:text-5xl font-black text-amber-800 mb-2">You Did It!</h1>
+            <h2 class="text-xl sm:text-2xl font-bold text-emerald-600 mb-4">You're a Spelling & Driving Hero!</h2>
+
+            <div class="bg-white/80 border-4 border-amber-300 rounded-2xl p-4 w-full max-w-md mb-6 space-y-3">
+                <div class="flex justify-between text-lg font-bold text-amber-900 border-b pb-2">
+                    <span>Total Score:</span>
+                    <span id="final-score" class="text-emerald-600 font-black">0</span>
+                </div>
+                <div class="flex justify-between text-lg font-bold text-amber-900">
+                    <span>Total Stars Collected:</span>
+                    <span id="final-stars" class="text-yellow-600 font-black">0</span>
+                </div>
+            </div>
+
+            <button id="btn-restart" class="stone-button text-2xl font-black text-amber-950 px-8 py-4 rounded-full transition-transform animate-pulse-btn w-full max-w-xs">
+                PLAY AGAIN 🔄
+            </button>
+        </section>
+
+    </main>
+
+    <!-- Safe Child-Friendly Footer -->
+    <footer class="text-center text-xs text-amber-800/80 font-semibold py-2">
+        Dino Spelling Adventure &bull; Safe & Fun Learning for Kids
+    </footer>
+
+    <!-- Sound Effects Synthesizer -->
+    <script>
+        class SoundEffects {
+            constructor() {
+                this.ctx = null;
+                this.driftGain = null;
+                this.driftOsc = null;
+            }
+
+            init() {
+                if (!this.ctx) {
+                    const AudioContext = window.AudioContext || window.webkitAudioContext;
+                    this.ctx = new AudioContext();
+                }
+                if (this.ctx.state === 'suspended') {
+                    this.ctx.resume();
+                }
+            }
+
+            playCorrect() {
+                this.init();
+                const now = this.ctx.currentTime;
+                const osc1 = this.ctx.createOscillator();
+                const osc2 = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+
+                osc1.type = 'triangle';
+                osc2.type = 'sine';
+
+                osc1.frequency.setValueAtTime(659.25, now);
+                osc1.frequency.setValueAtTime(830.61, now + 0.08);
+                osc1.frequency.setValueAtTime(987.77, now + 0.16);
+                osc1.frequency.setValueAtTime(1318.51, now + 0.24);
+
+                osc2.frequency.setValueAtTime(659.25, now);
+                osc2.frequency.setValueAtTime(830.61, now + 0.08);
+                osc2.frequency.setValueAtTime(987.77, now + 0.16);
+                osc2.frequency.setValueAtTime(1318.51, now + 0.24);
+
+                gain.gain.setValueAtTime(0.3, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.6);
+
+                osc1.connect(gain);
+                osc2.connect(gain);
+                gain.connect(this.ctx.destination);
+
+                osc1.start(now);
+                osc2.start(now);
+                osc1.stop(now + 0.6);
+                osc2.stop(now + 0.6);
+            }
+
+            playWrong() {
+                this.init();
+                const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(220, now);
+                osc.frequency.exponentialRampToValueAtTime(130, now + 0.3);
+
+                gain.gain.setValueAtTime(0.3, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+
+                osc.start(now);
+                osc.stop(now + 0.3);
+            }
+
+            playStar() {
+                this.init();
+                const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(987.77, now);
+                osc.frequency.setValueAtTime(1318.51, now + 0.08);
+
+                gain.gain.setValueAtTime(0.25, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+
+                osc.start(now);
+                osc.stop(now + 0.25);
+            }
+
+            playBump() {
+                this.init();
+                const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(120, now);
+                osc.frequency.linearRampToValueAtTime(40, now + 0.15);
+
+                gain.gain.setValueAtTime(0.3, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+
+                osc.start(now);
+                osc.stop(now + 0.15);
+            }
+
+            startDriftSound() {
+                this.init();
+                if (this.driftOsc) return;
+
+                const now = this.ctx.currentTime;
+                this.driftOsc = this.ctx.createOscillator();
+                this.driftGain = this.ctx.createGain();
+
+                this.driftOsc.type = 'sawtooth';
+                this.driftOsc.frequency.setValueAtTime(200, now);
+                this.driftOsc.frequency.linearRampToValueAtTime(280, now + 0.15);
+
+                this.driftGain.gain.setValueAtTime(0.12, now);
+
+                this.driftOsc.connect(this.driftGain);
+                this.driftGain.connect(this.ctx.destination);
+                this.driftOsc.start(now);
+            }
+
+            stopDriftSound() {
+                if (this.driftOsc) {
+                    try {
+                        this.driftGain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.1);
+                        this.driftOsc.stop(this.ctx.currentTime + 0.1);
+                    } catch(e) {}
+                    this.driftOsc = null;
+                    this.driftGain = null;
+                }
+            }
+
+            playVictory() {
+                this.init();
+                const now = this.ctx.currentTime;
+                const notes = [523.25, 659.25, 783.99, 1046.50];
+                notes.forEach((freq, idx) => {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'triangle';
+                    osc.frequency.value = freq;
+                    
+                    const start = now + (idx * 0.12);
+                    gain.gain.setValueAtTime(0.25, start);
+                    gain.gain.exponentialRampToValueAtTime(0.001, start + 0.4);
+
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+
+                    osc.start(start);
+                    osc.stop(start + 0.4);
+                });
+            }
+        }
+
+        const SFX = new SoundEffects();
+    </script>
+
+    <script>
+        // 15 Year 3 Spelling Words across 5 levels
+        const GAME_LEVELS = [
+            // Level 1
+            [
+                { word: "said", missing: "s_id", options: ["a", "e", "i"], answer: "a", type: "missing" },
+                { word: "again", missing: "ag_in", options: ["a", "e", "o"], answer: "a", type: "missing" },
+                { word: "school", missing: null, options: ["school", "skool", "scool"], answer: "school", type: "choice" }
+            ],
+            // Level 2
+            [
+                { word: "because", missing: "bec_use", options: ["a", "e", "o"], answer: "a", type: "missing" },
+                { word: "friend", missing: "fr_end", options: ["i", "e", "a"], answer: "i", type: "missing" },
+                { word: "people", missing: null, options: ["people", "peepel", "poeple"], answer: "people", type: "choice" }
+            ],
+            // Level 3
+            [
+                { word: "would", missing: "w_uld", options: ["o", "a", "e"], answer: "o", type: "missing" },
+                { word: "climb", missing: "clim_", options: ["b", "m", "p"], answer: "b", type: "missing" },
+                { word: "clothes", missing: null, options: ["clothes", "clothez", "close"], answer: "clothes", type: "choice" }
+            ],
+            // Level 4
+            [
+                { word: "half", missing: "ha_f", options: ["l", "r", "w"], answer: "l", type: "missing" },
+                { word: "money", missing: "mon_y", options: ["e", "a", "i"], answer: "e", type: "missing" },
+                { word: "parents", missing: null, options: ["parents", "parants", "perents"], answer: "parents", type: "choice" }
+            ],
+            // Level 5
+            [
+                { word: "straight", missing: "stra_ght", options: ["i", "e", "a"], answer: "i", type: "missing" },
+                { word: "special", missing: "spe_ial", options: ["c", "s", "sh"], answer: "c", type: "missing" },
+                { word: "whole", missing: null, options: ["whole", "hole", "whoel"], answer: "whole", type: "choice" }
+            ]
+        ];
+
+        // Overall Application State
+        let currentLevelIdx = 0;
+        let currentQuestionIdx = 0;
+        let totalScore = 0;
+        let totalStars = 0;
+
+        // Canvas & Mini-game loop references
+        let canvas, ctx;
+        let gameLoopReq;
+        let dodgerTimeLeft = 15;
+        let dodgerTimerInterval;
+        
+        // High-Speed Agile Car Physics State
+        let car = { 
+            x: 0, 
+            y: 0, 
+            width: 56, 
+            height: 38, 
+            vx: 0, 
+            vy: 0,
+            angle: 0, 
+            angularVelocity: 0,
+            isDrifting: false,
+            driftCharge: 0,
+            boostTimer: 0
+        };
+        
+        let rocks = [];
+        let stars = [];
+        let skidMarks = [];
+        let dustParticles = [];
+        let speedLines = [];
+        let keysPressed = {};
+
+        // DOM Element References
+        const hudLevel = document.getElementById('hud-level');
+        const hudScore = document.getElementById('hud-score');
+        const hudStars = document.getElementById('hud-stars');
+        const driftBadge = document.getElementById('drift-badge');
+        const boostBadge = document.getElementById('boost-badge');
+
+        const screenWelcome = document.getElementById('screen-welcome');
+        const screenSpelling = document.getElementById('screen-spelling');
+        const screenDodger = document.getElementById('screen-dodger');
+        const screenLevelComplete = document.getElementById('screen-level-complete');
+        const screenVictory = document.getElementById('screen-victory');
+
+        const spellingProgressBar = document.getElementById('spelling-progress-bar');
+        const spellingQNum = document.getElementById('spelling-q-num');
+        const wordDisplay = document.getElementById('word-display');
+        const optionsContainer = document.getElementById('options-container');
+        const dinoFeedback = document.getElementById('dino-feedback');
+        const dinoAvatar = document.getElementById('dino-avatar');
+        const dinoMessage = document.getElementById('dino-message');
+
+        function showScreen(screen) {
+            [screenWelcome, screenSpelling, screenDodger, screenLevelComplete, screenVictory].forEach(s => s.classList.add('hidden'));
+            screen.classList.remove('hidden');
+        }
+
+        function updateHUD() {
+            hudLevel.textContent = `${currentLevelIdx + 1} / ${GAME_LEVELS.length}`;
+            hudScore.textContent = totalScore;
+            hudStars.textContent = totalStars;
+        }
+
+        document.getElementById('btn-start').addEventListener('click', () => {
+            SFX.init();
+            currentLevelIdx = 0;
+            currentQuestionIdx = 0;
+            totalScore = 0;
+            totalStars = 0;
+            updateHUD();
+            startSpellingQuestion();
+        });
+
+        function startSpellingQuestion() {
+            showScreen(screenSpelling);
+            dinoFeedback.classList.add('hidden');
+            
+            const currentQuestion = GAME_LEVELS[currentLevelIdx][currentQuestionIdx];
+            
+            const pct = ((currentQuestionIdx + 1) / 3) * 100;
+            spellingProgressBar.style.width = `${pct}%`;
+            spellingQNum.textContent = `Question ${currentQuestionIdx + 1} of 3`;
+
+            wordDisplay.innerHTML = '';
+            optionsContainer.innerHTML = '';
+
+            if (currentQuestion.type === 'missing') {
+                const parts = currentQuestion.missing.split('_');
+                wordDisplay.innerHTML = `
+                    <span>${parts[0]}</span>
+                    <span class="inline-block px-3 py-1 bg-amber-200 border-b-4 border-amber-600 rounded-lg text-amber-900 animate-pulse">?</span>
+                    <span>${parts[1]}</span>
+                `;
+
+                currentQuestion.options.forEach(opt => {
+                    const btn = document.createElement('button');
+                    btn.className = 'stone-button text-3xl font-black py-4 rounded-2xl text-amber-950 transition-all hover:scale-105';
+                    btn.textContent = opt;
+                    btn.onclick = () => handleAnswer(opt, currentQuestion.answer);
+                    optionsContainer.appendChild(btn);
+                });
+            } else {
+                wordDisplay.innerHTML = `<span class="text-amber-700">❓❓❓</span>`;
+
+                currentQuestion.options.forEach(opt => {
+                    const btn = document.createElement('button');
+                    btn.className = 'stone-button text-2xl sm:text-3xl font-black py-4 rounded-2xl text-amber-950 transition-all hover:scale-105';
+                    btn.textContent = opt;
+                    btn.onclick = () => handleAnswer(opt, currentQuestion.answer);
+                    optionsContainer.appendChild(btn);
+                });
+            }
+        }
+
+        function handleAnswer(selected, correct) {
+            const buttons = optionsContainer.querySelectorAll('button');
+            buttons.forEach(b => b.disabled = true);
+
+            const isCorrect = (selected === correct);
+
+            dinoFeedback.classList.remove('hidden');
+
+            if (isCorrect) {
+                SFX.playCorrect();
+                totalScore += 100;
+                totalStars += 1;
+                updateHUD();
+
+                dinoAvatar.textContent = '🦕';
+                dinoAvatar.className = 'text-6xl mb-1 animate-happy-dino';
+                dinoFeedback.className = 'my-2 flex flex-col items-center justify-center bg-emerald-100 p-4 rounded-2xl border-4 border-emerald-400 w-full animate-bounce-gentle';
+                dinoMessage.textContent = '🌟 Super Job! Correct!';
+                dinoMessage.className = 'text-2xl font-black text-emerald-800 mb-2';
+            } else {
+                SFX.playWrong();
+                dinoAvatar.textContent = '🦖';
+                dinoAvatar.className = 'text-6xl mb-1';
+                dinoFeedback.className = 'my-2 flex flex-col items-center justify-center bg-amber-100 p-4 rounded-2xl border-4 border-amber-400 w-full';
+                dinoMessage.textContent = `Nice try! The correct word is: "${GAME_LEVELS[currentLevelIdx][currentQuestionIdx].word}"`;
+                dinoMessage.className = 'text-xl font-black text-amber-900 mb-2';
+            }
+        }
+
+        document.getElementById('btn-next-spelling').addEventListener('click', () => {
+            currentQuestionIdx++;
+            if (currentQuestionIdx < 3) {
+                startSpellingQuestion();
+            } else {
+                initCarDodger();
+            }
+        });
+
+        function initCarDodger() {
+            showScreen(screenDodger);
+            document.getElementById('dodger-start-overlay').classList.remove('hidden');
+
+            canvas = document.getElementById('dodger-canvas');
+            ctx = canvas.getContext('2d');
+
+            canvas.width = 400;
+            canvas.height = 300;
+
+            // Initialize super-fast car physics parameters
+            car.x = canvas.width / 2 - car.width / 2;
+            car.y = canvas.height - car.height - 15;
+            car.vx = 0;
+            car.vy = 0;
+            car.angle = 0;
+            car.angularVelocity = 0;
+            car.isDrifting = false;
+            car.driftCharge = 0;
+            car.boostTimer = 0;
+
+            rocks = [];
+            stars = [];
+            skidMarks = [];
+            dustParticles = [];
+            
+            // Generate background track speed lines
+            speedLines = [];
+            for(let i = 0; i < 20; i++) {
+                speedLines.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height,
+                    length: Math.random() * 25 + 15,
+                    speed: Math.random() * 6 + 6
+                });
+            }
+
+            dodgerTimeLeft = 15;
+            document.getElementById('game-timer').textContent = dodgerTimeLeft;
+        }
+
+        document.getElementById('btn-start-dodger').addEventListener('click', () => {
+            document.getElementById('dodger-start-overlay').classList.add('hidden');
+            SFX.init();
+            startCarDodgerLoop();
+        });
+
+        function startCarDodgerLoop() {
+            clearInterval(dodgerTimerInterval);
+            dodgerTimerInterval = setInterval(() => {
+                dodgerTimeLeft--;
+                document.getElementById('game-timer').textContent = dodgerTimeLeft;
+
+                if (dodgerTimeLeft <= 0) {
+                    endCarDodger();
+                }
+            }, 1000);
+
+            window.addEventListener('keydown', handleKeyDown);
+            window.addEventListener('keyup', handleKeyUp);
+
+            function loop() {
+                updateCarDodger();
+                drawCarDodger();
+
+                if (dodgerTimeLeft > 0) {
+                    gameLoopReq = requestAnimationFrame(loop);
+                }
+            }
+            gameLoopReq = requestAnimationFrame(loop);
+        }
+
+        function handleKeyDown(e) {
+            if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') keysPressed['left'] = true;
+            if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') keysPressed['right'] = true;
+            if (e.key === ' ' || e.key === 'ArrowDown' || e.key === 'Shift') keysPressed['drift'] = true;
+        }
+
+        function handleKeyUp(e) {
+            if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') keysPressed['left'] = false;
+            if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') keysPressed['right'] = false;
+            if (e.key === ' ' || e.key === 'ArrowDown' || e.key === 'Shift') keysPressed['drift'] = false;
+        }
+
+        // Ultra-responsive Touch Controls
+        const btnLeft = document.getElementById('btn-drive-left');
+        const btnRight = document.getElementById('btn-drive-right');
+        const btnDrift = document.getElementById('btn-drift');
+
+        btnLeft.addEventListener('pointerdown', (e) => { e.preventDefault(); keysPressed['left'] = true; });
+        btnLeft.addEventListener('pointerup', () => keysPressed['left'] = false);
+        btnLeft.addEventListener('pointercancel', () => keysPressed['left'] = false);
+        btnLeft.addEventListener('pointerleave', () => keysPressed['left'] = false);
+
+        btnRight.addEventListener('pointerdown', (e) => { e.preventDefault(); keysPressed['right'] = true; });
+        btnRight.addEventListener('pointerup', () => keysPressed['right'] = false);
+        btnRight.addEventListener('pointercancel', () => keysPressed['right'] = false);
+        btnRight.addEventListener('pointerleave', () => keysPressed['right'] = false);
+
+        btnDrift.addEventListener('pointerdown', (e) => { e.preventDefault(); keysPressed['drift'] = true; });
+        btnDrift.addEventListener('pointerup', () => keysPressed['drift'] = false);
+        btnDrift.addEventListener('pointercancel', () => keysPressed['drift'] = false);
+        btnDrift.addEventListener('pointerleave', () => keysPressed['drift'] = false);
+
+        function updateCarDodger() {
+            // High Speed Turn & Steering Dynamics
+            const turnSpeed = 0.16; // Doubled turn speed
+            const isTurning = keysPressed['left'] || keysPressed['right'];
+
+            if (keysPressed['left']) {
+                car.angularVelocity -= turnSpeed;
+            } else if (keysPressed['right']) {
+                car.angularVelocity += turnSpeed;
+            } else {
+                car.angularVelocity *= 0.6; // Quick snapping balance
+            }
+
+            // Angle limit limits
+            car.angle += car.angularVelocity;
+            car.angle = Math.max(-0.85, Math.min(0.85, car.angle));
+
+            // Is actively Drifting?
+            car.isDrifting = (keysPressed['drift'] || Math.abs(car.angle) > 0.4) && isTurning;
+
+            // Handle Nitro Boost Mechanic
+            if (car.isDrifting) {
+                driftBadge.classList.remove('hidden');
+                SFX.startDriftSound();
+                car.driftCharge += 1;
+
+                if (car.driftCharge > 20) {
+                    car.boostTimer = 35; // Trigger Turbo Boost!
+                }
+
+                // Tire skid trails
+                skidMarks.push({
+                    x1: car.x + 8,
+                    y1: car.y + car.height - 4,
+                    x2: car.x + car.width - 8,
+                    y2: car.y + car.height - 4,
+                    alpha: 1.0
+                });
+
+                // Dust explosion particles
+                dustParticles.push({
+                    x: car.x + (Math.random() * car.width),
+                    y: car.y + car.height,
+                    vx: (Math.random() - 0.5) * 4,
+                    vy: Math.random() * 4 + 2,
+                    size: Math.random() * 8 + 4,
+                    alpha: 0.9
+                });
+            } else {
+                driftBadge.classList.add('hidden');
+                SFX.stopDriftSound();
+                car.driftCharge = 0;
+            }
+
+            if (car.boostTimer > 0) {
+                car.boostTimer--;
+                boostBadge.classList.remove('hidden');
+            } else {
+                boostBadge.classList.add('hidden');
+            }
+
+            // Acceleration & Velocity (Much Faster!)
+            const baseAcceleration = 2.2; // Doubled base acceleration
+            const speedBoostMultiplier = car.boostTimer > 0 ? 1.8 : (car.isDrifting ? 1.4 : 1.0);
+            const currentAccel = baseAcceleration * speedBoostMultiplier;
+
+            if (keysPressed['left']) car.vx -= currentAccel;
+            if (keysPressed['right']) car.vx += currentAccel;
+
+            // Friction / Drag damping (high speed drift slide)
+            car.vx *= car.isDrifting ? 0.91 : 0.78;
+            car.x += car.vx;
+
+            // Edge Boundary Clamping
+            if (car.x < 10) { car.x = 10; car.vx = 0; }
+            if (car.x > canvas.width - car.width - 10) { car.x = canvas.width - car.width - 10; car.vx = 0; }
+
+            // Fade skid mark lines
+            for (let i = skidMarks.length - 1; i >= 0; i--) {
+                skidMarks[i].alpha -= 0.04;
+                if (skidMarks[i].alpha <= 0) skidMarks.splice(i, 1);
+            }
+
+            // Update dust particles
+            for (let i = dustParticles.length - 1; i >= 0; i--) {
+                const p = dustParticles[i];
+                p.x += p.vx;
+                p.y += p.vy;
+                p.alpha -= 0.05;
+                if (p.alpha <= 0) dustParticles.splice(i, 1);
+            }
+
+            // Update Track Speed Lines (Creates high speed vertical scrolling effect)
+            speedLines.forEach(line => {
+                line.y += line.speed * (car.boostTimer > 0 ? 2.0 : 1.2);
+                if (line.y > canvas.height) {
+                    line.y = -20;
+                    line.x = Math.random() * canvas.width;
+                }
+            });
+
+            // Spawn Falling Boulder Rocks
+            if (Math.random() < 0.06) {
+                rocks.push({
+                    x: Math.random() * (canvas.width - 32),
+                    y: -35,
+                    size: 28 + Math.random() * 12,
+                    speed: 4 + Math.random() * 4 // Faster falling rocks!
+                });
+            }
+
+            // Spawn Stars
+            if (Math.random() < 0.05) {
+                stars.push({
+                    x: Math.random() * (canvas.width - 25),
+                    y: -25,
+                    size: 22,
+                    speed: 3 + Math.random() * 3
+                });
+            }
+
+            // Update Rocks & Check Collisions
+            for (let i = rocks.length - 1; i >= 0; i--) {
+                const r = rocks[i];
+                r.y += r.speed;
+
+                if (r.x < car.x + car.width &&
+                    r.x + r.size > car.x &&
+                    r.y < car.y + car.height &&
+                    r.y + r.size > car.y) {
+                    
+                    SFX.playBump();
+                    rocks.splice(i, 1);
+                    if (totalScore >= 10) totalScore -= 10;
+                    updateHUD();
+                } else if (r.y > canvas.height) {
+                    rocks.splice(i, 1);
+                }
+            }
+
+            // Update Stars & Check Collisions
+            for (let i = stars.length - 1; i >= 0; i--) {
+                const s = stars[i];
+                s.y += s.speed;
+
+                if (s.x < car.x + car.width &&
+                    s.x + s.size > car.x &&
+                    s.y < car.y + car.height &&
+                    s.y + s.size > car.y) {
+
+                    SFX.playStar();
+                    stars.splice(i, 1);
+                    
+                    const pointsGained = (car.isDrifting || car.boostTimer > 0) ? 100 : 50;
+                    totalScore += pointsGained;
+                    totalStars += 1;
+                    updateHUD();
+                } else if (s.y > canvas.height) {
+                    stars.splice(i, 1);
+                }
+            }
+        }
+
+        function drawCarDodger() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Dirt Track Ground
+            ctx.fillStyle = '#EAB308';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Vertical Speed Lines for Thrilling High-Speed Motion Sensation
+            ctx.strokeStyle = 'rgba(254, 240, 138, 0.6)';
+            ctx.lineWidth = 3;
+            speedLines.forEach(line => {
+                ctx.beginPath();
+                ctx.moveTo(line.x, line.y);
+                ctx.lineTo(line.x, line.y + line.length);
+                ctx.stroke();
+            });
+
+            // Center Track Dashed Road Markers
+            ctx.fillStyle = '#FEF08A';
+            for (let y = 0; y < canvas.height; y += 40) {
+                ctx.fillRect(canvas.width / 2 - 4, y, 8, 22);
+            }
+
+            // Render Skid Marks
+            skidMarks.forEach(sm => {
+                ctx.strokeStyle = `rgba(120, 53, 15, ${sm.alpha})`;
+                ctx.lineWidth = 5;
+                ctx.beginPath();
+                ctx.moveTo(sm.x1, sm.y1);
+                ctx.lineTo(sm.x2, sm.y2);
+                ctx.stroke();
+            });
+
+            // Render Dust Cloud Particles
+            dustParticles.forEach(p => {
+                ctx.fillStyle = `rgba(254, 243, 199, ${p.alpha})`;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                ctx.fill();
+            });
+
+            // Draw Rocks
+            rocks.forEach(r => {
+                ctx.fillStyle = '#78350F';
+                ctx.beginPath();
+                ctx.arc(r.x + r.size/2, r.y + r.size/2, r.size/2, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.strokeStyle = '#451A03';
+                ctx.lineWidth = 3;
+                ctx.stroke();
+            });
+
+            // Draw Stars
+            stars.forEach(s => {
+                ctx.font = '24px sans-serif';
+                ctx.fillText('⭐', s.x, s.y + 20);
+            });
+
+            // Draw Prehistoric High-Speed Car
+            ctx.save();
+            ctx.translate(car.x + car.width / 2, car.y + car.height / 2);
+            ctx.rotate(car.angle);
+
+            // Turbo Flames / Boost Thruster Trail
+            if (car.boostTimer > 0 || car.isDrifting) {
+                ctx.fillStyle = car.boostTimer > 0 ? '#06B6D4' : '#EF4444';
+                ctx.beginPath();
+                ctx.moveTo(-12, car.height / 2 - 2);
+                ctx.lineTo(0, car.height / 2 + (Math.random() * 15 + 10));
+                ctx.lineTo(12, car.height / 2 - 2);
+                ctx.closePath();
+                ctx.fill();
+            }
+
+            // Car Main Stone Body
+            ctx.fillStyle = car.boostTimer > 0 ? '#0284C7' : '#B45309';
+            ctx.fillRect(-car.width / 2, -car.height / 2 + 10, car.width, car.height - 15);
+            ctx.fillStyle = car.boostTimer > 0 ? '#38BDF8' : '#D97706';
+            ctx.fillRect(-car.width / 2 + 8, -car.height / 2, car.width - 16, 16);
+
+            // Stone Wheels
+            ctx.fillStyle = '#475569';
+            ctx.beginPath();
+            ctx.arc(-car.width / 2 + 8, car.height / 2 - 4, 8, 0, Math.PI * 2);
+            ctx.arc(car.width / 2 - 8, car.height / 2 - 4, 8, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Dino Driver
+            ctx.font = '20px sans-serif';
+            ctx.fillText('🦕', -10, -6);
+
+            ctx.restore();
+        }
+
+        function endCarDodger() {
+            SFX.stopDriftSound();
+            driftBadge.classList.add('hidden');
+            boostBadge.classList.add('hidden');
+            clearInterval(dodgerTimerInterval);
+            cancelAnimationFrame(gameLoopReq);
+            window.removeEventListener('keydown', handleKeyDown);
+            window.removeEventListener('keyup', handleKeyUp);
+
+            SFX.playVictory();
+
+            if (currentLevelIdx < GAME_LEVELS.length - 1) {
+                document.getElementById('level-complete-msg').textContent = 
+                    `Awesome work! You completed Level ${currentLevelIdx + 1}!`;
+                showScreen(screenLevelComplete);
+            } else {
+                document.getElementById('final-score').textContent = totalScore;
+                document.getElementById('final-stars').textContent = totalStars;
+                showScreen(screenVictory);
+            }
+        }
+
+        document.getElementById('btn-next-level').addEventListener('click', () => {
+            currentLevelIdx++;
+            currentQuestionIdx = 0;
+            updateHUD();
+            startSpellingQuestion();
+        });
+
+        document.getElementById('btn-restart').addEventListener('click', () => {
+            currentLevelIdx = 0;
+            currentQuestionIdx = 0;
+            totalScore = 0;
+            totalStars = 0;
+            updateHUD();
+            showScreen(screenWelcome);
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,879 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Puppy Times Tables</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts for child-friendly rounded typography -->
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Quicksand:wght@500;700&display=swap" rel="stylesheet">
+    
+    <style>
+        * {
+            font-family: 'Fredoka', 'Quicksand', sans-serif;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        body {
+            background: linear-gradient(135deg, #FFDEE9 0%, #B5FFFC 100%);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Cheerful Animations */
+        @keyframes bounce-gentle {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        @keyframes pulse-glow {
+            0%, 100% { filter: drop-shadow(0 0 8px rgba(255, 223, 0, 0.6)); }
+            50% { filter: drop-shadow(0 0 18px rgba(255, 215, 0, 0.9)); }
+        }
+
+        @keyframes wiggle {
+            0%, 100% { transform: rotate(-3deg); }
+            50% { transform: rotate(3deg); }
+        }
+
+        @keyframes float-star {
+            0% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-12px) rotate(10deg); }
+            100% { transform: translateY(0px) rotate(0deg); }
+        }
+
+        .animate-bounce-gentle {
+            animation: bounce-gentle 2.5s infinite ease-in-out;
+        }
+
+        .animate-wiggle {
+            animation: wiggle 1.2s infinite ease-in-out;
+        }
+
+        .animate-star {
+            animation: float-star 3s infinite ease-in-out;
+        }
+
+        /* Custom Button Styling */
+        .btn-rainbow {
+            background: linear-gradient(45deg, #FF6B6B, #FF8E53, #FFD93D, #6BCB77, #4D96FF);
+            background-size: 300% 300%;
+            animation: rainbow-gradient 6s ease infinite;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        @keyframes rainbow-gradient {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .btn-rainbow:hover {
+            transform: scale(1.04) translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.15);
+        }
+
+        .btn-rainbow:active {
+            transform: scale(0.98) translateY(1px);
+        }
+
+        .btn-option {
+            transition: transform 0.15s ease, background-color 0.2s ease, box-shadow 0.2s ease;
+            box-shadow: 0 6px 0px rgba(0,0,0,0.1);
+        }
+
+        .btn-option:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 0px rgba(0,0,0,0.1);
+        }
+
+        .btn-option:active {
+            transform: translateY(2px);
+            box-shadow: 0 2px 0px rgba(0,0,0,0.1);
+        }
+
+        /* Glassmorphism Card Style */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.92);
+            backdrop-filter: blur(10px);
+            border: 4px solid rgba(255, 255, 255, 0.8);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+        }
+
+        /* Canvas touch handling */
+        canvas {
+            touch-action: none;
+        }
+    </style>
+</head>
+<body class="flex flex-col min-h-screen justify-between p-3 sm:p-6 text-gray-800">
+
+    <header class="w-full max-w-4xl mx-auto flex items-center justify-between bg-white/80 backdrop-blur-md rounded-3xl p-4 shadow-lg mb-4 border-4 border-yellow-200">
+        <div class="flex items-center gap-3">
+            <!-- Puppy Icon SVG -->
+            <svg class="w-12 h-12 animate-bounce-gentle" viewBox="0 0 100 100">
+                <circle cx="50" cy="55" r="35" fill="#F4A261" />
+                <!-- Ears -->
+                <ellipse cx="20" cy="35" rx="12" ry="22" fill="#E76F51" transform="rotate(-20 20 35)" />
+                <ellipse cx="80" cy="35" rx="12" ry="22" fill="#E76F51" transform="rotate(20 80 35)" />
+                <!-- Eyes -->
+                <circle cx="38" cy="48" r="5" fill="#2B2D42" />
+                <circle cx="62" cy="48" r="5" fill="#2B2D42" />
+                <circle cx="40" cy="46" r="2" fill="#FFFFFF" />
+                <circle cx="64" cy="46" r="2" fill="#FFFFFF" />
+                <!-- Snout -->
+                <ellipse cx="50" cy="62" rx="14" ry="10" fill="#FFFFFF" />
+                <polygon points="50,56 44,63 56,63" fill="#2B2D42" rx="3" />
+                <path d="M 50 63 Q 45 70 40 66" stroke="#2B2D42" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+                <path d="M 50 63 Q 55 70 60 66" stroke="#2B2D42" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+                <!-- Cheeks -->
+                <circle cx="30" cy="58" r="5" fill="#FF8A8A" opacity="0.6"/>
+                <circle cx="70" cy="58" r="5" fill="#FF8A8A" opacity="0.6"/>
+            </svg>
+            <div>
+                <h1 class="text-3xl sm:text-4xl font-extrabold text-pink-500 tracking-wider">PUPPYS</h1>
+                <p class="text-xs sm:text-sm font-semibold text-purple-600">Year 3 Maths Times Tables</p>
+            </div>
+        </div>
+
+        <!-- Mute/Sound Toggle Button -->
+        <button id="sound-toggle" onclick="toggleSound()" class="bg-yellow-100 hover:bg-yellow-200 text-yellow-700 font-bold p-3 rounded-2xl flex items-center gap-2 border-2 border-yellow-300 transition-all">
+            <span id="sound-icon" class="text-2xl">🔊</span>
+            <span id="sound-text" class="hidden sm:inline font-bold">Sound ON</span>
+        </button>
+    </header>
+
+    <main class="w-full max-w-4xl mx-auto flex-grow flex flex-col justify-center items-center">
+
+        <!-- SCREEN 1: START SCREEN -->
+        <section id="screen-start" class="w-full glass-card rounded-3xl p-6 sm:p-10 text-center flex flex-col items-center">
+            <div class="relative mb-4">
+                <!-- Large Welcome Puppy SVG -->
+                <svg class="w-40 h-40 sm:w-48 sm:h-48 drop-shadow-md animate-bounce-gentle" viewBox="0 0 120 120">
+                    <circle cx="60" cy="65" r="42" fill="#F4A261" />
+                    <!-- Flappy Ears -->
+                    <path d="M 25 45 Q 5 20 20 60 Z" fill="#E76F51" />
+                    <path d="M 95 45 Q 115 20 100 60 Z" fill="#E76F51" />
+                    <!-- Eyes -->
+                    <circle cx="45" cy="55" r="6" fill="#2B2D42" />
+                    <circle cx="75" cy="55" r="6" fill="#2B2D42" />
+                    <circle cx="47" cy="53" r="2.5" fill="#FFFFFF" />
+                    <circle cx="77" cy="53" r="2.5" fill="#FFFFFF" />
+                    <!-- Cute Tongue Out -->
+                    <ellipse cx="60" cy="72" rx="16" ry="12" fill="#FFFFFF" />
+                    <path d="M 56 74 C 56 84, 64 84, 64 74 Z" fill="#FF6B6B" />
+                    <ellipse cx="60" cy="67" rx="6" ry="4" fill="#2B2D42" />
+                    <!-- Collar -->
+                    <path d="M 30 95 Q 60 105 90 95" stroke="#FF4757" stroke-width="8" stroke-linecap="round" fill="none" />
+                    <circle cx="60" cy="100" r="6" fill="#FFD700" />
+                </svg>
+            </div>
+
+            <h2 class="text-3xl sm:text-5xl font-black text-purple-600 mb-3 tracking-wide">Hello Math Explorer! 🐶</h2>
+            <p class="text-lg sm:text-xl text-gray-700 font-semibold mb-6 max-w-lg leading-relaxed">
+                Join our playful puppies to master your Year 3 Times Tables! Complete 5 fun levels and play star-catching bonus games!
+            </p>
+
+            <div class="bg-amber-50 border-2 border-amber-200 rounded-2xl p-4 mb-8 text-amber-800 text-sm sm:text-base font-bold flex items-center gap-3">
+                <span class="text-3xl">⭐</span>
+                <span>Learn 2x, 3x, 4x, 5x, 8x, and 10x multiplication tables with gentle encouragement!</span>
+            </div>
+
+            <button onclick="startGame()" class="btn-rainbow text-white font-extrabold text-2xl sm:text-3xl py-5 px-12 rounded-full shadow-xl border-4 border-white tracking-wider flex items-center gap-3">
+                <span>START PLAYING!</span>
+                <span class="text-3xl">🐾</span>
+            </button>
+        </section>
+
+        <!-- SCREEN 2: QUIZ GAMEPLAY SCREEN -->
+        <section id="screen-quiz" class="w-full glass-card rounded-3xl p-4 sm:p-8 hidden flex-col">
+            <!-- Top Progress & Score Bar -->
+            <div class="flex flex-wrap items-center justify-between gap-2 mb-6 bg-purple-50 p-4 rounded-2xl border-2 border-purple-100">
+                <div class="flex items-center gap-2">
+                    <span class="bg-purple-600 text-white font-extrabold px-3 py-1 rounded-xl text-sm sm:text-base">
+                        LEVEL <span id="quiz-level-num">1</span>/5
+                    </span>
+                    <span class="text-purple-700 font-bold text-sm sm:text-base" id="level-title">2x & 10x Tables</span>
+                </div>
+
+                <!-- Star Score Badge -->
+                <div class="flex items-center gap-2 bg-yellow-300 border-2 border-yellow-400 px-4 py-1.5 rounded-2xl shadow-inner">
+                    <span class="text-2xl animate-star">⭐</span>
+                    <span id="quiz-score" class="text-2xl font-black text-amber-900">0</span>
+                    <span class="text-xs font-bold text-amber-800 uppercase">Points</span>
+                </div>
+            </div>
+
+            <!-- Level Question Progress Indicators -->
+            <div class="w-full bg-gray-200 rounded-full h-4 mb-6 overflow-hidden border-2 border-gray-300">
+                <div id="progress-bar" class="bg-gradient-to-r from-pink-400 via-purple-400 to-indigo-500 h-full w-0 transition-all duration-500 rounded-full"></div>
+            </div>
+
+            <!-- Main Question Section -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 items-center my-4">
+                
+                <!-- Puppy Helper Avatar & Speech Bubble -->
+                <div class="md:col-span-1 flex flex-col items-center text-center">
+                    <div id="puppy-speech" class="bg-white border-3 border-purple-300 rounded-2xl p-3 shadow-md mb-3 relative max-w-xs text-purple-900 font-bold text-sm sm:text-base animate-pulse-glow">
+                        You've got this! Count carefully! 🐾
+                        <!-- Bubble Tail -->
+                        <div class="hidden md:block absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-4 h-4 bg-white border-b-2 border-r-2 border-purple-300 rotate-45"></div>
+                    </div>
+                    
+                    <svg id="puppy-avatar" class="w-32 h-32 sm:w-36 sm:h-36 animate-wiggle" viewBox="0 0 100 100">
+                        <circle cx="50" cy="55" r="35" fill="#FFB703" />
+                        <ellipse cx="20" cy="35" rx="12" ry="22" fill="#FB8500" transform="rotate(-20 20 35)" />
+                        <ellipse cx="80" cy="35" rx="12" ry="22" fill="#FB8500" transform="rotate(20 80 35)" />
+                        <circle cx="38" cy="48" r="5" fill="#023047" />
+                        <circle cx="62" cy="48" r="5" fill="#023047" />
+                        <circle cx="40" cy="46" r="2" fill="#FFFFFF" />
+                        <circle cx="64" cy="46" r="2" fill="#FFFFFF" />
+                        <ellipse cx="50" cy="62" rx="14" ry="10" fill="#FFFFFF" />
+                        <polygon points="50,56 44,63 56,63" fill="#023047" />
+                        <path d="M 50 63 Q 45 70 40 66" stroke="#023047" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+                        <path d="M 50 63 Q 55 70 60 66" stroke="#023047" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+                        <circle cx="30" cy="58" r="5" fill="#FFB703" opacity="0.6"/>
+                    </svg>
+                </div>
+
+                <!-- Math Card & Multiple Choice Options -->
+                <div class="md:col-span-2 flex flex-col items-center">
+                    <div class="w-full bg-gradient-to-br from-indigo-50 to-blue-50 border-4 border-indigo-200 rounded-3xl p-6 sm:p-8 text-center shadow-md mb-6">
+                        <span class="text-xs uppercase font-extrabold text-indigo-400 tracking-widest block mb-1">Question <span id="q-number">1</span> of 3</span>
+                        <div id="question-text" class="text-5xl sm:text-6xl font-black text-indigo-900 tracking-wide my-2">
+                            2 × 3 = ?
+                        </div>
+                    </div>
+
+                    <!-- Multiple Choice Answer Grid -->
+                    <div id="answers-grid" class="grid grid-cols-2 gap-4 w-full">
+                        <!-- Buttons injected dynamically -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SCREEN 3: BONUS GAME SCREEN (Catch the Falling Stars) -->
+        <section id="screen-bonus" class="w-full glass-card rounded-3xl p-4 sm:p-6 hidden flex-col items-center relative">
+            <div class="w-full flex justify-between items-center bg-indigo-900 text-white rounded-2xl p-4 mb-3 border-2 border-indigo-400 shadow">
+                <div class="flex items-center gap-2">
+                    <span class="text-2xl animate-bounce-gentle">🌟</span>
+                    <div>
+                        <h3 class="font-extrabold text-lg sm:text-xl text-yellow-300">BONUS ROUND!</h3>
+                        <p class="text-xs text-indigo-200">Catch the falling stars with your puppy basket!</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-4">
+                    <div class="bg-indigo-800 px-4 py-2 rounded-xl text-center border border-indigo-600">
+                        <span class="text-xs text-indigo-300 block uppercase">Time Left</span>
+                        <span id="bonus-timer" class="text-2xl font-black text-pink-400">15</span><span class="text-xs font-bold">s</span>
+                    </div>
+                    <div class="bg-indigo-800 px-4 py-2 rounded-xl text-center border border-indigo-600">
+                        <span class="text-xs text-indigo-300 block uppercase">Bonus Stars</span>
+                        <span id="bonus-stars-count" class="text-2xl font-black text-yellow-400">0</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Canvas Container -->
+            <div class="relative w-full max-w-2xl bg-gradient-to-b from-indigo-950 via-purple-900 to-indigo-900 rounded-2xl border-4 border-yellow-300 shadow-2xl overflow-hidden" style="height: 380px;">
+                <canvas id="bonusCanvas" class="w-full h-full cursor-pointer"></canvas>
+                
+                <!-- Controls Overlay Hint for Mobile -->
+                <div class="absolute bottom-2 left-0 right-0 text-center pointer-events-none text-xs text-yellow-200/70 font-semibold">
+                    Drag mouse/finger or use Left & Right Arrow keys ↔️
+                </div>
+            </div>
+        </section>
+
+        <!-- SCREEN 4: FINAL CELEBRATION SCREEN -->
+        <section id="screen-final" class="w-full glass-card rounded-3xl p-6 sm:p-10 text-center hidden flex-col items-center relative">
+            <div class="absolute -top-10 animate-bounce-gentle">
+                <!-- Golden Trophy SVG -->
+                <svg class="w-28 h-28 drop-shadow-xl" viewBox="0 0 100 100">
+                    <path d="M 25 20 L 75 20 L 70 55 C 70 70 55 75 50 75 C 45 75 30 70 30 55 Z" fill="#FFD700" stroke="#DAA520" stroke-width="3" />
+                    <path d="M 25 25 C 10 25 10 45 28 45" fill="none" stroke="#FFD700" stroke-width="6" stroke-linecap="round" />
+                    <path d="M 75 25 C 90 25 90 45 72 45" fill="none" stroke="#FFD700" stroke-width="6" stroke-linecap="round" />
+                    <rect x="42" y="75" width="16" height="12" fill="#DAA520" />
+                    <rect x="30" y="87" width="40" height="10" fill="#8B4513" rx="3" />
+                    <circle cx="50" cy="40" r="10" fill="#FFF" opacity="0.4" />
+                    <text x="50" y="47" font-size="18" text-anchor="middle" fill="#B8860B" font-weight="bold">★</text>
+                </svg>
+            </div>
+
+            <h2 class="text-4xl sm:text-5xl font-black text-purple-600 mt-14 mb-2">PAWSOME JOB! 🎉</h2>
+            <p class="text-xl text-gray-700 font-bold mb-6">You completed all 5 Puppy Times Table Levels!</p>
+
+            <!-- Final Stats Box -->
+            <div class="grid grid-cols-2 gap-4 w-full max-w-md my-4">
+                <div class="bg-purple-100 border-2 border-purple-300 p-4 rounded-2xl text-center">
+                    <span class="text-sm font-bold text-purple-700 uppercase block">Total Score</span>
+                    <span id="final-score" class="text-4xl font-black text-purple-900">0</span>
+                    <span class="text-xs font-semibold text-purple-600 block">points</span>
+                </div>
+
+                <div class="bg-yellow-100 border-2 border-yellow-300 p-4 rounded-2xl text-center">
+                    <span class="text-sm font-bold text-yellow-800 uppercase block">Puppy Badge</span>
+                    <span id="final-badge" class="text-3xl font-black text-yellow-900 block my-1">🏆 Master</span>
+                    <span class="text-xs font-semibold text-yellow-700 block">Times Table Hero</span>
+                </div>
+            </div>
+
+            <div class="bg-emerald-50 border-2 border-emerald-200 rounded-2xl p-4 my-4 max-w-md text-emerald-800 font-bold text-center">
+                🐶 Puppy says: "You worked so hard! Your math skills are shining brighter than the stars!"
+            </div>
+
+            <button onclick="restartGame()" class="btn-rainbow text-white font-extrabold text-2xl py-4 px-10 rounded-full shadow-lg border-4 border-white tracking-wider my-4 flex items-center gap-3">
+                <span>PLAY AGAIN</span>
+                <span class="text-2xl">🔄</span>
+            </button>
+        </section>
+
+    </main>
+
+    <!-- Footer Tag -->
+    <footer class="w-full text-center text-xs font-bold text-gray-500 mt-6 py-2">
+        Safe & Friendly Learning Game for Kids • Year 3 Times Tables
+    </footer>
+
+    <script>
+        /* ------------------------------------------------------------------
+           1. GAME DATA & QUESTIONS (Year 3 Times Tables: 2x, 3x, 4x, 5x, 8x, 10x)
+           ------------------------------------------------------------------ */
+        const LEVELS_DATA = [
+            {
+                level: 1,
+                title: "2x & 10x Tables",
+                questions: [
+                    { q: "2 × 3", answer: 6, options: [4, 6, 8, 10] },
+                    { q: "5 × 2", answer: 10, options: [8, 10, 12, 14] },
+                    { q: "10 × 4", answer: 40, options: [30, 35, 40, 45] }
+                ]
+            },
+            {
+                level: 2,
+                title: "5x Tables",
+                questions: [
+                    { q: "5 × 3", answer: 15, options: [10, 15, 20, 25] },
+                    { q: "5 × 6", answer: 30, options: [25, 30, 35, 40] },
+                    { q: "5 × 8", answer: 40, options: [35, 40, 45, 50] }
+                ]
+            },
+            {
+                level: 3,
+                title: "3x Tables",
+                questions: [
+                    { q: "3 × 3", answer: 9, options: [6, 9, 12, 15] },
+                    { q: "3 × 4", answer: 12, options: [9, 12, 15, 18] },
+                    { q: "3 × 7", answer: 21, options: [18, 21, 24, 27] }
+                ]
+            },
+            {
+                level: 4,
+                title: "4x Tables",
+                questions: [
+                    { q: "4 × 2", answer: 8, options: [6, 8, 10, 12] },
+                    { q: "4 × 4", answer: 16, options: [12, 14, 16, 20] },
+                    { q: "4 × 6", answer: 24, options: [20, 22, 24, 28] }
+                ]
+            },
+            {
+                level: 5,
+                title: "8x Tables Super Challenge",
+                questions: [
+                    { q: "8 × 2", answer: 16, options: [12, 14, 16, 18] },
+                    { q: "8 × 3", answer: 24, options: [20, 24, 28, 32] },
+                    { q: "8 × 5", answer: 40, options: [35, 40, 45, 50] }
+                ]
+            }
+        ];
+
+        // Encouraging phrases from Puppy helper
+        const ENCOURAGEMENTS = [
+            "Super Job! 🌟",
+            "Pawsome Work! 🐶",
+            "You're a Star! ⭐",
+            "Brilliant Thinking! 💡",
+            "Keep Going! You're Doing Great! 🚀"
+        ];
+
+        /* ------------------------------------------------------------------
+           2. STATE VARIABLES
+           ------------------------------------------------------------------ */
+        let currentLevelIdx = 0;
+        let currentQuestionIdx = 0;
+        let totalScore = 0;
+        let soundEnabled = true;
+        let canAnswer = true;
+
+        /* ------------------------------------------------------------------
+           3. WEB AUDIO API SYNTHESIZER (Child-safe playful sound FX)
+           ------------------------------------------------------------------ */
+        let audioCtx = null;
+
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        }
+
+        function playSound(type) {
+            if (!soundEnabled) return;
+            try {
+                initAudio();
+                if (audioCtx.state === 'suspended') {
+                    audioCtx.resume();
+                }
+
+                const now = audioCtx.currentTime;
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+
+                if (type === 'correct') {
+                    // Cheerful rising double tone
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(440, now); // A4
+                    osc.frequency.exponentialRampToValueAtTime(880, now + 0.15); // A5
+                    gain.gain.setValueAtTime(0.3, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+                    osc.start(now);
+                    osc.stop(now + 0.3);
+                } else if (type === 'wrong') {
+                    // Gentle low boop
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(220, now);
+                    osc.frequency.exponentialRampToValueAtTime(140, now + 0.2);
+                    gain.gain.setValueAtTime(0.2, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
+                    osc.start(now);
+                    osc.stop(now + 0.25);
+                } else if (type === 'catch') {
+                    // High twinkling pop for star catch
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(600 + Math.random() * 300, now);
+                    osc.frequency.exponentialRampToValueAtTime(1200, now + 0.08);
+                    gain.gain.setValueAtTime(0.25, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+                    osc.start(now);
+                    osc.stop(now + 0.1);
+                } else if (type === 'fanfare') {
+                    // Level finish happy melody
+                    const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+                    notes.forEach((freq, index) => {
+                        const noteOsc = audioCtx.createOscillator();
+                        const noteGain = audioCtx.createGain();
+                        noteOsc.connect(noteGain);
+                        noteGain.connect(audioCtx.destination);
+                        noteOsc.type = 'triangle';
+                        noteOsc.frequency.setValueAtTime(freq, now + index * 0.1);
+                        noteGain.gain.setValueAtTime(0.25, now + index * 0.1);
+                        noteGain.gain.exponentialRampToValueAtTime(0.01, now + index * 0.1 + 0.25);
+                        noteOsc.start(now + index * 0.1);
+                        noteOsc.stop(now + index * 0.1 + 0.25);
+                    });
+                }
+            } catch (e) {
+                console.log("Audio play error:", e);
+            }
+        }
+
+        function toggleSound() {
+            soundEnabled = !soundEnabled;
+            const icon = document.getElementById('sound-icon');
+            const text = document.getElementById('sound-text');
+            if (soundEnabled) {
+                icon.textContent = "🔊";
+                text.textContent = "Sound ON";
+                playSound('correct');
+            } else {
+                icon.textContent = "🔇";
+                text.textContent = "Sound OFF";
+            }
+        }
+
+        /* ------------------------------------------------------------------
+           4. SCREEN SWITCHING & FLOW MANAGEMENT
+           ------------------------------------------------------------------ */
+        function showScreen(screenId) {
+            ['screen-start', 'screen-quiz', 'screen-bonus', 'screen-final'].forEach(id => {
+                const el = document.getElementById(id);
+                if (id === screenId) {
+                    el.classList.remove('hidden');
+                    el.classList.add('flex');
+                } else {
+                    el.classList.add('hidden');
+                    el.classList.remove('flex');
+                }
+            });
+        }
+
+        function startGame() {
+            currentLevelIdx = 0;
+            currentQuestionIdx = 0;
+            totalScore = 0;
+            updateScoreDisplay();
+            showScreen('screen-quiz');
+            loadQuestion();
+        }
+
+        function restartGame() {
+            startGame();
+        }
+
+        function updateScoreDisplay() {
+            document.getElementById('quiz-score').textContent = totalScore;
+        }
+
+        /* ------------------------------------------------------------------
+           5. QUIZ LOGIC
+           ------------------------------------------------------------------ */
+        function loadQuestion() {
+            canAnswer = true;
+            const levelData = LEVELS_DATA[currentLevelIdx];
+            const qData = levelData.questions[currentQuestionIdx];
+
+            // Update UI headers
+            document.getElementById('quiz-level-num').textContent = levelData.level;
+            document.getElementById('level-title').textContent = levelData.title;
+            document.getElementById('q-number').textContent = currentQuestionIdx + 1;
+            document.getElementById('question-text').textContent = `${qData.q} = ?`;
+
+            // Update progress bar
+            const totalQuestionsInLevel = levelData.questions.length;
+            const progressPercent = ((currentQuestionIdx) / totalQuestionsInLevel) * 100;
+            document.getElementById('progress-bar').style.width = `${progressPercent}%`;
+
+            // Reset Speech Bubble
+            const speech = document.getElementById('puppy-speech');
+            speech.textContent = "Take your time! You can do it! 🐶";
+
+            // Render Option Buttons
+            const grid = document.getElementById('answers-grid');
+            grid.innerHTML = '';
+
+            // Color themes for buttons
+            const btnColors = [
+                'bg-pink-400 hover:bg-pink-500 text-white border-pink-600',
+                'bg-blue-400 hover:bg-blue-500 text-white border-blue-600',
+                'bg-amber-400 hover:bg-amber-500 text-white border-amber-600',
+                'bg-emerald-400 hover:bg-emerald-500 text-white border-emerald-600'
+            ];
+
+            // Shuffle options for variety
+            const shuffledOptions = [...qData.options].sort(() => Math.random() - 0.5);
+
+            shuffledOptions.forEach((opt, idx) => {
+                const btn = document.createElement('button');
+                btn.className = `btn-option ${btnColors[idx % btnColors.length]} text-3xl sm:text-4xl font-extrabold py-5 px-6 rounded-2xl border-b-4 transition-all flex items-center justify-center`;
+                btn.textContent = opt;
+                btn.onclick = () => handleAnswer(opt, qData.answer, btn);
+                grid.appendChild(btn);
+            });
+        }
+
+        function handleAnswer(selected, correct, buttonEl) {
+            if (!canAnswer) return;
+            canAnswer = false;
+
+            const speech = document.getElementById('puppy-speech');
+
+            if (selected === correct) {
+                // Correct Answer!
+                playSound('correct');
+                buttonEl.classList.remove('bg-pink-400', 'bg-blue-400', 'bg-amber-400', 'bg-emerald-400');
+                buttonEl.classList.add('bg-green-500', 'text-white', 'border-green-700', 'scale-105');
+
+                totalScore += 10;
+                updateScoreDisplay();
+
+                const randomEncouragement = ENCOURAGEMENTS[Math.floor(Math.random() * ENCOURAGEMENTS.length)];
+                speech.textContent = randomEncouragement;
+
+                setTimeout(() => {
+                    currentQuestionIdx++;
+                    const levelData = LEVELS_DATA[currentLevelIdx];
+
+                    if (currentQuestionIdx >= levelData.questions.length) {
+                        // Level complete! Transition to Bonus game
+                        document.getElementById('progress-bar').style.width = `100%`;
+                        playSound('fanfare');
+                        setTimeout(() => {
+                            startBonusGame();
+                        }, 600);
+                    } else {
+                        loadQuestion();
+                    }
+                }, 1200);
+
+            } else {
+                // Wrong Answer (Gentle feedback)
+                playSound('wrong');
+                buttonEl.classList.add('bg-gray-300', 'text-gray-500', 'border-gray-400', 'opacity-60');
+                speech.textContent = "Oopsie! Try again, you're so close! 🐾";
+
+                setTimeout(() => {
+                    canAnswer = true;
+                }, 800);
+            }
+        }
+
+        /* ------------------------------------------------------------------
+           6. STREAMING_CHUNK:Bonus Game Code (Catch the Falling Stars)...
+           ------------------------------------------------------------------ */
+        let canvas, ctx;
+        let bonusAnimationId;
+        let basket = { x: 0, y: 0, width: 90, height: 50, speed: 8 };
+        let stars = [];
+        let bonusScore = 0;
+        let bonusTimeLeft = 15;
+        let bonusTimerInterval;
+        let keys = { left: false, right: false };
+
+        function startBonusGame() {
+            showScreen('screen-bonus');
+            canvas = document.getElementById('bonusCanvas');
+            ctx = canvas.getContext('2d');
+
+            // Resize canvas to parent
+            const rect = canvas.parentElement.getBoundingClientRect();
+            canvas.width = rect.width;
+            canvas.height = rect.height;
+
+            // Reset basket position
+            basket.width = 90;
+            basket.height = 50;
+            basket.x = canvas.width / 2 - basket.width / 2;
+            basket.y = canvas.height - basket.height - 15;
+
+            stars = [];
+            bonusScore = 0;
+            bonusTimeLeft = 15;
+
+            document.getElementById('bonus-stars-count').textContent = bonusScore;
+            document.getElementById('bonus-timer').textContent = bonusTimeLeft;
+
+            // Setup Touch / Mouse listener
+            canvas.onmousemove = (e) => {
+                const cRect = canvas.getBoundingClientRect();
+                const mouseX = e.clientX - cRect.left;
+                basket.x = mouseX - basket.width / 2;
+                clampBasket();
+            };
+
+            canvas.ontouchmove = (e) => {
+                if (e.touches.length > 0) {
+                    const cRect = canvas.getBoundingClientRect();
+                    const touchX = e.touches[0].clientX - cRect.left;
+                    basket.x = touchX - basket.width / 2;
+                    clampBasket();
+                }
+            };
+
+            // Keyboard navigation
+            window.onkeydown = (e) => {
+                if (e.key === 'ArrowLeft' || e.key === 'a') keys.left = true;
+                if (e.key === 'ArrowRight' || e.key === 'd') keys.right = true;
+            };
+
+            window.onkeyup = (e) => {
+                if (e.key === 'ArrowLeft' || e.key === 'a') keys.left = false;
+                if (e.key === 'ArrowRight' || e.key === 'd') keys.right = false;
+            };
+
+            // Timer countdown
+            clearInterval(bonusTimerInterval);
+            bonusTimerInterval = setInterval(() => {
+                bonusTimeLeft--;
+                document.getElementById('bonus-timer').textContent = bonusTimeLeft;
+                if (bonusTimeLeft <= 0) {
+                    endBonusGame();
+                }
+            }, 1000);
+
+            // Game Loop
+            if (bonusAnimationId) cancelAnimationFrame(bonusAnimationId);
+            bonusLoop();
+        }
+
+        function clampBasket() {
+            if (basket.x < 0) basket.x = 0;
+            if (basket.x + basket.width > canvas.width) basket.x = canvas.width - basket.width;
+        }
+
+        function spawnStar() {
+            if (Math.random() < 0.08) {
+                stars.push({
+                    x: Math.random() * (canvas.width - 30) + 15,
+                    y: -20,
+                    size: 18 + Math.random() * 12,
+                    speed: 3 + Math.random() * 3,
+                    rotation: Math.random() * Math.PI * 2,
+                    rotSpeed: (Math.random() - 0.5) * 0.1
+                });
+            }
+        }
+
+        function drawBasket() {
+            // Draw woven puppy basket
+            ctx.save();
+            ctx.fillStyle = '#D97706'; // Amber 600
+            ctx.beginPath();
+            ctx.roundRect(basket.x, basket.y, basket.width, basket.height, 12);
+            ctx.fill();
+            ctx.lineWidth = 3;
+            ctx.strokeStyle = '#78350F';
+            ctx.stroke();
+
+            // Basket Rim
+            ctx.fillStyle = '#F59E0B';
+            ctx.beginPath();
+            ctx.roundRect(basket.x - 5, basket.y - 6, basket.width + 10, 14, 6);
+            ctx.fill();
+            ctx.stroke();
+
+            // Cute Puppy Paw print on basket
+            ctx.fillStyle = '#FFFFFF';
+            const cx = basket.x + basket.width / 2;
+            const cy = basket.y + basket.height / 2 + 4;
+            ctx.beginPath();
+            ctx.arc(cx, cy, 7, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(cx - 7, cy - 7, 3, 0, Math.PI * 2);
+            ctx.arc(cx, cy - 10, 3, 0, Math.PI * 2);
+            ctx.arc(cx + 7, cy - 7, 3, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.restore();
+        }
+
+        function drawStar(star) {
+            ctx.save();
+            ctx.translate(star.x, star.y);
+            ctx.rotate(star.rotation);
+
+            // Glowing Star Shape
+            ctx.fillStyle = '#FFD700';
+            ctx.strokeStyle = '#FFA500';
+            ctx.lineWidth = 2;
+
+            ctx.beginPath();
+            const spikes = 5;
+            const outerRadius = star.size;
+            const innerRadius = star.size / 2;
+
+            for (let i = 0; i < spikes * 2; i++) {
+                const r = (i % 2 === 0) ? outerRadius : innerRadius;
+                const angle = (i * Math.PI) / spikes;
+                const x = Math.cos(angle) * r;
+                const y = Math.sin(angle) * r;
+                if (i === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            }
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+
+            ctx.restore();
+        }
+
+        function bonusLoop() {
+            // Clear canvas background
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Handle Key Movement
+            if (keys.left) basket.x -= basket.speed;
+            if (keys.right) basket.x += basket.speed;
+            clampBasket();
+
+            // Draw Basket
+            drawBasket();
+
+            // Spawn & Update Stars
+            spawnStar();
+
+            for (let i = stars.length - 1; i >= 0; i--) {
+                const s = stars[i];
+                s.y += s.speed;
+                s.rotation += s.rotSpeed;
+
+                drawStar(s);
+
+                // Collision Detection with Basket
+                if (
+                    s.y + s.size >= basket.y &&
+                    s.y - s.size <= basket.y + basket.height &&
+                    s.x >= basket.x - 10 &&
+                    s.x <= basket.x + basket.width + 10
+                ) {
+                    // Star caught!
+                    playSound('catch');
+                    bonusScore++;
+                    totalScore += 5; // 5 bonus points per star
+                    updateScoreDisplay();
+                    document.getElementById('bonus-stars-count').textContent = bonusScore;
+                    stars.splice(i, 1);
+                    continue;
+                }
+
+                // Remove stars off screen
+                if (s.y - s.size > canvas.height) {
+                    stars.splice(i, 1);
+                }
+            }
+
+            bonusAnimationId = requestAnimationFrame(bonusLoop);
+        }
+
+        function endBonusGame() {
+            clearInterval(bonusTimerInterval);
+            if (bonusAnimationId) cancelAnimationFrame(bonusAnimationId);
+
+            // Clean event listeners
+            window.onkeydown = null;
+            window.onkeyup = null;
+
+            currentLevelIdx++;
+            currentQuestionIdx = 0;
+
+            if (currentLevelIdx >= LEVELS_DATA.length) {
+                // Game Finished!
+                showFinalScreen();
+            } else {
+                // Next Level
+                showScreen('screen-quiz');
+                loadQuestion();
+            }
+        }
+
+        /* ------------------------------------------------------------------
+           7. FINAL SCREEN & BADGES
+           ------------------------------------------------------------------ */
+        function showFinalScreen() {
+            showScreen('screen-final');
+            playSound('fanfare');
+
+            document.getElementById('final-score').textContent = totalScore;
+
+            // Assign Badge
+            const badgeEl = document.getElementById('final-badge');
+            if (totalScore >= 200) {
+                badgeEl.textContent = "🥇 Gold Puppy Master";
+            } else if (totalScore >= 150) {
+                badgeEl.textContent = "🥈 Silver Star Champ";
+            } else {
+                badgeEl.textContent = "🥉 Super Star Explorer";
+            }
+        }
+
+        // Initialize Audio Context on first click anywhere (browser requirement)
+        window.addEventListener('click', () => {
+            initAudio();
+        }, { once: true });
+    </script>
+</body>
+</html>

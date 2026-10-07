@@ -1,0 +1,1097 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Super Car Racer 3D</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@700;800;900&display=swap" rel="stylesheet">
+  <!-- Three.js CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <style>
+    body {
+      font-family: 'Nunito', sans-serif;
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: manipulation;
+      overflow-x: hidden;
+    }
+    .font-game {
+      font-family: 'Fredoka One', cursive;
+    }
+    .btn-3d {
+      transition: all 0.1s ease;
+      box-shadow: 0px 6px 0px rgba(0, 0, 0, 0.3);
+    }
+    .btn-3d:active {
+      transform: translateY(4px);
+      box-shadow: 0px 2px 0px rgba(0, 0, 0, 0.3);
+    }
+    @keyframes bounce-subtle {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-5px); }
+    }
+    .animate-bounce-subtle {
+      animation: bounce-subtle 1.5s infinite;
+    }
+    @keyframes pulse-glow {
+      0%, 100% { filter: drop-shadow(0 0 10px rgba(250, 204, 21, 0.7)); }
+      50% { filter: drop-shadow(0 0 25px rgba(250, 204, 21, 1)); }
+    }
+    .pulse-glow {
+      animation: pulse-glow 1.8s infinite;
+    }
+    @keyframes shake {
+      0% { transform: translate(2px, 2px) rotate(0deg); }
+      20% { transform: translate(-3px, -2px) rotate(-1deg); }
+      40% { transform: translate(3px, 1px) rotate(1deg); }
+      60% { transform: translate(-3px, 2px) rotate(0deg); }
+      80% { transform: translate(2px, -1px) rotate(-1deg); }
+      100% { transform: translate(0px, 0px) rotate(0deg); }
+    }
+    .screen-shake {
+      animation: shake 0.45s ease-in-out;
+    }
+    /* Hide scrollbars for clean full screen feel */
+    ::-webkit-scrollbar {
+      display: none;
+    }
+  </style>
+</head>
+<body id="app-body" class="bg-slate-900 text-white min-h-screen flex flex-col justify-between">
+
+  <!-- Top Navigation HUD -->
+  <header class="bg-slate-800 border-b-4 border-yellow-400 p-3 sm:p-4 shadow-lg sticky top-0 z-20">
+    <div class="max-w-5xl mx-auto flex justify-between items-center">
+      <div class="flex items-center space-x-2 sm:space-x-3">
+        <span class="text-3xl sm:text-4xl animate-bounce-subtle">🏎️</span>
+        <div>
+          <h1 class="font-game text-xl sm:text-2xl text-yellow-400 tracking-wide leading-none">SUPER CAR RACER 3D</h1>
+          <p class="text-xs text-slate-300 font-extrabold">Year 3 Drift Math Championship</p>
+        </div>
+      </div>
+
+      <!-- Counters & Settings -->
+      <div class="flex items-center gap-2 sm:gap-4">
+        <div class="bg-slate-900 border-2 border-yellow-400/80 rounded-2xl px-3 py-1 flex items-center gap-1.5 shadow-md">
+          <span class="text-xs text-yellow-300 font-extrabold uppercase hidden sm:inline">ROUND</span>
+          <span id="round-badge" class="font-game text-base sm:text-xl text-yellow-400">Round 1 of 15</span>
+        </div>
+        <div class="bg-slate-900 border-2 border-emerald-400/80 rounded-2xl px-3 py-1 flex items-center gap-1.5 shadow-md">
+          <span class="text-xs text-emerald-300 font-extrabold uppercase hidden sm:inline">SCORE</span>
+          <span id="score-badge" class="font-game text-base sm:text-xl text-emerald-400">0</span>
+        </div>
+        <button id="sound-toggle" onclick="toggleAudio()" class="bg-slate-700 hover:bg-slate-600 border-2 border-slate-500 rounded-2xl p-2 text-xl transition" title="Toggle Sound">
+          🔊
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-5xl w-full mx-auto p-2 sm:p-4 flex-grow flex flex-col gap-4">
+
+    <!-- 3D Race Stadium Viewport Canvas Container -->
+    <section class="bg-slate-800 rounded-3xl border-4 border-slate-700 shadow-2xl overflow-hidden relative">
+      <!-- Stadium Bar -->
+      <div class="h-9 bg-slate-900 border-b-2 border-slate-700 flex items-center justify-between px-4">
+        <div class="text-xs text-yellow-300 font-black uppercase tracking-widest flex items-center gap-2">
+          <span>🎮 3D INTERACTIVE STADIUM • DRIFT ENGINE</span>
+        </div>
+        <div class="text-xs text-slate-400 font-bold hidden sm:block">
+          Drag to rotate camera 🔄
+        </div>
+      </div>
+
+      <!-- Three.js Canvas Container -->
+      <div id="canvas-container" class="relative w-full h-56 sm:h-72 md:h-80 bg-slate-950 overflow-hidden cursor-grab active:cursor-grabbing">
+        <!-- 3D Drift Banner Overlay -->
+        <div id="drift-banner" class="absolute inset-0 flex items-center justify-center pointer-events-none opacity-0 transition-all duration-300 transform scale-50 z-10">
+          <span class="font-game text-4xl sm:text-6xl text-yellow-300 drop-shadow-[0_6px_12px_rgba(239,68,68,0.95)] tracking-widest -rotate-6">
+            🔥 MEGA 3D DRIFT! 🔥
+          </span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Math Question Box & Controls -->
+    <section id="quiz-panel" class="bg-slate-800 rounded-3xl border-4 border-slate-700 p-4 sm:p-6 shadow-2xl flex flex-col gap-4 relative">
+
+      <!-- Round & Topic Header -->
+      <div class="bg-slate-900 border-2 border-yellow-400/50 rounded-2xl p-4 sm:p-5 text-center shadow-inner relative overflow-hidden">
+        <div class="text-xs sm:text-sm font-black text-yellow-400 uppercase tracking-widest mb-1" id="category-title">
+          ROUND 1 • ADDITION WITHIN 20
+        </div>
+        <div id="question-text" class="font-game text-3xl sm:text-5xl text-white tracking-wide py-1 sm:py-2">
+          14 + 5 = ?
+        </div>
+        <p id="hint-box" class="text-sm sm:text-base text-cyan-300 font-extrabold mt-1 hidden transition-all animate-bounce-subtle">
+          💡 Hint: Count forward 5 steps from 14!
+        </p>
+      </div>
+
+      <!-- Answer Choices (4 Large Child-Friendly Buttons) -->
+      <div id="answers-grid" class="grid grid-cols-2 gap-3 sm:gap-4">
+        <!-- Buttons injected dynamically -->
+      </div>
+
+      <!-- Encouraging Feedback Message -->
+      <div id="feedback-message" class="text-center min-h-[2rem] font-game text-xl sm:text-2xl text-yellow-400 transition-all opacity-0">
+        Ready to race!
+      </div>
+    </section>
+
+    <!-- Asteroid Drifter Arcade Modal -->
+    <section id="arcade-panel" class="bg-slate-900 border-4 border-yellow-400 rounded-3xl p-4 sm:p-6 shadow-2xl hidden flex-col items-center gap-4">
+      <div class="w-full flex justify-between items-center border-b-2 border-slate-700 pb-3">
+        <div class="flex items-center gap-2">
+          <span class="text-3xl">🚀</span>
+          <div>
+            <h2 class="font-game text-2xl text-yellow-400">3D ASTEROID DRIFTER</h2>
+            <p class="text-xs text-slate-400 font-bold">15-Round Championship Grand Prize!</p>
+          </div>
+        </div>
+        <div class="bg-slate-800 border border-slate-600 rounded-xl px-3 py-1 text-right">
+          <span class="text-xs text-slate-400 block font-bold">ARCADE SCORE</span>
+          <span id="arcade-score" class="font-game text-xl text-green-400">0</span>
+        </div>
+      </div>
+
+      <!-- 3D Arcade Container -->
+      <div id="arcade-container" class="relative w-full max-w-2xl aspect-[4/3] bg-black rounded-2xl border-2 border-slate-700 overflow-hidden shadow-inner flex items-center justify-center">
+        <!-- Touch Screen Controls for Mobile -->
+        <div class="absolute bottom-3 left-3 right-3 flex justify-between pointer-events-none z-10 md:hidden">
+          <div class="flex gap-2 pointer-events-auto">
+            <button id="btn-left" class="bg-slate-800/90 active:bg-slate-600 border-2 border-slate-400 text-2xl w-14 h-14 rounded-2xl flex items-center justify-center text-white">⬅️</button>
+            <button id="btn-right" class="bg-slate-800/90 active:bg-slate-600 border-2 border-slate-400 text-2xl w-14 h-14 rounded-2xl flex items-center justify-center text-white">➡️</button>
+          </div>
+          <button id="btn-fire" class="bg-red-600/90 active:bg-red-500 border-2 border-red-300 text-xl font-game px-6 h-14 rounded-2xl flex items-center justify-center text-white pointer-events-auto">FIRE 💥</button>
+        </div>
+      </div>
+
+      <div class="text-xs sm:text-sm text-slate-400 text-center font-bold">
+        ⌨️ Desktop Controls: <span class="text-yellow-400">Left/Right Arrow Keys</span> to Glide & Drift | <span class="text-yellow-400">Spacebar</span> to Shoot Laser
+      </div>
+
+      <button onclick="restartFullGame()" class="btn-3d bg-blue-600 hover:bg-blue-500 border-b-4 border-blue-800 text-white font-game text-lg px-8 py-3 rounded-2xl">
+        🏎️ Replay 3D Math Championship
+      </button>
+    </section>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="bg-slate-900 border-t border-slate-800 py-3 text-center text-xs text-slate-500 font-bold">
+    Super Car Racer 3D • Safe, Educational Year 3 Math Game
+  </footer>
+
+  <!-- Pit Stop Milestone Modal -->
+  <div id="milestone-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-slate-800 border-4 border-yellow-400 rounded-3xl p-6 max-w-md w-full text-center shadow-2xl relative animate-bounce-subtle">
+      <div class="text-6xl mb-2">🏁</div>
+      <h2 id="milestone-title" class="font-game text-3xl text-yellow-400 mb-2">PIT STOP MILESTONE!</h2>
+      <p id="milestone-desc" class="text-slate-200 font-bold mb-6">Great racing! You completed Round 5!</p>
+      <button onclick="closeMilestone()" class="btn-3d w-full bg-green-500 hover:bg-green-400 border-b-4 border-green-700 text-white font-game text-xl py-4 rounded-2xl">
+        KEEP DRIFTING 🚀
+      </button>
+    </div>
+  </div>
+
+  <!-- Victory & Mini-Game Unlock Modal -->
+  <div id="victory-modal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-slate-800 border-4 border-yellow-400 rounded-3xl p-6 sm:p-8 max-w-lg w-full text-center shadow-2xl relative">
+      <div class="text-7xl mb-2 pulse-glow">🏆</div>
+      <h2 class="font-game text-3xl sm:text-4xl text-yellow-400 mb-1">3D DRIFT KING CHAMPION!</h2>
+      <p class="text-lg text-emerald-400 font-black mb-4">YOU WON ALL 15 ROUNDS!</p>
+      <p class="text-slate-300 font-bold mb-6 text-sm sm:text-base">
+        Superb math skills! You drifted through all 15 Year 3 addition & subtraction challenges!
+      </p>
+
+      <div class="bg-slate-900 border-2 border-yellow-400/60 rounded-2xl p-4 mb-6">
+        <p class="text-yellow-300 font-game text-lg mb-1">🎁 GRAND PRIZE UNLOCKED!</p>
+        <p class="text-xs text-slate-300">You unlocked the <strong>3D Asteroid Drifter</strong> space mini-game!</p>
+      </div>
+
+      <div class="flex flex-col sm:flex-row gap-3">
+        <button onclick="startArcadeGame()" class="btn-3d flex-1 bg-yellow-500 hover:bg-yellow-400 border-b-4 border-yellow-700 text-slate-900 font-game text-lg py-4 rounded-2xl">
+          🚀 PLAY 3D ASTEROID DRIFTER
+        </button>
+        <button onclick="restartFullGame()" class="btn-3d flex-1 bg-slate-700 hover:bg-slate-600 border-b-4 border-slate-900 text-white font-game text-lg py-4 rounded-2xl">
+          🏎️ PLAY AGAIN
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /* =========================================================================
+       15 ROUND CURRICULUM DATA
+       ========================================================================= */
+    const TOTAL_ROUNDS = 15;
+    let currentRound = 1;
+    let totalScore = 0;
+    let attemptsOnCurrent = 0;
+    let soundEnabled = true;
+
+    const roundsCurriculum = [
+      { round: 1, title: "ROUND 1 • ADDITION WITHIN 20", q: "14 + 5 = ?", options: [19, 18, 20, 17], ans: 19, hint: "Count forward 5 steps from 14!" },
+      { round: 2, title: "ROUND 2 • SUBTRACTION WITHIN 20", q: "18 - 6 = ?", options: [12, 14, 11, 13], ans: 12, hint: "Count backwards 6 steps from 18!" },
+      { round: 3, title: "ROUND 3 • ADDITION WITHIN 20", q: "8 + 9 = ?", options: [17, 16, 18, 15], ans: 17, hint: "8 + 10 is 18, so subtract 1!" },
+
+      { round: 4, title: "ROUND 4 • ADDING TENS", q: "40 + 30 = ?", options: [70, 60, 80, 50], ans: 70, hint: "Think 4 tens + 3 tens = 7 tens!" },
+      { round: 5, title: "ROUND 5 • SUBTRACTING TENS", q: "80 - 50 = ?", options: [30, 40, 20, 35], ans: 30, hint: "Think 8 tens - 5 tens = 3 tens!" },
+      { round: 6, title: "ROUND 6 • ADDING TENS", q: "25 + 30 = ?", options: [55, 45, 65, 50], ans: 55, hint: "Keep 5 ones, add 3 tens to 2 tens!" },
+
+      { round: 7, title: "ROUND 7 • ADDING SINGLE DIGITS", q: "34 + 5 = ?", options: [39, 38, 40, 37], ans: 39, hint: "Add ones: 4 + 5 = 9, so 39!" },
+      { round: 8, title: "ROUND 8 • SUBTRACTING SINGLE DIGITS", q: "57 - 4 = ?", options: [53, 52, 54, 51], ans: 53, hint: "Subtract ones: 7 - 4 = 3, so 53!" },
+      { round: 9, title: "ROUND 9 • ADDING SINGLE DIGITS", q: "62 + 7 = ?", options: [69, 68, 70, 67], ans: 69, hint: "Add ones: 2 + 7 = 9!" },
+
+      { round: 10, title: "ROUND 10 • BRIDGING TENS", q: "28 + 6 = ?", options: [34, 32, 35, 36], ans: 34, hint: "Add 2 to reach 30, then add 4 more!" },
+      { round: 11, title: "ROUND 11 • BRIDGING TENS", q: "43 - 7 = ?", options: [36, 37, 35, 34], ans: 36, hint: "Take away 3 to reach 40, then take away 4 more!" },
+      { round: 12, title: "ROUND 12 • BRIDGING TENS", q: "65 + 8 = ?", options: [73, 72, 74, 75], ans: 73, hint: "65 + 5 = 70, plus 3 more is 73!" },
+
+      { round: 13, title: "ROUND 13 • TWO 2-DIGIT NUMBERS", q: "35 + 24 = ?", options: [59, 58, 60, 57], ans: 59, hint: "30 + 20 = 50, and 5 + 4 = 9!" },
+      { round: 14, title: "ROUND 14 • TWO 2-DIGIT NUMBERS", q: "78 - 35 = ?", options: [43, 42, 45, 33], ans: 43, hint: "70 - 30 = 40, and 8 - 5 = 3!" },
+      { round: 15, title: "ROUND 15 • CHAMPIONSHIP FINALE!", q: "46 + 37 = ?", options: [83, 82, 84, 73], ans: 83, hint: "46 + 30 = 76, plus 7 more = 83!" }
+    ];
+
+    const praiseList = [
+      "Awesome 3D drift!", "Tokyo Drift style!", "Super fast math!", "Vroom vroom!", "Unbelievable drift!", "You nailed it!"
+    ];
+
+    /* =========================================================================
+       AUDIO & SPEECH SYNTHESIS ENGINE
+       ========================================================================= */
+    let audioCtx = null;
+
+    function getAudioContext() {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+      return audioCtx;
+    }
+
+    function playSound(type) {
+      if (!soundEnabled) return;
+      try {
+        const ctx = getAudioContext();
+        const now = ctx.currentTime;
+
+        if (type === 'drift') {
+          // Tire Screech Sound FX
+          const bufferSize = ctx.sampleRate * 0.5;
+          const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+          const data = buffer.getChannelData(0);
+          for (let i = 0; i < bufferSize; i++) {
+            data[i] = Math.random() * 2 - 1;
+          }
+
+          const noise = ctx.createBufferSource();
+          noise.buffer = buffer;
+
+          const filter = ctx.createBiquadFilter();
+          filter.type = 'bandpass';
+          filter.frequency.setValueAtTime(3200, now);
+          filter.frequency.exponentialRampToValueAtTime(1400, now + 0.45);
+          filter.Q.value = 9;
+
+          const gain = ctx.createGain();
+          gain.gain.setValueAtTime(0.35, now);
+          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.45);
+
+          noise.connect(filter);
+          filter.connect(gain);
+          gain.connect(ctx.destination);
+          noise.start(now);
+
+          // Engine Acceleration Sound
+          const osc = ctx.createOscillator();
+          const oscGain = ctx.createGain();
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(140, now);
+          osc.frequency.exponentialRampToValueAtTime(550, now + 0.35);
+          oscGain.gain.setValueAtTime(0.2, now);
+          oscGain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+
+          osc.connect(oscGain);
+          oscGain.connect(ctx.destination);
+          osc.start(now);
+          osc.stop(now + 0.4);
+
+        } else if (type === 'wrong') {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(220, now);
+          osc.frequency.exponentialRampToValueAtTime(110, now + 0.25);
+          gain.gain.setValueAtTime(0.25, now);
+          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(now);
+          osc.stop(now + 0.25);
+
+        } else if (type === 'win') {
+          const notes = [440, 554.37, 659.25, 880];
+          notes.forEach((freq, i) => {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.frequency.value = freq;
+            gain.gain.setValueAtTime(0.25, now + i * 0.08);
+            gain.gain.exponentialRampToValueAtTime(0.01, now + i * 0.08 + 0.2);
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start(now + i * 0.08);
+            osc.stop(now + i * 0.08 + 0.2);
+          });
+        }
+      } catch (e) {
+        console.log("Audio play error:", e);
+      }
+    }
+
+    function speakText(text) {
+      if (!soundEnabled || !('speechSynthesis' in window)) return;
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.pitch = 1.2;
+      utterance.rate = 1.05;
+      window.speechSynthesis.speak(utterance);
+    }
+
+    function toggleAudio() {
+      soundEnabled = !soundEnabled;
+      document.getElementById('sound-toggle').textContent = soundEnabled ? '🔊' : '🔇';
+      if (!soundEnabled && 'speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+      }
+    }
+
+    /* =========================================================================
+       THREE.JS 3D RACING STADIUM & DRIFT CAR ENGINE
+       ========================================================================= */
+    let scene, camera, renderer;
+    let carGroup, frontLeftWheel, frontRightWheel, rearLeftWheel, rearRightWheel;
+    let targetZ = 0; // Target position based on current round
+    let currentZ = 0;
+    let driftAngle = 0;
+    let isDrifting = false;
+    let driftTimer = 0;
+
+    // Particles & Skidmarks
+    let particles = [];
+    let skidmarkLines = [];
+
+    // Interactive Drag Camera Orbit State
+    let isDragging = false;
+    let previousMouseX = 0;
+    let cameraAngleY = 0;
+
+    function init3DScene() {
+      const container = document.getElementById('canvas-container');
+      const width = container.clientWidth;
+      const height = container.clientHeight;
+
+      // 1. Scene setup
+      scene = new THREE.Scene();
+      scene.background = new THREE.Color(0x0a0f1d);
+      scene.fog = new THREE.FogExp2(0x0a0f1d, 0.012);
+
+      // 2. Camera setup
+      camera = new THREE.PerspectiveCamera(55, width / height, 0.1, 1000);
+      camera.position.set(0, 7, 14);
+
+      // 3. Renderer setup
+      renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
+      renderer.setSize(width, height);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.shadowMap.enabled = true;
+      renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+      container.appendChild(renderer.domElement);
+
+      // 4. Lighting
+      const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+      scene.add(ambientLight);
+
+      const dirLight = new THREE.DirectionalLight(0xfffaed, 1.2);
+      dirLight.position.set(20, 40, 20);
+      dirLight.castShadow = true;
+      dirLight.shadow.mapSize.width = 1024;
+      dirLight.shadow.mapSize.height = 1024;
+      dirLight.shadow.camera.near = 0.5;
+      dirLight.shadow.camera.far = 150;
+      scene.add(dirLight);
+
+      // 5. Build Stadium Elements
+      buildStadiumTrack();
+
+      // 6. Build 3D Car Model
+      build3DRaceCar();
+
+      // Drag controls for camera
+      container.addEventListener('mousedown', (e) => { isDragging = true; previousMouseX = e.clientX; });
+      window.addEventListener('mouseup', () => { isDragging = false; });
+      container.addEventListener('mousemove', (e) => {
+        if (!isDragging) return;
+        const deltaX = e.clientX - previousMouseX;
+        cameraAngleY += deltaX * 0.005;
+        previousMouseX = e.clientX;
+      });
+
+      // Touch camera drag
+      container.addEventListener('touchstart', (e) => {
+        if (e.touches.length === 1) { isDragging = true; previousMouseX = e.touches[0].clientX; }
+      });
+      window.addEventListener('touchend', () => { isDragging = false; });
+      container.addEventListener('touchmove', (e) => {
+        if (!isDragging || e.touches.length !== 1) return;
+        const deltaX = e.touches[0].clientX - previousMouseX;
+        cameraAngleY += deltaX * 0.005;
+        previousMouseX = e.touches[0].clientX;
+      });
+
+      window.addEventListener('resize', onWindowResize);
+      animate3DScene();
+    }
+
+    function buildStadiumTrack() {
+      // Grass Field
+      const grassGeo = new THREE.PlaneGeometry(200, 300);
+      const grassMat = new THREE.MeshStandardMaterial({ color: 0x15803d, roughness: 0.9 });
+      const grass = new THREE.Mesh(grassGeo, grassMat);
+      grass.rotation.x = -Math.PI / 2;
+      grass.position.y = -0.05;
+      grass.receiveShadow = true;
+      scene.add(grass);
+
+      // Asphalt Track Road
+      const trackGeo = new THREE.PlaneGeometry(16, 260);
+      const trackMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.5 });
+      const track = new THREE.Mesh(trackGeo, trackMat);
+      track.rotation.x = -Math.PI / 2;
+      track.position.set(0, 0, -100);
+      track.receiveShadow = true;
+      scene.add(track);
+
+      // Track Curbs (Red and White striped edges)
+      const curbGeo = new THREE.BoxGeometry(0.8, 0.2, 260);
+      const curbMatL = new THREE.MeshStandardMaterial({ color: 0xef4444 });
+      const curbMatR = new THREE.MeshStandardMaterial({ color: 0xf8fafc });
+
+      const leftCurb = new THREE.Mesh(curbGeo, curbMatL);
+      leftCurb.position.set(-8.4, 0.05, -100);
+      scene.add(leftCurb);
+
+      const rightCurb = new THREE.Mesh(curbGeo, curbMatR);
+      rightCurb.position.set(8.4, 0.05, -100);
+      scene.add(rightCurb);
+
+      // Yellow Center Dash Lines
+      const dashGeo = new THREE.PlaneGeometry(0.3, 3);
+      const dashMat = new THREE.MeshBasicMaterial({ color: 0xfacc15 });
+      for (let z = 20; z >= -220; z -= 8) {
+        const dash = new THREE.Mesh(dashGeo, dashMat);
+        dash.rotation.x = -Math.PI / 2;
+        dash.position.set(0, 0.01, z);
+        scene.add(dash);
+      }
+
+      // Grandstands & Crowd Blocks (Left and Right Stadium Stands)
+      const standGeo = new THREE.BoxGeometry(12, 6, 240);
+      const standMat = new THREE.MeshStandardMaterial({ color: 0x334155 });
+
+      const leftStand = new THREE.Mesh(standGeo, standMat);
+      leftStand.position.set(-17, 3, -100);
+      leftStand.castShadow = true;
+      leftStand.receiveShadow = true;
+      scene.add(leftStand);
+
+      const rightStand = new THREE.Mesh(standGeo, standMat);
+      rightStand.position.set(17, 3, -100);
+      rightStand.castShadow = true;
+      rightStand.receiveShadow = true;
+      scene.add(rightStand);
+
+      // Stadium Crowd Blocks (Bright colorful crowd cubes)
+      const colors = [0xef4444, 0x3b82f6, 0x10b981, 0xfacc15, 0xa855f7];
+      const spectatorGeo = new THREE.BoxGeometry(0.5, 0.8, 0.5);
+
+      for (let z = 15; z >= -210; z -= 4) {
+        for (let xOffset of [-15, -17, -19, 15, 17, 19]) {
+          if (Math.random() > 0.3) {
+            const mat = new THREE.MeshBasicMaterial({ color: colors[Math.floor(Math.random() * colors.length)] });
+            const spectator = new THREE.Mesh(spectatorGeo, mat);
+            spectator.position.set(xOffset, 6.4, z + (Math.random() - 0.5));
+            scene.add(spectator);
+          }
+        }
+      }
+
+      // Stadium Light Towers
+      for (let z = 0; z >= -200; z -= 60) {
+        buildLightTower(-14, z);
+        buildLightTower(14, z);
+      }
+
+      // Finish Line Arch Archway
+      const archGroup = new THREE.Group();
+      const pillarGeo = new THREE.BoxGeometry(1, 10, 1);
+      const pillarMat = new THREE.MeshStandardMaterial({ color: 0xfacc15 });
+
+      const p1 = new THREE.Mesh(pillarGeo, pillarMat);
+      p1.position.set(-8.5, 5, -195);
+      const p2 = new THREE.Mesh(pillarGeo, pillarMat);
+      p2.position.set(8.5, 5, -195);
+
+      const topGeo = new THREE.BoxGeometry(18, 1.5, 1);
+      const topBanner = new THREE.Mesh(topGeo, pillarMat);
+      topBanner.position.set(0, 9.5, -195);
+
+      archGroup.add(p1, p2, topBanner);
+      scene.add(archGroup);
+    }
+
+    function buildLightTower(x, z) {
+      const poleGeo = new THREE.CylinderGeometry(0.3, 0.4, 18);
+      const poleMat = new THREE.MeshStandardMaterial({ color: 0x64748b, metalness: 0.8 });
+      const pole = new THREE.Mesh(poleGeo, poleMat);
+      pole.position.set(x, 9, z);
+      scene.add(pole);
+
+      const lightBoxGeo = new THREE.BoxGeometry(3, 1.5, 0.5);
+      const lightBoxMat = new THREE.MeshBasicMaterial({ color: 0xfffbeb });
+      const lightBox = new THREE.Mesh(lightBoxGeo, lightBoxMat);
+      lightBox.position.set(x, 18, z);
+      scene.add(lightBox);
+    }
+
+    function build3DRaceCar() {
+      carGroup = new THREE.Group();
+
+      // Main Chassis Body
+      const bodyGeo = new THREE.BoxGeometry(2.2, 0.9, 4.4);
+      const bodyMat = new THREE.MeshStandardMaterial({ color: 0xdc2626, roughness: 0.2, metalness: 0.4 });
+      const body = new THREE.Mesh(bodyGeo, bodyMat);
+      body.position.y = 0.7;
+      body.castShadow = true;
+      carGroup.add(body);
+
+      // Racing Stripe
+      const stripeGeo = new THREE.BoxGeometry(0.5, 0.92, 4.42);
+      const stripeMat = new THREE.MeshStandardMaterial({ color: 0xfacc15 });
+      const stripe = new THREE.Mesh(stripeGeo, stripeMat);
+      stripe.position.y = 0.7;
+      carGroup.add(stripe);
+
+      // Cabin Glass
+      const cabinGeo = new THREE.BoxGeometry(1.8, 0.7, 2.2);
+      const cabinMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.1 });
+      const cabin = new THREE.Mesh(cabinGeo, cabinMat);
+      cabin.position.set(0, 1.3, -0.2);
+      carGroup.add(cabin);
+
+      // Windshield
+      const glassGeo = new THREE.PlaneGeometry(1.6, 0.65);
+      const glassMat = new THREE.MeshBasicMaterial({ color: 0x38bdf8 });
+      const glass = new THREE.Mesh(glassGeo, glassMat);
+      glass.rotation.x = -Math.PI / 4;
+      glass.position.set(0, 1.35, -1.25);
+      carGroup.add(glass);
+
+      // Rear Spoiler
+      const spoilerGeo = new THREE.BoxGeometry(2.4, 0.2, 0.6);
+      const spoilerMat = new THREE.MeshStandardMaterial({ color: 0x991b1b });
+      const spoiler = new THREE.Mesh(spoilerGeo, spoilerMat);
+      spoiler.position.set(0, 1.6, 1.8);
+
+      const mountGeo = new THREE.BoxGeometry(0.2, 0.6, 0.2);
+      const m1 = new THREE.Mesh(mountGeo, spoilerMat);
+      m1.position.set(-0.8, 1.3, 1.8);
+      const m2 = new THREE.Mesh(mountGeo, spoilerMat);
+      m2.position.set(0.8, 1.3, 1.8);
+      carGroup.add(spoiler, m1, m2);
+
+      // Wheels
+      const wheelGeo = new THREE.CylinderGeometry(0.45, 0.45, 0.4, 16);
+      const wheelMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.8 });
+
+      function createWheel(x, y, z) {
+        const w = new THREE.Mesh(wheelGeo, wheelMat);
+        w.rotation.z = Math.PI / 2;
+        w.position.set(x, y, z);
+        w.castShadow = true;
+        return w;
+      }
+
+      frontLeftWheel = createWheel(-1.25, 0.45, -1.3);
+      frontRightWheel = createWheel(1.25, 0.45, -1.3);
+      rearLeftWheel = createWheel(-1.25, 0.45, 1.3);
+      rearRightWheel = createWheel(1.25, 0.45, 1.3);
+
+      carGroup.add(frontLeftWheel, frontRightWheel, rearLeftWheel, rearRightWheel);
+
+      // Headlights
+      const lightGeo = new THREE.BoxGeometry(0.4, 0.2, 0.1);
+      const lightMat = new THREE.MeshBasicMaterial({ color: 0xfef08a });
+      const hl1 = new THREE.Mesh(lightGeo, lightMat);
+      hl1.position.set(-0.7, 0.8, -2.21);
+      const hl2 = new THREE.Mesh(lightGeo, lightMat);
+      hl2.position.set(0.7, 0.8, -2.21);
+      carGroup.add(hl1, hl2);
+
+      carGroup.position.set(0, 0, 0);
+      scene.add(carGroup);
+    }
+
+    function trigger3DDriftSequence() {
+      isDrifting = true;
+      driftTimer = 55; // Frames duration
+
+      // Show Overlay Banner
+      const banner = document.getElementById('drift-banner');
+      banner.classList.remove('opacity-0', 'scale-50');
+      banner.classList.add('opacity-100', 'scale-100');
+
+      // Trigger Screen Shake
+      const appBody = document.getElementById('app-body');
+      appBody.classList.add('screen-shake');
+      setTimeout(() => appBody.classList.remove('screen-shake'), 450);
+
+      setTimeout(() => {
+        banner.classList.remove('opacity-100', 'scale-100');
+        banner.classList.add('opacity-0', 'scale-50');
+      }, 1000);
+    }
+
+    function create3DSmokeParticle(x, y, z) {
+      const geo = new THREE.SphereGeometry(0.2 + Math.random() * 0.2, 8, 8);
+      const mat = new THREE.MeshBasicMaterial({ color: 0xe2e8f0, transparent: true, opacity: 0.8 });
+      const p = new THREE.Mesh(geo, mat);
+      p.position.set(x + (Math.random() - 0.5), y, z + (Math.random() - 0.5));
+      scene.add(p);
+
+      particles.push({
+        mesh: p,
+        vy: 0.03 + Math.random() * 0.02,
+        life: 30
+      });
+    }
+
+    function create3DSkidmark(x, z) {
+      const geo = new THREE.PlaneGeometry(0.4, 0.8);
+      const mat = new THREE.MeshBasicMaterial({ color: 0x0f172a, transparent: true, opacity: 0.7 });
+      const mark = new THREE.Mesh(geo, mat);
+      mark.rotation.x = -Math.PI / 2;
+      mark.position.set(x, 0.02, z);
+      scene.add(mark);
+
+      skidmarkLines.push({ mesh: mark, life: 120 });
+    }
+
+    function animate3DScene() {
+      requestAnimationFrame(animate3DScene);
+
+      // Target position based on Round progression (0 to -190)
+      targetZ = -((currentRound - 1) / TOTAL_ROUNDS) * 190;
+
+      // Smooth Car forward motion
+      currentZ += (targetZ - currentZ) * 0.06;
+      carGroup.position.z = currentZ;
+
+      // Wheel Rotation
+      const speedDelta = (currentZ - carGroup.position.z);
+      frontLeftWheel.rotation.x += 0.2;
+      frontRightWheel.rotation.x += 0.2;
+      rearLeftWheel.rotation.x += 0.2;
+      rearRightWheel.rotation.x += 0.2;
+
+      // Drift physics handling
+      if (isDrifting && driftTimer > 0) {
+        driftTimer--;
+
+        // Yaw angle rotation sideways
+        driftAngle = Math.sin(driftTimer * 0.18) * 0.65;
+        carGroup.rotation.y = driftAngle;
+        carGroup.position.x = Math.sin(driftTimer * 0.15) * 1.8;
+
+        // Front wheels counter-steer
+        frontLeftWheel.rotation.y = -driftAngle * 0.8;
+        frontRightWheel.rotation.y = -driftAngle * 0.8;
+
+        // Emit 3D Smoke Particles & Skidmarks from tires
+        if (driftTimer % 2 === 0) {
+          create3DSmokeParticle(carGroup.position.x - 1, 0.3, currentZ + 1.2);
+          create3DSmokeParticle(carGroup.position.x + 1, 0.3, currentZ + 1.2);
+          create3DSkidmark(carGroup.position.x - 1, currentZ + 1.2);
+          create3DSkidmark(carGroup.position.x + 1, currentZ + 1.2);
+        }
+
+        if (driftTimer <= 0) {
+          isDrifting = false;
+        }
+      } else {
+        // Return car smoothly to straight angle
+        driftAngle += (0 - driftAngle) * 0.1;
+        carGroup.rotation.y = driftAngle;
+        carGroup.position.x += (0 - carGroup.position.x) * 0.1;
+        frontLeftWheel.rotation.y = 0;
+        frontRightWheel.rotation.y = 0;
+      }
+
+      // Update Smoke Particles
+      for (let i = particles.length - 1; i >= 0; i--) {
+        let p = particles[i];
+        p.mesh.position.y += p.vy;
+        p.mesh.scale.addScalar(0.02);
+        p.mesh.material.opacity -= 0.025;
+        p.life--;
+
+        if (p.life <= 0 || p.mesh.material.opacity <= 0) {
+          scene.remove(p.mesh);
+          particles.splice(i, 1);
+        }
+      }
+
+      // Fade Out Skidmarks
+      for (let i = skidmarkLines.length - 1; i >= 0; i--) {
+        let sm = skidmarkLines[i];
+        sm.life--;
+        sm.mesh.material.opacity = (sm.life / 120) * 0.7;
+        if (sm.life <= 0) {
+          scene.remove(sm.mesh);
+          skidmarkLines.splice(i, 1);
+        }
+      }
+
+      // Chase Camera Follow Logic
+      const camTargetX = carGroup.position.x * 0.5 + Math.sin(cameraAngleY) * 12;
+      const camTargetZ = carGroup.position.z + 12 + Math.cos(cameraAngleY) * 2;
+
+      camera.position.x += (camTargetX - camera.position.x) * 0.08;
+      camera.position.z += (camTargetZ - camera.position.z) * 0.08;
+      camera.position.y = 6.5 + Math.sin(driftTimer * 0.1) * (isDrifting ? 0.4 : 0);
+
+      camera.lookAt(carGroup.position.x, carGroup.position.y + 1, carGroup.position.z - 3);
+
+      renderer.render(scene, camera);
+    }
+
+    function onWindowResize() {
+      const container = document.getElementById('canvas-container');
+      if (!container || !renderer) return;
+      camera.aspect = container.clientWidth / container.clientHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(container.clientWidth, container.clientHeight);
+    }
+
+    /* =========================================================================
+       MATH QUIZ INTERACTIVE LOGIC
+       ========================================================================= */
+    function loadRound() {
+      const qData = roundsCurriculum[currentRound - 1];
+      attemptsOnCurrent = 0;
+
+      // Update HUD
+      document.getElementById('round-badge').textContent = `Round ${currentRound} of 15`;
+      document.getElementById('score-badge').textContent = totalScore;
+      document.getElementById('category-title').textContent = qData.title;
+      document.getElementById('question-text').textContent = qData.q;
+
+      // Reset Hints
+      const hintBox = document.getElementById('hint-box');
+      hintBox.classList.add('hidden');
+      hintBox.textContent = `💡 Hint: ${qData.hint}`;
+
+      const feedback = document.getElementById('feedback-message');
+      feedback.style.opacity = '0';
+
+      // Render Answer Option Buttons
+      const grid = document.getElementById('answers-grid');
+      grid.innerHTML = '';
+
+      const buttonStyles = [
+        'bg-blue-600 hover:bg-blue-500 border-blue-800',
+        'bg-emerald-600 hover:bg-emerald-500 border-emerald-800',
+        'bg-amber-600 hover:bg-amber-500 border-amber-800',
+        'bg-purple-600 hover:bg-purple-500 border-purple-800'
+      ];
+
+      qData.options.forEach((opt, idx) => {
+        const btn = document.createElement('button');
+        btn.className = `btn-3d ${buttonStyles[idx % 4]} border-b-4 text-white font-game text-2xl sm:text-3xl py-4 rounded-2xl shadow-md transition-all flex items-center justify-center`;
+        btn.textContent = opt;
+        btn.onclick = () => handleAnswerSelect(opt, qData.ans, btn);
+        grid.appendChild(btn);
+      });
+    }
+
+    function handleAnswerSelect(selected, correctAns, btnElement) {
+      if (selected === correctAns) {
+        // Correct Answer -> Trigger 3D DRIFT!
+        playSound('drift');
+        trigger3DDriftSequence();
+
+        totalScore += (attemptsOnCurrent === 0) ? 100 : 50;
+        document.getElementById('score-badge').textContent = totalScore;
+
+        btnElement.classList.remove('bg-blue-600', 'bg-emerald-600', 'bg-amber-600', 'bg-purple-600');
+        btnElement.classList.add('bg-green-500', 'border-green-700', 'scale-105');
+
+        const praise = praiseList[Math.floor(Math.random() * praiseList.length)];
+        showFeedback(`🔥 ${praise}`, 'text-green-400');
+        speakText(praise);
+
+        disableAnswerButtons();
+
+        setTimeout(() => {
+          advanceRound();
+        }, 1400);
+
+      } else {
+        // Wrong Answer
+        playSound('wrong');
+        attemptsOnCurrent++;
+
+        btnElement.classList.add('opacity-40', 'pointer-events-none');
+        showFeedback("Nice try! Check the hint and try again! 🏎️", 'text-yellow-400');
+
+        const hintBox = document.getElementById('hint-box');
+        hintBox.classList.remove('hidden');
+
+        speakText("Nice try! Check the hint and try again.");
+      }
+    }
+
+    function disableAnswerButtons() {
+      const btns = document.querySelectorAll('#answers-grid button');
+      btns.forEach(b => b.classList.add('pointer-events-none'));
+    }
+
+    function showFeedback(text, colorClass) {
+      const fb = document.getElementById('feedback-message');
+      fb.textContent = text;
+      fb.className = `text-center min-h-[2rem] font-game text-xl sm:text-2xl transition-all ${colorClass} opacity-100`;
+    }
+
+    function advanceRound() {
+      if (currentRound === 5 || currentRound === 10) {
+        playSound('win');
+        document.getElementById('milestone-title').textContent = `ROUND ${currentRound} PIT STOP!`;
+        document.getElementById('milestone-desc').textContent = `Awesome 3D racing! You completed Round ${currentRound} of 15!`;
+        document.getElementById('milestone-modal').classList.remove('hidden');
+        speakText(`Awesome racing! You reached the Round ${currentRound} pit stop!`);
+        return;
+      }
+
+      currentRound++;
+
+      if (currentRound > TOTAL_ROUNDS) {
+        playSound('win');
+        speakText("Congratulations! You completed all 15 rounds and became the 3D Drift King!");
+        document.getElementById('victory-modal').classList.remove('hidden');
+      } else {
+        loadRound();
+      }
+    }
+
+    function closeMilestone() {
+      document.getElementById('milestone-modal').classList.add('hidden');
+      currentRound++;
+      loadRound();
+    }
+
+    function restartFullGame() {
+      document.getElementById('victory-modal').classList.add('hidden');
+      document.getElementById('milestone-modal').classList.add('hidden');
+      document.getElementById('arcade-panel').classList.add('hidden');
+      document.getElementById('quiz-panel').classList.remove('hidden');
+
+      currentRound = 1;
+      totalScore = 0;
+      currentZ = 0;
+      targetZ = 0;
+      loadRound();
+    }
+
+    /* =========================================================================
+       BONUS 3D ASTEROID DRIFTER MINI-GAME (THREE.JS SPACE SCENE)
+       ========================================================================= */
+    let arcadeScene, arcadeCamera, arcadeRenderer;
+    let arcadeShip, arcadeAsteroids = [], arcadeBullets = [];
+    let arcadeActive = false;
+    let arcadeScore = 0;
+    let arcadeKeys = {};
+
+    function startArcadeGame() {
+      document.getElementById('victory-modal').classList.add('hidden');
+      document.getElementById('quiz-panel').classList.add('hidden');
+      document.getElementById('arcade-panel').classList.remove('hidden');
+
+      const container = document.getElementById('arcade-container');
+      container.innerHTML = ''; // Clear prior if any
+
+      // Re-add touch UI
+      const touchControls = document.createElement('div');
+      touchControls.className = 'absolute bottom-3 left-3 right-3 flex justify-between pointer-events-none z-10 md:hidden';
+      touchControls.innerHTML = `
+        <div class="flex gap-2 pointer-events-auto">
+          <button id="btn-left" class="bg-slate-800/90 active:bg-slate-600 border-2 border-slate-400 text-2xl w-14 h-14 rounded-2xl flex items-center justify-center text-white">⬅️</button>
+          <button id="btn-right" class="bg-slate-800/90 active:bg-slate-600 border-2 border-slate-400 text-2xl w-14 h-14 rounded-2xl flex items-center justify-center text-white">➡️</button>
+        </div>
+        <button id="btn-fire" class="bg-red-600/90 active:bg-red-500 border-2 border-red-300 text-xl font-game px-6 h-14 rounded-2xl flex items-center justify-center text-white pointer-events-auto">FIRE 💥</button>
+      `;
+      container.appendChild(touchControls);
+
+      // Setup 3D Space Scene
+      arcadeScene = new THREE.Scene();
+      arcadeScene.background = new THREE.Color(0x030712);
+
+      arcadeCamera = new THREE.PerspectiveCamera(60, container.clientWidth / container.clientHeight, 0.1, 100);
+      arcadeCamera.position.set(0, 0, 18);
+
+      arcadeRenderer = new THREE.WebGLRenderer({ antialias: true });
+      arcadeRenderer.setSize(container.clientWidth, container.clientHeight);
+      container.appendChild(arcadeRenderer.domElement);
+
+      // Lights
+      const light = new THREE.DirectionalLight(0xffffff, 1.2);
+      light.position.set(5, 10, 15);
+      arcadeScene.add(light, new THREE.AmbientLight(0x38bdf8, 0.5));
+
+      // Starfield Background
+      const starGeo = new THREE.BufferGeometry();
+      const starCoords = [];
+      for (let i = 0; i < 300; i++) {
+        starCoords.push((Math.random() - 0.5) * 60, (Math.random() - 0.5) * 60, (Math.random() - 0.5) * 60);
+      }
+      starGeo.setAttribute('position', new THREE.Float32BufferAttribute(starCoords, 3));
+      const starMat = new THREE.PointsMaterial({ color: 0xffffff, size: 0.15 });
+      arcadeScene.add(new THREE.Points(starGeo, starMat));
+
+      // Build 3D Spaceship
+      const shipGeo = new THREE.ConeGeometry(0.8, 2.2, 4);
+      const shipMat = new THREE.MeshStandardMaterial({ color: 0x38bdf8, roughness: 0.3 });
+      arcadeShip = new THREE.Mesh(shipGeo, shipMat);
+      arcadeShip.position.set(0, -6, 0);
+      arcadeShip.userData = { vx: 0 };
+      arcadeScene.add(arcadeShip);
+
+      arcadeAsteroids = [];
+      arcadeBullets = [];
+      arcadeScore = 0;
+      document.getElementById('arcade-score').textContent = arcadeScore;
+
+      // Touch handlers
+      document.getElementById('btn-left').addEventListener('touchstart', (e) => { e.preventDefault(); arcadeKeys['ArrowLeft'] = true; });
+      document.getElementById('btn-left').addEventListener('touchend', (e) => { e.preventDefault(); arcadeKeys['ArrowLeft'] = false; });
+      document.getElementById('btn-right').addEventListener('touchstart', (e) => { e.preventDefault(); arcadeKeys['ArrowRight'] = true; });
+      document.getElementById('btn-right').addEventListener('touchend', (e) => { e.preventDefault(); arcadeKeys['ArrowRight'] = false; });
+      document.getElementById('btn-fire').addEventListener('touchstart', (e) => { e.preventDefault(); fireArcadeLaser(); });
+
+      arcadeActive = true;
+      animateArcade();
+    }
+
+    window.addEventListener('keydown', (e) => {
+      arcadeKeys[e.code] = true;
+      if (e.code === 'Space' && arcadeActive) {
+        e.preventDefault();
+        fireArcadeLaser();
+      }
+    });
+
+    window.addEventListener('keyup', (e) => {
+      arcadeKeys[e.code] = false;
+    });
+
+    function fireArcadeLaser() {
+      if (!arcadeActive) return;
+      playSound('wrong');
+
+      const geo = new THREE.CylinderGeometry(0.08, 0.08, 0.8);
+      const mat = new THREE.MeshBasicMaterial({ color: 0xfacc15 });
+      const bullet = new THREE.Mesh(geo, mat);
+      bullet.position.set(arcadeShip.position.x, arcadeShip.position.y + 1, 0);
+      arcadeScene.add(bullet);
+      arcadeBullets.push(bullet);
+    }
+
+    function animateArcade() {
+      if (!arcadeActive) return;
+      requestAnimationFrame(animateArcade);
+
+      // Ship Steering & Drift Glide
+      if (arcadeKeys['ArrowLeft'] || arcadeKeys['KeyA']) arcadeShip.userData.vx -= 0.04;
+      if (arcadeKeys['ArrowRight'] || arcadeKeys['KeyD']) arcadeShip.userData.vx += 0.04;
+
+      arcadeShip.userData.vx *= 0.92; // Inertial slide
+      arcadeShip.position.x += arcadeShip.userData.vx;
+      arcadeShip.rotation.z = -arcadeShip.userData.vx * 0.8; // Tilt during drift slide
+
+      // Bounds
+      if (arcadeShip.position.x < -8) { arcadeShip.position.x = -8; arcadeShip.userData.vx *= -0.5; }
+      if (arcadeShip.position.x > 8) { arcadeShip.position.x = 8; arcadeShip.userData.vx *= -0.5; }
+
+      // Spawn 3D Asteroids
+      if (Math.random() < 0.04) {
+        const geo = new THREE.DodecahedronGeometry(0.8 + Math.random() * 0.6);
+        const mat = new THREE.MeshStandardMaterial({ color: 0x64748b, roughness: 0.8 });
+        const ast = new THREE.Mesh(geo, mat);
+        ast.position.set((Math.random() - 0.5) * 16, 12, 0);
+        ast.userData = { vy: 0.08 + Math.random() * 0.08, rx: Math.random() * 0.05, ry: Math.random() * 0.05 };
+        arcadeScene.add(ast);
+        arcadeAsteroids.push(ast);
+      }
+
+      // Move Lasers
+      for (let i = arcadeBullets.length - 1; i >= 0; i--) {
+        let b = arcadeBullets[i];
+        b.position.y += 0.4;
+        if (b.position.y > 14) {
+          arcadeScene.remove(b);
+          arcadeBullets.splice(i, 1);
+        }
+      }
+
+      // Move Asteroids & Detect Laser Collisions
+      for (let i = arcadeAsteroids.length - 1; i >= 0; i--) {
+        let a = arcadeAsteroids[i];
+        a.position.y -= a.userData.vy;
+        a.rotation.x += a.userData.rx;
+        a.rotation.y += a.userData.ry;
+
+        // Collision Check
+        for (let j = arcadeBullets.length - 1; j >= 0; j--) {
+          let b = arcadeBullets[j];
+          if (b.position.distanceTo(a.position) < 1.2) {
+            playSound('drift');
+            arcadeScene.remove(a);
+            arcadeScene.remove(b);
+            arcadeAsteroids.splice(i, 1);
+            arcadeBullets.splice(j, 1);
+            arcadeScore += 10;
+            document.getElementById('arcade-score').textContent = arcadeScore;
+            break;
+          }
+        }
+
+        if (a.position.y < -10) {
+          arcadeScene.remove(a);
+          arcadeAsteroids.splice(i, 1);
+        }
+      }
+
+      arcadeRenderer.render(arcadeScene, arcadeCamera);
+    }
+
+    window.onload = function() {
+      init3DScene();
+      loadRound();
+    };
+  </script>
+</body>
+</html>

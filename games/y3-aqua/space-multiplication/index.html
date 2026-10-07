@@ -1,0 +1,852 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Space Multiplication Adventure</title>
+    <!-- Tailwind CSS CDN for rich utilities -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap');
+
+        * {
+            font-family: 'Fredoka', cursive, sans-serif;
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: manipulation;
+        }
+
+        body {
+            background: linear-gradient(135deg, #0b0a26 0%, #1a0b36 50%, #2b0c4a 100%);
+            color: #ffffff;
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+
+        /* Twinkling stars background canvas */
+        #stars-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        /* Custom glow effects and buttons */
+        .glow-title {
+            text-shadow: 0 0 15px #a855f7, 0 0 30px #ec4899;
+        }
+
+        .space-card {
+            background: rgba(23, 15, 54, 0.85);
+            backdrop-filter: blur(12px);
+            border: 3px solid rgba(168, 85, 247, 0.4);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), inset 0 0 15px rgba(168, 85, 247, 0.2);
+        }
+
+        .btn-choice {
+            transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 8px 0 rgba(0, 0, 0, 0.3);
+        }
+
+        .btn-choice:active {
+            transform: translateY(4px);
+            box-shadow: 0 4px 0 rgba(0, 0, 0, 0.3);
+        }
+
+        .btn-purple {
+            background: linear-gradient(180deg, #a855f7 0%, #7e22ce 100%);
+            border: 2px solid #c084fc;
+        }
+
+        .btn-purple:hover {
+            background: linear-gradient(180deg, #c084fc 0%, #9333ea 100%);
+        }
+
+        .btn-blue {
+            background: linear-gradient(180deg, #3b82f6 0%, #1d4ed8 100%);
+            border: 2px solid #60a5fa;
+        }
+
+        .btn-blue:hover {
+            background: linear-gradient(180deg, #60a5fa 0%, #2563eb 100%);
+        }
+
+        .btn-green {
+            background: linear-gradient(180deg, #22c55e 0%, #15803d 100%);
+            border: 2px solid #4ade80;
+        }
+
+        .btn-pink {
+            background: linear-gradient(180deg, #ec4899 0%, #be185d 100%);
+            border: 2px solid #f472b6;
+        }
+
+        /* Rocket floating animation */
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-12px) rotate(3deg); }
+        }
+
+        .floating-rocket {
+            animation: float 4s ease-in-out infinite;
+        }
+
+        /* Pulse animation for stars/trophies */
+        @keyframes pulse-glow {
+            0%, 100% { filter: drop-shadow(0 0 10px #facc15); transform: scale(1); }
+            50% { filter: drop-shadow(0 0 25px #fde047); transform: scale(1.05); }
+        }
+
+        .pulse-star {
+            animation: pulse-glow 2s infinite;
+        }
+
+        /* Hide scrollbars for clean full-screen feel */
+        ::-webkit-scrollbar {
+            display: none;
+        }
+    </style>
+</head>
+<body class="flex flex-col items-center justify-center min-h-screen p-3 md:p-6 relative">
+
+    <!-- Background Canvas for Stars -->
+    <canvas id="stars-canvas"></canvas>
+
+    <!-- Main Game Container -->
+    <div id="game-container" class="relative z-10 w-full max-w-3xl mx-auto flex flex-col items-center">
+
+        <!-- HEADER: Title & Mute Toggle -->
+        <header class="w-full flex justify-between items-center mb-4 px-2">
+            <div class="flex items-center gap-3">
+                <span class="text-4xl floating-rocket">🚀</span>
+                <div>
+                    <h1 class="text-3xl md:text-5xl font-extrabold tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 via-pink-400 to-cyan-300 glow-title">Space Multiplication Adventure</h1>
+                    <p class="text-xs md:text-sm text-purple-200 font-medium">¡Aventura Matemática Espacial!</p>
+                </div>
+            </div>
+            
+            <button id="sound-btn" onclick="toggleSound()" class="bg-purple-900/80 hover:bg-purple-800 border-2 border-purple-400 text-yellow-300 p-3 rounded-2xl text-xl transition-all shadow-lg">
+                🔊
+            </button>
+        </header>
+
+        <!-- SCREEN 1: START SCREEN -->
+        <div id="start-screen" class="space-card w-full rounded-3xl p-6 md:p-10 text-center flex flex-col items-center gap-6">
+            <div class="relative">
+                <span class="text-8xl md:text-9xl floating-rocket inline-block my-2">🛸</span>
+                <span class="absolute -bottom-2 -right-2 text-4xl pulse-star">⭐</span>
+            </div>
+
+            <div class="space-y-2">
+                <h2 class="text-2xl md:text-4xl font-bold text-cyan-300">¡Hola, Hero! 👋</h2>
+                <p class="text-base md:text-xl text-purple-100 max-w-lg">
+                    ¿Listo para viajar por las galaxias? Resuelve las multiplicaciones para ganar tiempo en el **Asteroid Shooter** y destruir meteoritos. 🌌✨
+                </p>
+            </div>
+
+            <div class="bg-purple-950/60 p-4 rounded-2xl border border-purple-500/30 w-full max-w-md text-left text-sm md:text-base space-y-2">
+                <div class="flex items-center gap-2 text-yellow-300 font-bold">
+                    <span>🎯</span> <span>5 Niveles Espaciales</span>
+                </div>
+                <div class="flex items-center gap-2 text-cyan-300 font-bold">
+                    <span>⚡</span> <span>Tablas de multiplicar (del 2 al 10)</span>
+                </div>
+                <div class="flex items-center gap-2 text-pink-300 font-bold">
+                    <span>💥</span> <span>¡Minijuego de Premio de Disparos!</span>
+                </div>
+            </div>
+
+            <button onclick="startGame()" class="btn-choice btn-pink w-full max-w-sm py-4 rounded-2xl text-2xl font-black text-white uppercase tracking-wider transform hover:scale-105 active:scale-95">
+                ¡Empezar Aventura! 🚀
+            </button>
+        </div>
+
+        <!-- SCREEN 2: QUIZ SCREEN -->
+        <div id="quiz-screen" class="space-card w-full rounded-3xl p-5 md:p-8 flex flex-col gap-5 hidden">
+            <!-- Top Status Bar -->
+            <div class="flex flex-wrap justify-between items-center bg-purple-950/70 p-3 md:p-4 rounded-2xl border border-purple-500/30 gap-2">
+                <div class="flex items-center gap-2">
+                    <span class="text-2xl">🏆</span>
+                    <div>
+                        <div class="text-xs text-purple-300 uppercase font-bold">Puntos</div>
+                        <div id="score-display" class="text-xl md:text-2xl font-black text-yellow-300">0</div>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-2">
+                    <span class="text-2xl">🛸</span>
+                    <div>
+                        <div class="text-xs text-purple-300 uppercase font-bold">Nivel</div>
+                        <div id="level-display" class="text-xl md:text-2xl font-black text-cyan-300">1 / 5</div>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-2">
+                    <span class="text-2xl">⭐</span>
+                    <div>
+                        <div class="text-xs text-purple-300 uppercase font-bold">Pregunta</div>
+                        <div id="question-count-display" class="text-xl md:text-2xl font-black text-pink-300">1 / 3</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Progress Bar -->
+            <div class="w-full bg-purple-950 rounded-full h-4 overflow-hidden p-0.5 border border-purple-500/30">
+                <div id="progress-bar" class="bg-gradient-to-r from-cyan-400 to-pink-500 h-full rounded-full transition-all duration-500" style="width: 20%"></div>
+            </div>
+
+            <!-- Question Card -->
+            <div class="bg-indigo-950/80 border-2 border-indigo-400/50 rounded-3xl p-6 text-center my-2 shadow-inner">
+                <span id="level-title" class="inline-block bg-purple-800/80 text-cyan-200 text-xs md:text-sm font-bold px-4 py-1 rounded-full mb-3 uppercase tracking-widest border border-purple-400/40">
+                    Nivel 1: Nebulosa Inicial
+                </span>
+                <h3 class="text-xs md:text-sm text-purple-200 uppercase font-bold tracking-wider mb-2">¿Cuánto es?</h3>
+                <div id="question-text" class="text-5xl md:text-7xl font-black text-white tracking-wide my-2 glow-title">
+                    3 × 4
+                </div>
+            </div>
+
+            <!-- Answer Options (4 buttons) -->
+            <div id="options-container" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <!-- Buttons injected dynamically -->
+            </div>
+
+            <!-- Feedback Message Box -->
+            <div id="feedback-box" class="hidden p-4 rounded-2xl text-center font-bold text-lg border-2 transition-all duration-300 animate-bounce">
+                <!-- Feedback injected dynamically -->
+            </div>
+        </div>
+
+        <!-- SCREEN 3: ASTEROID SHOOTER PREMIO -->
+        <div id="shooter-screen" class="space-card w-full rounded-3xl p-4 md:p-6 flex flex-col items-center gap-4 hidden">
+            <div class="w-full flex justify-between items-center bg-purple-950/80 p-3 rounded-2xl border border-purple-500/30">
+                <div class="flex items-center gap-2">
+                    <span class="text-3xl">💥</span>
+                    <div>
+                        <div class="text-xs text-purple-300 uppercase font-bold">¡Premio Espacial!</div>
+                        <div class="text-lg md:text-xl font-extrabold text-cyan-300">Asteroid Shooter</div>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-3">
+                    <div class="text-right">
+                        <div class="text-xs text-purple-300 uppercase font-bold">Tiempo Ganiado</div>
+                        <div id="shooter-timer" class="text-2xl font-black text-yellow-300">20s</div>
+                    </div>
+                    <div class="text-right border-l border-purple-700 pl-3">
+                        <div class="text-xs text-purple-300 uppercase font-bold">Meteoritos</div>
+                        <div id="shooter-score" class="text-2xl font-black text-pink-400">0</div>
+                    </div>
+                </div>
+            </div>
+
+            <p class="text-xs md:text-sm text-purple-200 text-center">
+                👉 ¡Mueve la nave con el dedo o ratón! Dispara automáticamente a los asteroides.
+            </p>
+
+            <!-- Game Canvas -->
+            <div class="relative w-full aspect-[4/3] max-h-[420px] rounded-2xl overflow-hidden border-4 border-purple-500/50 bg-black/80 shadow-2xl">
+                <canvas id="shooter-canvas" class="w-full h-full block cursor-crosshair"></canvas>
+            </div>
+        </div>
+
+        <!-- SCREEN 4: LEVEL COMPLETE MODAL / SCREEN -->
+        <div id="level-complete-screen" class="space-card w-full rounded-3xl p-6 md:p-8 text-center flex flex-col items-center gap-6 hidden">
+            <div class="text-7xl md:text-8xl pulse-star">🌟</div>
+            <h2 class="text-3xl md:text-5xl font-black text-yellow-300 glow-title">
+                ¡Nivel Completado!
+            </h2>
+            <p id="level-complete-msg" class="text-lg md:text-xl text-purple-100 max-w-md">
+                ¡Eres un superastro de las matemáticas, Hero! Has superado este sector espacial con éxito. 🚀✨
+            </p>
+
+            <div class="bg-purple-950/80 p-4 rounded-2xl border border-purple-500/40 w-full max-w-xs space-y-2">
+                <div class="flex justify-between text-base">
+                    <span class="text-purple-300">Puntos Totales:</span>
+                    <span id="completed-score" class="font-bold text-yellow-300">0</span>
+                </div>
+                <div class="flex justify-between text-base">
+                    <span class="text-purple-300">Siguiente Nivel:</span>
+                    <span id="next-level-num" class="font-bold text-cyan-300">Nivel 2</span>
+                </div>
+            </div>
+
+            <button onclick="nextLevel()" class="btn-choice btn-green w-full max-w-sm py-4 rounded-2xl text-2xl font-black text-white uppercase tracking-wider transform hover:scale-105 active:scale-95">
+                ¡Siguiente Nivel! 🌌
+            </button>
+        </div>
+
+        <!-- SCREEN 5: GRAND FINAL VICTORY SCREEN -->
+        <div id="victory-screen" class="space-card w-full rounded-3xl p-8 md:p-10 text-center flex flex-col items-center gap-6 hidden">
+            <div class="relative">
+                <span class="text-8xl md:text-9xl pulse-star inline-block">🏆</span>
+                <span class="absolute -top-2 -right-2 text-5xl">✨</span>
+                <span class="absolute -bottom-2 -left-2 text-5xl">👑</span>
+            </div>
+
+            <div class="space-y-2">
+                <h2 class="text-4xl md:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 via-pink-400 to-cyan-300 glow-title">
+                    ¡GRAN FINAL ESPACIAL!
+                </h2>
+                <p class="text-xl md:text-2xl text-yellow-200 font-bold">
+                    ¡Felicidades, Hero! ¡Eres el Gran Campeón de la Galaxia! 🪐🚀
+                </p>
+            </div>
+
+            <p class="text-base md:text-lg text-purple-100 max-w-md">
+                Has dominado las 15 multiplicaciones de Year 3 y protegido el universo de todos los asteroides. ¡Tus profesores y familia están súper orgullosos de ti! ❤️🌟
+            </p>
+
+            <div class="bg-purple-950/90 border-2 border-yellow-400/60 p-6 rounded-3xl w-full max-w-sm text-center shadow-xl">
+                <div class="text-sm text-purple-300 uppercase tracking-widest font-bold">Puntuación Estelar Final</div>
+                <div id="final-total-score" class="text-5xl font-black text-yellow-300 my-2 glow-title">0</div>
+                <div class="text-xs text-cyan-300 font-medium">¡RRecord Insuperable! ⭐⭐⭐⭐⭐</div>
+            </div>
+
+            <button onclick="restartGame()" class="btn-choice btn-purple w-full max-w-sm py-4 rounded-2xl text-2xl font-black text-white uppercase tracking-wider transform hover:scale-105 active:scale-95">
+                ¡Jugar Otra Vez! 🔄
+            </button>
+        </div>
+
+    </div>
+
+    <script>
+        /* WEB AUDIO API SOUND SYNTHESIZER */
+        let audioCtx = null;
+        let isMuted = false;
+
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }
+
+        function toggleSound() {
+            isMuted = !isMuted;
+            document.getElementById('sound-btn').innerText = isMuted ? '🔇' : '🔊';
+        }
+
+        function playSound(type) {
+            if (isMuted) return;
+            initAudio();
+            if (!audioCtx) return;
+
+            const now = audioCtx.currentTime;
+
+            if (type === 'correct') {
+                // Happy arpeggio
+                const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+                notes.forEach((freq, index) => {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = 'triangle';
+                    osc.frequency.value = freq;
+                    gain.gain.setValueAtTime(0.15, now + index * 0.08);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + index * 0.08 + 0.2);
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.start(now + index * 0.08);
+                    osc.stop(now + index * 0.08 + 0.2);
+                });
+            } else if (type === 'wrong') {
+                // Gentle encouraging sound
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(320, now);
+                osc.frequency.exponentialRampToValueAtTime(220, now + 0.3);
+                gain.gain.setValueAtTime(0.15, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start(now);
+                osc.stop(now + 0.3);
+            } else if (type === 'laser') {
+                // Laser shoot
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(800, now);
+                osc.frequency.exponentialRampToValueAtTime(100, now + 0.12);
+                gain.gain.setValueAtTime(0.08, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start(now);
+                osc.stop(now + 0.12);
+            } else if (type === 'explosion') {
+                // Asteroid explosion
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(150, now);
+                osc.frequency.exponentialRampToValueAtTime(30, now + 0.2);
+                gain.gain.setValueAtTime(0.15, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start(now);
+                osc.stop(now + 0.2);
+            } else if (type === 'fanfare') {
+                // Level complete fanfare
+                const melody = [
+                    {f: 523.25, d: 0.15},
+                    {f: 659.25, d: 0.15},
+                    {f: 783.99, d: 0.15},
+                    {f: 1046.50, d: 0.4}
+                ];
+                let timeOffset = 0;
+                melody.forEach(note => {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = 'triangle';
+                    osc.frequency.value = note.f;
+                    gain.gain.setValueAtTime(0.2, now + timeOffset);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + timeOffset + note.d);
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.start(now + timeOffset);
+                    osc.stop(now + timeOffset + note.d);
+                    timeOffset += note.d * 0.9;
+                });
+            }
+        }
+
+        /* YEAR 3 MULTIPLICATION QUESTIONS DATABASE (5 Levels, 3 Questions each = 15 Total) */
+        const gameLevels = [
+            {
+                name: "Nivel 1: Nebulosa Inicial",
+                questions: [
+                    { q: "2 × 3", options: [5, 6, 8, 9], a: 6 },
+                    { q: "5 × 2", options: [10, 12, 7, 15], a: 10 },
+                    { q: "3 × 4", options: [11, 14, 12, 16], a: 12 }
+                ]
+            },
+            {
+                name: "Nivel 2: Cinturón de Asteroides",
+                questions: [
+                    { q: "4 × 4", options: [12, 16, 20, 14], a: 16 },
+                    { q: "5 × 5", options: [20, 30, 25, 15], a: 25 },
+                    { q: "3 × 6", options: [18, 15, 21, 24], a: 18 }
+                ]
+            },
+            {
+                name: "Nivel 3: Anillos de Saturno",
+                questions: [
+                    { q: "6 × 4", options: [28, 22, 24, 20], a: 24 },
+                    { q: "7 × 2", options: [12, 14, 16, 18], a: 14 },
+                    { q: "5 × 8", options: [35, 45, 40, 30], a: 40 }
+                ]
+            },
+            {
+                name: "Nivel 4: Galaxia de Cometas",
+                questions: [
+                    { q: "8 × 3", options: [24, 21, 27, 30], a: 24 },
+                    { q: "9 × 5", options: [40, 50, 45, 35], a: 45 },
+                    { q: "6 × 7", options: [42, 36, 48, 40], a: 42 }
+                ]
+            },
+            {
+                name: "Nivel 5: Supernova Maestra",
+                questions: [
+                    { q: "7 × 7", options: [42, 49, 56, 47], a: 49 },
+                    { q: "8 × 6", options: [46, 54, 48, 40], a: 48 },
+                    { q: "10 × 4", options: [30, 50, 40, 44], a: 40 }
+                ]
+            }
+        ];
+
+        /* GAME STATE VARIABLES */
+        let currentLevelIdx = 0;
+        let currentQuestionIdx = 0;
+        let totalScore = 0;
+        let levelCorrectAnswers = 0;
+        let canAnswer = true;
+
+        function startGame() {
+            initAudio();
+            currentLevelIdx = 0;
+            currentQuestionIdx = 0;
+            totalScore = 0;
+            showScreen('quiz-screen');
+            loadQuestion();
+        }
+
+        function showScreen(screenId) {
+            const screens = ['start-screen', 'quiz-screen', 'shooter-screen', 'level-complete-screen', 'victory-screen'];
+            screens.forEach(id => {
+                document.getElementById(id).classList.add('hidden');
+            });
+            document.getElementById(screenId).classList.remove('hidden');
+        }
+
+        function loadQuestion() {
+            canAnswer = true;
+            const feedbackBox = document.getElementById('feedback-box');
+            feedbackBox.classList.add('hidden');
+
+            const level = gameLevels[currentLevelIdx];
+            const qData = level.questions[currentQuestionIdx];
+
+            // Update Header Stats
+            document.getElementById('score-display').innerText = totalScore;
+            document.getElementById('level-display').innerText = `${currentLevelIdx + 1} / ${gameLevels.length}`;
+            document.getElementById('question-count-display').innerText = `${currentQuestionIdx + 1} / ${level.questions.length}`;
+            document.getElementById('level-title').innerText = level.name;
+            document.getElementById('question-text').innerText = qData.q;
+
+            // Update Progress bar
+            const totalQuestions = gameLevels.length * 3;
+            const currentGlobalQ = (currentLevelIdx * 3) + currentQuestionIdx + 1;
+            const progressPercent = Math.round((currentGlobalQ / totalQuestions) * 100);
+            document.getElementById('progress-bar').style.width = `${progressPercent}%`;
+
+            // Render Options
+            const optionsContainer = document.getElementById('options-container');
+            optionsContainer.innerHTML = '';
+
+            const btnColors = ['btn-purple', 'btn-blue', 'btn-pink', 'btn-green'];
+
+            qData.options.forEach((opt, idx) => {
+                const btn = document.createElement('button');
+                btn.className = `btn-choice ${btnColors[idx % btnColors.length]} py-5 px-6 rounded-2xl text-3xl md:text-4xl font-black text-white transform transition duration-200 hover:scale-105 active:scale-95 shadow-lg border-2`;
+                btn.innerText = opt;
+                btn.onclick = () => handleAnswer(opt, qData.a, btn);
+                optionsContainer.appendChild(btn);
+            });
+        }
+
+        function handleAnswer(selected, correct, btnElement) {
+            if (!canAnswer) return;
+
+            const feedbackBox = document.getElementById('feedback-box');
+            feedbackBox.classList.remove('hidden', 'bg-green-900/80', 'border-green-400', 'text-green-200', 'bg-pink-950/90', 'border-pink-500', 'text-pink-200');
+
+            if (selected === correct) {
+                canAnswer = false;
+                playSound('correct');
+                totalScore += 100;
+                levelCorrectAnswers++;
+
+                document.getElementById('score-display').innerText = totalScore;
+
+                btnElement.classList.add('ring-4', 'ring-yellow-300', 'scale-105');
+                
+                feedbackBox.classList.add('bg-green-900/80', 'border-green-400', 'text-green-200');
+                feedbackBox.innerHTML = `🌟 ¡SÚPER BIEN, HERO! ¡Respuesta Correcta! (+100 pts) 🚀`;
+
+                setTimeout(() => {
+                    currentQuestionIdx++;
+                    if (currentQuestionIdx >= gameLevels[currentLevelIdx].questions.length) {
+                        // Level complete! Launch Shooter minigame
+                        startShooterMinigame();
+                    } else {
+                        loadQuestion();
+                    }
+                }, 1400);
+
+            } else {
+                playSound('wrong');
+                btnElement.classList.add('opacity-50', 'scale-95');
+
+                feedbackBox.classList.add('bg-pink-950/90', 'border-pink-500', 'text-pink-200');
+                feedbackBox.innerHTML = `💖 ¡Casi, Hero! No pasa nada. La respuesta de <b>${gameLevels[currentLevelIdx].questions[currentQuestionIdx].q}</b> es <span class="text-yellow-300 font-extrabold text-2xl">${correct}</span>. ¡Inténtalo de nuevo! 🚀`;
+            }
+        }
+
+        /* ASTEROID SHOOTER MINIGAME ENGINE */
+        let shooterCanvas, shooterCtx;
+        let shooterAnimationId = null;
+        let shooterTimer = 20;
+        let shooterTimerInterval = null;
+        let asteroidsDestroyed = 0;
+
+        let ship = {
+            x: 0,
+            y: 0,
+            width: 44,
+            height: 44,
+            speed: 6
+        };
+
+        let lasers = [];
+        let asteroids = [];
+        let particles = [];
+        let lastLaserTime = 0;
+
+        function startShooterMinigame() {
+            playSound('fanfare');
+            showScreen('shooter-screen');
+
+            shooterCanvas = document.getElementById('shooter-canvas');
+            shooterCtx = shooterCanvas.getContext('2d');
+
+            // Resize canvas to internal display size
+            const rect = shooterCanvas.getBoundingClientRect();
+            shooterCanvas.width = rect.width || 500;
+            shooterCanvas.height = rect.height || 350;
+
+            ship.x = shooterCanvas.width / 2;
+            ship.y = shooterCanvas.height - 50;
+
+            lasers = [];
+            asteroids = [];
+            particles = [];
+            asteroidsDestroyed = 0;
+            
+            // Earn 20s reward time
+            shooterTimer = 20;
+
+            document.getElementById('shooter-score').innerText = '0';
+            document.getElementById('shooter-timer').innerText = `${shooterTimer}s`;
+
+            setupShooterControls();
+
+            // Start Countdown Timer
+            clearInterval(shooterTimerInterval);
+            shooterTimerInterval = setInterval(() => {
+                shooterTimer--;
+                document.getElementById('shooter-timer').innerText = `${shooterTimer}s`;
+                if (shooterTimer <= 0) {
+                    endShooterMinigame();
+                }
+            }, 1000);
+
+            // Game Loop
+            if (shooterAnimationId) cancelAnimationFrame(shooterAnimationId);
+            shooterLoop();
+        }
+
+        function setupShooterControls() {
+            const updateShipPos = (clientX, clientY) => {
+                const rect = shooterCanvas.getBoundingClientRect();
+                const scaleX = shooterCanvas.width / rect.width;
+                const scaleY = shooterCanvas.height / rect.height;
+
+                ship.x = (clientX - rect.left) * scaleX;
+                ship.y = (clientY - rect.top) * scaleY;
+
+                // Keep inside bounds
+                ship.x = Math.max(20, Math.min(shooterCanvas.width - 20, ship.x));
+                ship.y = Math.max(20, Math.min(shooterCanvas.height - 20, ship.y));
+            };
+
+            shooterCanvas.onmousemove = (e) => updateShipPos(e.clientX, e.clientY);
+            shooterCanvas.ontouchmove = (e) => {
+                if (e.touches.length > 0) {
+                    updateShipPos(e.touches[0].clientX, e.touches[0].clientY);
+                }
+            };
+        }
+
+        function shooterLoop() {
+            shooterCtx.clearRect(0, 0, shooterCanvas.width, shooterCanvas.height);
+
+            // Auto shoot laser every 180ms
+            const now = Date.now();
+            if (now - lastLaserTime > 180) {
+                lasers.push({
+                    x: ship.x,
+                    y: ship.y - 20,
+                    speed: 9
+                });
+                playSound('laser');
+                lastLaserTime = now;
+            }
+
+            // Spawn asteroids
+            if (Math.random() < 0.05 && asteroids.length < 10) {
+                asteroids.push({
+                    x: Math.random() * (shooterCanvas.width - 40) + 20,
+                    y: -30,
+                    radius: Math.random() * 14 + 14,
+                    speed: Math.random() * 2 + 1.5,
+                    rot: 0,
+                    rotSpeed: (Math.random() - 0.5) * 0.08
+                });
+            }
+
+            // Draw & Update Lasers
+            shooterCtx.fillStyle = '#f43f5e';
+            shooterCtx.shadowBlur = 10;
+            shooterCtx.shadowColor = '#fb7185';
+            for (let i = lasers.length - 1; i >= 0; i--) {
+                let l = lasers[i];
+                l.y -= l.speed;
+                shooterCtx.fillRect(l.x - 3, l.y, 6, 14);
+
+                if (l.y < -20) lasers.splice(i, 1);
+            }
+            shooterCtx.shadowBlur = 0;
+
+            // Draw & Update Asteroids
+            for (let i = asteroids.length - 1; i >= 0; i--) {
+                let a = asteroids[i];
+                a.y += a.speed;
+                a.rot += a.rotSpeed;
+
+                shooterCtx.save();
+                shooterCtx.translate(a.x, a.y);
+                shooterCtx.rotate(a.rot);
+                
+                // Draw rocky asteroid
+                shooterCtx.fillStyle = '#78716c';
+                shooterCtx.strokeStyle = '#a8a29e';
+                shooterCtx.lineWidth = 3;
+                
+                shooterCtx.beginPath();
+                shooterCtx.arc(0, 0, a.radius, 0, Math.PI * 2);
+                shooterCtx.fill();
+                shooterCtx.stroke();
+
+                // Crater detail
+                shooterCtx.fillStyle = '#57534e';
+                shooterCtx.beginPath();
+                shooterCtx.arc(-a.radius * 0.3, -a.radius * 0.2, a.radius * 0.25, 0, Math.PI * 2);
+                shooterCtx.fill();
+
+                shooterCtx.restore();
+
+                // Collision detection with Lasers
+                for (let j = lasers.length - 1; j >= 0; j--) {
+                    let l = lasers[j];
+                    let dist = Math.hypot(a.x - l.x, a.y - l.y);
+                    if (dist < a.radius + 5) {
+                        // Explosion!
+                        playSound('explosion');
+                        asteroidsDestroyed++;
+                        totalScore += 20;
+                        document.getElementById('shooter-score').innerText = asteroidsDestroyed;
+
+                        // Create Particles
+                        for (let p = 0; p < 10; p++) {
+                            particles.push({
+                                x: a.x,
+                                y: a.y,
+                                vx: (Math.random() - 0.5) * 6,
+                                vy: (Math.random() - 0.5) * 6,
+                                life: 1,
+                                color: Math.random() > 0.5 ? '#facc15' : '#f97316'
+                            });
+                        }
+
+                        asteroids.splice(i, 1);
+                        lasers.splice(j, 1);
+                        break;
+                    }
+                }
+
+                if (a && a.y > shooterCanvas.height + 40) {
+                    asteroids.splice(i, 1);
+                }
+            }
+
+            // Draw Particles
+            for (let i = particles.length - 1; i >= 0; i--) {
+                let p = particles[i];
+                p.x += p.vx;
+                p.y += p.vy;
+                p.life -= 0.04;
+
+                shooterCtx.fillStyle = p.color;
+                shooterCtx.globalAlpha = Math.max(0, p.life);
+                shooterCtx.beginPath();
+                shooterCtx.arc(p.x, p.y, 4, 0, Math.PI * 2);
+                shooterCtx.fill();
+                shooterCtx.globalAlpha = 1.0;
+
+                if (p.life <= 0) particles.splice(i, 1);
+            }
+
+            // Draw Player Ship (Spaceship Emoji / Graphic)
+            shooterCtx.font = '36px sans-serif';
+            shooterCtx.textAlign = 'center';
+            shooterCtx.textBaseline = 'middle';
+            shooterCtx.fillText('🚀', ship.x, ship.y);
+
+            shooterAnimationId = requestAnimationFrame(shooterLoop);
+        }
+
+        function endShooterMinigame() {
+            clearInterval(shooterTimerInterval);
+            if (shooterAnimationId) cancelAnimationFrame(shooterAnimationId);
+
+            if (currentLevelIdx >= gameLevels.length - 1) {
+                // Game Finished!
+                showVictoryScreen();
+            } else {
+                // Next Level Screen
+                document.getElementById('completed-score').innerText = totalScore;
+                document.getElementById('next-level-num').innerText = `Nivel ${currentLevelIdx + 2}`;
+                showScreen('level-complete-screen');
+            }
+        }
+
+        function nextLevel() {
+            currentLevelIdx++;
+            currentQuestionIdx = 0;
+            showScreen('quiz-screen');
+            loadQuestion();
+        }
+
+        function showVictoryScreen() {
+            playSound('fanfare');
+            document.getElementById('final-total-score').innerText = totalScore;
+            showScreen('victory-screen');
+        }
+
+        function restartGame() {
+            startGame();
+        }
+
+        /* BACKGROUND TWINKLING STARS CANVAS */
+        function initStarsBackground() {
+            const canvas = document.getElementById('stars-canvas');
+            const ctx = canvas.getContext('2d');
+
+            function resize() {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            }
+            window.addEventListener('resize', resize);
+            resize();
+
+            const stars = Array.from({ length: 120 }, () => ({
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height,
+                size: Math.random() * 2.2 + 0.5,
+                alpha: Math.random(),
+                speed: Math.random() * 0.02 + 0.005
+            }));
+
+            function animateStars() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                
+                stars.forEach(s => {
+                    s.alpha += s.speed;
+                    if (s.alpha > 1 || s.alpha < 0) s.speed = -s.speed;
+
+                    ctx.fillStyle = `rgba(255, 255, 255, ${Math.abs(s.alpha)})`;
+                    ctx.beginPath();
+                    ctx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
+                    ctx.fill();
+                });
+
+                requestAnimationFrame(animateStars);
+            }
+            animateStars();
+        }
+
+        // Initialize background on load
+        window.onload = function() {
+            initStarsBackground();
+        };
+    </script>
+</body>
+</html>

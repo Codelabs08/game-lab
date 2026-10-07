@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Plane Flyer</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      user-select: none;
+      -webkit-user-select: none;
+      margin: 0;
+      padding: 0;
+      font-family: 'Comic Sans MS', 'Chalkboard SE', 'Fredoka', cursive, sans-serif;
+    }
+
+    body {
+      background: linear-gradient(180deg, #1e90ff 0%, #87ceeb 60%, #e0f6ff 100%);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 12px;
+      overflow-x: hidden;
+    }
+
+    #game-container {
+      width: 100%;
+      max-width: 600px;
+      background: rgba(255, 255, 255, 0.92);
+      border-radius: 28px;
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.25);
+      border: 6px solid #ffcc00;
+      padding: 20px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    h1 {
+      color: #0056b3;
+      font-size: 26px;
+      text-shadow: 2px 2px 0px #ffea00;
+      margin-bottom: 8px;
+    }
+
+    .badge {
+      display: inline-block;
+      background: #ff4757;
+      color: white;
+      padding: 6px 16px;
+      border-radius: 20px;
+      font-weight: bold;
+      font-size: 16px;
+      box-shadow: 0 4px 0 #c0392b;
+      margin-bottom: 12px;
+    }
+
+    /* SKY & PLANE CANVAS AREA */
+    .sky-box {
+      width: 100%;
+      height: 150px;
+      background: linear-gradient(180deg, #2980b9 0%, #6dd5fa 100%);
+      border-radius: 20px;
+      position: relative;
+      overflow: hidden;
+      margin-bottom: 16px;
+      border: 4px solid #fff;
+      box-shadow: inset 0 0 10px rgba(0,0,0,0.15);
+    }
+
+    .cloud {
+      position: absolute;
+      background: white;
+      border-radius: 50px;
+      opacity: 0.8;
+      animation: floatClouds 12s linear infinite;
+    }
+
+    .cloud::before, .cloud::after {
+      content: '';
+      position: absolute;
+      background: white;
+      border-radius: 50%;
+    }
+
+    .cloud1 { width: 70px; height: 24px; top: 20px; left: -80px; }
+    .cloud1::before { width: 30px; height: 30px; top: -12px; left: 10px; }
+    .cloud1::after { width: 25px; height: 25px; top: -8px; right: 10px; }
+
+    .cloud2 { width: 90px; height: 30px; top: 70px; left: -100px; animation-delay: 5s; }
+    .cloud2::before { width: 40px; height: 40px; top: -18px; left: 15px; }
+
+    @keyframes floatClouds {
+      0% { transform: translateX(-100px); }
+      100% { transform: translateX(700px); }
+    }
+
+    #plane {
+      position: absolute;
+      left: 30px;
+      bottom: 15px;
+      font-size: 42px;
+      transition: bottom 0.8s cubic-bezier(0.34, 1.56, 0.64, 1), transform 0.3s;
+      filter: drop-shadow(2px 4px 4px rgba(0,0,0,0.2));
+    }
+
+    .altitude-label {
+      position: absolute;
+      top: 8px;
+      right: 12px;
+      background: rgba(255,255,255,0.85);
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 13px;
+      font-weight: bold;
+      color: #2c3e50;
+    }
+
+    /* QUESTION CARD */
+    .question-card {
+      background: #f8fbff;
+      border: 3px dashed #48dbfb;
+      border-radius: 20px;
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+
+    .question-text {
+      font-size: 24px;
+      color: #2c3e50;
+      font-weight: bold;
+      min-height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* BUTTONS GRID */
+    .answers-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .btn-ans {
+      background: #10ac84;
+      color: white;
+      border: none;
+      border-bottom: 5px solid #0e8364;
+      padding: 16px;
+      font-size: 22px;
+      font-weight: bold;
+      border-radius: 16px;
+      cursor: pointer;
+      transition: transform 0.1s, background-color 0.2s;
+      outline: none;
+    }
+
+    .btn-ans:active {
+      transform: translateY(3px);
+      border-bottom-width: 2px;
+    }
+
+    /* FEEDBACK AREA */
+    #feedback {
+      min-height: 38px;
+      font-size: 20px;
+      font-weight: bold;
+      margin-top: 6px;
+    }
+
+    .correct { color: #10ac84; }
+    .wrong { color: #ee5253; }
+
+    /* START / WIN OVERLAYS */
+    .screen {
+      display: none;
+    }
+    .screen.active {
+      display: block;
+    }
+
+    .btn-large {
+      background: #ff9f43;
+      color: white;
+      border: none;
+      border-bottom: 6px solid #e67e22;
+      padding: 16px 32px;
+      font-size: 22px;
+      font-weight: bold;
+      border-radius: 25px;
+      cursor: pointer;
+      box-shadow: 0 6px 0 #d35400;
+      margin-top: 15px;
+    }
+
+    .btn-large:active {
+      transform: translateY(4px);
+      box-shadow: 0 2px 0 #d35400;
+    }
+
+    /* ASTRO SHOOTER REWARD MINI GAME STYLES */
+    #astro-canvas {
+      background: #0c102b;
+      border-radius: 16px;
+      border: 4px solid #3d3d71;
+      display: block;
+      margin: 10px auto;
+    }
+
+    .astro-controls {
+      display: flex;
+      justify-content: space-around;
+      margin-top: 10px;
+    }
+
+    .btn-ctrl {
+      background: #5f27cd;
+      color: white;
+      border: none;
+      border-bottom: 4px solid #341f97;
+      padding: 14px 28px;
+      font-size: 24px;
+      border-radius: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      touch-action: manipulation;
+    }
+
+    .btn-ctrl:active {
+      transform: translateY(2px);
+    }
+  </style>
+</head>
+<body>
+
+  <div id="game-container">
+    
+    <!-- START SCREEN -->
+    <div id="start-screen" class="screen active">
+      <h1>🛩️ Plane Flyer</h1>
+      <p style="font-size: 18px; color: #576574; margin: 15px 0;">
+        Help Hero answer 15 Maths questions to fly high into space!
+      </p>
+      <div style="font-size: 60px; margin: 15px;">☁️️✈️🚀</div>
+      <p style="color: #10ac84; font-weight: bold; font-size: 16px;">
+        Year 3 Times Tables Challenge
+      </p>
+      <button class="btn-large" onclick="startGame()">Start Flying! 🚀</button>
+    </div>
+
+    <!-- QUIZ SCREEN -->
+    <div id="quiz-screen" class="screen">
+      <div class="badge" id="level-badge">Level 1 of 5</div>
+      
+      <!-- SKY & PLANE PROGRESS -->
+      <div class="sky-box">
+        <div class="cloud cloud1"></div>
+        <div class="cloud cloud2"></div>
+        <div id="plane">✈️</div>
+        <div class="altitude-label" id="altitude">Altitude: 100m</div>
+      </div>
+
+      <div class="question-card">
+        <div class="question-text" id="question-text">Loading question...</div>
+      </div>
+
+      <div class="answers-grid">
+        <button class="btn-ans" onclick="checkAnswer(0)" id="opt0"></button>
+        <button class="btn-ans" onclick="checkAnswer(1)" id="opt1"></button>
+        <button class="btn-ans" onclick="checkAnswer(2)" id="opt2"></button>
+        <button class="btn-ans" onclick="checkAnswer(3)" id="opt3"></button>
+      </div>
+
+      <div id="feedback"></div>
+    </div>
+
+    <!-- WIN SCREEN -->
+    <div id="win-screen" class="screen">
+      <h1>🏆 Super Flying, Hero!</h1>
+      <p style="font-size: 18px; color: #2e86de; margin: 10px 0;">
+        You answered all 15 questions and flew into outer space!
+      </p>
+      <div style="font-size: 60px; margin: 10px;">🌟🚀✨</div>
+      <p style="font-size: 16px; color: #10ac84; font-weight: bold;">
+        🎁 You unlocked the Reward Mini-Game!
+      </p>
+      <button class="btn-large" onclick="startAstroGame()" style="background:#5f27cd; border-color:#341f97;">
+        Play "Astro Shooter"! 🚀✨
+      </button>
+    </div>
+
+    <!-- ASTRO SHOOTER REWARD MINI GAME SCREEN -->
+    <div id="astro-screen" class="screen">
+      <h1>🚀 Astro Shooter</h1>
+      <p style="font-size: 14px; color: #576574;">Dodge asteroids 🪨 & collect cosmic stars ⭐!</p>
+      <canvas id="astro-canvas" width="300" height="320"></canvas>
+      <div class="astro-controls">
+        <button class="btn-ctrl" id="btn-left">◀ LEFT</button>
+        <button class="btn-ctrl" id="btn-right">RIGHT ▶</button>
+      </div>
+      <button class="btn-large" onclick="resetToStart()" style="margin-top: 12px; padding: 10px 20px; font-size: 16px; background: #ee5253; border-color: #c0392b;">
+        Play Maths Game Again 🔄
+      </button>
+    </div>
+
+  </div>
+
+  <script>
+    /* AUDIO SYNTHESIS */
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    
+    function playSound(type) {
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+
+      if (type === 'correct') {
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(440, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 0.3);
+        gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.3);
+      } else if (type === 'wrong') {
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(220, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(110, audioCtx.currentTime + 0.3);
+        gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.3);
+      } else if (type === 'win') {
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(523.25, audioCtx.currentTime);
+        osc.frequency.setValueAtTime(659.25, audioCtx.currentTime + 0.15);
+        osc.frequency.setValueAtTime(783.99, audioCtx.currentTime + 0.3);
+        osc.frequency.setValueAtTime(1046.50, audioCtx.currentTime + 0.45);
+        gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.7);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.7);
+      }
+    }
+
+    /* 15 YEAR 3 MATHS QUESTIONS */
+    const questions = [
+      // Level 1: 2x, 5x, 10x
+      { q: "What is 2 × 5?", options: ["10", "7", "12", "8"], ans: 0 },
+      { q: "What is 5 × 4?", options: ["15", "20", "25", "18"], ans: 1 },
+      { q: "What is 10 × 3?", options: ["13", "20", "30", "35"], ans: 2 },
+      
+      // Level 2: 3x, 4x
+      { q: "What is 3 × 4?", options: ["10", "12", "14", "9"], ans: 1 },
+      { q: "What is 4 × 6?", options: ["20", "22", "24", "28"], ans: 2 },
+      { q: "What is 3 × 8?", options: ["24", "18", "21", "27"], ans: 0 },
+      
+      // Level 3: 8x & Mixed
+      { q: "What is 8 × 2?", options: ["14", "16", "18", "20"], ans: 1 },
+      { q: "What is 8 × 5?", options: ["35", "45", "40", "30"], ans: 2 },
+      { q: "What is 4 × 7?", options: ["28", "24", "32", "21"], ans: 0 },
+
+      // Level 4: Missing Factor Challenge
+      { q: " ? × 4 = 24. What is ?", options: ["5", "6", "7", "8"], ans: 1 },
+      { q: " 3 × ? = 27. What is ?", options: ["8", "7", "9", "6"], ans: 2 },
+      { q: " ? × 8 = 32. What is ?", options: ["4", "3", "5", "6"], ans: 0 },
+
+      // Level 5: Word Problems & Bigger Facts
+      { q: "Hero sees 5 cars. Each car has 4 wheels. How many wheels in total?", options: ["16", "20", "24", "25"], ans: 1 },
+      { q: "What is 12 × 3?", options: ["33", "34", "36", "30"], ans: 2 },
+      { q: "There are 8 boxes with 3 toys in each. How many toys altogether?", options: ["24", "21", "27", "28"], ans: 0 }
+    ];
+
+    let currentQ = 0;
+    let planeBottom = 15;
+
+    function showScreen(screenId) {
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      document.getElementById(screenId).classList.add('active');
+    }
+
+    function startGame() {
+      currentQ = 0;
+      planeBottom = 15;
+      updatePlanePosition();
+      showScreen('quiz-screen');
+      loadQuestion();
+    }
+
+    function loadQuestion() {
+      const qData = questions[currentQ];
+      const level = Math.floor(currentQ / 3) + 1;
+      
+      document.getElementById('level-badge').innerText = `Level ${level} of 5`;
+      document.getElementById('question-text').innerText = `${currentQ + 1}. ${qData.q}`;
+      document.getElementById('feedback').innerText = "";
+
+      for (let i = 0; i < 4; i++) {
+        const btn = document.getElementById(`opt${i}`);
+        btn.innerText = qData.options[i];
+        btn.disabled = false;
+        btn.style.background = "#10ac84";
+      }
+    }
+
+    function checkAnswer(selectedIndex) {
+      const qData = questions[currentQ];
+      const feedback = document.getElementById('feedback');
+
+      for (let i = 0; i < 4; i++) {
+        document.getElementById(`opt${i}`).disabled = true;
+      }
+
+      if (selectedIndex === qData.ans) {
+        playSound('correct');
+        feedback.innerText = "🎉 Brilliant job, Hero! Keep flying!";
+        feedback.className = "correct";
+        document.getElementById(`opt${selectedIndex}`).style.background = "#2ed573";
+        
+        planeBottom += 7;
+        updatePlanePosition();
+
+        setTimeout(() => {
+          currentQ++;
+          if (currentQ < questions.length) {
+            loadQuestion();
+          } else {
+            playSound('win');
+            showScreen('win-screen');
+          }
+        }, 1300);
+
+      } else {
+        playSound('wrong');
+        feedback.innerText = "Oops! Give it another try! 😊";
+        feedback.className = "wrong";
+        document.getElementById(`opt${selectedIndex}`).style.background = "#ee5253";
+
+        setTimeout(() => {
+          for (let i = 0; i < 4; i++) {
+            document.getElementById(`opt${i}`).disabled = false;
+          }
+          feedback.innerText = "";
+        }, 1200);
+      }
+    }
+
+    function updatePlanePosition() {
+      const plane = document.getElementById('plane');
+      plane.style.bottom = `${planeBottom}%`;
+      
+      const meters = 100 + (currentQ * 60);
+      document.getElementById('altitude').innerText = `Altitude: ${meters}m`;
+
+      plane.style.transform = "rotate(-10deg)";
+      setTimeout(() => {
+        plane.style.transform = "rotate(0deg)";
+      }, 400);
+    }
+
+    function resetToStart() {
+      if (astroGameLoop) cancelAnimationFrame(astroGameLoop);
+      showScreen('start-screen');
+    }
+
+    /* ---------------------------------------------------
+       REWARD MINI-GAME: ASTRO SHOOTER
+    --------------------------------------------------- */
+    let canvas, ctx;
+    let shipX = 130;
+    let asteroids = [];
+    let spaceStars = [];
+    let bgStars = [];
+    let astroScore = 0;
+    let astroGameLoop = null;
+
+    function startAstroGame() {
+      showScreen('astro-screen');
+      canvas = document.getElementById('astro-canvas');
+      ctx = canvas.getContext('2d');
+      shipX = 130;
+      asteroids = [];
+      spaceStars = [];
+      astroScore = 0;
+
+      // Generate static background stars
+      bgStars = [];
+      for (let i = 0; i < 30; i++) {
+        bgStars.push({
+          x: Math.random() * canvas.width,
+          y: Math.random() * canvas.height,
+          size: Math.random() * 2 + 1
+        });
+      }
+
+      // Event listeners for controls
+      document.getElementById('btn-left').onpointerdown = () => { shipX = Math.max(20, shipX - 35); };
+      document.getElementById('btn-right').onpointerdown = () => { shipX = Math.min(240, shipX + 35); };
+
+      window.onkeydown = (e) => {
+        if (e.key === 'ArrowLeft') shipX = Math.max(20, shipX - 35);
+        if (e.key === 'ArrowRight') shipX = Math.min(240, shipX + 35);
+      };
+
+      if (astroGameLoop) cancelAnimationFrame(astroGameLoop);
+      updateAstroGame();
+    }
+
+    function updateAstroGame() {
+      // Clear screen (Deep Space background)
+      ctx.fillStyle = "#0c102b";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // Draw background stars
+      ctx.fillStyle = "#ffffff";
+      for (let s of bgStars) {
+        ctx.fillRect(s.x, s.y, s.size, s.size);
+        s.y += 0.5;
+        if (s.y > canvas.height) s.y = 0;
+      }
+
+      // Spawn Asteroids
+      if (Math.random() < 0.03) {
+        asteroids.push({ x: 20 + Math.random() * 240, y: -30, speed: 3 + Math.random() * 2 });
+      }
+
+      // Spawn Cosmic Stars
+      if (Math.random() < 0.02) {
+        spaceStars.push({ x: 20 + Math.random() * 240, y: -30, speed: 2.5 });
+      }
+
+      // Draw Player Spaceship
+      ctx.font = "32px serif";
+      ctx.fillText("🚀", shipX, 290);
+
+      // Move & Draw Asteroids
+      for (let i = 0; i < asteroids.length; i++) {
+        let ast = asteroids[i];
+        ast.y += ast.speed;
+        ctx.fillText("🪨", ast.x, ast.y);
+
+        // Simple Collision check
+        if (Math.abs(shipX - ast.x) < 25 && Math.abs(280 - ast.y) < 25) {
+          playSound('wrong');
+          asteroids.splice(i, 1);
+          astroScore = Math.max(0, astroScore - 1);
+        }
+      }
+
+      // Move & Draw Collectible Stars
+      for (let i = 0; i < spaceStars.length; i++) {
+        let st = spaceStars[i];
+        st.y += st.speed;
+        ctx.fillText("⭐", st.x, st.y);
+
+        // Star Collection
+        if (Math.abs(shipX - st.x) < 25 && Math.abs(280 - st.y) < 25) {
+          playSound('correct');
+          spaceStars.splice(i, 1);
+          astroScore += 5;
+        }
+      }
+
+      // Cleanup off-screen items
+      asteroids = asteroids.filter(a => a.y < 350);
+      spaceStars = spaceStars.filter(s => s.y < 350);
+
+      // Draw Score
+      ctx.fillStyle = "#ffdd59";
+      ctx.font = "bold 16px Comic Sans MS, sans-serif";
+      ctx.fillText(`Space Stars: ${astroScore}`, 20, 30);
+
+      astroGameLoop = requestAnimationFrame(updateAstroGame);
+    }
+  </script>
+</body>
+</html>

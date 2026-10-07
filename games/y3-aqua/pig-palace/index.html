@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pig Palace Science Quest</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@700;800;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Nunito', sans-serif;
+            background-color: #f7a8c4;
+            background-image: 
+                radial-gradient(#8b4513 12%, transparent 12%),
+                radial-gradient(#ff69b4 12%, transparent 12%);
+            background-size: 60px 60px;
+            background-position: 0 0, 30px 30px;
+            touch-action: manipulation;
+            user-select: none;
+        }
+        .font-game {
+            font-family: 'Fredoka One', cursive;
+        }
+        
+        /* Custom Mud & Wood Frames */
+        .pig-panel {
+            background: linear-gradient(180deg, #fff2f6 0%, #ffe0eb 100%);
+            border: 6px solid #8b4513;
+            box-shadow: 0 12px 0 #5c2e0b, 0 20px 25px rgba(0,0,0,0.25);
+            border-radius: 32px;
+        }
+
+        .mud-badge {
+            background: #8b4513;
+            color: #ffe4e1;
+            border: 3px solid #5c2e0b;
+            box-shadow: inset 0 -4px 0 #3a1d07;
+        }
+
+        .snout-btn {
+            background: linear-gradient(180deg, #ff8da1 0%, #ff5376 100%);
+            border: 4px solid #b81d43;
+            box-shadow: 0 8px 0 #850e2b, 0 10px 15px rgba(0,0,0,0.2);
+            border-radius: 24px;
+            transition: all 0.1s ease;
+        }
+        .snout-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 11px 0 #850e2b, 0 14px 20px rgba(0,0,0,0.25);
+        }
+        .snout-btn:active {
+            transform: translateY(4px);
+            box-shadow: 0 4px 0 #850e2b, 0 6px 10px rgba(0,0,0,0.2);
+        }
+
+        .wiggle-tail {
+            animation: tailWiggle 1.5s infinite ease-in-out;
+            transform-origin: bottom center;
+        }
+        @keyframes tailWiggle {
+            0%, 100% { transform: rotate(-8deg); }
+            50% { transform: rotate(8deg); }
+        }
+
+        .mud-splat {
+            background: #8b4513;
+            border-radius: 40% 60% 70% 30% / 40% 50% 60% 50%;
+        }
+
+        /* Curly Tail Animation */
+        .pig-tail {
+            width: 24px;
+            height: 24px;
+            border: 4px solid #ff1493;
+            border-right-color: transparent;
+            border-radius: 50%;
+            animation: spinTail 1s infinite linear;
+        }
+        @keyframes spinTail {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        canvas {
+            touch-action: none;
+            background: linear-gradient(180deg, #1d092b 0%, #3a1542 100%);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-3 md:p-6 text-slate-800">
+
+    <div class="w-full max-w-4xl pig-panel p-4 md:p-8 relative overflow-hidden my-auto">
+        
+        <!-- Straw & Mud Top Decoration -->
+        <div class="absolute -top-6 -left-6 w-24 h-24 mud-splat opacity-20 pointer-events-none"></div>
+        <div class="absolute -top-6 -right-6 w-28 h-28 mud-splat opacity-20 pointer-events-none"></div>
+
+        <!-- Header / Progress Bar -->
+        <header class="flex flex-col sm:flex-row items-center justify-between gap-4 mb-6 pb-4 border-b-4 border-pink-300 relative z-10">
+            <div class="flex items-center gap-3">
+                <!-- Hero Header Icon with Robin Hood Hat -->
+                <div class="relative w-16 h-16 bg-pink-200 rounded-3xl flex items-center justify-center border-4 border-pink-400 shadow-md flex-shrink-0">
+                    <svg viewBox="0 0 100 100" class="w-14 h-14">
+                        <!-- Pig Ears -->
+                        <polygon points="20,35 10,12 32,22" fill="#FFB6C1" stroke="#FF1493" stroke-width="3" />
+                        <polygon points="80,35 90,12 68,22" fill="#FFB6C1" stroke="#FF1493" stroke-width="3" />
+                        <!-- Pig Head -->
+                        <ellipse cx="50" cy="55" rx="35" ry="30" fill="#FFC0CB" stroke="#FF1493" stroke-width="3" />
+                        <!-- Eyes -->
+                        <circle cx="38" cy="50" r="4" fill="#333" />
+                        <circle cx="62" cy="50" r="4" fill="#333" />
+                        <!-- Cheeks -->
+                        <circle cx="28" cy="58" r="5" fill="#FF69B4" opacity="0.6"/>
+                        <circle cx="72" cy="58" r="5" fill="#FF69B4" opacity="0.6"/>
+                        <!-- Snout -->
+                        <ellipse cx="50" cy="62" rx="14" ry="10" fill="#FF1493" />
+                        <ellipse cx="44" cy="62" rx="3" ry="4" fill="#4A0033" />
+                        <ellipse cx="56" cy="62" rx="3" ry="4" fill="#4A0033" />
+                        <!-- Robin Hood Hat -->
+                        <path d="M 15 38 Q 50 12 82 38 Q 50 26 15 38 Z" fill="#2E7D32" stroke="#1B5E20" stroke-width="2.5" />
+                        <!-- Red Feather -->
+                        <path d="M 60 26 Q 80 2 90 0 C 84 12 76 22 68 28 Z" fill="#D32F2F" />
+                        <line x1="62" y1="26" x2="86" y2="2" stroke="#B71C1C" stroke-width="1.5" />
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="font-game text-2xl md:text-3xl text-pink-900 tracking-wide flex items-center gap-2">Pig Palace Science Quest</h1>
+                    <p class="text-xs md:text-sm text-pink-700 font-extrabold" id="level-title">Year 3 Science: Level 1 - Diets & Animal Groups</p>
+                </div>
+            </div>
+
+            <!-- Score & Level Mud Badges -->
+            <div class="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end">
+                <div class="mud-badge px-4 py-2 rounded-2xl text-center">
+                    <span class="text-xs uppercase font-black text-amber-200 block tracking-wider">Mud Coins</span>
+                    <span id="score-text" class="font-game text-xl text-yellow-300">🪙 0</span>
+                </div>
+                <div class="bg-pink-500 border-3 border-pink-700 text-white px-4 py-2 rounded-2xl text-center shadow-md">
+                    <span class="text-xs uppercase font-black text-pink-100 block tracking-wider">Level</span>
+                    <span id="level-text" class="font-game text-xl text-white">1 / 5</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- SCREEN 1: PIGGY SCIENCE QUIZ -->
+        <main id="quiz-screen" class="space-y-5 relative z-10">
+            
+            <!-- Pig Progress Bar -->
+            <div class="space-y-1">
+                <div class="flex justify-between text-xs font-black text-pink-800 uppercase tracking-wider">
+                    <span>Piggy Progress</span>
+                    <span id="progress-percent">0%</span>
+                </div>
+                <div class="w-full bg-pink-200 rounded-full h-5 p-1 border-2 border-pink-400 overflow-hidden relative">
+                    <div id="progress-bar" class="bg-gradient-to-r from-pink-500 to-rose-500 h-full rounded-full transition-all duration-300 flex justify-end items-center pr-1" style="width: 6.66%;">
+                        <span class="text-[10px]">🐷</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Interactive Mascot Banner -->
+            <div class="bg-pink-100/90 rounded-3xl p-4 border-4 border-pink-300 flex items-center gap-4 shadow-inner relative">
+                <div class="w-20 h-20 flex-shrink-0 relative">
+                    <svg id="benji-reactive-svg" viewBox="0 0 100 100" class="w-full h-full wiggle-tail">
+                        <!-- Pig Ears -->
+                        <polygon points="20,35 10,12 32,22" fill="#FFB6C1" stroke="#FF1493" stroke-width="3" />
+                        <polygon points="80,35 90,12 68,22" fill="#FFB6C1" stroke="#FF1493" stroke-width="3" />
+                        <!-- Pig Head -->
+                        <ellipse cx="50" cy="55" rx="35" ry="30" fill="#FFC0CB" stroke="#FF1493" stroke-width="3" />
+                        <!-- Eyes -->
+                        <circle id="benji-eye-l" cx="38" cy="50" r="4" fill="#333" />
+                        <circle id="benji-eye-r" cx="62" cy="50" r="4" fill="#333" />
+                        <!-- Mouth -->
+                        <path id="benji-mouth" d="M 42 72 Q 50 78 58 72" fill="none" stroke="#4A0033" stroke-width="3" stroke-linecap="round" />
+                        <!-- Snout -->
+                        <ellipse cx="50" cy="62" rx="14" ry="10" fill="#FF1493" />
+                        <ellipse cx="44" cy="62" rx="3" ry="4" fill="#4A0033" />
+                        <ellipse cx="56" cy="62" rx="3" ry="4" fill="#4A0033" />
+                        <!-- Robin Hood Hat -->
+                        <path d="M 15 38 Q 50 12 82 38 Q 50 26 15 38 Z" fill="#2E7D32" stroke="#1B5E20" stroke-width="2.5" />
+                        <!-- Red Feather -->
+                        <path d="M 60 26 Q 80 2 90 0 C 84 12 76 22 68 28 Z" fill="#D32F2F" />
+                        <line x1="62" y1="26" x2="86" y2="2" stroke="#B71C1C" stroke-width="1.5" />
+                    </svg>
+                </div>
+                <div class="flex-grow">
+                    <div id="benji-dialogue" class="bg-white p-3 rounded-2xl rounded-tl-none border-3 border-pink-400 font-extrabold text-pink-900 text-sm md:text-base shadow-sm">
+                        "Oink-oink! Welcome to my Pig Palace! Answer Year 3 Science questions to help me build the mud wall!"
+                    </div>
+                </div>
+            </div>
+
+            <!-- Question Box with Pig Snouts -->
+            <div class="bg-white rounded-3xl p-5 md:p-6 border-4 border-pink-200 shadow-md">
+                <span id="question-number" class="text-xs font-black text-pink-600 uppercase tracking-widest block mb-1">Question 1 of 15</span>
+                <h2 id="question-text" class="font-game text-xl md:text-2xl text-slate-800 mb-6">Loading Piggy Question...</h2>
+
+                <!-- Options Grid -->
+                <div id="options-container" class="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
+                    <!-- Dynamic Options Inserted via JS -->
+                </div>
+            </div>
+
+            <!-- Feedback Bar -->
+            <div id="feedback-box" class="hidden p-4 rounded-2xl text-center font-extrabold text-lg border-4 shadow-sm"></div>
+
+        </main>
+
+        <!-- SCREEN 2: PIGGY SPACE DEFENSE MINI GAME -->
+        <main id="minigame-screen" class="hidden flex-col items-center space-y-4 relative z-10">
+            <div class="text-center">
+                <h2 class="font-game text-2xl md:text-3xl text-pink-900">🐷🛸 Mud-Oink Alien Chicken Blaster!</h2>
+                <p class="text-pink-800 text-sm font-extrabold">Blast invading space chickens with muddy apples! Use ← → keys or tap buttons below!</p>
+                <div class="mt-2 flex justify-center gap-6 font-game text-lg">
+                    <span class="text-pink-700 bg-pink-100 px-3 py-1 rounded-xl border-2 border-pink-300">⏱️ Time: <span id="game-timer">30</span>s</span>
+                    <span class="text-amber-700 bg-amber-100 px-3 py-1 rounded-xl border-2 border-amber-300">🪙 Bonus: <span id="game-coins">0</span></span>
+                </div>
+            </div>
+
+            <!-- Interactive Canvas -->
+            <div class="relative w-full max-w-lg aspect-[4/3] rounded-3xl overflow-hidden border-4 border-pink-400 shadow-2xl">
+                <canvas id="gameCanvas" class="w-full h-full block"></canvas>
+            </div>
+
+            <!-- Mobile Controls -->
+            <div class="flex gap-3 w-full max-w-md sm:hidden">
+                <button id="btn-left" class="flex-1 snout-btn text-white font-game text-xl py-3 rounded-2xl">👈 Left</button>
+                <button id="btn-shoot" class="flex-1 bg-amber-500 hover:bg-amber-600 border-4 border-amber-700 text-white font-game text-xl py-3 rounded-2xl shadow-md">🍎 Mud-Splat</button>
+                <button id="btn-right" class="flex-1 snout-btn text-white font-game text-xl py-3 rounded-2xl">Right 👉</button>
+            </div>
+        </main>
+
+        <!-- SCREEN 3: VICTORY PALACE SCREEN -->
+        <main id="victory-screen" class="hidden text-center space-y-6 py-6 relative z-10">
+            <div class="inline-block relative">
+                <svg viewBox="0 0 200 180" class="w-48 h-48 mx-auto">
+                    <!-- Pig Palace Mud Castle -->
+                    <rect x="30" y="80" width="140" height="80" fill="#FFC0CB" stroke="#FF1493" stroke-width="4" rx="16"/>
+                    <polygon points="20,80 100,20 180,80" fill="#FF69B4" stroke="#8B4513" stroke-width="4"/>
+                    <!-- Mud Door -->
+                    <rect x="85" y="110" width="30" height="50" fill="#8B4513" rx="15"/>
+                    <circle cx="100" cy="50" r="14" fill="#FFD700" stroke="#B8860B" stroke-width="2"/>
+                    <!-- Royal Crown -->
+                    <path d="M 90 45 L 95 33 L 100 45 L 105 33 L 110 45 Z" fill="#FFD700" />
+                    <!-- Hero in Front -->
+                    <ellipse cx="100" cy="140" rx="28" ry="22" fill="#FFB6C1" stroke="#FF1493" stroke-width="3"/>
+                    <circle cx="90" cy="135" r="3" fill="#333"/>
+                    <circle cx="110" cy="135" r="3" fill="#333"/>
+                    <ellipse cx="100" cy="143" rx="9" ry="7" fill="#FF1493"/>
+                    <!-- Robin Hood Hat -->
+                    <path d="M 72 125 Q 100 106 128 125 Q 100 116 72 125 Z" fill="#2E7D32" stroke="#1B5E20" stroke-width="2" />
+                    <path d="M 112 114 Q 124 96 130 94 C 126 102 122 110 116 116 Z" fill="#D32F2F" />
+                </svg>
+            </div>
+
+            <h2 class="font-game text-3xl md:text-4xl text-pink-900">🎉 OINK-TASTIC VICTORY! 🎉</h2>
+            <p class="text-pink-800 font-extrabold max-w-md mx-auto text-base md:text-lg">
+                Pig-tacular job! You helped Robin Hood Hero master Year 3 Science and build the ultimate Mud Palace!
+            </p>
+
+            <div class="mud-badge p-4 max-w-xs mx-auto rounded-3xl">
+                <span class="text-xs uppercase font-black text-amber-200">Total Mud Score</span>
+                <div id="final-score" class="font-game text-3xl text-yellow-300">🪙 0 Mud Coins</div>
+            </div>
+
+            <button id="restart-btn" class="snout-btn text-white font-game text-xl px-8 py-4 text-white">
+                Play Again 🐷🔄
+            </button>
+        </main>
+
+    </div>
+
+    <script>
+        // Synthesized Piggy Sound Engine using Web Audio API
+        class PigAudioEngine {
+            constructor() {
+                this.ctx = null;
+            }
+
+            init() {
+                if (!this.ctx) {
+                    this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+                }
+                if (this.ctx.state === 'suspended') {
+                    this.ctx.resume();
+                }
+            }
+
+            // Friendly Oink Oink Sound
+            playOink() {
+                this.init();
+                const now = this.ctx.currentTime;
+                
+                // Frequency Modulation for Pig Oink
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(260, now);
+                osc.frequency.exponentialRampToValueAtTime(120, now + 0.15);
+                osc.frequency.exponentialRampToValueAtTime(220, now + 0.25);
+                osc.frequency.exponentialRampToValueAtTime(90, now + 0.35);
+
+                gain.gain.setValueAtTime(0.3, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.38);
+
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(now);
+                osc.stop(now + 0.38);
+            }
+
+            // Happy Victory Squeal
+            playHappySqueal() {
+                this.init();
+                const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(600, now);
+                osc.frequency.linearRampToValueAtTime(950, now + 0.15);
+                osc.frequency.exponentialRampToValueAtTime(1200, now + 0.3);
+
+                gain.gain.setValueAtTime(0.25, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.35);
+
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(now);
+                osc.stop(now + 0.35);
+            }
+
+            // Incorrect Oink/Grumble
+            playWrongOink() {
+                this.init();
+                const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(150, now);
+                osc.frequency.linearRampToValueAtTime(80, now + 0.3);
+
+                gain.gain.setValueAtTime(0.3, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.35);
+
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(now);
+                osc.stop(now + 0.35);
+            }
+
+            // Mud Splat Shot
+            playMudSplat() {
+                this.init();
+                const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(400, now);
+                osc.frequency.exponentialRampToValueAtTime(80, now + 0.12);
+
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.12);
+
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(now);
+                osc.stop(now + 0.12);
+            }
+        }
+
+        const piggyAudio = new PigAudioEngine();
+
+        // 15 Year 3 UK Curriculum Science Questions
+        const questions = [
+            // Level 1: Diets & Animal Groups
+            { level: 1, topic: "Diets & Animal Groups", q: "Animals that eat ONLY plants are called...", options: ["Herbivores", "Carnivores", "Omnivores"], answer: 0 },
+            { level: 1, topic: "Diets & Animal Groups", q: "Pigs eat both plants and meat! What kind of eaters are pigs?", options: ["Omnivores", "Herbivores", "Carnivores"], answer: 0 },
+            { level: 1, topic: "Diets & Animal Groups", q: "Which of these food groups gives animals energy to run and play?", options: ["Carbohydrates", "Water", "Rocks"], answer: 0 },
+
+            // Level 2: Skeletons & Bones
+            { level: 2, topic: "Skeletons & Bones", q: "What is the main job of our skeleton?", options: ["Support, protect organs, & help movement", "To turn food into milk", "To help us breathe water"], answer: 0 },
+            { level: 2, topic: "Skeletons & Bones", q: "Which hard bones protect our heart and lungs?", options: ["Ribs", "Skull", "Kneecap"], answer: 0 },
+            { level: 2, topic: "Skeletons & Bones", q: "An animal like a worm has no bones inside. It is an...", options: ["Invertebrate", "Vertebrate", "Insectivore"], answer: 0 },
+
+            // Level 3: Muscles & Movement
+            { level: 3, topic: "Muscles & Movement", q: "How do muscles work in pairs to move our bones?", options: ["One contracts (shortens) while one relaxes", "They both push outwards", "They turn into liquid"], answer: 0 },
+            { level: 3, topic: "Muscles & Movement", q: "Which muscle pumps blood around your entire body 24/7?", options: ["The Heart", "The Bicep", "The Tongue"], answer: 0 },
+            { level: 3, topic: "Muscles & Movement", q: "What connects muscles directly to our bones?", options: ["Tendons", "Ligaments", "Skin"], answer: 0 },
+
+            // Level 4: Nutrition & Health
+            { level: 4, topic: "Nutrition & Health", q: "Which nutrient helps our bodies grow and repair muscles?", options: ["Protein", "Sugar", "Fats"], answer: 0 },
+            { level: 4, topic: "Nutrition & Health", q: "Why do humans and pigs need a balanced diet?", options: ["To stay healthy and strong", "To grow feathers", "To stop sleeping"], answer: 0 },
+            { level: 4, topic: "Nutrition & Health", q: "Which mineral found in milk keeps our bones and teeth strong?", options: ["Calcium", "Iron", "Gold"], answer: 0 },
+
+            // Level 5: Teeth & Digestion
+            { level: 5, topic: "Teeth & Digestion", q: "Which sharp, pointed teeth are used for tearing food?", options: ["Canines", "Molars", "Incisors"], answer: 0 },
+            { level: 5, topic: "Teeth & Digestion", q: "Which flat teeth at the back of the mouth grind up food?", options: ["Molars", "Canines", "Incisors"], answer: 0 },
+            { level: 5, topic: "Teeth & Digestion", q: "Where does digestion start in the human body?", options: ["In the Mouth", "In the Stomach", "In the Feet"], answer: 0 }
+        ];
+
+        let currentQuestionIdx = 0;
+        let score = 0;
+        let isAnswering = false;
+
+        // DOM Elements
+        const scoreText = document.getElementById('score-text');
+        const levelText = document.getElementById('level-text');
+        const levelTitle = document.getElementById('level-title');
+        const progressBar = document.getElementById('progress-bar');
+        const progressPercent = document.getElementById('progress-percent');
+        const questionNumber = document.getElementById('question-number');
+        const questionText = document.getElementById('question-text');
+        const optionsContainer = document.getElementById('options-container');
+        const feedbackBox = document.getElementById('feedback-box');
+        const benjiDialogue = document.getElementById('benji-dialogue');
+        const benjiMouth = document.getElementById('benji-mouth');
+
+        function loadQuestion() {
+            isAnswering = true;
+            feedbackBox.classList.add('hidden');
+            
+            const q = questions[currentQuestionIdx];
+            
+            // Update stats
+            scoreText.innerText = `🪙 ${score}`;
+            levelText.innerText = `${q.level} / 5`;
+            levelTitle.innerText = `Year 3 Science: Level ${q.level} - ${q.topic}`;
+            
+            const pct = Math.round(((currentQuestionIdx + 1) / questions.length) * 100);
+            progressBar.style.width = `${pct}%`;
+            progressPercent.innerText = `${pct}%`;
+
+            questionNumber.innerText = `Question ${currentQuestionIdx + 1} of ${questions.length}`;
+            questionText.innerText = q.q;
+
+            // Reset Hero expression
+            benjiMouth.setAttribute('d', 'M 42 72 Q 50 78 58 72');
+
+            // Render 3 options as Pig Snout Buttons
+            optionsContainer.innerHTML = '';
+            
+            const choices = q.options.map((opt, i) => ({ text: opt, isCorrect: i === q.answer }));
+            choices.sort(() => Math.random() - 0.5);
+
+            choices.forEach(choice => {
+                const btn = document.createElement('button');
+                btn.className = 'snout-btn text-white font-extrabold p-4 rounded-2xl text-center text-base md:text-lg flex items-center justify-between w-full shadow-md';
+                btn.innerHTML = `<span>🐷 ${choice.text}</span> <span class="opacity-0 font-game text-xl check-mark">✓</span>`;
+                
+                btn.onclick = () => handleAnswer(choice.isCorrect, btn, q.options[q.answer]);
+                optionsContainer.appendChild(btn);
+            });
+        }
+
+        function handleAnswer(isCorrect, selectedBtn, correctAnswerText) {
+            if (!isAnswering) return;
+            isAnswering = false;
+
+            const buttons = optionsContainer.querySelectorAll('button');
+            buttons.forEach(b => b.style.pointerEvents = 'none');
+
+            if (isCorrect) {
+                piggyAudio.playHappySqueal();
+                score += 10;
+                scoreText.innerText = `🪙 ${score}`;
+                selectedBtn.className = 'bg-green-500 border-4 border-green-700 text-white font-extrabold p-4 rounded-2xl text-center text-base md:text-lg flex items-center justify-between w-full shadow-lg';
+                selectedBtn.querySelector('.check-mark').style.opacity = '1';
+                
+                feedbackBox.className = 'p-4 rounded-2xl text-center font-extrabold text-lg bg-pink-200 text-pink-900 border-4 border-pink-400 block';
+                feedbackBox.innerHTML = '🌟 <b>Well done!</b> Oink-tastic answer!';
+
+                // Happy Hero
+                benjiMouth.setAttribute('d', 'M 38 68 Q 50 85 62 68');
+                
+                const praises = ["\"Oink-tastic answer! You know your Year 3 Science!\"", "\"Snout-standing job!\"", "\"Pig-tacular knowledge!\"", "\"Muddy marvelous!\""];
+                benjiDialogue.innerText = praises[Math.floor(Math.random() * praises.length)];
+
+            } else {
+                piggyAudio.playWrongOink();
+                selectedBtn.className = 'bg-rose-500 border-4 border-rose-700 text-white font-extrabold p-4 rounded-2xl text-center text-base md:text-lg flex items-center justify-between w-full shadow-lg';
+                
+                feedbackBox.className = 'p-4 rounded-2xl text-center font-extrabold text-lg bg-amber-100 text-amber-900 border-4 border-amber-400 block';
+                feedbackBox.innerHTML = `🐽 <b>Try again!</b> The correct answer was <b>${correctAnswerText}</b>.`;
+
+                // Sad Hero
+                benjiMouth.setAttribute('d', 'M 44 75 Q 50 68 56 75');
+                benjiDialogue.innerText = '"Don\'t worry! Even Robin Hood Hero makes mistakes in the forest!"';
+            }
+
+            setTimeout(() => {
+                currentQuestionIdx++;
+                // Trigger Mini Game after Level 1 (Q3), Level 2 (Q6), Level 3 (Q9), Level 4 (Q12) or finish game
+                if (currentQuestionIdx > 0 && currentQuestionIdx % 3 === 0 && currentQuestionIdx < questions.length) {
+                    startMiniGame();
+                } else if (currentQuestionIdx < questions.length) {
+                    loadQuestion();
+                } else {
+                    endMiniGame();
+                }
+            }, 2200);
+        }
+
+        // PIGGY SPACE DEFENSE REWARD GAME
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        let gameActive = false;
+        let gameTimer = 30;
+        let bonusCoins = 0;
+        let timerInterval;
+
+        const player = {
+            x: 200,
+            y: 320,
+            width: 70,
+            height: 50,
+            speed: 7,
+            dx: 0
+        };
+
+        let bullets = [];
+        let chickens = [];
+
+        function resizeCanvas() {
+            canvas.width = canvas.parentElement.clientWidth;
+            canvas.height = canvas.parentElement.clientHeight;
+            player.y = canvas.height - 65;
+        }
+
+        function startMiniGame() {
+            document.getElementById('quiz-screen').classList.add('hidden');
+            document.getElementById('minigame-screen').classList.remove('hidden');
+            document.getElementById('minigame-screen').classList.add('flex');
+            
+            resizeCanvas();
+            window.addEventListener('resize', resizeCanvas);
+
+            gameActive = true;
+            gameTimer = 30;
+            bonusCoins = 0;
+            bullets = [];
+            chickens = [];
+
+            // Keyboard Controls
+            window.addEventListener('keydown', handleKeyDown);
+            window.addEventListener('keyup', handleKeyUp);
+
+            // Touch Controls
+            const btnLeft = document.getElementById('btn-left');
+            const btnRight = document.getElementById('btn-right');
+            const btnShoot = document.getElementById('btn-shoot');
+
+            btnLeft.onmousedown = btnLeft.ontouchstart = (e) => { e.preventDefault(); player.dx = -player.speed; };
+            btnLeft.onmouseup = btnLeft.ontouchend = () => { player.dx = 0; };
+            btnRight.onmousedown = btnRight.ontouchstart = (e) => { e.preventDefault(); player.dx = player.speed; };
+            btnRight.onmouseup = btnRight.ontouchend = () => { player.dx = 0; };
+            
+            btnShoot.onclick = () => { shootMud(); };
+
+            // Timer countdown
+            timerInterval = setInterval(() => {
+                gameTimer--;
+                document.getElementById('game-timer').innerText = gameTimer;
+                if (gameTimer <= 0) {
+                    finishRewardRound();
+                }
+            }, 1000);
+
+            requestAnimationFrame(gameLoop);
+        }
+
+        function shootMud() {
+            if (!gameActive) return;
+            piggyAudio.playMudSplat();
+            bullets.push({
+                x: player.x + player.width / 2 - 6,
+                y: player.y - 10,
+                width: 12,
+                height: 12,
+                speed: 8
+            });
+        }
+
+        function handleKeyDown(e) {
+            if (e.key === 'ArrowLeft' || e.key === 'a') player.dx = -player.speed;
+            if (e.key === 'ArrowRight' || e.key === 'd') player.dx = player.speed;
+            if (e.key === ' ' || e.key === 'ArrowUp') shootMud();
+        }
+
+        function handleKeyUp(e) {
+            if (['ArrowLeft', 'ArrowRight', 'a', 'd'].includes(e.key)) player.dx = 0;
+        }
+
+        function drawBenjiShip() {
+            // UFO Glass Dome
+            ctx.fillStyle = "rgba(255, 182, 193, 0.7)";
+            ctx.beginPath();
+            ctx.arc(player.x + player.width / 2, player.y + 8, 22, Math.PI, 0, false);
+            ctx.fill();
+
+            // HERO WITH ROBIN HOOD HAT INSIDE UFO
+            const bx = player.x + player.width / 2;
+            const by = player.y + 6;
+
+            // Pig Ears
+            ctx.fillStyle = "#FFB6C1";
+            ctx.beginPath();
+            ctx.moveTo(bx - 12, by - 5); ctx.lineTo(bx - 18, by - 15); ctx.lineTo(bx - 6, by - 10);
+            ctx.moveTo(bx + 12, by - 5); ctx.lineTo(bx + 18, by - 15); ctx.lineTo(bx + 6, by - 10);
+            ctx.fill();
+
+            // Pig Head
+            ctx.fillStyle = "#FFB6C1";
+            ctx.beginPath(); ctx.arc(bx, by, 14, 0, Math.PI * 2); ctx.fill();
+
+            // Eyes
+            ctx.fillStyle = "#333";
+            ctx.beginPath(); ctx.arc(bx - 5, by - 2, 2, 0, Math.PI * 2); ctx.fill();
+            ctx.beginPath(); ctx.arc(bx + 5, by - 2, 2, 0, Math.PI * 2); ctx.fill();
+
+            // Snout
+            ctx.fillStyle = "#FF1493";
+            ctx.beginPath(); ctx.ellipse(bx, by + 4, 5, 3.5, 0, 0, Math.PI * 2); ctx.fill();
+
+            // Robin Hood Hat
+            ctx.fillStyle = "#2E7D32";
+            ctx.beginPath();
+            ctx.moveTo(bx - 15, by - 6);
+            ctx.quadraticCurveTo(bx, by - 22, bx + 15, by - 6);
+            ctx.quadraticCurveTo(bx, by - 12, bx - 15, by - 6);
+            ctx.fill();
+
+            // UFO Pink Metallic Base
+            ctx.fillStyle = "#FF69B4";
+            ctx.beginPath();
+            ctx.ellipse(player.x + player.width / 2, player.y + 22, player.width / 2, 12, 0, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.strokeStyle = "#8B4513"; ctx.lineWidth = 3; ctx.stroke();
+        }
+
+        function gameLoop() {
+            if (!gameActive) return;
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Move Player
+            player.x += player.dx;
+            if (player.x < 0) player.x = 0;
+            if (player.x + player.width > canvas.width) player.x = canvas.width - player.width;
+
+            drawBenjiShip();
+
+            // Spawn Alien Chickens
+            if (Math.random() < 0.04) {
+                chickens.push({
+                    x: Math.random() * (canvas.width - 40),
+                    y: -30,
+                    size: 32,
+                    speed: 1.5 + Math.random() * 2
+                });
+            }
+
+            // Draw Mud-Apple Lasers
+            for (let i = bullets.length - 1; i >= 0; i--) {
+                const b = bullets[i];
+                b.y -= b.speed;
+
+                ctx.font = "16px sans-serif";
+                ctx.fillText("🍎", b.x, b.y);
+
+                if (b.y < -10) bullets.splice(i, 1);
+            }
+
+            // Draw Alien Chickens
+            for (let i = chickens.length - 1; i >= 0; i--) {
+                const c = chickens[i];
+                c.y += c.speed;
+
+                ctx.font = "28px sans-serif";
+                ctx.fillText("🐔", c.x, c.y);
+
+                // Collision with Bullets
+                for (let j = bullets.length - 1; j >= 0; j--) {
+                    const b = bullets[j];
+                    if (
+                        b.x >= c.x - 10 && b.x <= c.x + c.size &&
+                        b.y >= c.y - 20 && b.y <= c.y + c.size
+                    ) {
+                        piggyAudio.playOink();
+                        bonusCoins += 5;
+                        document.getElementById('game-coins').innerText = bonusCoins;
+                        chickens.splice(i, 1);
+                        bullets.splice(j, 1);
+                        break;
+                    }
+                }
+
+                if (c && c.y > canvas.height + 30) {
+                    chickens.splice(i, 1);
+                }
+            }
+
+            requestAnimationFrame(gameLoop);
+        }
+
+        function finishRewardRound() {
+            gameActive = false;
+            clearInterval(timerInterval);
+            score += bonusCoins;
+
+            document.getElementById('minigame-screen').classList.add('hidden');
+            
+            if (currentQuestionIdx < questions.length) {
+                document.getElementById('quiz-screen').classList.remove('hidden');
+                loadQuestion();
+            } else {
+                endMiniGame();
+            }
+        }
+
+        function endMiniGame() {
+            gameActive = false;
+            clearInterval(timerInterval);
+
+            document.getElementById('quiz-screen').classList.add('hidden');
+            document.getElementById('minigame-screen').classList.add('hidden');
+            document.getElementById('victory-screen').classList.remove('hidden');
+            document.getElementById('final-score').innerText = `🪙 ${score} Mud Coins`;
+            piggyAudio.playHappySqueal();
+        }
+
+        // Restart Game Event
+        document.getElementById('restart-btn').onclick = () => {
+            currentQuestionIdx = 0;
+            score = 0;
+            document.getElementById('victory-screen').classList.add('hidden');
+            document.getElementById('quiz-screen').classList.remove('hidden');
+            loadQuestion();
+        };
+
+        // Initialize First Question
+        loadQuestion();
+
+    </script>
+</body>
+</html>

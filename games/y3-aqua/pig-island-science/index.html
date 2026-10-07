@@ -1,0 +1,1105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pig Island Science Quiz</title>
+    <!-- Google Fonts for playful, highly legible text -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Nunito:wght@700;900&display=swap" rel="stylesheet">
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'pig-pink': '#FF8DA1',
+                        'pig-soft': '#FFD1DC',
+                        'pig-dark': '#E05A77',
+                        'island-sand': '#FFE8A3',
+                        'island-ocean': '#38BDF8',
+                        'island-deep': '#0284C7',
+                        'palm-green': '#4ADE80',
+                        'palm-dark': '#15803D',
+                        'coconut-brown': '#8B5A2B',
+                        'sunny-yellow': '#FACC15',
+                    },
+                    fontFamily: {
+                        'fredoka': ['Fredoka', 'sans-serif'],
+                        'nunito': ['Nunito', 'sans-serif'],
+                    },
+                    boxShadow: {
+                        'pop': '0 8px 0 rgba(0, 0, 0, 0.15)',
+                        'pop-sm': '0 4px 0 rgba(0, 0, 0, 0.12)',
+                        'pop-lg': '0 12px 0 rgba(0, 0, 0, 0.15)',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Fredoka', sans-serif;
+            background: linear-gradient(180deg, #38BDF8 0%, #BAE6FD 45%, #FFE8A3 85%, #FDE68A 100%);
+            min-height: 100vh;
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: manipulation;
+        }
+
+        .bg-pattern {
+            background-image: radial-gradient(rgba(255, 255, 255, 0.4) 2px, transparent 2px);
+            background-size: 24px 24px;
+        }
+
+        @keyframes bounce-slow {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        @keyframes pulse-gentle {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.04); }
+        }
+
+        .animate-bounce-slow {
+            animation: bounce-slow 2.5s infinite ease-in-out;
+        }
+
+        .animate-pulse-gentle {
+            animation: pulse-gentle 1.8s infinite ease-in-out;
+        }
+
+        /* Glassmorphism styling */
+        .island-card {
+            background: rgba(255, 255, 255, 0.92);
+            backdrop-filter: blur(10px);
+            border: 4px solid #FFFFFF;
+            box-shadow: 0 12px 32px rgba(2, 132, 199, 0.2), 0 6px 0 #CBD5E1;
+        }
+
+        .btn-green {
+            background-color: #4ADE80;
+            border-bottom: 6px solid #16A34A;
+            color: #064E3B;
+        }
+        .btn-green:hover { background-color: #22C55E; }
+        .btn-green:active { transform: translateY(4px); border-bottom-width: 2px; }
+
+        .btn-pink {
+            background-color: #FF8DA1;
+            border-bottom: 6px solid #E05A77;
+            color: #881337;
+        }
+        .btn-pink:hover { background-color: #FB7185; }
+        .btn-pink:active { transform: translateY(4px); border-bottom-width: 2px; }
+
+        .btn-yellow {
+            background-color: #FACC15;
+            border-bottom: 6px solid #CA8A04;
+            color: #713F12;
+        }
+        .btn-yellow:hover { background-color: #EAB308; }
+        .btn-yellow:active { transform: translateY(4px); border-bottom-width: 2px; }
+
+        .btn-blue {
+            background-color: #38BDF8;
+            border-bottom: 6px solid #0284C7;
+            color: #0C4A6E;
+        }
+        .btn-blue:hover { background-color: #0EA5E9; }
+        .btn-blue:active { transform: translateY(4px); border-bottom-width: 2px; }
+
+        .option-btn {
+            transition: all 0.15s ease;
+            background-color: #FFFFFF;
+            border: 3px solid #E2E8F0;
+            border-bottom: 6px solid #CBD5E1;
+            color: #334155;
+        }
+        .option-btn:hover:not(:disabled) {
+            border-color: #38BDF8;
+            background-color: #F0F9FF;
+            transform: translateY(-2px);
+        }
+        .option-btn:active:not(:disabled) {
+            transform: translateY(3px);
+            border-bottom-width: 3px;
+        }
+
+        .option-correct {
+            background-color: #DCFCE7 !important;
+            border-color: #22C55E !important;
+            border-bottom-color: #15803D !important;
+            color: #14532D !important;
+        }
+
+        .option-wrong {
+            background-color: #FEE2E2 !important;
+            border-color: #EF4444 !important;
+            border-bottom-color: #B91C1C !important;
+            color: #7F1D1D !important;
+        }
+
+        canvas {
+            touch-action: none;
+        }
+    </style>
+</head>
+<body class="relative min-h-screen flex flex-col justify-between overflow-x-hidden bg-pattern pb-6">
+
+    <!-- Top Bar Navigation -->
+    <header class="w-full max-w-5xl mx-auto p-4 flex justify-between items-center z-20">
+        <div class="flex items-center gap-3">
+            <div class="w-12 h-12 rounded-full bg-pig-pink border-2 border-white shadow-md flex items-center justify-center text-2xl animate-bounce-slow">
+                🐷
+            </div>
+            <div>
+                <h1 class="text-2xl md:text-3xl font-extrabold text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.4)] tracking-wide">
+                    PIG ISLAND
+                </h1>
+                <p class="text-xs md:text-sm font-semibold text-amber-100 drop-shadow">Year 3 Science Adventure</p>
+            </div>
+        </div>
+
+        <!-- Mute Audio Toggle & Arcade Quick Access -->
+        <div class="flex items-center gap-3">
+            <button id="muteBtn" onclick="toggleAudio()" class="bg-white/80 hover:bg-white p-3 rounded-2xl shadow-pop-sm flex items-center justify-center text-xl transition-transform active:scale-95" title="Toggle Sound">
+                🔊
+            </button>
+            <button id="arcadeShortcutBtn" onclick="openArcadeDirect()" class="bg-amber-300 hover:bg-amber-400 text-amber-950 font-bold px-3 py-2 rounded-2xl shadow-pop-sm flex items-center gap-1.5 text-sm md:text-base border-2 border-white transition-transform active:scale-95">
+                <span>🎮</span>
+                <span class="hidden sm:inline">Mini-Game</span>
+                <span id="playTimeBadge" class="bg-amber-900 text-amber-100 text-xs px-2 py-0.5 rounded-full font-bold">0s</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Interactive Container -->
+    <main class="w-full max-w-3xl mx-auto px-4 my-2 flex-grow flex flex-col justify-center z-10">
+
+        <!-- SCREEN 1: WELCOME SCREEN -->
+        <section id="welcomeScreen" class="island-card rounded-3xl p-6 md:p-8 text-center animate-fade-in">
+            <div class="relative inline-block mb-4">
+                <div class="w-32 h-32 md:w-40 md:h-40 mx-auto rounded-full bg-pig-soft border-4 border-pig-pink flex items-center justify-center text-7xl md:text-8xl shadow-inner animate-pulse-gentle">
+                    🐷
+                </div>
+                <span class="absolute bottom-0 right-0 bg-sunny-yellow text-amber-900 text-xs md:text-sm font-extrabold px-3 py-1 rounded-full border-2 border-white shadow">
+                    Barnaby!
+                </span>
+            </div>
+
+            <h2 class="text-3xl md:text-4xl font-extrabold text-slate-800 mb-2">Welcome to Pig Island!</h2>
+            <p class="text-slate-600 text-base md:text-lg max-w-md mx-auto mb-6">
+                Help Barnaby the Island Pig answer fun science questions about <strong class="text-pig-dark">Animals & Humans</strong>. Complete levels to earn play time in the <strong class="text-island-deep">Beach Brick Breaker</strong>!
+            </p>
+
+            <div class="grid grid-cols-2 md:grid-cols-3 gap-3 max-w-lg mx-auto mb-8 text-left text-xs md:text-sm">
+                <div class="bg-sky-50 p-3 rounded-2xl border border-sky-200 flex items-center gap-2">
+                    <span class="text-2xl">🌱</span>
+                    <div><span class="font-bold text-sky-900 block">Level 1</span> Diets</div>
+                </div>
+                <div class="bg-amber-50 p-3 rounded-2xl border border-amber-200 flex items-center gap-2">
+                    <span class="text-2xl">🍎</span>
+                    <div><span class="font-bold text-amber-900 block">Level 2</span> Nutrition</div>
+                </div>
+                <div class="bg-pink-50 p-3 rounded-2xl border border-pink-200 flex items-center gap-2">
+                    <span class="text-2xl">🦴</span>
+                    <div><span class="font-bold text-pink-900 block">Level 3</span> Skeletons</div>
+                </div>
+                <div class="bg-emerald-50 p-3 rounded-2xl border border-emerald-200 flex items-center gap-2">
+                    <span class="text-2xl">ARM</span>
+                    <div><span class="font-bold text-emerald-900 block">Level 4</span> Muscles</div>
+                </div>
+                <div class="bg-purple-50 p-3 rounded-2xl border border-purple-200 flex items-center gap-2 col-span-2 md:col-span-1">
+                    <span class="text-2xl">🦀</span>
+                    <div><span class="font-bold text-purple-900 block">Level 5</span> Bone Types</div>
+                </div>
+            </div>
+
+            <button onclick="startQuiz()" class="btn-green w-full max-w-xs py-4 rounded-2xl text-xl font-black tracking-wide shadow-pop uppercase transition-all hover:scale-105 active:scale-95">
+                Start Adventure! 🚀
+            </button>
+        </section>
+
+
+        <!-- SCREEN 2: QUIZ SCREEN -->
+        <section id="quizScreen" class="island-card rounded-3xl p-5 md:p-8 hidden">
+            <!-- Level and Progress Header -->
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-6 pb-4 border-b border-slate-200">
+                <div class="flex items-center gap-3">
+                    <span id="levelIcon" class="text-3xl">🌴</span>
+                    <div>
+                        <span id="levelCategory" class="text-xs uppercase font-extrabold text-pig-dark tracking-wider block">Level 1</span>
+                        <h3 id="levelTitle" class="text-xl md:text-2xl font-black text-slate-800">Animal Diets</h3>
+                    </div>
+                </div>
+
+                <!-- Star tracker & score -->
+                <div class="flex items-center justify-between md:justify-end gap-4">
+                    <div class="flex items-center gap-1.5 bg-amber-100 px-3 py-1.5 rounded-full border border-amber-300">
+                        <span class="text-xl">🪙</span>
+                        <span id="coinCount" class="font-black text-amber-900 text-lg">0</span>
+                    </div>
+                    <div class="text-sm font-extrabold text-slate-500">
+                        Question <span id="questionNumText" class="text-slate-800">1</span>/3
+                    </div>
+                </div>
+            </div>
+
+            <!-- Progress Bar -->
+            <div class="w-full bg-slate-100 rounded-full h-3.5 mb-6 p-0.5 border border-slate-200 overflow-hidden">
+                <div id="progressBar" class="bg-gradient-to-r from-palm-green to-emerald-500 h-full rounded-full transition-all duration-300" style="width: 20%;"></div>
+            </div>
+
+            <!-- Barnaby Speech Bubble & Question -->
+            <div class="bg-sky-50 rounded-2xl p-4 md:p-5 border-2 border-sky-200 mb-6 flex gap-4 items-start relative">
+                <div class="text-4xl md:text-5xl shrink-0 pt-1">🐷</div>
+                <div class="flex-grow">
+                    <div id="barnabySpeech" class="text-xs font-bold uppercase text-sky-700 tracking-wider mb-1">Barnaby asks:</div>
+                    <p id="questionText" class="text-lg md:text-xl font-extrabold text-slate-800 leading-snug">
+                        Which group of animals ONLY eats meat?
+                    </p>
+                </div>
+            </div>
+
+            <!-- Options Grid -->
+            <div id="optionsContainer" class="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4 mb-6">
+                <!-- Buttons injected dynamically -->
+            </div>
+
+            <!-- Feedback Banner -->
+            <div id="feedbackBox" class="hidden rounded-2xl p-4 mb-4 text-center border-2 transition-all">
+                <p id="feedbackTitle" class="text-lg font-black mb-1">Oink-tastic!</p>
+                <p id="feedbackText" class="text-sm font-semibold">Carnivores only eat other animals (meat)!</p>
+            </div>
+
+            <!-- Next Button Container -->
+            <div class="flex justify-end">
+                <button id="nextBtn" onclick="nextQuestion()" class="btn-yellow px-8 py-3.5 rounded-2xl text-lg font-black shadow-pop hidden flex items-center gap-2">
+                    <span>Next Question</span>
+                    <span>➔</span>
+                </button>
+            </div>
+        </section>
+
+
+        <!-- SCREEN 3: LEVEL CLEAR CELEBRATION MODAL -->
+        <section id="levelClearScreen" class="island-card rounded-3xl p-6 md:p-8 text-center hidden">
+            <div class="text-6xl md:text-7xl mb-3 animate-bounce-slow">🎉</div>
+            <span id="mascotCatchphrase" class="bg-pig-soft text-pig-dark font-black px-4 py-1.5 rounded-full text-sm md:text-base border border-pig-pink inline-block mb-3">
+                Oink-tastic!
+            </span>
+            <h2 class="text-3xl md:text-4xl font-black text-slate-800 mb-2">Level Complete!</h2>
+            <p id="levelClearSub" class="text-slate-600 font-bold mb-6">You answered all questions in Level 1!</p>
+
+            <div class="bg-amber-50 border-2 border-amber-300 rounded-2xl p-4 max-w-sm mx-auto mb-6 flex items-center justify-around">
+                <div class="text-center">
+                    <span class="text-xs font-bold text-amber-700 block uppercase">Earned Time</span>
+                    <span class="text-2xl font-black text-amber-900">+45 Seconds! ⏱️</span>
+                </div>
+                <div class="text-center">
+                    <span class="text-xs font-bold text-amber-700 block uppercase">Total Play Time</span>
+                    <span id="totalRewardTime" class="text-2xl font-black text-amber-900">45s</span>
+                </div>
+            </div>
+
+            <div class="flex flex-col sm:flex-row gap-3 justify-center max-w-md mx-auto">
+                <button id="playArcadeNowBtn" onclick="startBrickBreakerFromModal()" class="btn-pink py-3.5 px-6 rounded-2xl text-lg font-black shadow-pop flex-1 flex items-center justify-center gap-2">
+                    <span>🎮 Play Arcade</span>
+                </button>
+                <button id="nextLevelBtn" onclick="continueToNextLevel()" class="btn-green py-3.5 px-6 rounded-2xl text-lg font-black shadow-pop flex-1 flex items-center justify-center gap-2">
+                    <span>Next Science Level ➔</span>
+                </button>
+            </div>
+        </section>
+
+
+        <!-- SCREEN 4: BRICK BREAKER MINI-GAME SCREEN -->
+        <section id="arcadeScreen" class="island-card rounded-3xl p-4 md:p-6 hidden">
+            <div class="flex justify-between items-center mb-3">
+                <div class="flex items-center gap-2">
+                    <span class="text-2xl">🏄</span>
+                    <div>
+                        <h3 class="text-lg font-black text-slate-800 leading-none">Piggy Beach Brick Breaker</h3>
+                        <span class="text-xs text-slate-500 font-bold">Use Mouse, Touch, or Arrow Keys!</span>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-4">
+                    <div class="bg-amber-100 border border-amber-300 px-3 py-1 rounded-xl text-center">
+                        <span class="text-xs text-amber-800 font-bold block leading-none">TIME LEFT</span>
+                        <span id="arcadeTimer" class="text-lg font-black text-amber-900">00:45</span>
+                    </div>
+                    <button onclick="closeArcade()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-extrabold px-3 py-1.5 rounded-xl text-sm transition">
+                        Back to Quiz ✖
+                    </button>
+                </div>
+            </div>
+
+            <!-- Canvas Game Container -->
+            <div class="relative w-full aspect-[4/3] bg-gradient-to-b from-sky-300 via-sky-200 to-amber-100 rounded-2xl border-4 border-white shadow-inner overflow-hidden flex items-center justify-center">
+                <canvas id="gameCanvas" class="w-full h-full block cursor-pointer"></canvas>
+
+                <!-- Overlay for Game Over / Time Up -->
+                <div id="arcadeOverlay" class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm flex flex-col items-center justify-center text-white p-6 hidden">
+                    <div class="text-5xl mb-2">🏖️</div>
+                    <h4 id="arcadeOverlayTitle" class="text-3xl font-black mb-2 text-amber-300">Time's Up!</h4>
+                    <p id="arcadeOverlayDesc" class="text-sm md:text-base font-semibold text-center mb-6 max-w-xs">
+                        Awesome playing! Complete more science levels to earn extra mini-game time.
+                    </p>
+                    <button onclick="closeArcade()" class="btn-green px-6 py-3 rounded-2xl text-lg font-black shadow-pop">
+                        Return to Science Quiz 🚀
+                    </button>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- SCREEN 5: GRAND FINALE / ALL LEVELS COMPLETE -->
+        <section id="grandFinaleScreen" class="island-card rounded-3xl p-6 md:p-8 text-center hidden">
+            <div class="text-7xl mb-4 animate-bounce-slow">🏆</div>
+            <span class="bg-yellow-300 text-amber-900 font-black px-4 py-1.5 rounded-full text-sm border-2 border-white inline-block mb-3">
+                ISLAND CHAMPION!
+            </span>
+            <h2 class="text-3xl md:text-5xl font-black text-slate-800 mb-3">Pig-credible Job!</h2>
+            <p class="text-slate-600 text-base md:text-lg max-w-md mx-auto mb-6">
+                You finished all 5 levels of Animals & Humans! Barnaby is doing a happy piggy dance! 🐷💃
+            </p>
+
+            <div class="bg-sky-50 border-2 border-sky-200 rounded-2xl p-4 max-w-sm mx-auto mb-6">
+                <p class="text-sm font-extrabold text-sky-900 mb-1">Your Total Coin Score</p>
+                <div class="text-4xl font-black text-amber-500 flex items-center justify-center gap-2">
+                    <span>🪙</span>
+                    <span id="finalScore">15</span>
+                </div>
+            </div>
+
+            <div class="flex flex-col sm:flex-row gap-3 justify-center max-w-md mx-auto">
+                <button onclick="openArcadeDirect()" class="btn-pink py-3.5 px-6 rounded-2xl text-lg font-black shadow-pop flex-1">
+                    🎮 Endless Arcade Play
+                </button>
+                <button onclick="restartFullQuiz()" class="btn-green py-3.5 px-6 rounded-2xl text-lg font-black shadow-pop flex-1">
+                    🔄 Play Quiz Again
+                </button>
+            </div>
+        </section>
+
+    </main>
+
+    <script>
+        /* ====================================================================
+           AUDIO SYNTHESIZER (Web Audio API - 100% Self-Contained)
+           ==================================================================== */
+        let audioCtx = null;
+        let isMuted = false;
+
+        function initAudio() {
+            if (!audioCtx) {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                if (AudioContext) {
+                    audioCtx = new AudioContext();
+                }
+            }
+            if (audioCtx && audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }
+
+        function toggleAudio() {
+            isMuted = !isMuted;
+            document.getElementById('muteBtn').innerText = isMuted ? '🔇' : '🔊';
+        }
+
+        function playSound(type) {
+            if (isMuted) return;
+            initAudio();
+            if (!audioCtx) return;
+
+            const now = audioCtx.currentTime;
+
+            if (type === 'correct') {
+                // Happy ascending chime
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(523.25, now); // C5
+                osc.frequency.setValueAtTime(659.25, now + 0.08); // E5
+                osc.frequency.setValueAtTime(783.99, now + 0.16); // G5
+                osc.frequency.setValueAtTime(1046.50, now + 0.24); // C6
+
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
+
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+
+                osc.start(now);
+                osc.stop(now + 0.5);
+
+            } else if (type === 'wrong') {
+                // Soft boing down
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(220, now);
+                osc.frequency.exponentialRampToValueAtTime(110, now + 0.3);
+
+                gain.gain.setValueAtTime(0.15, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+
+                osc.start(now);
+                osc.stop(now + 0.3);
+
+            } else if (type === 'fanfare') {
+                // Victory fanfare sequence
+                const notes = [523.25, 659.25, 783.99, 1046.50, 880, 1046.50];
+                const times = [0, 0.1, 0.2, 0.3, 0.45, 0.6];
+                notes.forEach((freq, i) => {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(freq, now + times[i]);
+                    gain.gain.setValueAtTime(0.2, now + times[i]);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + times[i] + 0.25);
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.start(now + times[i]);
+                    osc.stop(now + times[i] + 0.25);
+                });
+
+            } else if (type === 'paddle') {
+                // Crisp wood bounce
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(320, now);
+                osc.frequency.exponentialRampToValueAtTime(160, now + 0.08);
+
+                gain.gain.setValueAtTime(0.25, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
+
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+
+                osc.start(now);
+                osc.stop(now + 0.08);
+
+            } else if (type === 'brick') {
+                // Pop sound
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(600 + Math.random() * 200, now);
+                osc.frequency.exponentialRampToValueAtTime(1200, now + 0.06);
+
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.06);
+
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+
+                osc.start(now);
+                osc.stop(now + 0.06);
+            }
+        }
+
+        /* ====================================================================
+           CURRICULUM QUESTION DATA (UK Year 3: Animals, Including Humans)
+           ==================================================================== */
+        const QUIZ_DATA = [
+            {
+                level: 1,
+                title: "Animal Types & Diets",
+                icon: "🌱",
+                questions: [
+                    {
+                        q: "Animals that ONLY eat plants (like cows and rabbits) are called...",
+                        options: ["Herbivores", "Carnivores", "Omnivores", "Insectivores"],
+                        answer: 0,
+                        explanation: "Herbivores eat plants, grass, fruits, and seeds!"
+                    },
+                    {
+                        q: "A lion ONLY eats other animals. What type of animal is a lion?",
+                        options: ["Herbivore", "Carnivore", "Omnivore", "Vegetarian"],
+                        answer: 1,
+                        explanation: "Carnivores eat meat and prey on other animals."
+                    },
+                    {
+                        q: "Pigs and humans eat BOTH plants and meat. That makes us...",
+                        options: ["Herbivores", "Carnivores", "Omnivores", "Skeletons"],
+                        answer: 2,
+                        explanation: "Omnivores eat a mix of plants and meat!"
+                    }
+                ]
+            },
+            {
+                level: 2,
+                title: "Human Body & Nutrition",
+                icon: "🍎",
+                questions: [
+                    {
+                        q: "Which food group gives our body lots of energy to run and play?",
+                        options: ["Carbohydrates (bread, pasta)", "Water", "Sweets", "Spices"],
+                        answer: 0,
+                        explanation: "Carbohydrates like bread, rice, and oats give us energy!"
+                    },
+                    {
+                        q: "Why do we need to drink plenty of WATER every day?",
+                        options: ["It keeps us hydrated and healthy", "It changes our hair color", "It gives us superhero wings", "It stops us needing sleep"],
+                        answer: 0,
+                        explanation: "Water keeps our bodies cool, hydrated, and working properly."
+                    },
+                    {
+                        q: "Which food group helps build strong muscles and helps us grow big?",
+                        options: ["Proteins (fish, beans, eggs)", "Fizzy drinks", "Butter", "Crisps"],
+                        answer: 0,
+                        explanation: "Proteins help repair our body and grow strong muscles!"
+                    }
+                ]
+            },
+            {
+                level: 3,
+                title: "Skeletons & Bones",
+                icon: "🦴",
+                questions: [
+                    {
+                        q: "Which part of your skeleton acts like a hard helmet to protect your BRAIN?",
+                        options: ["The Skull", "The Ribs", "The Spine", "The Knee"],
+                        answer: 0,
+                        explanation: "The skull is a strong bone structure protecting your brain."
+                    },
+                    {
+                        q: "Your RIBS form a cage around your chest to protect which organs?",
+                        options: ["Heart and Lungs", "Stomach and Feet", "Brain and Eyes", "Ears and Nose"],
+                        answer: 0,
+                        explanation: "The ribcage safely protects your precious heart and lungs!"
+                    },
+                    {
+                        q: "What does your SPINE (backbone) help your body do?",
+                        options: ["Stand up straight and bend", "Taste delicious ice cream", "Hear music", "See color"],
+                        answer: 0,
+                        explanation: "Your spine gives support so you can stand, sit, and bend!"
+                    }
+                ]
+            },
+            {
+                level: 4,
+                title: "Muscles & Movement",
+                icon: "ARM",
+                questions: [
+                    {
+                        q: "How do muscles move your bones?",
+                        options: ["By pulling on bones", "By blowing air on bones", "By pushing bones away", "By melting"],
+                        answer: 0,
+                        explanation: "Muscles move bones by pulling on them!"
+                    },
+                    {
+                        q: "Muscles work in PAIRS! When one muscle contracts (gets shorter), the other...",
+                        options: ["Relaxes (gets longer)", "Snoozes", "Disappears", "Grows hard like stone"],
+                        answer: 0,
+                        explanation: "Muscles work in teams: one contracts while the other relaxes."
+                    },
+                    {
+                        q: "When you bend your arm, the BICEPS muscle at the front of your arm...",
+                        options: ["Contracts and gets thicker", "Relaxes and gets floppy", "Turns into water", "Stays unchanged"],
+                        answer: 0,
+                        explanation: "Your biceps contracts and tightens to pull your arm up!"
+                    }
+                ]
+            },
+            {
+                level: 5,
+                title: "Animal Skeleton Types",
+                icon: "🦀",
+                questions: [
+                    {
+                        q: "Humans and dogs have skeletons INSIDE their bodies. This is called an...",
+                        options: ["Endoskeleton", "Exoskeleton", "Hydrostatic skeleton", "Outer shell"],
+                        answer: 0,
+                        explanation: "'Endo' means inside! Internal skeletons grow inside us."
+                    },
+                    {
+                        q: "Crabs and beetles have a hard protective armor shell on the OUTSIDE called an...",
+                        options: ["Exoskeleton", "Endoskeleton", "Inner skeleton", "Soft coat"],
+                        answer: 0,
+                        explanation: "'Exo' means outside! An exoskeleton acts like outer armor."
+                    },
+                    {
+                        q: "Which of these creatures has NO BONES at all?",
+                        options: ["Jellyfish", "Eagle", "Frog", "Horse"],
+                        answer: 0,
+                        explanation: "Jellyfish and worms have no bones in their body at all!"
+                    }
+                ]
+            }
+        ];
+
+        /* ====================================================================
+           GAME STATE MANAGEMENT
+           ==================================================================== */
+        let currentLevelIdx = 0;
+        let currentQuestionIdx = 0;
+        let coinsEarned = 0;
+        let playTimeSeconds = 0; // Total earned Arcade play time
+        let currentLevelCorrectCount = 0;
+        let selectedOptionIdx = null;
+
+        const CATCHPHRASES = ["Oink-tastic!", "Snout-standing!", "Squeal of Delight!", "Pig-credible!", "Super Star!"];
+
+        function showScreen(screenId) {
+            const screens = ['welcomeScreen', 'quizScreen', 'levelClearScreen', 'arcadeScreen', 'grandFinaleScreen'];
+            screens.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.classList.add('hidden');
+            });
+            const activeEl = document.getElementById(screenId);
+            if (activeEl) activeEl.classList.remove('hidden');
+        }
+
+        function startQuiz() {
+            initAudio();
+            currentLevelIdx = 0;
+            currentQuestionIdx = 0;
+            coinsEarned = 0;
+            playTimeSeconds = 0;
+            updateHeaderBadges();
+            loadQuestion();
+            showScreen('quizScreen');
+        }
+
+        function updateHeaderBadges() {
+            document.getElementById('coinCount').innerText = coinsEarned;
+            document.getElementById('playTimeBadge').innerText = `${playTimeSeconds}s`;
+        }
+
+        function loadQuestion() {
+            const levelData = QUIZ_DATA[currentLevelIdx];
+            const qData = levelData.questions[currentQuestionIdx];
+
+            document.getElementById('levelIcon').innerText = levelData.icon;
+            document.getElementById('levelCategory').innerText = `Level ${levelData.level} of 5`;
+            document.getElementById('levelTitle').innerText = levelData.title;
+            document.getElementById('questionNumText').innerText = currentQuestionIdx + 1;
+
+            // Update Progress Bar
+            const totalQ = 15;
+            const completedQ = (currentLevelIdx * 3) + currentQuestionIdx;
+            const pct = Math.round((completedQ / totalQ) * 100);
+            document.getElementById('progressBar').style.width = `${Math.max(5, pct)}%`;
+
+            // Set Question Text
+            document.getElementById('questionText').innerText = qData.q;
+
+            // Reset Feedback & Next Button
+            const feedbackBox = document.getElementById('feedbackBox');
+            feedbackBox.classList.add('hidden');
+            document.getElementById('nextBtn').classList.add('hidden');
+            selectedOptionIdx = null;
+
+            // Render Options
+            const container = document.getElementById('optionsContainer');
+            container.innerHTML = '';
+
+            qData.options.forEach((optText, idx) => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn p-4 rounded-2xl text-left text-base md:text-lg font-extrabold flex items-center justify-between w-full shadow-pop-sm';
+                btn.innerHTML = `
+                    <span>${optText}</span>
+                    <span class="w-7 h-7 rounded-full bg-slate-100 border border-slate-300 flex items-center justify-center text-xs text-slate-400 font-black">${String.fromCharCode(65 + idx)}</span>
+                `;
+                btn.onclick = () => selectAnswer(idx);
+                container.appendChild(btn);
+            });
+        }
+
+        function selectAnswer(chosenIdx) {
+            if (selectedOptionIdx !== null) return; // Prevent double taps
+            selectedOptionIdx = chosenIdx;
+
+            const levelData = QUIZ_DATA[currentLevelIdx];
+            const qData = levelData.questions[currentQuestionIdx];
+            const isCorrect = (chosenIdx === qData.answer);
+
+            const container = document.getElementById('optionsContainer');
+            const buttons = container.querySelectorAll('button');
+
+            buttons.forEach((btn, idx) => {
+                btn.disabled = true;
+                if (idx === qData.answer) {
+                    btn.classList.add('option-correct');
+                } else if (idx === chosenIdx && !isCorrect) {
+                    btn.classList.add('option-wrong');
+                }
+            });
+
+            const feedbackBox = document.getElementById('feedbackBox');
+            const feedbackTitle = document.getElementById('feedbackTitle');
+            const feedbackText = document.getElementById('feedbackText');
+
+            feedbackBox.classList.remove('hidden', 'bg-green-100', 'border-green-400', 'text-green-900', 'bg-rose-100', 'border-rose-400', 'text-rose-900');
+
+            if (isCorrect) {
+                playSound('correct');
+                coinsEarned += 1;
+                currentLevelCorrectCount += 1;
+                updateHeaderBadges();
+
+                const randomPhrase = CATCHPHRASES[Math.floor(Math.random() * CATCHPHRASES.length)];
+                feedbackTitle.innerText = randomPhrase;
+                feedbackText.innerText = qData.explanation;
+                feedbackBox.classList.add('bg-green-100', 'border-green-400', 'text-green-900');
+            } else {
+                playSound('wrong');
+                feedbackTitle.innerText = "Nice try!";
+                feedbackText.innerText = qData.explanation;
+                feedbackBox.classList.add('bg-rose-100', 'border-rose-400', 'text-rose-900');
+            }
+
+            document.getElementById('nextBtn').classList.remove('hidden');
+        }
+
+        function nextQuestion() {
+            currentQuestionIdx++;
+            if (currentQuestionIdx < 3) {
+                loadQuestion();
+            } else {
+                // Level Complete!
+                playTimeSeconds += 45; // Earn 45s per level
+                updateHeaderBadges();
+                playSound('fanfare');
+
+                if (currentLevelIdx < 4) {
+                    // Show Level Clear Screen
+                    document.getElementById('mascotCatchphrase').innerText = CATCHPHRASES[currentLevelIdx % CATCHPHRASES.length];
+                    document.getElementById('levelClearSub').innerText = `You completed Level ${currentLevelIdx + 1}: ${QUIZ_DATA[currentLevelIdx].title}!`;
+                    document.getElementById('totalRewardTime').innerText = `${playTimeSeconds}s`;
+                    showScreen('levelClearScreen');
+                } else {
+                    // Grand Finale!
+                    document.getElementById('finalScore').innerText = coinsEarned;
+                    showScreen('grandFinaleScreen');
+                }
+            }
+        }
+
+        function continueToNextLevel() {
+            currentLevelIdx++;
+            currentQuestionIdx = 0;
+            currentLevelCorrectCount = 0;
+            loadQuestion();
+            showScreen('quizScreen');
+        }
+
+        function restartFullQuiz() {
+            startQuiz();
+        }
+
+        function startBrickBreakerFromModal() {
+            showScreen('arcadeScreen');
+            initBrickBreaker();
+        }
+
+        function openArcadeDirect() {
+            showScreen('arcadeScreen');
+            initBrickBreaker();
+        }
+
+        /* ====================================================================
+           BRICK BREAKER MINI-GAME ENGINE (HTML5 Canvas)
+           ==================================================================== */
+        let canvas, ctx;
+        let gameLoopReq = null;
+        let arcadeTimerInterval = null;
+        let remainingArcadeTime = 0;
+
+        // Mini-game State
+        let paddle = { x: 0, y: 0, w: 90, h: 16, speed: 8, dx: 0 };
+        let ball = { x: 0, y: 0, r: 8, dx: 4, dy: -4, speed: 5 };
+        let bricks = [];
+        let particles = [];
+        const BRICK_ROWS = 4;
+        const BRICK_COLS = 7;
+
+        function initBrickBreaker() {
+            canvas = document.getElementById('gameCanvas');
+            ctx = canvas.getContext('2d');
+
+            // Responsive Canvas Internal Sizing
+            const rect = canvas.getBoundingClientRect();
+            canvas.width = rect.width || 600;
+            canvas.height = rect.height || 450;
+
+            remainingArcadeTime = playTimeSeconds > 0 ? playTimeSeconds : 30; // default minimum play test
+            document.getElementById('arcadeOverlay').classList.add('hidden');
+
+            // Setup Paddle
+            paddle.w = Math.max(70, canvas.width * 0.18);
+            paddle.h = 16;
+            paddle.x = (canvas.width - paddle.w) / 2;
+            paddle.y = canvas.height - 30;
+            paddle.dx = 0;
+
+            resetBall();
+            createBricks();
+
+            // Event Listeners for Controls
+            setupArcadeControls();
+
+            // Start Arcade Countdown
+            clearInterval(arcadeTimerInterval);
+            updateTimerDisplay();
+            arcadeTimerInterval = setInterval(() => {
+                remainingArcadeTime--;
+                updateTimerDisplay();
+                if (remainingArcadeTime <= 0) {
+                    endArcadeGame("Time's Up!", "Super bounce skills! Complete more science levels for more play time!");
+                }
+            }, 1000);
+
+            if (gameLoopReq) cancelAnimationFrame(gameLoopReq);
+            gameLoop();
+        }
+
+        function updateTimerDisplay() {
+            const mins = Math.floor(Math.max(0, remainingArcadeTime) / 60);
+            const secs = Math.max(0, remainingArcadeTime) % 60;
+            document.getElementById('arcadeTimer').innerText = 
+                `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+        }
+
+        function resetBall() {
+            ball.x = canvas.width / 2;
+            ball.y = paddle.y - 15;
+            ball.speed = canvas.width * 0.008;
+            ball.dx = (Math.random() > 0.5 ? 1 : -1) * ball.speed;
+            ball.dy = -ball.speed;
+        }
+
+        function createBricks() {
+            bricks = [];
+            const padding = 8;
+            const offsetTop = 40;
+            const offsetLeft = 12;
+            const availableWidth = canvas.width - (offsetLeft * 2);
+            const brickW = (availableWidth - (padding * (BRICK_COLS - 1))) / BRICK_COLS;
+            const brickH = 22;
+
+            const colors = ['#FF8DA1', '#FACC15', '#4ADE80', '#38BDF8'];
+            const icons = ['🐷', '🥥', '🌴', '⭐'];
+
+            for (let r = 0; r < BRICK_ROWS; r++) {
+                for (let c = 0; c < BRICK_COLS; c++) {
+                    bricks.push({
+                        x: offsetLeft + c * (brickW + padding),
+                        y: offsetTop + r * (brickH + padding),
+                        w: brickW,
+                        h: brickH,
+                        color: colors[r % colors.length],
+                        icon: icons[r % icons.length],
+                        active: true
+                    });
+                }
+            }
+        }
+
+        let touchX = null;
+        function setupArcadeControls() {
+            // Mouse
+            window.onmousemove = (e) => {
+                if (!canvas) return;
+                const rect = canvas.getBoundingClientRect();
+                const mouseX = e.clientX - rect.left;
+                paddle.x = mouseX - paddle.w / 2;
+            };
+
+            // Touch
+            canvas.ontouchmove = (e) => {
+                if (e.touches.length > 0) {
+                    const rect = canvas.getBoundingClientRect();
+                    const touchX = e.touches[0].clientX - rect.left;
+                    paddle.x = touchX - paddle.w / 2;
+                }
+            };
+
+            // Keyboard
+            window.onkeydown = (e) => {
+                if (e.key === 'ArrowLeft') paddle.dx = -8;
+                if (e.key === 'ArrowRight') paddle.dx = 8;
+            };
+            window.onkeyup = (e) => {
+                if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') paddle.dx = 0;
+            };
+        }
+
+        function spawnParticles(x, y, color) {
+            for (let i = 0; i < 8; i++) {
+                particles.push({
+                    x: x,
+                    y: y,
+                    vx: (Math.random() - 0.5) * 6,
+                    vy: (Math.random() - 0.5) * 6,
+                    radius: Math.random() * 4 + 2,
+                    color: color,
+                    life: 1.0
+                });
+            }
+        }
+
+        function gameLoop() {
+            // Update Positions
+            paddle.x += paddle.dx;
+            // Clamp paddle
+            if (paddle.x < 0) paddle.x = 0;
+            if (paddle.x + paddle.w > canvas.width) paddle.x = canvas.width - paddle.w;
+
+            ball.x += ball.dx;
+            ball.y += ball.dy;
+
+            // Wall Collisions
+            if (ball.x - ball.r < 0) {
+                ball.x = ball.r;
+                ball.dx *= -1;
+                playSound('paddle');
+            }
+            if (ball.x + ball.r > canvas.width) {
+                ball.x = canvas.width - ball.r;
+                ball.dx *= -1;
+                playSound('paddle');
+            }
+            if (ball.y - ball.r < 0) {
+                ball.y = ball.r;
+                ball.dy *= -1;
+                playSound('paddle');
+            }
+
+            // Bottom collision (Missed paddle)
+            if (ball.y + ball.r > canvas.height) {
+                playSound('wrong');
+                resetBall();
+            }
+
+            // Paddle Collision
+            if (ball.y + ball.r >= paddle.y && 
+                ball.y - ball.r <= paddle.y + paddle.h &&
+                ball.x >= paddle.x && 
+                ball.x <= paddle.x + paddle.w) {
+                
+                playSound('paddle');
+                ball.dy = -Math.abs(ball.dy); // Bounce up
+                // Angle variation based on hit position
+                const hitPoint = (ball.x - (paddle.x + paddle.w / 2)) / (paddle.w / 2);
+                ball.dx = hitPoint * (ball.speed * 1.2);
+            }
+
+            // Brick Collisions
+            let activeCount = 0;
+            bricks.forEach(b => {
+                if (b.active) {
+                    activeCount++;
+                    if (ball.x + ball.r > b.x && 
+                        ball.x - ball.r < b.x + b.w && 
+                        ball.y + ball.r > b.y && 
+                        ball.y - ball.r < b.y + b.h) {
+                        
+                        b.active = false;
+                        ball.dy *= -1;
+                        playSound('brick');
+                        spawnParticles(b.x + b.w/2, b.y + b.h/2, b.color);
+                    }
+                }
+            });
+
+            // Respawn bricks if all destroyed!
+            if (activeCount === 0) {
+                createBricks();
+                playSound('fanfare');
+            }
+
+            // Update Particles
+            particles.forEach((p, index) => {
+                p.x += p.vx;
+                p.y += p.vy;
+                p.life -= 0.03;
+                if (p.life <= 0) particles.splice(index, 1);
+            });
+
+            // RENDER CLEAR
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Draw Surfboard Paddle
+            ctx.fillStyle = '#D97706'; // Wooden paddle base
+            ctx.beginPath();
+            ctx.roundRect(paddle.x, paddle.y, paddle.w, paddle.h, 8);
+            ctx.fill();
+            ctx.fillStyle = '#FACC15'; // Yellow stripe
+            ctx.fillRect(paddle.x + paddle.w * 0.3, paddle.y, paddle.w * 0.4, paddle.h);
+
+            // Draw Beach Ball
+            ctx.fillStyle = '#EF4444';
+            ctx.beginPath();
+            ctx.arc(ball.x, ball.y, ball.r, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = '#FFFFFF';
+            ctx.beginPath();
+            ctx.arc(ball.x - 2, ball.y - 2, ball.r * 0.4, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Draw Bricks
+            bricks.forEach(b => {
+                if (b.active) {
+                    ctx.fillStyle = b.color;
+                    ctx.beginPath();
+                    ctx.roundRect(b.x, b.y, b.w, b.h, 6);
+                    ctx.fill();
+                    ctx.strokeStyle = '#FFFFFF';
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+
+                    // Emoji overlay
+                    ctx.font = '12px Fredoka, sans-serif';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText(b.icon, b.x + b.w / 2, b.y + b.h / 2);
+                }
+            });
+
+            // Draw Particles
+            particles.forEach(p => {
+                ctx.fillStyle = p.color;
+                ctx.globalAlpha = Math.max(0, p.life);
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.globalAlpha = 1.0;
+            });
+
+            gameLoopReq = requestAnimationFrame(gameLoop);
+        }
+
+        function endArcadeGame(title, desc) {
+            clearInterval(arcadeTimerInterval);
+            if (gameLoopReq) cancelAnimationFrame(gameLoopReq);
+            document.getElementById('arcadeOverlayTitle').innerText = title;
+            document.getElementById('arcadeOverlayDesc').innerText = desc;
+            document.getElementById('arcadeOverlay').classList.remove('hidden');
+        }
+
+        function closeArcade() {
+            clearInterval(arcadeTimerInterval);
+            if (gameLoopReq) cancelAnimationFrame(gameLoopReq);
+
+            if (currentLevelIdx < 5) {
+                showScreen('quizScreen');
+            } else {
+                showScreen('grandFinaleScreen');
+            }
+        }
+    </script>
+</body>
+</html>

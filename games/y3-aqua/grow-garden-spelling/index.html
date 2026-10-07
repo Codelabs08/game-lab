@@ -1,0 +1,923 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Grow Garden Spelling</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Google Font - Fredoka & Quicksand -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Quicksand:wght@500;700&display=swap" rel="stylesheet">
+
+  <style>
+    body {
+      font-family: 'Fredoka', 'Quicksand', sans-serif;
+      overflow-x: hidden;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    
+    /* Dynamic Rainbow Background Gradient */
+    .rainbow-bg {
+      background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 20%, #a1c4fd 40%, #c2e9fb 60%, #d4fc79 80%, #96e6a1 100%);
+      background-size: 300% 300%;
+      animation: rainbowMove 12s ease infinite;
+    }
+
+    @keyframes rainbowMove {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    /* Floating Leaves Effect */
+    .leaf {
+      position: absolute;
+      pointer-events: none;
+      animation: floatLeaf 8s linear infinite;
+      opacity: 0.7;
+    }
+
+    @keyframes floatLeaf {
+      0% { transform: translateY(-10px) rotate(0deg); opacity: 0; }
+      10% { opacity: 0.8; }
+      90% { opacity: 0.8; }
+      100% { transform: translateY(100vh) rotate(360deg); opacity: 0; }
+    }
+
+    /* Gentle Natural Rainbow Arc with a very slight tilt (-3deg) */
+    .rainbow-sky-arc {
+      position: absolute;
+      top: -25px;
+      left: 2%;
+      width: 96%;
+      height: 180px;
+      border-radius: 50% 50% 0 0;
+      background: transparent;
+      border-top: 14px solid rgba(255, 89, 94, 0.85);
+      box-shadow: 
+        0 12px 0 0 rgba(255, 146, 76, 0.85),
+        0 24px 0 0 rgba(255, 202, 58, 0.85),
+        0 36px 0 0 rgba(138, 201, 38, 0.85),
+        0 48px 0 0 rgba(25, 130, 196, 0.85),
+        0 60px 0 0 rgba(106, 76, 147, 0.85);
+      pointer-events: none;
+      transform: rotate(-3deg);
+      filter: drop-shadow(0 4px 6px rgba(0,0,0,0.08));
+    }
+
+    /* Fluffy Clouds floating on the Rainbow */
+    .rainbow-cloud {
+      position: absolute;
+      background: #ffffff;
+      border-radius: 50px;
+      box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+      pointer-events: none;
+      animation: cloudBob 4s ease-in-out infinite alternate;
+    }
+
+    .rainbow-cloud::before,
+    .rainbow-cloud::after {
+      content: '';
+      position: absolute;
+      background: #ffffff;
+      border-radius: 50%;
+    }
+
+    /* Left Cloud on Rainbow */
+    .cloud-left {
+      top: 60px;
+      left: 5%;
+      width: 75px;
+      height: 26px;
+    }
+    .cloud-left::before { width: 34px; height: 34px; top: -16px; left: 10px; }
+    .cloud-left::after { width: 26px; height: 26px; top: -10px; right: 12px; }
+
+    /* Middle Top Cloud on Rainbow */
+    .cloud-mid {
+      top: -10px;
+      left: 48%;
+      transform: translateX(-50%);
+      width: 90px;
+      height: 30px;
+      animation-delay: -2s;
+    }
+    .cloud-mid::before { width: 40px; height: 40px; top: -20px; left: 14px; }
+    .cloud-mid::after { width: 30px; height: 30px; top: -12px; right: 14px; }
+
+    /* Right Cloud on Rainbow */
+    .cloud-right {
+      top: 65px;
+      right: 5%;
+      width: 75px;
+      height: 26px;
+      animation-delay: -1s;
+    }
+    .cloud-right::before { width: 34px; height: 34px; top: -16px; left: 10px; }
+    .cloud-right::after { width: 26px; height: 26px; top: -10px; right: 12px; }
+
+    @keyframes cloudBob {
+      0% { transform: translateY(0px); }
+      100% { transform: translateY(-5px); }
+    }
+
+    /* Bouncy Button Styling */
+    .btn-bounce {
+      transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    .btn-bounce:hover {
+      transform: translateY(-4px) scale(1.02);
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+    }
+    .btn-bounce:active {
+      transform: translateY(2px) scale(0.98);
+    }
+
+    /* Garden Canvas Styling */
+    #gardenCanvas {
+      background: linear-gradient(to bottom, #87CEEB 0%, #E0F6FF 60%, #8B5A2B 60%, #5C3A21 100%);
+      border-radius: 1.5rem;
+      box-shadow: inset 0 4px 8px rgba(0,0,0,0.2);
+    }
+
+    /* Confetti Particle Overlay */
+    .particle {
+      position: absolute;
+      pointer-events: none;
+      border-radius: 50%;
+      animation: popParticle 0.8s ease-out forwards;
+    }
+
+    @keyframes popParticle {
+      0% { transform: translate(0, 0) scale(1); opacity: 1; }
+      100% { transform: translate(var(--dx), var(--dy)) scale(0); opacity: 0; }
+    }
+
+    /* Custom Glassmorphism Card */
+    .glass-card {
+      background: rgba(255, 255, 255, 0.92);
+      backdrop-filter: blur(8px);
+      border: 4px solid rgba(255, 255, 255, 0.8);
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+    }
+  </style>
+</head>
+<body class="rainbow-bg min-h-screen flex flex-col items-center justify-between p-2 md:p-4 text-slate-800 relative">
+
+  <!-- Leaves Container for Atmosphere -->
+  <div id="leavesContainer" class="fixed inset-0 pointer-events-none overflow-hidden z-0"></div>
+
+  <!-- Top Navigation Header -->
+  <header class="w-full max-w-4xl flex items-center justify-between p-3 glass-card rounded-2xl z-10 mb-3">
+    <div class="flex items-center gap-3">
+      <div class="bg-amber-400 p-3 rounded-2xl text-white shadow-md">
+        <i class="fa-solid fa-seedling text-2xl md:text-3xl"></i>
+      </div>
+      <div>
+        <h1 class="text-xl md:text-3xl font-extrabold text-emerald-700 tracking-wide">Grow Garden</h1>
+        <p class="text-xs md:text-sm text-slate-600 font-semibold">Year 3 English Spelling Quiz</p>
+      </div>
+    </div>
+    <div class="flex items-center gap-2 bg-emerald-100 px-4 py-2 rounded-full border-2 border-emerald-300">
+      <i class="fa-solid fa-star text-amber-500 text-lg md:text-xl"></i>
+      <span id="scoreText" class="font-extrabold text-emerald-800 text-base md:text-lg">0 / 15</span>
+    </div>
+  </header>
+
+  <main class="w-full max-w-4xl flex flex-col gap-4 z-10 flex-grow justify-center">
+
+    <!-- Garden Viewport Canvas Scene -->
+    <div class="relative w-full overflow-hidden glass-card rounded-3xl p-2 md:p-4 border-4 border-emerald-400">
+      
+      <!-- Gently Tilted Rainbow with Fluffy Clouds -->
+      <div class="rainbow-sky-arc"></div>
+      <div class="rainbow-cloud cloud-left"></div>
+      <div class="rainbow-cloud cloud-mid"></div>
+      <div class="rainbow-cloud cloud-right"></div>
+
+      <div class="flex justify-between items-center mb-2 px-2 relative z-10">
+        <span id="levelBadge" class="bg-indigo-500 text-white font-bold px-3 py-1 rounded-full text-xs md:text-sm shadow">
+          Level 1: Soft Sounds & Prefixes
+        </span>
+        <span id="questionProgress" class="text-slate-600 font-bold text-xs md:text-sm">
+          Question 1 of 3
+        </span>
+      </div>
+
+      <!-- Canvas for Growing Flowers -->
+      <canvas id="gardenCanvas" class="w-full h-44 md:h-56 relative z-0"></canvas>
+
+      <!-- Decorative Jungle Vines Overlay -->
+      <div class="absolute top-0 left-0 p-2 pointer-events-none text-emerald-600 opacity-60 z-10">
+        <i class="fa-solid fa-leaf text-2xl"></i>
+        <i class="fa-solid fa-leaf text-lg -ml-1"></i>
+      </div>
+      <div class="absolute top-0 right-0 p-2 pointer-events-none text-emerald-600 opacity-60 transform scale-x-[-1] z-10">
+        <i class="fa-solid fa-leaf text-2xl"></i>
+        <i class="fa-solid fa-leaf text-lg -ml-1"></i>
+      </div>
+    </div>
+
+    <!-- Quiz Card Section -->
+    <div id="quizCard" class="glass-card rounded-3xl p-4 md:p-6 text-center shadow-2xl relative border-4 border-amber-300">
+      
+      <!-- Feedback Banner Overlay -->
+      <div id="feedbackBanner" class="hidden absolute -top-5 left-1/2 transform -translate-x-1/2 px-6 py-2 rounded-full font-extrabold text-white shadow-xl z-20 text-sm md:text-base animate-bounce">
+        🌟 Great Job!
+      </div>
+
+      <!-- Question Text / Sentence -->
+      <div class="min-h-[70px] flex flex-col justify-center items-center">
+        <p id="questionHint" class="text-xs md:text-sm font-bold text-indigo-600 uppercase tracking-wider mb-1">
+          Choose the correct spelling
+        </p>
+        <h2 id="questionText" class="text-lg md:text-2xl font-bold text-slate-800 leading-snug">
+          Loading question...
+        </h2>
+      </div>
+
+      <!-- Answer Option Buttons Grid -->
+      <div id="optionsGrid" class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
+        <!-- Buttons injected dynamically by JS -->
+      </div>
+
+      <!-- Next / Continue Button -->
+      <button id="nextBtn" class="hidden mt-5 w-full bg-emerald-500 hover:bg-emerald-600 text-white font-extrabold text-lg py-3 rounded-2xl btn-bounce shadow-lg border-b-4 border-emerald-700 flex items-center justify-center gap-2">
+        <span>Next Question</span>
+        <i class="fa-solid fa-arrow-right"></i>
+      </button>
+    </div>
+
+    <!-- Reward Unlock Card (Hidden initially) -->
+    <div id="rewardCard" class="hidden glass-card rounded-3xl p-6 md:p-8 text-center border-4 border-amber-400">
+      <div class="text-amber-500 text-5xl md:text-6xl mb-3 animate-bounce">
+        <i class="fa-solid fa-trophy"></i>
+      </div>
+      <h2 class="text-2xl md:text-4xl font-extrabold text-emerald-700 mb-2">Garden Fully Bloomed! 🎉</h2>
+      <p class="text-slate-700 font-semibold text-sm md:text-lg mb-6">
+        You are a Spelling Superstar! You completed all 15 spelling challenges!
+      </p>
+      <button id="startMiniGameBtn" class="bg-amber-400 hover:bg-amber-500 text-slate-900 font-extrabold text-lg md:text-xl px-8 py-4 rounded-2xl btn-bounce shadow-xl border-b-4 border-amber-600 flex items-center justify-center gap-3 mx-auto">
+        <i class="fa-solid fa-star text-white"></i>
+        <span>Play Catch the Falling Stars!</span>
+      </button>
+    </div>
+
+    <!-- Mini Game Modal / View -->
+    <div id="miniGameContainer" class="hidden glass-card rounded-3xl p-3 md:p-5 text-center relative border-4 border-purple-400">
+      <div class="flex justify-between items-center mb-2 px-2">
+        <h3 class="font-extrabold text-purple-700 text-base md:text-xl">🌟 Catch the Falling Stars</h3>
+        <div class="flex items-center gap-4 text-xs md:text-sm font-bold text-slate-700">
+          <span>Caught: <strong id="starScore" class="text-amber-500 text-base">0</strong></span>
+          <span>Timer: <strong id="starTimer" class="text-red-500 text-base">30s</strong></span>
+        </div>
+      </div>
+      <canvas id="miniGameCanvas" class="w-full h-64 md:h-80 bg-slate-900 rounded-2xl shadow-inner cursor-pointer"></canvas>
+      <p class="text-xs text-slate-500 mt-2 font-semibold">
+        Drag or move your mouse / tap screen to move the basket!
+      </p>
+      <button id="restartQuizBtn" class="mt-3 bg-emerald-500 hover:bg-emerald-600 text-white font-bold px-5 py-2 rounded-xl text-sm btn-bounce">
+        <i class="fa-solid fa-rotate-left mr-2"></i> Play Quiz Again
+      </button>
+    </div>
+  </main>
+
+  <!-- Footer Safety & Encouragement Note -->
+  <footer class="w-full max-w-4xl text-center py-3 text-slate-600 text-xs font-semibold z-10">
+    <p>🌱 Keep growing your knowledge! Child-safe educational fun.</p>
+  </footer>
+
+  <script>
+    // 15 Year 3 Curriculum-aligned Questions across 5 Levels
+    const quizData = [
+      // Level 1: Soft c/g, prefixes (un/dis), silent letters
+      {
+        level: 1,
+        title: "Level 1: Soft Sounds & Prefixes",
+        sentence: "It was a total ______ when the lights went out in the room.",
+        target: "disagree",
+        options: ["disagree", "dissagree", "desagree", "disagrie"],
+        hint: "Prefix 'dis-' added to 'agree'"
+      },
+      {
+        level: 1,
+        title: "Level 1: Soft Sounds & Prefixes",
+        sentence: "Draw a neat ______ around your drawing.",
+        target: "circle",
+        options: ["sercle", "circle", "surcle", "circel"],
+        hint: "Starts with a soft 'c'"
+      },
+      {
+        level: 1,
+        title: "Level 1: Soft Sounds & Prefixes",
+        sentence: "He felt very ______ after making a silly mistake.",
+        target: "unhappy",
+        options: ["unhapy", "unhappy", "onhappy", "unhapee"],
+        hint: "Prefix 'un-' added to 'happy'"
+      },
+
+      // Level 2: Suffix rules (-ed, -ing, -ly)
+      {
+        level: 2,
+        title: "Level 2: Suffix Rules (-ed, -ing, -ly)",
+        sentence: "She walked ______ past the sleeping puppy.",
+        target: "quietly",
+        options: ["quietly", "quietley", "quietly", "quitelie"],
+        hint: "Add suffix '-ly' to 'quiet'"
+      },
+      {
+        level: 2,
+        title: "Level 2: Suffix Rules (-ed, -ing, -ly)",
+        sentence: "They were ______ excited about the trip to the zoo.",
+        target: "really",
+        options: ["realy", "reallie", "really", "realey"],
+        hint: "Root word 'real' + '-ly'"
+      },
+      {
+        level: 2,
+        title: "Level 2: Suffix Rules (-ed, -ing, -ly)",
+        sentence: "He was ______ his hands before dinner.",
+        target: "washing",
+        options: ["washin", "washing", "washxing", "wasing"],
+        hint: "Add suffix '-ing' to 'wash'"
+      },
+
+      // Level 3: Homophones (there/their/they're, wear/where)
+      {
+        level: 3,
+        title: "Level 3: Tricky Homophones",
+        sentence: "Look over ______ at the rainbow in the sky!",
+        target: "there",
+        options: ["their", "they're", "there", "thare"],
+        hint: "Refers to a place (contains 'here')"
+      },
+      {
+        level: 3,
+        title: "Level 3: Tricky Homophones",
+        sentence: "The children put on ______ coats before going outside.",
+        target: "their",
+        options: ["there", "their", "they're", "their's"],
+        hint: "Belonging to them"
+      },
+      {
+        level: 3,
+        title: "Level 3: Tricky Homophones",
+        sentence: "Do you know ______ we are going on our school tour?",
+        target: "where",
+        options: ["wear", "were", "where", "whare"],
+        hint: "Asking about a place"
+      },
+
+      // Level 4: Tricky Year 3 Curriculum Words
+      {
+        level: 4,
+        title: "Level 4: Tricky National Words",
+        sentence: "Mark the special date on your wall ______.",
+        target: "calendar",
+        options: ["calender", "calendar", "calandar", "callendar"],
+        hint: "Ends with '-ar'"
+      },
+      {
+        level: 4,
+        title: "Level 4: Tricky National Words",
+        sentence: "We borrowed three interesting books from the local ______.",
+        target: "library",
+        options: ["libary", "librery", "library", "lybrary"],
+        hint: "Notice the 'br' in the middle"
+      },
+      {
+        level: 4,
+        title: "Level 4: Tricky National Words",
+        sentence: "Hot is the exact ______ of cold.",
+        target: "opposite",
+        options: ["oposite", "opposite", "oppasite", "opposit"],
+        hint: "Double 'p' and ends with silent 'e'"
+      },
+
+      // Level 5: Challenge Year 3 Words
+      {
+        level: 5,
+        title: "Level 5: Challenge Words",
+        sentence: "Watch the magician make the coin ______ into thin air!",
+        target: "disappear",
+        options: ["dissappear", "disapear", "disappear", "desappear"],
+        hint: "One 's', double 'p'"
+      },
+      {
+        level: 5,
+        title: "Level 5: Challenge Words",
+        sentence: "Reading books gives you a lot of useful ______.",
+        target: "knowledge",
+        options: ["knowlege", "knowledge", "nowledge", "knolege"],
+        hint: "Contains 'know' and 'ledge'"
+      },
+      {
+        level: 5,
+        title: "Level 5: Challenge Words",
+        sentence: "Take a deep ______ before you start singing.",
+        target: "breathe",
+        options: ["breath", "breathe", "breath-e", "breethe"],
+        hint: "Ends with an 'e' for the long sound"
+      }
+    ];
+
+    // Web Audio API Sound Effects (100% synthesized, safe)
+    let audioCtx = null;
+
+    function initAudio() {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+    }
+
+    function playSound(type) {
+      try {
+        initAudio();
+        if (audioCtx.state === 'suspended') {
+          audioCtx.resume();
+        }
+
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+
+        const now = audioCtx.currentTime;
+
+        if (type === 'correct') {
+          // Cheerful high double chime
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(523.25, now); // C5
+          osc.frequency.exponentialRampToValueAtTime(659.25, now + 0.1); // E5
+          osc.frequency.exponentialRampToValueAtTime(783.99, now + 0.25); // G5
+          
+          gain.gain.setValueAtTime(0.3, now);
+          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+          
+          osc.start(now);
+          osc.stop(now + 0.4);
+        } else if (type === 'wrong') {
+          // Soft low gentle wobble sound
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(220, now); // A3
+          osc.frequency.linearRampToValueAtTime(180, now + 0.25);
+          
+          gain.gain.setValueAtTime(0.2, now);
+          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+          
+          osc.start(now);
+          osc.stop(now + 0.3);
+        } else if (type === 'star') {
+          // Star catch pop sound
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(880, now);
+          osc.frequency.exponentialRampToValueAtTime(1200, now + 0.08);
+
+          gain.gain.setValueAtTime(0.2, now);
+          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.08);
+
+          osc.start(now);
+          osc.stop(now + 0.08);
+        }
+      } catch (e) {
+        // Fallback for audio restrictions
+      }
+    }
+
+    // Garden Canvas Logic
+    const canvas = document.getElementById('gardenCanvas');
+    const ctx = canvas.getContext('2d');
+    let plants = [];
+
+    function resizeCanvas() {
+      const rect = canvas.getBoundingClientRect();
+      canvas.width = rect.width;
+      canvas.height = rect.height;
+      drawGarden();
+    }
+
+    // Flower types and colors
+    const flowerColors = ['#FF6B6B', '#FFD166', '#06D6A0', '#118AB2', '#9D4EDD', '#FF9F1C'];
+
+    function addPlant(index) {
+      const totalQuestions = quizData.length;
+      const step = canvas.width / (totalQuestions + 1);
+      const x = step * (index + 1);
+      const groundY = canvas.height * 0.72;
+
+      plants.push({
+        x: x,
+        y: groundY,
+        height: Math.random() * 25 + 35,
+        color: flowerColors[index % flowerColors.length],
+        petals: Math.floor(Math.random() * 2) + 5,
+        size: Math.random() * 6 + 10,
+        growProgress: 0
+      });
+      animateGarden();
+    }
+
+    function animateGarden() {
+      let animating = false;
+      plants.forEach(p => {
+        if (p.growProgress < 1) {
+          p.growProgress += 0.05;
+          animating = true;
+        }
+      });
+      drawGarden();
+      if (animating) {
+        requestAnimationFrame(animateGarden);
+      }
+    }
+
+    function drawGarden() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      const groundY = canvas.height * 0.72;
+
+      // Draw Grass Backdrop Hills
+      ctx.fillStyle = '#6B8E23';
+      ctx.beginPath();
+      ctx.arc(canvas.width * 0.25, groundY + 80, 120, 0, Math.PI * 2);
+      ctx.arc(canvas.width * 0.75, groundY + 90, 140, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Draw Dirt Base
+      ctx.fillStyle = '#8B5A2B';
+      ctx.fillRect(0, groundY, canvas.width, canvas.height - groundY);
+
+      // Draw Grass Top Layer
+      ctx.fillStyle = '#4CAF50';
+      ctx.fillRect(0, groundY - 8, canvas.width, 10);
+
+      // Draw Each Grown Plant
+      plants.forEach(p => {
+        const currentHeight = p.height * Math.min(1, p.growProgress);
+
+        // Stem
+        ctx.strokeStyle = '#2E7D32';
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        ctx.moveTo(p.x, p.y);
+        ctx.quadraticCurveTo(p.x - 5, p.y - currentHeight / 2, p.x, p.y - currentHeight);
+        ctx.stroke();
+
+        // Leaves
+        if (p.growProgress > 0.4) {
+          ctx.fillStyle = '#4CAF50';
+          ctx.beginPath();
+          ctx.ellipse(p.x - 6, p.y - currentHeight * 0.4, 8, 4, -Math.PI / 4, 0, Math.PI * 2);
+          ctx.ellipse(p.x + 6, p.y - currentHeight * 0.6, 8, 4, Math.PI / 4, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        // Flower Bloom
+        if (p.growProgress > 0.7) {
+          const bloomScale = (p.growProgress - 0.7) / 0.3;
+          const flowerY = p.y - currentHeight;
+          const r = p.size * bloomScale;
+
+          // Petals
+          ctx.fillStyle = p.color;
+          for (let i = 0; i < p.petals; i++) {
+            const angle = (i * 2 * Math.PI) / p.petals;
+            const px = p.x + Math.cos(angle) * r;
+            const py = flowerY + Math.sin(angle) * r;
+            ctx.beginPath();
+            ctx.arc(px, py, r * 0.7, 0, Math.PI * 2);
+            ctx.fill();
+          }
+
+          // Center
+          ctx.fillStyle = '#FFD700';
+          ctx.beginPath();
+          ctx.arc(p.x, flowerY, r * 0.6, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      });
+    }
+
+    let currentQuestionIndex = 0;
+    let score = 0;
+    let answered = false;
+
+    // DOM Elements
+    const levelBadge = document.getElementById('levelBadge');
+    const questionProgress = document.getElementById('questionProgress');
+    const questionText = document.getElementById('questionText');
+    const optionsGrid = document.getElementById('optionsGrid');
+    const nextBtn = document.getElementById('nextBtn');
+    const feedbackBanner = document.getElementById('feedbackBanner');
+    const scoreText = document.getElementById('scoreText');
+    const quizCard = document.getElementById('quizCard');
+    const rewardCard = document.getElementById('rewardCard');
+
+    function loadQuestion() {
+      answered = false;
+      nextBtn.classList.add('hidden');
+      feedbackBanner.classList.add('hidden');
+
+      const q = quizData[currentQuestionIndex];
+      const levelQNumber = ((currentQuestionIndex) % 3) + 1;
+
+      levelBadge.textContent = q.title;
+      questionProgress.textContent = `Level ${q.level} • Question ${levelQNumber} of 3`;
+      
+      // Format sentence with underlined blank
+      const formattedSentence = q.sentence.replace('______', '<span class="underline decoration-indigo-400 decoration-4 text-indigo-700">_______</span>');
+      questionText.innerHTML = formattedSentence;
+
+      optionsGrid.innerHTML = '';
+
+      // Shuffle options copy
+      const shuffledOptions = [...q.options].sort(() => Math.random() - 0.5);
+
+      shuffledOptions.forEach(opt => {
+        const btn = document.createElement('button');
+        btn.className = 'w-full bg-white hover:bg-indigo-50 border-2 border-indigo-200 hover:border-indigo-400 text-slate-800 font-extrabold text-base md:text-lg py-3 px-4 rounded-2xl btn-bounce shadow-sm flex items-center justify-center';
+        btn.textContent = opt;
+        btn.onclick = () => checkAnswer(opt, q.target, btn);
+        optionsGrid.appendChild(btn);
+      });
+    }
+
+    function checkAnswer(selected, correct, btnElement) {
+      if (answered) return;
+      answered = true;
+
+      const buttons = optionsGrid.querySelectorAll('button');
+
+      if (selected === correct) {
+        playSound('correct');
+        score++;
+        scoreText.textContent = `${score} / 15`;
+
+        btnElement.className = 'w-full bg-emerald-500 text-white font-extrabold text-base md:text-lg py-3 px-4 rounded-2xl shadow-md flex items-center justify-center border-b-4 border-emerald-700';
+        btnElement.innerHTML = `${selected} <i class="fa-solid fa-circle-check ml-2"></i>`;
+
+        feedbackBanner.textContent = '🌟 Perfect! Your flower bloomed!';
+        feedbackBanner.className = 'absolute -top-5 left-1/2 transform -translate-x-1/2 px-6 py-2 rounded-full font-extrabold text-white shadow-xl z-20 text-sm md:text-base animate-bounce bg-emerald-500';
+        feedbackBanner.classList.remove('hidden');
+
+        // Sprout flower in garden canvas
+        addPlant(currentQuestionIndex);
+        createConfetti(btnElement);
+
+      } else {
+        playSound('wrong');
+
+        btnElement.className = 'w-full bg-rose-400 text-white font-extrabold text-base md:text-lg py-3 px-4 rounded-2xl shadow-sm flex items-center justify-center border-b-4 border-rose-600';
+        btnElement.innerHTML = `${selected} <i class="fa-solid fa-circle-xmark ml-2"></i>`;
+
+        // Highlight correct option kindly
+        buttons.forEach(b => {
+          if (b.textContent.trim() === correct) {
+            b.className = 'w-full bg-emerald-100 text-emerald-800 border-2 border-emerald-400 font-extrabold text-base md:text-lg py-3 px-4 rounded-2xl';
+          }
+        });
+
+        feedbackBanner.textContent = `Kind try! Correct spelling: "${correct}"`;
+        feedbackBanner.className = 'absolute -top-5 left-1/2 transform -translate-x-1/2 px-6 py-2 rounded-full font-extrabold text-white shadow-xl z-20 text-sm md:text-base bg-amber-500';
+        feedbackBanner.classList.remove('hidden');
+      }
+
+      // Disable all option buttons
+      buttons.forEach(b => b.onclick = null);
+
+      if (currentQuestionIndex < quizData.length - 1) {
+        nextBtn.classList.remove('hidden');
+      } else {
+        setTimeout(showRewardScreen, 1500);
+      }
+    }
+
+    nextBtn.onclick = () => {
+      currentQuestionIndex++;
+      if (currentQuestionIndex < quizData.length) {
+        loadQuestion();
+      } else {
+        showRewardScreen();
+      }
+    };
+
+    function showRewardScreen() {
+      quizCard.classList.add('hidden');
+      rewardCard.classList.remove('hidden');
+    }
+
+    function createConfetti(targetEl) {
+      const rect = targetEl.getBoundingClientRect();
+      const centerX = rect.left + rect.width / 2;
+      const centerY = rect.top + rect.height / 2;
+
+      for (let i = 0; i < 15; i++) {
+        const particle = document.createElement('div');
+        particle.className = 'particle';
+        const colors = ['#FFD166', '#06D6A0', '#118AB2', '#FF6B6B', '#9D4EDD'];
+        particle.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+
+        const size = Math.random() * 8 + 6;
+        particle.style.width = `${size}px`;
+        particle.style.height = `${size}px`;
+
+        const dx = (Math.random() - 0.5) * 160;
+        const dy = (Math.random() - 0.5) * 160;
+
+        particle.style.setProperty('--dx', `${dx}px`);
+        particle.style.setProperty('--dy', `${dy}px`);
+        particle.style.left = `${centerX}px`;
+        particle.style.top = `${centerY}px`;
+
+        document.body.appendChild(particle);
+        setTimeout(() => particle.remove(), 800);
+      }
+    }
+
+    const startMiniGameBtn = document.getElementById('startMiniGameBtn');
+    const miniGameContainer = document.getElementById('miniGameContainer');
+    const miniCanvas = document.getElementById('miniGameCanvas');
+    const miniCtx = miniCanvas.getContext('2d');
+    const starScoreEl = document.getElementById('starScore');
+    const starTimerEl = document.getElementById('starTimer');
+    const restartQuizBtn = document.getElementById('restartQuizBtn');
+
+    let gameActive = false;
+    let starScore = 0;
+    let gameTimer = 30;
+    let timerInterval = null;
+    let stars = [];
+    let basket = { x: 0, y: 0, width: 70, height: 20 };
+
+    startMiniGameBtn.onclick = () => {
+      rewardCard.classList.add('hidden');
+      miniGameContainer.classList.remove('hidden');
+      startMiniGame();
+    };
+
+    function startMiniGame() {
+      resizeMiniCanvas();
+      gameActive = true;
+      starScore = 0;
+      gameTimer = 30;
+      stars = [];
+      starScoreEl.textContent = '0';
+      starTimerEl.textContent = '30s';
+
+      basket.x = miniCanvas.width / 2 - basket.width / 2;
+      basket.y = miniCanvas.height - 35;
+
+      clearInterval(timerInterval);
+      timerInterval = setInterval(() => {
+        gameTimer--;
+        starTimerEl.textContent = `${gameTimer}s`;
+        if (gameTimer <= 0) {
+          endMiniGame();
+        }
+      }, 1000);
+
+      requestAnimationFrame(updateMiniGame);
+    }
+
+    function resizeMiniCanvas() {
+      const rect = miniCanvas.getBoundingClientRect();
+      miniCanvas.width = rect.width;
+      miniCanvas.height = rect.height;
+      basket.y = miniCanvas.height - 35;
+    }
+
+    // Input handlers for Basket movement
+    function moveBasket(clientX) {
+      const rect = miniCanvas.getBoundingClientRect();
+      const relativeX = clientX - rect.left;
+      basket.x = Math.max(0, Math.min(miniCanvas.width - basket.width, relativeX - basket.width / 2));
+    }
+
+    miniCanvas.addEventListener('mousemove', (e) => moveBasket(e.clientX));
+    miniCanvas.addEventListener('touchmove', (e) => {
+      if (e.touches.length > 0) {
+        moveBasket(e.touches[0].clientX);
+      }
+    });
+
+    function updateMiniGame() {
+      if (!gameActive) return;
+
+      miniCtx.clearRect(0, 0, miniCanvas.width, miniCanvas.height);
+
+      // Spawn new stars
+      if (Math.random() < 0.06) {
+        stars.push({
+          x: Math.random() * (miniCanvas.width - 20) + 10,
+          y: -10,
+          speed: Math.random() * 2 + 2,
+          size: Math.random() * 8 + 12,
+          color: flowerColors[Math.floor(Math.random() * flowerColors.length)]
+        });
+      }
+
+      // Draw Basket
+      miniCtx.fillStyle = '#D97706';
+      miniCtx.beginPath();
+      miniCtx.roundRect(basket.x, basket.y, basket.width, basket.height, 10);
+      miniCtx.fill();
+      miniCtx.strokeStyle = '#78350F';
+      miniCtx.lineWidth = 3;
+      miniCtx.stroke();
+
+      // Update and Draw Stars
+      for (let i = stars.length - 1; i >= 0; i--) {
+        const s = stars[i];
+        s.y += s.speed;
+
+        // Draw Star Shape
+        miniCtx.fillStyle = s.color;
+        miniCtx.beginPath();
+        miniCtx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
+        miniCtx.fill();
+
+        // Collision Check with Basket
+        if (
+          s.y + s.size >= basket.y &&
+          s.y - s.size <= basket.y + basket.height &&
+          s.x >= basket.x &&
+          s.x <= basket.x + basket.width
+        ) {
+          playSound('star');
+          starScore++;
+          starScoreEl.textContent = starScore;
+          stars.splice(i, 1);
+          continue;
+        }
+
+        // Remove offscreen stars
+        if (s.y > miniCanvas.height + 20) {
+          stars.splice(i, 1);
+        }
+      }
+
+      requestAnimationFrame(updateMiniGame);
+    }
+
+    function endMiniGame() {
+      gameActive = false;
+      clearInterval(timerInterval);
+
+      miniCtx.fillStyle = 'rgba(15, 23, 42, 0.85)';
+      miniCtx.fillRect(0, 0, miniCanvas.width, miniCanvas.height);
+
+      miniCtx.fillStyle = '#FFFFFF';
+      miniCtx.font = 'bold 24px Fredoka';
+      miniCtx.textAlign = 'center';
+      miniCtx.fillText('🎉 Time is Up!', miniCanvas.width / 2, miniCanvas.height / 2 - 20);
+
+      miniCtx.font = 'bold 18px Fredoka';
+      miniCtx.fillStyle = '#FBBF24';
+      miniCtx.fillText(`You caught ${starScore} stars!`, miniCanvas.width / 2, miniCanvas.height / 2 + 15);
+    }
+
+    restartQuizBtn.onclick = () => {
+      currentQuestionIndex = 0;
+      score = 0;
+      plants = [];
+      scoreText.textContent = '0 / 15';
+      miniGameContainer.classList.add('hidden');
+      quizCard.classList.remove('hidden');
+      loadQuestion();
+      drawGarden();
+    };
+
+    // Decorative floating leaves setup
+    function generateLeaves() {
+      const container = document.getElementById('leavesContainer');
+      for (let i = 0; i < 8; i++) {
+        const leaf = document.createElement('i');
+        leaf.className = 'fa-solid fa-leaf leaf text-emerald-400';
+        leaf.style.left = `${Math.random() * 100}%`;
+        leaf.style.animationDelay = `${Math.random() * 8}s`;
+        leaf.style.fontSize = `${Math.random() * 12 + 14}px`;
+        container.appendChild(leaf);
+      }
+    }
+
+    // Window Onload Initialization
+    window.onload = function () {
+      generateLeaves();
+      resizeCanvas();
+      loadQuestion();
+
+      window.addEventListener('resize', () => {
+        resizeCanvas();
+        if (!miniGameContainer.classList.contains('hidden')) {
+          resizeMiniCanvas();
+        }
+      });
+    };
+  </script>
+</body>
+</html>
