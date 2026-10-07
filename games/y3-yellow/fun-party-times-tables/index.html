@@ -1,0 +1,811 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fun Party Times Tables</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Canvas Confetti for Reward Animations -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Quicksand:wght@500;700&display=swap');
+
+        body {
+            font-family: 'Quicksand', sans-serif;
+            background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 25%, #a1c4fd 50%, #c2e9fb 75%, #e0c3fc 100%);
+            background-size: 400% 400%;
+            animation: rainbowBG 15s ease infinite;
+            min-height: 100vh;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        h1, h2, h3, .font-fun {
+            font-family: 'Fredoka One', cursive;
+        }
+
+        @keyframes rainbowBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .rainbow-text {
+            background: linear-gradient(to right, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #9400d3);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.2));
+        }
+
+        .rainbow-btn {
+            background: linear-gradient(45deg, #ff6b6b, #feca57, #48dbfb, #ff9ff3);
+            background-size: 300% 300%;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 15px rgba(0,0,0,0.2);
+        }
+
+        .rainbow-btn:hover {
+            background-position: 100% 0;
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 12px 20px rgba(0,0,0,0.3);
+        }
+
+        .rainbow-btn:active {
+            transform: translateY(2px) scale(0.98);
+        }
+
+        .option-btn {
+            box-shadow: 0 6px 0 shadow;
+            transition: all 0.15s ease;
+        }
+
+        .option-btn:active {
+            transform: translateY(4px);
+            box-shadow: 0 2px 0 shadow;
+        }
+
+        .bounce-anim {
+            animation: bounce 2s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .pulse-star {
+            animation: pulseStar 1.5s infinite alternate;
+        }
+
+        @keyframes pulseStar {
+            0% { transform: scale(1); rotate: 0deg; }
+            100% { transform: scale(1.2); rotate: 15deg; }
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 10px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.4);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #ff6b6b;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body class="flex flex-col min-h-screen text-gray-800 p-2 sm:p-4">
+
+    <!-- Top Header -->
+    <header class="w-full max-w-4xl mx-auto bg-white/80 backdrop-blur-md rounded-3xl p-4 mb-4 shadow-xl flex flex-wrap justify-between items-center border-4 border-white gap-2">
+        <div class="flex items-center space-x-3">
+            <span class="text-4xl bounce-anim">🎈</span>
+            <div>
+                <h1 class="text-2xl sm:text-4xl font-fun rainbow-text leading-tight">Fun Party Times Tables</h1>
+                <p class="text-xs sm:text-sm font-bold text-purple-600">Year 3 Maths & Brick Breaker Fun</p>
+            </div>
+        </div>
+
+        <div class="flex items-center space-x-3 bg-purple-100 px-4 py-2 rounded-2xl border-2 border-purple-300">
+            <div class="text-center">
+                <span class="text-xs text-purple-600 uppercase font-bold block">Reward Turns</span>
+                <span id="turn-count" class="text-2xl font-fun text-purple-700"><i class="fa-solid font-bold fa-gamepad text-pink-500 mr-1"></i>0</span>
+            </div>
+            <button id="sound-toggle" onclick="toggleAudio()" class="p-2 bg-purple-200 text-purple-700 rounded-xl hover:bg-purple-300 transition text-lg" title="Toggle Sound">
+                <i class="fa-solid fa-volume-high"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="w-full max-w-4xl mx-auto flex-grow flex flex-col justify-center items-center">
+
+        <!-- SCREEN 1: Welcome Screen -->
+        <div id="screen-welcome" class="w-full bg-white/90 backdrop-blur-md rounded-3xl p-6 sm:p-10 shadow-2xl border-4 border-white text-center flex flex-col items-center">
+            <div class="text-6xl mb-4 bounce-anim">🦄 ✨ 🎂</div>
+            <h2 class="text-3xl sm:text-5xl font-fun text-purple-700 mb-4">Welcome to Your Party!</h2>
+            <p class="text-lg sm:text-xl font-bold text-gray-700 mb-6 max-w-lg">
+                Answer Year 3 times tables questions correctly to earn turns at the exciting <span class="text-pink-500 font-fun">Brick Breaker</span> party game! 🥳
+            </p>
+
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 w-full max-w-md mb-8">
+                <div class="bg-yellow-100 border-2 border-yellow-300 p-3 rounded-2xl">
+                    <span class="text-2xl">🌟</span>
+                    <p class="font-bold text-yellow-800 text-sm">5 Level Fun</p>
+                </div>
+                <div class="bg-green-100 border-2 border-green-300 p-3 rounded-2xl">
+                    <span class="text-2xl">🔢</span>
+                    <p class="font-bold text-green-800 text-sm">15 Math Questions</p>
+                </div>
+                <div class="bg-pink-100 border-2 border-pink-300 p-3 rounded-2xl">
+                    <span class="text-2xl">🧱</span>
+                    <p class="font-bold text-pink-800 text-sm">Brick Breaker Minigame</p>
+                </div>
+            </div>
+
+            <button onclick="startQuiz()" class="rainbow-btn text-white text-2xl font-fun py-4 px-10 rounded-full border-4 border-white w-full sm:w-auto cursor-pointer">
+                <i class="fa-solid fa-play mr-2"></i> Start Playing!
+            </button>
+        </div>
+
+        <!-- SCREEN 2: Quiz Screen -->
+        <div id="screen-quiz" class="hidden w-full bg-white/90 backdrop-blur-md rounded-3xl p-4 sm:p-8 shadow-2xl border-4 border-white text-center">
+            <!-- Progress Bar -->
+            <div class="flex justify-between items-center mb-2">
+                <span id="level-badge" class="bg-purple-600 text-white font-fun px-4 py-1 rounded-full text-sm sm:text-base">Level 1</span>
+                <span id="question-progress" class="font-bold text-purple-700 text-sm sm:text-base">Question 1 of 15</span>
+            </div>
+            <div class="w-full bg-gray-200 h-4 rounded-full overflow-hidden mb-6 border border-gray-300">
+                <div id="progress-bar" class="bg-gradient-to-r from-pink-500 via-yellow-400 to-green-400 h-full w-0 transition-all duration-500"></div>
+            </div>
+
+            <!-- Question Card -->
+            <div class="bg-gradient-to-br from-indigo-500 to-purple-600 text-white p-6 sm:p-10 rounded-3xl shadow-inner mb-6 relative overflow-hidden">
+                <div class="absolute -top-4 -right-4 text-white/10 text-8xl font-fun">?</div>
+                <h3 id="level-title" class="text-yellow-300 font-fun text-lg sm:text-xl mb-2">2 and 5 Times Tables</h3>
+                <div id="question-text" class="text-4xl sm:text-6xl font-fun tracking-wider my-4">2 × 3 = ?</div>
+                <p id="helper-text" class="text-sm sm:text-base text-indigo-100 font-bold">Tap the correct answer below!</p>
+            </div>
+
+            <!-- Options Grid -->
+            <div id="options-grid" class="grid grid-cols-2 gap-4 max-w-lg mx-auto mb-6">
+                <!-- Dynamic options generated by JavaScript -->
+            </div>
+
+            <!-- Feedback Modal Banner -->
+            <div id="feedback-message" class="hidden rounded-2xl p-4 text-center font-fun text-xl sm:text-2xl transition-all"></div>
+        </div>
+
+        <!-- SCREEN 3: Brick Breaker Minigame Screen -->
+        <div id="screen-minigame" class="hidden w-full bg-white/90 backdrop-blur-md rounded-3xl p-4 sm:p-6 shadow-2xl border-4 border-white text-center flex flex-col items-center">
+            <div class="flex justify-between items-center w-full mb-3 px-2">
+                <h2 class="text-xl sm:text-2xl font-fun text-pink-600 flex items-center">
+                    <span class="text-2xl mr-2">🧱</span> Party Brick Breaker
+                </h2>
+                <div class="flex gap-2">
+                    <span id="minigame-score" class="bg-yellow-400 text-yellow-900 font-fun px-3 py-1 rounded-xl text-sm">Score: 0</span>
+                    <button onclick="returnToQuiz()" class="bg-indigo-600 text-white font-fun px-3 py-1 rounded-xl text-sm hover:bg-indigo-700 transition">
+                        Back to Math <i class="fa-solid fa-arrow-right ml-1"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="relative w-full max-w-lg aspect-[4/3] bg-gray-900 rounded-2xl overflow-hidden border-4 border-purple-400 shadow-inner flex justify-center items-center">
+                <canvas id="gameCanvas" class="w-full h-full block bg-gradient-to-b from-indigo-950 to-slate-900"></canvas>
+                
+                <!-- Game Over / Ready Overlay inside Canvas Container -->
+                <div id="game-overlay" class="absolute inset-0 bg-black/75 flex flex-col items-center justify-center p-4 text-white z-10">
+                    <h3 id="overlay-title" class="text-3xl font-fun text-yellow-400 mb-2">Ready to Play?</h3>
+                    <p id="overlay-desc" class="text-sm font-bold text-gray-200 mb-4 text-center">Use your touch or mouse to slide the paddle!</p>
+                    <button id="start-game-btn" onclick="startBrickBreakerTurn()" class="rainbow-btn text-white font-fun text-xl py-3 px-8 rounded-full border-2 border-white">
+                        Use 1 Turn & Play! 🎈
+                    </button>
+                </div>
+            </div>
+
+            <!-- Touch Controls Indicator -->
+            <div class="mt-3 text-xs sm:text-sm font-bold text-gray-600 flex items-center gap-2">
+                <span>👈 Drag paddle left or right 👉</span>
+            </div>
+        </div>
+
+        <!-- SCREEN 4: Game Complete Victory Screen -->
+        <div id="screen-victory" class="hidden w-full bg-white/90 backdrop-blur-md rounded-3xl p-6 sm:p-10 shadow-2xl border-4 border-white text-center flex flex-col items-center">
+            <div class="text-7xl mb-4 bounce-anim">🏆 🎉 👑</div>
+            <h2 class="text-3xl sm:text-5xl font-fun rainbow-text mb-2">SUPER MATH STAR!</h2>
+            <p class="text-lg sm:text-xl font-bold text-purple-700 mb-4">You completed all 15 Year 3 Math Questions!</p>
+
+            <div class="bg-purple-50 border-2 border-purple-200 rounded-2xl p-4 w-full max-w-md mb-6">
+                <div class="text-gray-700 font-bold mb-1">Final Score Summary:</div>
+                <div id="final-score-text" class="text-2xl font-fun text-indigo-600">Correct Answers: 15 / 15</div>
+                <div id="final-brick-score" class="text-lg font-fun text-pink-600">Brick Breaker Score: 0</div>
+            </div>
+
+            <p class="text-base text-gray-600 font-bold mb-6">You still have <span id="victory-turns" class="text-purple-700 font-fun text-xl">0</span> reward turns left to play Brick Breaker!</p>
+
+            <div class="flex flex-col sm:flex-row gap-4 w-full max-w-md justify-center">
+                <button onclick="goToMinigameFromVictory()" class="bg-pink-500 hover:bg-pink-600 text-white font-fun text-xl py-3 px-6 rounded-2xl shadow-lg border-2 border-white transition">
+                    🎮 Play Minigame
+                </button>
+                <button onclick="resetWholeGame()" class="rainbow-btn text-white font-fun text-xl py-3 px-6 rounded-2xl shadow-lg border-2 border-white">
+                    🔄 Play Again
+                </button>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="w-full max-w-4xl mx-auto text-center mt-4 text-xs font-bold text-purple-800/80">
+        Safe & Kid-Friendly Learning Game • Created for Your Year 3 Fun Party 🎉
+    </footer>
+
+    <script>
+        let audioEnabled = true;
+        let audioCtx = null;
+
+        function getAudioContext() {
+            if (!audioCtx) {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                audioCtx = new AudioContext();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+            return audioCtx;
+        }
+
+        function toggleAudio() {
+            audioEnabled = !audioEnabled;
+            const btn = document.getElementById('sound-toggle');
+            btn.innerHTML = audioEnabled ? '<i class="fa-solid fa-volume-high"></i>' : '<i class="fa-solid fa-volume-xmark"></i>';
+            btn.classList.toggle('text-gray-400', !audioEnabled);
+        }
+
+        function playSound(type) {
+            if (!audioEnabled) return;
+            try {
+                const ctx = getAudioContext();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+
+                const now = ctx.currentTime;
+
+                if (type === 'correct') {
+                    // Upward Arpeggio Tone
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(300, now);
+                    osc.frequency.exponentialRampToValueAtTime(600, now + 0.1);
+                    osc.frequency.exponentialRampToValueAtTime(900, now + 0.25);
+                    gain.gain.setValueAtTime(0.3, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.35);
+                    osc.start(now);
+                    osc.stop(now + 0.35);
+                } else if (type === 'wrong') {
+                    // Gentle Low Tone
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(200, now);
+                    osc.frequency.exponentialRampToValueAtTime(120, now + 0.2);
+                    gain.gain.setValueAtTime(0.2, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
+                    osc.start(now);
+                    osc.stop(now + 0.25);
+                } else if (type === 'hit') {
+                    // Pop / Bounce Sound
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(400, now);
+                    osc.frequency.exponentialRampToValueAtTime(800, now + 0.08);
+                    gain.gain.setValueAtTime(0.25, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.08);
+                    osc.start(now);
+                    osc.stop(now + 0.08);
+                } else if (type === 'win') {
+                    // Fanfare
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(523.25, now); // C5
+                    osc.frequency.setValueAtTime(659.25, now + 0.15); // E5
+                    osc.frequency.setValueAtTime(783.99, now + 0.3); // G5
+                    osc.frequency.setValueAtTime(1046.50, now + 0.45); // C6
+                    gain.gain.setValueAtTime(0.3, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.8);
+                    osc.start(now);
+                    osc.stop(now + 0.8);
+                }
+            } catch(e) {
+                console.log("Audio play error", e);
+            }
+        }
+
+        const quizQuestions = [
+            // Level 1: Basic 5 & 10 Times Tables
+            { level: 1, levelTitle: "Level 1: Basic 5 & 10 Times Tables", num1: 1, num2: 5, answer: 5, options: [5, 10, 15, 0] },
+            { level: 1, levelTitle: "Level 1: Basic 5 & 10 Times Tables", num1: 2, num2: 5, answer: 10, options: [5, 10, 12, 15] },
+            { level: 1, levelTitle: "Level 1: Basic 5 & 10 Times Tables", num1: 1, num2: 10, answer: 10, options: [5, 10, 20, 100] },
+
+            // Level 2: Easy/Medium 5 & 10 Times Tables
+            { level: 2, levelTitle: "Level 2: Easy 5 & 10 Times Tables", num1: 3, num2: 5, answer: 15, options: [10, 15, 20, 25] },
+            { level: 2, levelTitle: "Level 2: Easy 5 & 10 Times Tables", num1: 4, num2: 5, answer: 20, options: [15, 18, 20, 25] },
+            { level: 2, levelTitle: "Level 2: Easy 5 & 10 Times Tables", num1: 2, num2: 10, answer: 20, options: [10, 15, 20, 30] },
+
+            // Level 3: Medium 5 & 10 Times Tables
+            { level: 3, levelTitle: "Level 3: Medium 5 & 10 Times Tables", num1: 5, num2: 5, answer: 25, options: [20, 25, 30, 35] },
+            { level: 3, levelTitle: "Level 3: Medium 5 & 10 Times Tables", num1: 6, num2: 5, answer: 30, options: [25, 30, 35, 40] },
+            { level: 3, levelTitle: "Level 3: Medium 5 & 10 Times Tables", num1: 5, num2: 10, answer: 50, options: [40, 45, 50, 55] },
+
+            // Level 4: Higher 5 & 10 Times Tables
+            { level: 4, levelTitle: "Level 4: Higher 5 & 10 Times Tables", num1: 7, num2: 5, answer: 35, options: [30, 35, 40, 45] },
+            { level: 4, levelTitle: "Level 4: Higher 5 & 10 Times Tables", num1: 8, num2: 5, answer: 40, options: [35, 40, 45, 50] },
+            { level: 4, levelTitle: "Level 4: Higher 5 & 10 Times Tables", num1: 7, num2: 10, answer: 70, options: [60, 65, 70, 75] },
+
+            // Level 5: Challenge 5 & 10 Times Tables
+            { level: 5, levelTitle: "Level 5: Challenge 5 & 10 Times Tables", num1: 9, num2: 5, answer: 45, options: [40, 45, 50, 55] },
+            { level: 5, levelTitle: "Level 5: Challenge 5 & 10 Times Tables", num1: 10, num2: 10, answer: 100, options: [90, 95, 100, 110] },
+            { level: 5, levelTitle: "Level 5: Challenge 5 & 10 Times Tables", num1: 12, num2: 5, answer: 60, options: [50, 55, 60, 65] }
+        ];
+
+        let currentQuestionIndex = 0;
+        let rewardTurns = 0;
+        let correctAnswersCount = 0;
+        let minigameScore = 0;
+        let isAnsweringLocked = false;
+
+        const encouragingMessages = [
+            "Super Star! 🌟",
+            "You're Amazing! 🎉",
+            "Brilliant Work! 🎈",
+            "Awesome Math Skills! 💪",
+            "High Five! ✨",
+            "Keep It Up! 🚀"
+        ];
+
+        function updateTurnsDisplay() {
+            document.getElementById('turn-count').innerHTML = `<i class="fa-solid font-bold fa-gamepad text-pink-500 mr-1"></i>${rewardTurns}`;
+        }
+
+        function showScreen(screenId) {
+            ['screen-welcome', 'screen-quiz', 'screen-minigame', 'screen-victory'].forEach(id => {
+                document.getElementById(id).classList.add('hidden');
+            });
+            document.getElementById(screenId).classList.remove('hidden');
+        }
+
+        function startQuiz() {
+            getAudioContext();
+            currentQuestionIndex = 0;
+            rewardTurns = 0;
+            correctAnswersCount = 0;
+            minigameScore = 0;
+            updateTurnsDisplay();
+            showScreen('screen-quiz');
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            isAnsweringLocked = false;
+            const feedbackEl = document.getElementById('feedback-message');
+            feedbackEl.classList.add('hidden');
+
+            const q = quizQuestions[currentQuestionIndex];
+            
+            // Update Headers & Progress
+            document.getElementById('level-badge').innerText = `Level ${q.level}`;
+            document.getElementById('level-title').innerText = q.levelTitle;
+            document.getElementById('question-progress').innerText = `Question ${currentQuestionIndex + 1} of 15`;
+            document.getElementById('question-text').innerText = `${q.num1} × ${q.num2} = ?`;
+
+            const percent = ((currentQuestionIndex) / 15) * 100;
+            document.getElementById('progress-bar').style.width = `${percent}%`;
+
+            // Render Options
+            const grid = document.getElementById('options-grid');
+            grid.innerHTML = '';
+
+            const btnColors = [
+                'bg-pink-500 hover:bg-pink-600 border-pink-700 text-white',
+                'bg-amber-400 hover:bg-amber-500 border-amber-600 text-gray-900',
+                'bg-emerald-500 hover:bg-emerald-600 border-emerald-700 text-white',
+                'bg-sky-500 hover:bg-sky-600 border-sky-700 text-white'
+            ];
+
+            q.options.forEach((opt, idx) => {
+                const btn = document.createElement('button');
+                btn.className = `option-btn ${btnColors[idx % btnColors.length]} text-3xl sm:text-4xl font-fun py-5 px-4 rounded-2xl border-b-4 text-center cursor-pointer flex items-center justify-center`;
+                btn.innerText = opt;
+                btn.onclick = () => handleAnswer(opt, btn);
+                grid.appendChild(btn);
+            });
+        }
+
+        function handleAnswer(selectedOpt, btnElement) {
+            if (isAnsweringLocked) return;
+            isAnsweringLocked = true;
+
+            const q = quizQuestions[currentQuestionIndex];
+            const feedbackEl = document.getElementById('feedback-message');
+            feedbackEl.classList.remove('hidden', 'bg-green-100', 'text-green-800', 'border-green-400', 'bg-red-100', 'text-red-800', 'border-red-400');
+
+            if (selectedOpt === q.answer) {
+                // Correct Answer
+                playSound('correct');
+                correctAnswersCount++;
+                rewardTurns++;
+                updateTurnsDisplay();
+
+                // Trigger confetti burst
+                confetti({
+                    particleCount: 40,
+                    spread: 60,
+                    origin: { y: 0.7 }
+                });
+
+                const msg = encouragingMessages[Math.floor(Math.random() * encouragingMessages.length)];
+                feedbackEl.className = "rounded-2xl p-4 text-center font-fun text-xl sm:text-2xl transition-all bg-green-100 text-green-800 border-2 border-green-400 my-4";
+                feedbackEl.innerHTML = `${msg} <br/><span class="text-sm font-bold text-green-700">+1 Brick Breaker Turn Earned! 🧱</span>`;
+
+                btnElement.classList.add('ring-4', 'ring-green-400', 'scale-105');
+
+                setTimeout(() => {
+                    askMinigameReward();
+                }, 1200);
+
+            } else {
+                // Wrong Answer
+                playSound('wrong');
+                feedbackEl.className = "rounded-2xl p-4 text-center font-fun text-xl sm:text-2xl transition-all bg-amber-100 text-amber-900 border-2 border-amber-400 my-4";
+                feedbackEl.innerHTML = `Great Try! You will get it next time! 💪<br/><span class="text-sm font-bold text-amber-800">The correct answer was ${q.answer}.</span>`;
+
+                btnElement.classList.add('opacity-50');
+
+                setTimeout(() => {
+                    nextQuestion();
+                }, 1800);
+            }
+        }
+
+        function askMinigameReward() {
+            currentQuestionIndex++;
+            if (currentQuestionIndex >= 15) {
+                finishQuiz();
+                return;
+            }
+
+            const feedbackEl = document.getElementById('feedback-message');
+            feedbackEl.innerHTML = `
+                <p class="mb-3 text-purple-900">Great Job! Do you want to play Brick Breaker now or keep solving math?</p>
+                <div class="flex gap-2 justify-center flex-wrap">
+                    <button onclick="goToMinigame()" class="bg-pink-500 hover:bg-pink-600 text-white text-base sm:text-lg px-4 py-2 rounded-xl font-fun shadow">
+                        🎮 Play Brick Breaker (${rewardTurns} left)
+                    </button>
+                    <button onclick="nextQuestion()" class="bg-indigo-600 hover:bg-indigo-700 text-white text-base sm:text-lg px-4 py-2 rounded-xl font-fun shadow">
+                        Next Question <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                </div>
+            `;
+        }
+
+        function nextQuestion() {
+            if (currentQuestionIndex >= 15) {
+                finishQuiz();
+            } else {
+                loadQuestion();
+            }
+        }
+
+        function finishQuiz() {
+            playSound('win');
+            confetti({
+                particleCount: 120,
+                spread: 100,
+                origin: { y: 0.5 }
+            });
+            document.getElementById('final-score-text').innerText = `Correct Answers: ${correctAnswersCount} / 15`;
+            document.getElementById('final-brick-score').innerText = `Brick Breaker Score: ${minigameScore}`;
+            document.getElementById('victory-turns').innerText = rewardTurns;
+            showScreen('screen-victory');
+        }
+
+        function resetWholeGame() {
+            startQuiz();
+        }
+
+        function goToMinigame() {
+            showScreen('screen-minigame');
+            initBrickBreakerCanvas();
+            updateMinigameOverlay();
+        }
+
+        function goToMinigameFromVictory() {
+            showScreen('screen-minigame');
+            initBrickBreakerCanvas();
+            updateMinigameOverlay();
+        }
+
+        function returnToQuiz() {
+            if (currentQuestionIndex >= 15) {
+                showScreen('screen-victory');
+            } else {
+                showScreen('screen-quiz');
+                loadQuestion();
+            }
+        }
+
+        let canvas = null;
+        let ctx = null;
+        let animationFrameId = null;
+
+        let paddle = { x: 0, y: 0, width: 80, height: 14, dx: 0 };
+        let ball = { x: 0, y: 0, radius: 8, dx: 4, dy: -4, active: false };
+        let bricks = [];
+        const brickRows = 4;
+        const brickCols = 6;
+        const brickPadding = 6;
+        const brickOffsetTop = 30;
+        const brickOffsetLeft = 20;
+
+        const brickColors = ['#ff4757', '#ffa502', '#2ed573', '#1e90ff'];
+
+        function initBrickBreakerCanvas() {
+            canvas = document.getElementById('gameCanvas');
+            ctx = canvas.getContext('2d');
+
+            canvas.width = 480;
+            canvas.height = 360;
+
+            paddle.width = 90;
+            paddle.height = 14;
+            paddle.x = (canvas.width - paddle.width) / 2;
+            paddle.y = canvas.height - 25;
+
+            initBricks();
+            drawCanvasFrame();
+            setupControls();
+        }
+
+        function initBricks() {
+            bricks = [];
+            const brickWidth = (canvas.width - (brickOffsetLeft * 2) - (brickPadding * (brickCols - 1))) / brickCols;
+            const brickHeight = 18;
+
+            for (let r = 0; r < brickRows; r++) {
+                bricks[r] = [];
+                for (let c = 0; c < brickCols; c++) {
+                    bricks[r][c] = {
+                        x: 0,
+                        y: 0,
+                        status: 1,
+                        color: brickColors[r % brickColors.length],
+                        width: brickWidth,
+                        height: brickHeight
+                    };
+                }
+            }
+        }
+
+        function updateMinigameOverlay() {
+            const overlay = document.getElementById('game-overlay');
+            const title = document.getElementById('overlay-title');
+            const desc = document.getElementById('overlay-desc');
+            const btn = document.getElementById('start-game-btn');
+
+            document.getElementById('minigame-score').innerText = `Score: ${minigameScore}`;
+
+            if (rewardTurns > 0) {
+                overlay.classList.remove('hidden');
+                title.innerText = "Ready to Play?";
+                desc.innerText = `You have ${rewardTurns} turn(s) left! Break the colourful party bricks!`;
+                btn.innerText = "Use 1 Turn & Play! 🎈";
+                btn.disabled = false;
+                btn.classList.remove('opacity-50', 'cursor-not-allowed');
+            } else {
+                overlay.classList.remove('hidden');
+                title.innerText = "No Turns Left!";
+                desc.innerText = "Answer more math questions in the quiz to earn extra turns!";
+                btn.innerText = "Back to Math Quiz ✏️";
+                btn.disabled = false;
+                btn.onclick = returnToQuiz;
+            }
+        }
+
+        function startBrickBreakerTurn() {
+            if (rewardTurns <= 0) return;
+
+            rewardTurns--;
+            updateTurnsDisplay();
+            document.getElementById('game-overlay').classList.add('hidden');
+
+            paddle.x = (canvas.width - paddle.width) / 2;
+            ball.x = canvas.width / 2;
+            ball.y = paddle.y - 10;
+            
+            ball.dx = 4 * (Math.random() > 0.5 ? 1 : -1);
+            ball.dy = -4;
+            ball.active = true;
+
+            let activeBricksCount = 0;
+            for (let r = 0; r < brickRows; r++) {
+                for (let c = 0; c < brickCols; c++) {
+                    if (bricks[r][c].status === 1) activeBricksCount++;
+                }
+            }
+            if (activeBricksCount === 0) {
+                initBricks();
+            }
+
+            if (animationFrameId) cancelAnimationFrame(animationFrameId);
+            gameLoop();
+        }
+
+        function gameLoop() {
+            if (!ball.active) return;
+
+            updatePhysics();
+            drawCanvasFrame();
+
+            if (ball.active) {
+                animationFrameId = requestAnimationFrame(gameLoop);
+            }
+        }
+
+        function updatePhysics() {
+            ball.x += ball.dx;
+            ball.y += ball.dy;
+
+            if (ball.x + ball.radius > canvas.width || ball.x - ball.radius < 0) {
+                ball.dx = -ball.dx;
+                playSound('hit');
+            }
+            if (ball.y - ball.radius < 0) {
+                ball.dy = -ball.dy;
+                playSound('hit');
+            }
+
+            if (ball.y + ball.radius >= paddle.y && 
+                ball.y - ball.radius <= paddle.y + paddle.height &&
+                ball.x >= paddle.x && ball.x <= paddle.x + paddle.width) {
+                
+                let hitPoint = (ball.x - (paddle.x + paddle.width / 2)) / (paddle.width / 2);
+                ball.dx = hitPoint * 5;
+                ball.dy = -Math.abs(ball.dy);
+                playSound('hit');
+            }
+
+            if (ball.y + ball.radius > canvas.height) {
+                ball.active = false;
+                playSound('wrong');
+                setTimeout(() => {
+                    updateMinigameOverlay();
+                }, 500);
+                return;
+            }
+
+            for (let r = 0; r < brickRows; r++) {
+                for (let c = 0; c < brickCols; c++) {
+                    let b = bricks[r][c];
+                    if (b.status === 1) {
+                        let brickX = (c * (b.width + brickPadding)) + brickOffsetLeft;
+                        let brickY = (r * (b.height + brickPadding)) + brickOffsetTop;
+                        b.x = brickX;
+                        b.y = brickY;
+
+                        if (ball.x > b.x && ball.x < b.x + b.width &&
+                            ball.y > b.y && ball.y < b.y + b.height) {
+                            ball.dy = -ball.dy;
+                            b.status = 0;
+                            minigameScore += 10;
+                            document.getElementById('minigame-score').innerText = `Score: ${minigameScore}`;
+                            playSound('correct');
+
+                            checkAllBricksCleared();
+                        }
+                    }
+                }
+            }
+        }
+
+        function checkAllBricksCleared() {
+            let remaining = 0;
+            for (let r = 0; r < brickRows; r++) {
+                for (let c = 0; c < brickCols; c++) {
+                    if (bricks[r][c].status === 1) remaining++;
+                }
+            }
+            if (remaining === 0) {
+                confetti({ particleCount: 50, spread: 70 });
+                playSound('win');
+            }
+        }
+
+        function drawCanvasFrame() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            for (let r = 0; r < brickRows; r++) {
+                for (let c = 0; c < brickCols; c++) {
+                    let b = bricks[r][c];
+                    if (b.status === 1) {
+                        let brickX = (c * (b.width + brickPadding)) + brickOffsetLeft;
+                        let brickY = (r * (b.height + brickPadding)) + brickOffsetTop;
+
+                        ctx.fillStyle = b.color;
+                        ctx.beginPath();
+                        ctx.roundRect(brickX, brickY, b.width, b.height, 4);
+                        ctx.fill();
+
+                        ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+                        ctx.beginPath();
+                        ctx.roundRect(brickX + 2, brickY + 2, b.width - 4, b.height / 2 - 2, 2);
+                        ctx.fill();
+                    }
+                }
+            }
+
+            ctx.fillStyle = '#ff4757';
+            ctx.beginPath();
+            ctx.roundRect(paddle.x, paddle.y, paddle.width, paddle.height, 7);
+            ctx.fill();
+
+            ctx.fillStyle = '#ffa502';
+            ctx.beginPath();
+            ctx.roundRect(paddle.x + 4, paddle.y + 3, paddle.width - 8, paddle.height - 6, 4);
+            ctx.fill();
+
+            ctx.fillStyle = '#00d2d3';
+            ctx.beginPath();
+            ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath();
+            ctx.arc(ball.x - 2, ball.y - 2, ball.radius / 3, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        function setupControls() {
+            function movePaddle(clientX) {
+                if (!canvas) return;
+                const rect = canvas.getBoundingClientRect();
+                const scaleX = canvas.width / rect.width;
+                const relativeX = (clientX - rect.left) * scaleX;
+
+                if (relativeX > 0 && relativeX < canvas.width) {
+                    paddle.x = relativeX - paddle.width / 2;
+                    if (paddle.x < 0) paddle.x = 0;
+                    if (paddle.x + paddle.width > canvas.width) paddle.x = canvas.width - paddle.width;
+                }
+            }
+
+            window.addEventListener('mousemove', (e) => {
+                if (document.getElementById('screen-minigame').classList.contains('hidden')) return;
+                movePaddle(e.clientX);
+            });
+
+            window.addEventListener('touchmove', (e) => {
+                if (document.getElementById('screen-minigame').classList.contains('hidden')) return;
+                if (e.touches.length > 0) {
+                    movePaddle(e.touches[0].clientX);
+                }
+            }, { passive: true });
+
+            // Keyboard Arrow Key Controls
+            window.addEventListener('keydown', (e) => {
+                if (document.getElementById('screen-minigame').classList.contains('hidden')) return;
+                if (e.key === 'ArrowLeft') {
+                    paddle.x = Math.max(0, paddle.x - 20);
+                } else if (e.key === 'ArrowRight') {
+                    paddle.x = Math.min(canvas.width - paddle.width, paddle.x + 20);
+                }
+            });
+        }
+
+        window.onload = function() {
+            updateTurnsDisplay();
+        };
+    </script>
+</body>
+</html>

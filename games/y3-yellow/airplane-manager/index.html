@@ -1,0 +1,1297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Airplane Manager Spelling Quiz</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Fredoka+One&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --pixel-bg: #4a90e2;
+            --pixel-tile: #3b7dd8;
+            --pixel-accent: #f5a623;
+            --pixel-green: #7ed321;
+            --pixel-red: #d0021b;
+        }
+
+        body {
+            font-family: 'Fredoka One', cursive, sans-serif;
+            background-color: #2b3a4a;
+            color: #ffffff;
+            user-select: none;
+            overflow-x: hidden;
+        }
+
+        .font-pixel {
+            font-family: 'Press Start 2P', monospace;
+        }
+
+        /* Blocky Pixel Border Style */
+        .pixel-box {
+            background-color: #3a506b;
+            border: 4px solid #1c2541;
+            box-shadow: 
+                inset -4px -4px 0px 0px #0b132b,
+                inset 4px 4px 0px 0px #5bc0be,
+                6px 6px 0px 0px rgba(0,0,0,0.4);
+            border-radius: 8px;
+        }
+
+        .pixel-box-gold {
+            background-color: #f39c12;
+            border: 4px solid #b7950b;
+            box-shadow: 
+                inset -4px -4px 0px 0px #7d6608,
+                inset 4px 4px 0px 0px #f1c40f,
+                6px 6px 0px 0px rgba(0,0,0,0.4);
+            border-radius: 8px;
+        }
+
+        .pixel-btn {
+            background-color: #4ed164;
+            border: 4px solid #1e702c;
+            color: white;
+            text-shadow: 2px 2px 0px #1e702c;
+            box-shadow: inset -4px -4px 0px 0px #2db343, 0px 6px 0px 0px #14491c;
+            transition: all 0.1s ease;
+            cursor: pointer;
+        }
+
+        .pixel-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: inset -4px -4px 0px 0px #2db343, 0px 8px 0px 0px #14491c;
+            filter: brightness(1.1);
+        }
+
+        .pixel-btn:active {
+            transform: translateY(4px);
+            box-shadow: inset -4px -4px 0px 0px #2db343, 0px 2px 0px 0px #14491c;
+        }
+
+        .pixel-btn-blue {
+            background-color: #3498db;
+            border-color: #1b4f72;
+            text-shadow: 2px 2px 0px #1b4f72;
+            box-shadow: inset -4px -4px 0px 0px #2980b9, 0px 6px 0px 0px #113851;
+        }
+
+        .pixel-btn-blue:hover {
+            box-shadow: inset -4px -4px 0px 0px #2980b9, 0px 8px 0px 0px #113851;
+        }
+
+        .pixel-btn-blue:active {
+            box-shadow: inset -4px -4px 0px 0px #2980b9, 0px 2px 0px 0px #113851;
+        }
+
+        /* Checkered Runway Grid */
+        .pixel-grid-bg {
+            background-size: 32px 32px;
+            background-image: 
+                linear-gradient(to right, rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+        }
+
+        /* Animated Runway Stripe */
+        @keyframes runwayMove {
+            0% { background-position: 0 0; }
+            100% { background-position: -64px 0; }
+        }
+
+        .runway-stripes {
+            background: repeating-linear-gradient(
+                90deg,
+                #f1c40f,
+                #f1c40f 30px,
+                transparent 30px,
+                transparent 60px
+            );
+            animation: runwayMove 1.5s linear infinite;
+        }
+
+        /* Floating Cloud Animation */
+        @keyframes floatCloud {
+            0% { transform: translateX(100vw); }
+            100% { transform: translateX(-200px); }
+        }
+
+        .cloud {
+            position: absolute;
+            animation: floatCloud linear infinite;
+        }
+
+        /* Airplane Pulse / Fly In */
+        @keyframes flyIn {
+            0% { transform: translateX(-200px) translateY(-50px) scale(0.6); }
+            50% { transform: translateX(40vw) translateY(0px) scale(1.1); }
+            100% { transform: translateX(100vw) translateY(-20px) scale(0.8); }
+        }
+
+        .anim-fly-in {
+            animation: flyIn 3.5s ease-in-out forwards;
+        }
+
+        /* Bounce Animation */
+        @keyframes softBounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
+        }
+
+        .bounce-ui {
+            animation: softBounce 2s ease-in-out infinite;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #1c2541;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #5bc0be;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-center p-3 md:p-6 pixel-grid-bg relative overflow-hidden">
+
+    <div class="pointer-events-none absolute inset-0 overflow-hidden z-0">
+        <div class="cloud top-10 opacity-30" style="animation-duration: 25s; top: 10%;">
+            <svg width="120" height="60" fill="white"><rect x="20" y="20" width="80" height="30" rx="10"/><rect x="40" y="10" width="40" height="30" rx="10"/></svg>
+        </div>
+        <div class="cloud opacity-20" style="animation-duration: 35s; top: 30%; animation-delay: -10s;">
+            <svg width="160" height="80" fill="white"><rect x="20" y="30" width="120" height="40" rx="15"/><rect x="50" y="15" width="60" height="40" rx="15"/></svg>
+        </div>
+        <div class="cloud opacity-25" style="animation-duration: 20s; top: 60%; animation-delay: -5s;">
+            <svg width="100" height="50" fill="white"><rect x="10" y="15" width="70" height="25" rx="8"/><rect x="30" y="5" width="35" height="25" rx="8"/></svg>
+        </div>
+    </div>
+
+    <header class="w-full max-w-4xl flex items-center justify-between mb-4 z-10 px-2">
+        <div class="flex items-center space-x-3">
+            <div class="bg-amber-500 border-2 border-amber-700 p-2 rounded-lg flex items-center space-x-2 shadow-lg">
+                <span class="text-xl">✈️</span>
+                <span class="font-pixel text-xs md:text-sm text-yellow-100 tracking-wide">AIRPORT HQ</span>
+            </div>
+        </div>
+
+        <div class="flex items-center space-x-3">
+            <!-- Mute/Audio Button -->
+            <button id="audio-toggle-btn" onclick="toggleMute()" class="bg-slate-700 hover:bg-slate-600 border-2 border-slate-900 p-2 rounded-lg text-lg transition" title="Toggle Sound">
+                🔊
+            </button>
+            <!-- Score Counter -->
+            <div class="bg-blue-900/80 border-2 border-blue-400 px-4 py-2 rounded-lg flex items-center space-x-2">
+                <span class="text-amber-400 text-lg">⭐</span>
+                <span id="global-score" class="font-pixel text-sm md:text-base text-white">0</span>
+            </div>
+        </div>
+    </header>
+
+    <main id="app-container" class="w-full max-w-4xl z-10 relative">
+
+        <!-- ================= 1. START / TITLE SCREEN ================= -->
+        <div id="screen-start" class="pixel-box p-6 md:p-10 text-center flex flex-col items-center justify-center space-y-6">
+            <div class="bounce-ui my-2">
+                <!-- SVG Pixel Airplane Banner -->
+                <svg width="220" height="120" viewBox="0 0 200 100" class="mx-auto drop-shadow-xl">
+                    <!-- Sky Shadow -->
+                    <ellipse cx="100" cy="85" rx="60" ry="10" fill="rgba(0,0,0,0.2)" />
+                    <!-- Airplane Body -->
+                    <rect x="30" y="35" width="130" height="30" fill="#e74c3c" rx="5" />
+                    <rect x="150" y="40" width="25" height="20" fill="#c0392b" rx="3" />
+                    <polygon points="175,40 195,50 175,60" fill="#f1c40f" />
+                    <!-- Cockpit Windows -->
+                    <rect x="45" y="40" width="18" height="12" fill="#3498db" rx="2" />
+                    <rect x="68" y="40" width="18" height="12" fill="#3498db" rx="2" />
+                    <rect x="91" y="40" width="18" height="12" fill="#3498db" rx="2" />
+                    <!-- Wings -->
+                    <polygon points="70,35 110,10 130,10 100,35" fill="#ecf0f1" />
+                    <polygon points="70,65 110,90 130,90 100,65" fill="#bdc3c7" />
+                    <!-- Tail Fin -->
+                    <polygon points="35,35 20,15 40,15 50,35" fill="#f1c40f" />
+                    <!-- Stripes -->
+                    <rect x="60" y="48" width="80" height="5" fill="#f1c40f" />
+                </svg>
+            </div>
+
+            <div class="space-y-2">
+                <h1 class="text-3xl md:text-5xl font-extrabold text-amber-300 drop-shadow-[0_4px_0_rgba(0,0,0,0.8)] tracking-wide">Airplane Manager Spelling Quiz</h1>
+                <p class="text-blue-200 text-base md:text-lg max-w-lg mx-auto">
+                    Welcome Captain! Help guide airplanes to land safely by solving Year 3 spelling challenges!
+                </p>
+            </div>
+
+            <!-- Features Badges -->
+            <div class="flex flex-wrap justify-center gap-3 text-xs md:text-sm font-pixel text-slate-200 py-2">
+                <span class="bg-slate-800/80 px-3 py-1.5 rounded-md border border-slate-600">✈️ 5 Flight Levels</span>
+                <span class="bg-slate-800/80 px-3 py-1.5 rounded-md border border-slate-600">📝 15 Spelling Words</span>
+                <span class="bg-slate-800/80 px-3 py-1.5 rounded-md border border-slate-600">👔 Dress Quizmaster</span>
+            </div>
+
+            <button onclick="startGame()" class="pixel-btn text-xl md:text-2xl px-10 py-5 rounded-2xl w-full max-w-sm font-pixel tracking-wider">
+                ▶ START GAME
+            </button>
+        </div>
+
+
+        <!-- ================= 2. QUIZ SCREEN ================= -->
+        <div id="screen-quiz" class="pixel-box p-5 md:p-8 space-y-6 hidden">
+            <!-- Level & Question Top Bar -->
+            <div class="flex flex-col sm:flex-row justify-between items-center gap-3 border-b-2 border-slate-600/60 pb-4">
+                <div class="flex items-center space-x-3">
+                    <span id="level-badge" class="bg-amber-500 text-slate-900 font-pixel text-xs px-3 py-1.5 rounded-md font-bold">
+                        LEVEL 1
+                    </span>
+                    <span id="question-tracker" class="text-blue-200 text-sm font-pixel">
+                        Question 1 of 3
+                    </span>
+                </div>
+
+                <!-- Timer & Progress Bar -->
+                <div class="flex items-center space-x-4 w-full sm:w-auto">
+                    <!-- 1-Second Speed Timer Display -->
+                    <div class="bg-rose-900/90 border-2 border-rose-400 px-3 py-1 rounded-lg flex items-center space-x-1 font-pixel text-rose-300 animate-pulse text-xs">
+                        <span>⏱️</span>
+                        <span id="timer-display">1s</span>
+                    </div>
+
+                    <div class="w-full sm:w-48 bg-slate-800 h-4 rounded-full overflow-hidden border border-slate-600 p-0.5">
+                        <div id="progress-fill" class="bg-emerald-400 h-full rounded-full transition-all duration-300" style="width: 20%;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Question Prompt Card -->
+            <div class="bg-slate-800/80 border-2 border-slate-600 p-5 rounded-xl text-center space-y-4">
+                <div class="inline-block bg-blue-600/40 text-blue-200 px-3 py-1 rounded-full text-xs uppercase tracking-wider font-semibold">
+                    Spelling Task
+                </div>
+
+                <p id="question-instruction" class="text-xl md:text-2xl text-yellow-200 font-bold">
+                    Which is the correct spelling?
+                </p>
+
+                <!-- Audio Pronunciation Button -->
+                <div class="pt-2">
+                    <button id="listen-word-btn" onclick="speakCurrentWord()" class="pixel-btn-blue px-5 py-2.5 rounded-xl text-sm md:text-base inline-flex items-center space-x-2 font-pixel">
+                        <span>🔊</span>
+                        <span>Listen to Word</span>
+                    </button>
+                </div>
+
+                <!-- Sentence Context Hint -->
+                <p id="sentence-hint" class="text-slate-300 italic text-sm md:text-base mt-2">
+                    "Please write your ______ on the paper."
+                </p>
+            </div>
+
+            <!-- Answer Options Section (Multiple Choice OR Fill-In/Type) -->
+            <div id="options-container" class="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
+                <!-- Dynamically Populated Buttons -->
+            </div>
+
+            <div id="type-container" class="hidden flex-col items-center space-y-4 pt-2">
+                <div class="w-full max-w-md">
+                    <input type="text" id="type-input" placeholder="Type the spelled word here..." class="w-full text-center text-2xl p-4 bg-slate-900 border-4 border-slate-600 rounded-xl text-yellow-300 focus:outline-none focus:border-amber-400 font-pixel tracking-wider uppercase">
+                </div>
+                <button onclick="submitTypedAnswer()" class="pixel-btn px-8 py-3 rounded-xl font-pixel text-lg">
+                    SUBMIT ANSWER ✈️
+                </button>
+            </div>
+
+            <!-- Feedback Alert Display -->
+            <div id="feedback-box" class="hidden p-4 rounded-xl text-center border-2 transition-all">
+                <p id="feedback-text" class="text-lg font-bold"></p>
+                <button id="next-q-btn" onclick="nextQuestion()" class="pixel-btn px-6 py-2 rounded-lg font-pixel text-xs mt-3 hidden">
+                    CONTINUE ➔
+                </button>
+            </div>
+        </div>
+
+
+        <!-- ================= 3. MINI-GAME: DRESS MY QUIZMASTER ================= -->
+        <div id="screen-dressup" class="pixel-box p-5 md:p-8 space-y-6 hidden">
+            <div class="text-center space-y-1">
+                <span class="bg-purple-600 text-white font-pixel text-xs px-3 py-1 rounded-md uppercase">Bonus Reward Round</span>
+                <h2 class="text-2xl md:text-3xl font-extrabold text-amber-300">Dress Quizmaster Hero!</h2>
+                <p class="text-slate-300 text-sm">Customize your flight captain before the next plane lands!</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
+                <!-- Character Display Canvas / Stage -->
+                <div class="md:col-span-5 bg-slate-800 border-4 border-slate-900 rounded-2xl p-4 flex flex-col items-center justify-center relative min-h-[260px] shadow-inner">
+                    <!-- Quizmaster Pixel Mascot Frame -->
+                    <div id="mascot-stage" class="relative w-40 h-52 flex flex-col items-center justify-center">
+                        
+                        <!-- Accessory (Glasses/Mustache/Bowtie) -->
+                        <div id="layer-accessory" class="absolute z-30 top-14 text-3xl transition-all"></div>
+
+                        <!-- Hat Layer -->
+                        <div id="layer-hat" class="absolute z-30 top-1 text-4xl transition-all">🧢</div>
+
+                        <!-- Head / Face -->
+                        <div class="w-20 h-20 bg-amber-200 border-4 border-amber-800 rounded-xl relative z-10 flex flex-col items-center justify-center shadow-md">
+                            <!-- Eyes -->
+                            <div class="flex space-x-4 mb-1">
+                                <div class="w-3 h-3 bg-slate-900 rounded-full"></div>
+                                <div class="w-3 h-3 bg-slate-900 rounded-full"></div>
+                            </div>
+                            <!-- Smile -->
+                            <div class="w-6 h-2 border-b-4 border-slate-900 rounded-full"></div>
+                        </div>
+
+                        <!-- Outfit / Shirt Layer -->
+                        <div id="layer-outfit" class="w-24 h-24 bg-blue-600 border-4 border-blue-900 rounded-b-2xl relative z-20 mt-[-8px] flex items-center justify-center text-3xl shadow-md">
+                            👔
+                        </div>
+                    </div>
+
+                    <div class="mt-3 text-xs font-pixel text-amber-300 bg-slate-900 px-3 py-1 rounded-full">
+                        Captain Buzz
+                    </div>
+                </div>
+
+                <!-- Customization Wardrobe Options -->
+                <div class="md:col-span-7 space-y-4">
+                    <!-- Hats -->
+                    <div>
+                        <h4 class="font-pixel text-xs text-blue-300 mb-2">1. CHOOSE HEADWEAR</h4>
+                        <div class="flex flex-wrap gap-2">
+                            <button onclick="setHat('🧢')" class="bg-slate-700 hover:bg-slate-600 p-2.5 rounded-lg border-2 border-slate-900 text-xl">🧢 Cap</button>
+                            <button onclick="setHat('👑')" class="bg-slate-700 hover:bg-slate-600 p-2.5 rounded-lg border-2 border-slate-900 text-xl">👑 Crown</button>
+                            <button onclick="setHat('🥳')" class="bg-slate-700 hover:bg-slate-600 p-2.5 rounded-lg border-2 border-slate-900 text-xl">🥳 Party</button>
+                            <button onclick="setHat('🪖')" class="bg-slate-700 hover:bg-slate-600 p-2.5 rounded-lg border-2 border-slate-900 text-xl">🪖 Helmet</button>
+                            <button onclick="setHat('🎩')" class="bg-slate-700 hover:bg-slate-600 p-2.5 rounded-lg border-2 border-slate-900 text-xl">🎩 Tophat</button>
+                        </div>
+                    </div>
+
+                    <!-- Outfits -->
+                    <div>
+                        <h4 class="font-pixel text-xs text-blue-300 mb-2">2. CHOOSE OUTFIT</h4>
+                        <div class="flex flex-wrap gap-2">
+                            <button onclick="setOutfit('👔', '#2563eb')" class="bg-slate-700 hover:bg-slate-600 p-2.5 rounded-lg border-2 border-slate-900 text-xl">👔 Pilot</button>
+                            <button onclick="setOutfit('🦸‍♂️', '#dc2626')" class="bg-slate-700 hover:bg-slate-600 p-2.5 rounded-lg border-2 border-slate-900 text-xl">🦸 Hero</button>
+                            <button onclick="setOutfit('🥋', '#16a34a')" class="bg-slate-700 hover:bg-slate-600 p-2.5 rounded-lg border-2 border-slate-900 text-xl">🥋 Gi</button>
+                            <button onclick="setOutfit('👨‍🚀', '#9333ea')" class="bg-slate-700 hover:bg-slate-600 p-2.5 rounded-lg border-2 border-slate-900 text-xl">👨‍🚀 Space</button>
+                        </div>
+                    </div>
+
+                    <!-- Accessories -->
+                    <div>
+                        <h4 class="font-pixel text-xs text-blue-300 mb-2">3. ACCESSORIES</h4>
+                        <div class="flex flex-wrap gap-2">
+                            <button onclick="setAccessory('🕶️')" class="bg-slate-700 hover:bg-slate-600 p-2.5 rounded-lg border-2 border-slate-900 text-xl">🕶️ Shades</button>
+                            <button onclick="setAccessory('🥸')" class="bg-slate-700 hover:bg-slate-600 p-2.5 rounded-lg border-2 border-slate-900 text-xl">🥸 Glasses</button>
+                            <button onclick="setAccessory('🎀')" class="bg-slate-700 hover:bg-slate-600 p-2.5 rounded-lg border-2 border-slate-900 text-xl">🎀 Bowtie</button>
+                            <button onclick="setAccessory('')" class="bg-slate-700 hover:bg-slate-600 p-2.5 rounded-lg border-2 border-slate-900 text-xs">❌ None</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="text-center pt-2">
+                <button onclick="startRunwayLanding()" class="pixel-btn text-lg px-8 py-3.5 rounded-xl font-pixel">
+                    READY FOR LANDING! 🛬
+                </button>
+            </div>
+        </div>
+
+
+        <!-- ================= 4. AIRPLANE LANDING ANIMATION SCREEN ================= -->
+        <div id="screen-landing" class="pixel-box p-4 md:p-8 text-center space-y-4 hidden relative overflow-hidden">
+            <div class="flex items-center justify-between border-b-2 border-slate-600/60 pb-3">
+                <span class="bg-red-600 text-white font-pixel text-xs px-3 py-1 rounded-md uppercase tracking-wider font-bold">
+                    EMIRATES FLIGHT EK-777
+                </span>
+                <h3 class="text-xl md:text-2xl font-extrabold text-yellow-300 font-pixel">
+                    TOUCHDOWN CLEARED! 🛬
+                </h3>
+            </div>
+
+            <!-- Realistic Canvas Runway Landing Stage -->
+            <div class="w-full h-64 md:h-80 bg-slate-900 rounded-xl relative overflow-hidden border-4 border-slate-950 shadow-2xl">
+                <canvas id="runway-canvas" class="w-full h-full block"></canvas>
+
+                <!-- Touchdown HUD Overlay -->
+                <div class="absolute top-3 left-3 bg-slate-900/80 border border-emerald-500/50 px-3 py-1.5 rounded text-left font-mono text-xs text-emerald-400 space-y-0.5">
+                    <div>AIRCRAFT: <span class="text-white font-bold">Boeing 777-300ER</span></div>
+                    <div>LIVERY: <span class="text-amber-300 font-bold">Emirates (A6-EGB)</span></div>
+                    <div>STATUS: <span id="hud-status" class="text-emerald-300">FINAL APPROACH</span></div>
+                </div>
+            </div>
+
+            <div id="landing-status" class="font-pixel text-emerald-400 text-xs md:text-sm animate-pulse pt-1">
+                🛬 Emirates B777-300ER on short final approach...
+            </div>
+        </div>
+
+
+        <!-- ================= 5. FINISHING & VICTORY SCREEN ================= -->
+        <div id="screen-victory" class="pixel-box-gold p-6 md:p-10 text-center space-y-6 hidden">
+<script>
+        // Audio Synthesizer using Web Audio API
+        let audioCtx = null;
+        let isMuted = false;
+
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        }
+
+        function playSound(type) {
+            if (isMuted) return;
+            initAudio();
+            if (!audioCtx) return;
+
+            const now = audioCtx.currentTime;
+
+            if (type === 'click') {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(400, now);
+                osc.frequency.exponentialRampToValueAtTime(800, now + 0.05);
+                gain.gain.setValueAtTime(0.15, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.05);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start(now);
+                osc.stop(now + 0.05);
+            } 
+            else if (type === 'correct') {
+                // Cheerful arpeggio chime
+                [523.25, 659.25, 783.99, 1046.50].forEach((freq, idx) => {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(freq, now + idx * 0.08);
+                    gain.gain.setValueAtTime(0.2, now + idx * 0.08);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.08 + 0.2);
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.start(now + idx * 0.08);
+                    osc.stop(now + idx * 0.08 + 0.2);
+                });
+            } 
+            else if (type === 'wrong') {
+                // Low gentle boop
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(220, now);
+                osc.frequency.linearRampToValueAtTime(140, now + 0.25);
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start(now);
+                osc.stop(now + 0.25);
+            } 
+            else if (type === 'landing') {
+                // Airplane roar sound
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(150, now);
+                osc.frequency.exponentialRampToValueAtTime(300, now + 0.8);
+                osc.frequency.exponentialRampToValueAtTime(100, now + 2.0);
+                gain.gain.setValueAtTime(0.1, now);
+                gain.gain.linearRampToValueAtTime(0.25, now + 1.0);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 2.2);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start(now);
+                osc.stop(now + 2.2);
+            }
+        }
+
+        function toggleMute() {
+            isMuted = !isMuted;
+            const btn = document.getElementById('audio-toggle-btn');
+            btn.textContent = isMuted ? '🔇' : '🔊';
+        }
+
+        // 15 Year 3 Spelling Words split into 5 Levels (3 questions per level)
+        const quizLevels = [
+            {
+                level: 1,
+                name: "Level 1: Taxiway Takeoff",
+                questions: [
+                    {
+                        word: "answer",
+                        sentence: "Can you answer the flight controller's question?",
+                        type: "choice",
+                        options: ["anwer", "answer", "answer"]
+                    },
+                    {
+                        word: "appear",
+                        sentence: "Clouds appear in the sky high above.",
+                        type: "choice",
+                        options: ["appear", "apear", "appeer"]
+                    },
+                    {
+                        word: "arrive",
+                        sentence: "The airplane will arrive at the airport soon.",
+                        type: "type",
+                        options: []
+                    }
+                ]
+            },
+            {
+                level: 2,
+                name: "Level 2: Smooth Cruising",
+                questions: [
+                    {
+                        word: "bicycle",
+                        sentence: "The pilot rides a bicycle around the runway hangar.",
+                        type: "choice",
+                        options: ["bycycle", "bicycle", "bicyle"]
+                    },
+                    {
+                        word: "breath",
+                        sentence: "Take a deep breath before your first solo flight.",
+                        type: "choice",
+                        options: ["breath", "breth", "breathe"]
+                    },
+                    {
+                        word: "busy",
+                        sentence: "The airport terminal is very busy today.",
+                        type: "type",
+                        options: []
+                    }
+                ]
+            },
+            {
+                level: 3,
+                name: "Level 3: Cloud Navigation",
+                questions: [
+                    {
+                        word: "calendar",
+                        sentence: "Check the flight calendar for departure dates.",
+                        type: "choice",
+                        options: ["calender", "calendar", "calandar"]
+                    },
+                    {
+                        word: "caught",
+                        sentence: "The jet stream caught the airplane wing softly.",
+                        type: "choice",
+                        options: ["cought", "caught", "cort"]
+                    },
+                    {
+                        word: "centre",
+                        sentence: "Fly right through the centre of the airway line.",
+                        type: "type",
+                        options: []
+                    }
+                ]
+            },
+            {
+                level: 4,
+                name: "Level 4: High Altitude",
+                questions: [
+                    {
+                        word: "decide",
+                        sentence: "Captains decide the safest flight path to land.",
+                        type: "choice",
+                        options: ["decide", "deside", "dacide"]
+                    },
+                    {
+                        word: "early",
+                        sentence: "The airplane landed ten minutes early!",
+                        type: "choice",
+                        options: ["erly", "early", "earley"]
+                    },
+                    {
+                        word: "earth",
+                        sentence: "Looking down from above, Earth looks beautiful.",
+                        type: "type",
+                        options: []
+                    }
+                ]
+            },
+            {
+                level: 5,
+                name: "Level 5: Master Captain",
+                questions: [
+                    {
+                        word: "famous",
+                        sentence: "Hero is a famous airplane manager!",
+                        type: "choice",
+                        options: ["famos", "famous", "faymous"]
+                    },
+                    {
+                        word: "group",
+                        sentence: "A group of passengers boarded the aircraft.",
+                        type: "choice",
+                        options: ["group", "groop", "grup"]
+                    },
+                    {
+                        word: "island",
+                        sentence: "We flew over a tropical island with sunny beaches.",
+                        type: "type",
+                        options: []
+                    }
+                ]
+            }
+        ];
+
+        let currentLevelIdx = 0;
+        let currentQuestionIdx = 0;
+        let score = 0;
+        let activeQuestion = null;
+        let questionAnswered = false;
+        let questionTimer = null;
+        const QUESTION_TIME_LIMIT = 1; // 1 second spelling timer limit
+
+        function showScreen(screenId) {
+            const screens = ['screen-start', 'screen-quiz', 'screen-dressup', 'screen-landing', 'screen-victory'];
+            screens.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.classList.add('hidden');
+            });
+            const activeEl = document.getElementById(screenId);
+            if (activeEl) activeEl.classList.remove('hidden');
+        }
+
+        function startGame() {
+            playSound('click');
+            currentLevelIdx = 0;
+            currentQuestionIdx = 0;
+            score = 0;
+            updateScoreDisplay();
+            loadQuestion();
+            showScreen('screen-quiz');
+        }
+
+        function updateScoreDisplay() {
+            document.getElementById('global-score').textContent = score;
+        }
+
+        function clearTimer() {
+            if (questionTimer) {
+                clearInterval(questionTimer);
+                questionTimer = null;
+            }
+        }
+
+        function loadQuestion() {
+            clearTimer();
+            questionAnswered = false;
+            const levelData = quizLevels[currentLevelIdx];
+            activeQuestion = levelData.questions[currentQuestionIdx];
+
+            // Reset feedback
+            const feedbackBox = document.getElementById('feedback-box');
+            feedbackBox.classList.add('hidden');
+            document.getElementById('next-q-btn').classList.add('hidden');
+
+            // Reset & Start 1-Second Timer
+            let timeLeft = QUESTION_TIME_LIMIT;
+            const timerDisplay = document.getElementById('timer-display');
+            timerDisplay.textContent = `${timeLeft}s`;
+
+            questionTimer = setInterval(() => {
+                timeLeft--;
+                if (timeLeft <= 0) {
+                    timerDisplay.textContent = '0s';
+                    clearTimer();
+                    if (!questionAnswered) {
+                        handleTimeOut();
+                    }
+                } else {
+                    timerDisplay.textContent = `${timeLeft}s`;
+                }
+            }, 1000);
+
+            // UI updates
+            document.getElementById('level-badge').textContent = `LEVEL ${levelData.level}`;
+            document.getElementById('question-tracker').textContent = `Question ${currentQuestionIdx + 1} of 3`;
+            
+            // Progress percentage calculation
+            const totalQ = 15;
+            const currentTotalIndex = (currentLevelIdx * 3) + currentQuestionIdx;
+            const progressPercent = Math.round((currentTotalIndex / totalQ) * 100);
+            document.getElementById('progress-fill').style.width = `${Math.max(8, progressPercent)}%`;
+
+            document.getElementById('sentence-hint').textContent = `"${activeQuestion.sentence}"`;
+
+            const optionsContainer = document.getElementById('options-container');
+            const typeContainer = document.getElementById('type-container');
+
+            optionsContainer.innerHTML = '';
+            document.getElementById('type-input').value = '';
+
+            if (activeQuestion.type === 'choice') {
+                optionsContainer.classList.remove('hidden');
+                optionsContainer.classList.add('grid');
+                typeContainer.classList.add('hidden');
+
+                // Render option buttons
+                activeQuestion.options.forEach(opt => {
+                    const btn = document.createElement('button');
+                    btn.className = 'pixel-btn-blue text-lg md:text-xl py-4 px-3 rounded-xl font-pixel tracking-wide transform transition hover:scale-105';
+                    btn.textContent = opt;
+                    btn.onclick = () => handleChoiceAnswer(opt, btn);
+                    optionsContainer.appendChild(btn);
+                });
+            } else {
+                // Type / Fill word input mode
+                optionsContainer.classList.add('hidden');
+                optionsContainer.classList.remove('grid');
+                typeContainer.classList.remove('hidden');
+                typeContainer.classList.add('flex');
+            }
+
+            // Auto pronounce word speech
+            setTimeout(() => {
+                speakCurrentWord();
+            }, 100);
+        }
+
+        function handleTimeOut() {
+            questionAnswered = true;
+            showFeedback(false, activeQuestion.word, true);
+        }
+
+        function speakCurrentWord() {
+            if ('speechSynthesis' in window && activeQuestion) {
+                window.speechSynthesis.cancel(); // Stop ongoing speech
+                const utterance = new SpeechSynthesisUtterance(activeQuestion.word);
+                utterance.rate = 0.85; // Slightly slower for clear child-friendly pronunciation
+                utterance.pitch = 1.1;
+                window.speechSynthesis.speak(utterance);
+            }
+        }
+
+        function handleChoiceAnswer(selectedOpt, btnElement) {
+            if (questionAnswered) return;
+            clearTimer();
+            questionAnswered = true;
+
+            const isCorrect = selectedOpt.toLowerCase() === activeQuestion.word.toLowerCase();
+            showFeedback(isCorrect, activeQuestion.word);
+        }
+
+        function submitTypedAnswer() {
+            if (questionAnswered) return;
+            clearTimer();
+            const inputVal = document.getElementById('type-input').value.trim().toLowerCase();
+            if (!inputVal) return;
+
+            questionAnswered = true;
+            const isCorrect = inputVal === activeQuestion.word.toLowerCase();
+            showFeedback(isCorrect, activeQuestion.word);
+        }
+
+        function showFeedback(isCorrect, correctWord, timedOut = false) {
+            clearTimer();
+            const feedbackBox = document.getElementById('feedback-box');
+            const feedbackText = document.getElementById('feedback-text');
+            const nextBtn = document.getElementById('next-q-btn');
+
+            feedbackBox.classList.remove('hidden', 'bg-emerald-900/80', 'border-emerald-500', 'bg-rose-900/80', 'border-rose-500');
+
+            if (isCorrect) {
+                playSound('correct');
+                score += 100;
+                updateScoreDisplay();
+
+                feedbackBox.classList.add('bg-emerald-900/80', 'border-emerald-500');
+                feedbackText.className = 'text-emerald-300 font-bold text-xl';
+                feedbackText.innerHTML = `🌟 Lightning fast! "${correctWord}" is correct! Cheer cheer! 🎉`;
+            } else {
+                playSound('wrong');
+                feedbackBox.classList.add('bg-rose-900/80', 'border-rose-500');
+                feedbackText.className = 'text-rose-200 font-bold text-lg';
+                
+                if (timedOut) {
+                    feedbackText.innerHTML = `⏰ Time's up! The correct spelling is <span class="text-yellow-300 underline font-pixel text-xl">${correctWord}</span>. Fast flight ahead! ✈️`;
+                } else {
+                    feedbackText.innerHTML = `Good try! The correct spelling is <span class="text-yellow-300 underline font-pixel text-xl">${correctWord}</span>. You can do it! 💪`;
+                }
+            }
+
+            nextBtn.classList.remove('hidden');
+        }
+
+        function nextQuestion() {
+            playSound('click');
+            currentQuestionIdx++;
+
+            if (currentQuestionIdx >= 3) {
+                // Completed 3 questions in current level -> trigger Dressup Mini-Game
+                currentQuestionIdx = 0;
+                showScreen('screen-dressup');
+            } else {
+                loadQuestion();
+            }
+        }
+
+        function setHat(emoji) {
+            playSound('click');
+            document.getElementById('layer-hat').textContent = emoji;
+        }
+
+        function setOutfit(emoji, colorHex) {
+            playSound('click');
+            const outfitEl = document.getElementById('layer-outfit');
+            outfitEl.textContent = emoji;
+            outfitEl.style.backgroundColor = colorHex;
+        }
+
+        function setAccessory(emoji) {
+            playSound('click');
+            document.getElementById('layer-accessory').textContent = emoji;
+        }
+
+        function startRunwayLanding() {
+            playSound('landing');
+            showScreen('screen-landing');
+
+            document.getElementById('hud-status').textContent = "FINAL APPROACH";
+            document.getElementById('landing-status').textContent = "🛬 Emirates B777-300ER on short final approach...";
+
+            // Initialize Realistic Canvas Runway Landing Animation
+            animateEmiratesLanding();
+
+            setTimeout(() => {
+                currentLevelIdx++;
+                if (currentLevelIdx >= quizLevels.length) {
+                    // All 5 levels finished -> Victory
+                    showVictoryScreen();
+                } else {
+                    // Proceed to next quiz level
+                    loadQuestion();
+                    showScreen('screen-quiz');
+                }
+            }, 5500);
+        }
+
+        // Realistic Boeing 777-300ER Emirates Landing Canvas Engine
+        function animateEmiratesLanding() {
+            const canvas = document.getElementById('runway-canvas');
+            if (!canvas) return;
+
+            const ctx = canvas.getContext('2d');
+            const rect = canvas.getBoundingClientRect();
+            canvas.width = rect.width;
+            canvas.height = rect.height;
+
+            const W = canvas.width;
+            const H = canvas.height;
+            const groundY = H * 0.72;
+
+            let startTime = null;
+            let smokeParticles = [];
+
+            // Draw detailed Emirates Boeing 777-300ER vector aircraft
+            function drawBoeing777(x, y, scale, pitchAngle, touchdown) {
+                ctx.save();
+                ctx.translate(x, y);
+                ctx.rotate((pitchAngle * Math.PI) / 180);
+                ctx.scale(scale, scale);
+
+                // --- 1. Shadow on Runway ---
+                if (y > groundY - 60) {
+                    const shadowY = (groundY - y) / scale;
+                    ctx.save();
+                    ctx.fillStyle = 'rgba(0,0,0,0.35)';
+                    ctx.beginPath();
+                    ctx.ellipse(0, shadowY + 28, 140, 12, 0, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.restore();
+                }
+
+                // --- 2. Main Fuselage Body ---
+                const fuseGrad = ctx.createLinearGradient(0, -25, 0, 25);
+                fuseGrad.addColorStop(0, '#ffffff');
+                fuseGrad.addColorStop(0.6, '#f4f6f8');
+                fuseGrad.addColorStop(1, '#d5dbdb');
+
+                ctx.fillStyle = fuseGrad;
+                ctx.beginPath();
+                // Nose cone to tail
+                ctx.moveTo(-180, 0); // Nose tip
+                ctx.bezierCurveTo(-150, -22, -80, -26, 60, -24); // Top outline
+                ctx.bezierCurveTo(120, -22, 170, -18, 200, -8); // Tail top curve
+                ctx.lineTo(210, 0);
+                ctx.bezierCurveTo(170, 18, 110, 22, 30, 22); // Belly outline
+                ctx.bezierCurveTo(-70, 22, -140, 18, -180, 0); // Nose bottom curve
+                ctx.closePath();
+                ctx.fill();
+                ctx.lineWidth = 1.5;
+                ctx.strokeStyle = '#bdc3c7';
+                ctx.stroke();
+
+                // --- 3. Cockpit Windshield ---
+                ctx.fillStyle = '#1e293b';
+                ctx.beginPath();
+                ctx.moveTo(-165, -8);
+                ctx.lineTo(-148, -12);
+                ctx.lineTo(-142, -5);
+                ctx.lineTo(-160, -2);
+                ctx.closePath();
+                ctx.fill();
+
+                // Windshield Glare
+                ctx.fillStyle = '#38bdf8';
+                ctx.beginPath();
+                ctx.moveTo(-162, -7);
+                ctx.lineTo(-150, -10);
+                ctx.lineTo(-147, -5);
+                ctx.closePath();
+                ctx.fill();
+
+                // --- 4. Passenger Windows Row ---
+                ctx.fillStyle = '#334155';
+                for (let i = -130; i < 150; i += 7) {
+                    if (i > -10 && i < 30) continue; // Wing center gap
+                    ctx.fillRect(i, -6, 3.5, 5);
+                }
+
+                // --- 5. Iconic Emirates Red Tail & UAE Flag Motif ---
+                // Tail Fin Outline
+                ctx.save();
+                ctx.beginPath();
+                ctx.moveTo(130, -20);
+                ctx.lineTo(185, -85); // High tip
+                ctx.lineTo(210, -85);
+                ctx.lineTo(195, -12);
+                ctx.closePath();
+                
+                // Red Fill with Gold Accent
+                ctx.fillStyle = '#d97706'; // Gold top trim
+                ctx.fill();
+
+                ctx.beginPath();
+                ctx.moveTo(132, -20);
+                ctx.lineTo(185, -82);
+                ctx.lineTo(208, -82);
+                ctx.lineTo(193, -12);
+                ctx.closePath();
+                ctx.fillStyle = '#c8102e'; // Emirates Iconic Red
+                ctx.fill();
+
+                // UAE Flag Lines on Fin
+                ctx.fillStyle = '#000000';
+                ctx.fillRect(182, -78, 22, 4);
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(180, -74, 22, 4);
+                ctx.fillStyle = '#007a3d';
+                ctx.fillRect(178, -70, 22, 4);
+                ctx.restore();
+
+                // --- 6. Arabic & English "Emirates" Titles ---
+                // Golden Arabic Script Simulation
+                ctx.fillStyle = '#d97706';
+                ctx.font = 'bold 11px sans-serif';
+                ctx.fillText('الإمارات', -60, -10);
+
+                // Red Bold "Emirates" Title
+                ctx.fillStyle = '#c8102e';
+                ctx.font = 'bold 13px sans-serif';
+                ctx.fillText('Emirates', -10, -9);
+
+                // --- 7. Main Swept Wings & Flaps Down ---
+                // Main Wing Body
+                const wingGrad = ctx.createLinearGradient(0, 0, -20, 45);
+                wingGrad.addColorStop(0, '#e2e8f0');
+                wingGrad.addColorStop(1, '#94a3b8');
+
+                ctx.fillStyle = wingGrad;
+                ctx.beginPath();
+                ctx.moveTo(-25, 0);
+                ctx.lineTo(35, 42); // Wing tip trailing
+                ctx.lineTo(15, 45); // Winglet tip
+                ctx.lineTo(-45, 12); // Leading edge
+                ctx.closePath();
+                ctx.fill();
+                ctx.strokeStyle = '#64748b';
+                ctx.stroke();
+
+                // Extended Landing Flaps
+                ctx.fillStyle = '#475569';
+                ctx.beginPath();
+                ctx.moveTo(5, 30);
+                ctx.lineTo(30, 48);
+                ctx.lineTo(20, 50);
+                ctx.lineTo(-5, 32);
+                ctx.closePath();
+                ctx.fill();
+
+                // Raked Winglet Red Tip
+                ctx.fillStyle = '#c8102e';
+                ctx.beginPath();
+                ctx.moveTo(35, 42);
+                ctx.lineTo(42, 38);
+                ctx.lineTo(38, 46);
+                ctx.closePath();
+                ctx.fill();
+
+                // --- 8. GE90 Engine Nacelle ---
+                ctx.fillStyle = '#cbd5e1';
+                ctx.beginPath();
+                ctx.ellipse(-20, 24, 28, 13, 0, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.strokeStyle = '#475569';
+                ctx.stroke();
+
+                // Engine Intake & Fan Blades
+                ctx.fillStyle = '#1e293b';
+                ctx.beginPath();
+                ctx.ellipse(-45, 24, 5, 12, 0, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Engine Spinner Cone
+                ctx.fillStyle = '#94a3b8';
+                ctx.beginPath();
+                ctx.arc(-45, 24, 3, 0, Math.PI * 2);
+                ctx.fill();
+
+                // --- 9. Triple-Axle Landing Gear Assemblies ---
+                // Nose Gear
+                ctx.fillStyle = '#334155';
+                ctx.fillRect(-145, 10, 3, 16);
+                ctx.fillStyle = '#0f172a';
+                ctx.beginPath();
+                ctx.arc(-146, 26, 4, 0, Math.PI * 2);
+                ctx.arc(-142, 26, 4, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Main Rear Landing Gear (Boeing 777 Triple-Trucks)
+                ctx.fillStyle = '#334155';
+                ctx.fillRect(-5, 18, 5, 20);
+                ctx.fillRect(15, 18, 5, 20);
+
+                ctx.fillStyle = '#0f172a';
+                // 6 Main Wheels
+                [-10, -4, 2, 12, 18, 24].forEach(offset => {
+                    ctx.beginPath();
+                    ctx.arc(offset, 38, 4.5, 0, Math.PI * 2);
+                    ctx.fill();
+                });
+
+                ctx.restore();
+
+                // --- 10. Touchdown Tire Smoke Effect ---
+                if (touchdown) {
+                    for (let i = 0; i < 3; i++) {
+                        smokeParticles.push({
+                            x: x + (Math.random() * 20 - 10),
+                            y: y + scale * 36,
+                            vx: -Math.random() * 4 - 2,
+                            vy: -Math.random() * 2 - 0.5,
+                            radius: Math.random() * 8 + 6,
+                            alpha: 0.7
+                        });
+                    }
+                }
+            }
+
+            // Canvas Animation Loop
+            function renderFrame(timestamp) {
+                if (!startTime) startTime = timestamp;
+                const progress = (timestamp - startTime) / 1000; // time in seconds
+
+                // Background Sky (Sunset / Twilight Horizon Gradient)
+                const skyGrad = ctx.createLinearGradient(0, 0, 0, H);
+                skyGrad.addColorStop(0, '#0f172a');
+                skyGrad.addColorStop(0.4, '#1e3a8a');
+                skyGrad.addColorStop(0.68, '#3b82f6');
+                skyGrad.addColorStop(0.72, '#f97316'); // Golden Horizon
+                skyGrad.addColorStop(0.73, '#1e293b');
+                skyGrad.addColorStop(1, '#0f172a');
+
+                ctx.fillStyle = skyGrad;
+                ctx.fillRect(0, 0, W, H);
+
+                // Sun
+                ctx.fillStyle = 'rgba(253, 224, 71, 0.6)';
+                ctx.beginPath();
+                ctx.arc(W * 0.75, H * 0.62, 35, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Mountain Silhouettes in Background
+                ctx.fillStyle = '#1e1b4b';
+                ctx.beginPath();
+                ctx.moveTo(0, groundY);
+                ctx.lineTo(W * 0.15, groundY - 30);
+                ctx.lineTo(W * 0.35, groundY - 10);
+                ctx.lineTo(W * 0.55, groundY - 45);
+                ctx.lineTo(W * 0.8, groundY - 15);
+                ctx.lineTo(W, groundY - 35);
+                ctx.lineTo(W, groundY);
+                ctx.closePath();
+                ctx.fill();
+
+                // Tarmac Ground & Runway
+                ctx.fillStyle = '#1e293b';
+                ctx.fillRect(0, groundY, W, H - groundY);
+
+                // Runway Surface
+                const rLeft = 0;
+                const rRight = W;
+                ctx.fillStyle = '#334155';
+                ctx.fillRect(rLeft, groundY + 10, W, H - groundY - 10);
+
+                // Runway Centerline Animated Markings
+                ctx.fillStyle = '#fef08a';
+                const stripeOffset = (progress * 180) % 60;
+                for (let rx = -stripeOffset; rx < W; rx += 60) {
+                    ctx.fillRect(rx, groundY + 38, 35, 4);
+                }
+
+                // Runway Threshold Markings & Edge Lights
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(0, groundY + 12, W, 3); // Top edge
+                ctx.fillRect(0, H - 8, W, 3); // Bottom edge
+
+                // Glowing Runway Edge Lights
+                for (let lx = 10; lx < W; lx += 40) {
+                    ctx.fillStyle = '#38bdf8'; // Sky blue lights
+                    ctx.beginPath();
+                    ctx.arc(lx, groundY + 12, 2.5, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    ctx.fillStyle = '#f59e0b'; // Amber lights bottom
+                    ctx.beginPath();
+                    ctx.arc(lx, H - 8, 2.5, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+
+                // Calculate Flight Trajectory Physics
+                let planeX, planeY, pitchAngle, scale, isTouchdown = false;
+
+                if (progress < 2.2) {
+                    // Stage 1: Approach Descent (Glide Slope)
+                    const t = progress / 2.2;
+                    planeX = -120 + t * (W * 0.55 + 120);
+                    planeY = (H * 0.25) + (t * (groundY - (H * 0.25) - 32));
+                    pitchAngle = -6 + (t * 4); // Flare up nose
+                    scale = 0.55 + (t * 0.35);
+                } else if (progress < 3.2) {
+                    // Stage 2: Touchdown Flare & Rollout
+                    const t = (progress - 2.2) / 1.0;
+                    planeX = (W * 0.55) + t * (W * 0.35);
+                    planeY = groundY - 32;
+                    pitchAngle = -2 + (t * 2); // De-rotate nose down
+                    scale = 0.9;
+                    isTouchdown = (t < 0.4); // Smoke triggers on wheel impact
+
+                    if (isTouchdown) {
+                        document.getElementById('hud-status').textContent = "TOUCHDOWN!";
+                        document.getElementById('landing-status').textContent = "🛬 Touchdown! Spoilers & reverse thrust deployed!";
+                    }
+                } else {
+                    // Stage 3: Rollout & Taxi deceleration
+                    const t = Math.min(1.0, (progress - 3.2) / 2.0);
+                    planeX = (W * 0.9) + t * (W * 0.2);
+                    planeY = groundY - 32;
+                    pitchAngle = 0;
+                    scale = 0.9;
+                    document.getElementById('hud-status').textContent = "TAXI TO GATE";
+                    document.getElementById('landing-status').textContent = "✨ Welcome to Dubai! Flight EK-777 arrived safely!";
+                }
+
+                // Update & Render Tire Smoke Particles
+                for (let i = smokeParticles.length - 1; i >= 0; i--) {
+                    const p = smokeParticles[i];
+                    p.x += p.vx;
+                    p.y += p.vy;
+                    p.radius += 0.4;
+                    p.alpha -= 0.02;
+
+                    if (p.alpha <= 0) {
+                        smokeParticles.splice(i, 1);
+                    } else {
+                        ctx.fillStyle = `rgba(226, 232, 240, ${p.alpha})`;
+                        ctx.beginPath();
+                        ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                }
+
+                // Draw Emirates Boeing 777-300ER
+                drawBoeing777(planeX, planeY, scale, pitchAngle, isTouchdown);
+
+                if (progress < 5.2) {
+                    requestAnimationFrame(renderFrame);
+                }
+            }
+
+            requestAnimationFrame(renderFrame);
+        }
+
+        function showVictoryScreen() {
+            playSound('correct');
+            document.getElementById('final-score').textContent = score;
+            showScreen('screen-victory');
+            launchConfetti();
+        }
+
+        function resetGame() {
+            playSound('click');
+            startGame();
+        }
+
+        // Confetti Engine
+        function launchConfetti() {
+            const canvas = document.getElementById('confetti-canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+
+            const particles = [];
+            const colors = ['#f1c40f', '#e74c3c', '#3498db', '#2ecc71', '#9b59b6'];
+
+            for (let i = 0; i < 120; i++) {
+                particles.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height - canvas.height,
+                    size: Math.random() * 10 + 6,
+                    color: colors[Math.floor(Math.random() * colors.length)],
+                    speedY: Math.random() * 4 + 2,
+                    speedX: Math.random() * 2 - 1,
+                    rotation: Math.random() * 360
+                });
+            }
+
+            let animationFrame;
+            function render() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                particles.forEach(p => {
+                    p.y += p.speedY;
+                    p.x += p.speedX;
+                    p.rotation += 2;
+
+                    ctx.save();
+                    ctx.translate(p.x, p.y);
+                    ctx.rotate((p.rotation * Math.PI) / 180);
+                    ctx.fillStyle = p.color;
+                    ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size);
+                    ctx.restore();
+                });
+
+                if (particles.some(p => p.y < canvas.height)) {
+                    animationFrame = requestAnimationFrame(render);
+                } else {
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                }
+            }
+
+            render();
+        }
+
+        // Handle window resize
+        window.addEventListener('resize', () => {
+            const canvas = document.getElementById('confetti-canvas');
+            if (canvas) {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            }
+        });
+    </script>
+<!-- ... existing code -->

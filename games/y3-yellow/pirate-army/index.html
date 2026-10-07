@@ -1,0 +1,970 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pirate Army Stone Age Quest</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        gold: {
+                            light: '#FFF099',
+                            DEFAULT: '#FFD700',
+                            dark: '#B8860B',
+                            hover: '#E6C200'
+                        },
+                        silver: {
+                            light: '#F8FAFC',
+                            DEFAULT: '#E2E8F0',
+                            dark: '#94A3B8',
+                            border: '#CBD5E1'
+                        }
+                    },
+                    fontFamily: {
+                        heading: ['"Fredoka One"', 'cursive', 'sans-serif'],
+                        body: ['"Nunito"', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Nunito', sans-serif;
+            background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 50%, #94a3b8 100%);
+            min-height: 100vh;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        .gold-gradient-bg {
+            background: linear-gradient(180deg, #FFF099 0%, #FFD700 70%, #DAA520 100%);
+        }
+
+        .gold-card {
+            background: linear-gradient(145deg, #ffffff, #f1f5f9);
+            border: 4px solid #FFD700;
+            box-shadow: 0 10px 25px -5px rgba(184, 134, 11, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+        }
+
+        .gold-btn {
+            background: linear-gradient(180deg, #FFE55C 0%, #FFD700 50%, #D4AF37 100%);
+            border: 2px solid #B8860B;
+            box-shadow: 0 4px 0 #996515, 0 6px 10px rgba(0,0,0,0.15);
+            transition: all 0.15s ease;
+        }
+
+        .gold-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 0 #996515, 0 8px 15px rgba(0,0,0,0.2);
+            filter: brightness(1.05);
+        }
+
+        .gold-btn:active:not(:disabled) {
+            transform: translateY(2px);
+            box-shadow: 0 2px 0 #996515, 0 3px 5px rgba(0,0,0,0.15);
+        }
+
+        .silver-card {
+            background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+            border: 3px solid #CBD5E1;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+        }
+
+        .silver-badge {
+            background: linear-gradient(135deg, #F1F5F9 0%, #E2E8F0 100%);
+            border: 2px solid #94A3B8;
+        }
+
+        .sparkle-anim {
+            animation: pulse-sparkle 1.5s infinite ease-in-out alternate;
+        }
+
+        @keyframes pulse-sparkle {
+            0% { transform: scale(1); filter: drop-shadow(0 0 2px #FFD700); }
+            100% { transform: scale(1.08); filter: drop-shadow(0 0 10px #FFD700); }
+        }
+
+        .font-heading {
+            font-family: 'Fredoka One', cursive;
+        }
+
+        /* Canvas styling for touch controls */
+        #gameCanvas {
+            touch-action: none;
+            background: #0b0f19;
+        }
+    </style>
+</head>
+<body class="text-slate-800 flex flex-col items-center justify-between p-3 sm:p-6 min-h-screen">
+
+    <!-- Top Header / Score Bar -->
+    <header class="w-full max-w-4xl silver-card rounded-2xl p-4 mb-4 flex flex-wrap items-center justify-between gap-3">
+        <div class="flex items-center gap-3">
+            <div class="w-12 h-12 gold-gradient-bg rounded-full flex items-center justify-center text-2xl shadow-md border-2 border-yellow-600">
+                🏴‍☠️
+            </div>
+            <div>
+                <h1 class="font-heading text-xl sm:text-2xl text-slate-800 leading-tight">Pirate Army Stone Age Quest</h1>
+                <p class="text-xs sm:text-sm text-slate-500 font-bold">Stone Age Quest • Year 3</p>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-3">
+            <div class="flex items-center gap-2 bg-yellow-100 border border-yellow-300 px-3 py-1.5 rounded-full">
+                <span class="text-xl">🪙</span>
+                <span id="totalCoins" class="font-heading text-lg text-yellow-800">0</span>
+            </div>
+            <div class="flex items-center gap-2 bg-slate-100 border border-slate-300 px-3 py-1.5 rounded-full">
+                <span class="text-xl">⭐</span>
+                <span id="totalStars" class="font-heading text-lg text-slate-700">0 / 15</span>
+            </div>
+            <button onclick="showMainMenu()" class="p-2 bg-slate-200 hover:bg-slate-300 rounded-xl transition text-slate-700 font-bold text-sm" title="Main Menu">
+                🏠 Home
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Dynamic Content Box -->
+    <main id="appContainer" class="w-full max-w-4xl flex-grow flex flex-col items-center justify-center">
+
+        <!-- START / MENU SCREEN -->
+        <div id="screenMenu" class="w-full silver-card rounded-3xl p-6 sm:p-10 text-center flex flex-col items-center">
+            <div class="text-6xl mb-3 sparkle-anim">👑🏴‍☠️🗡️</div>
+            <h2 class="font-heading text-3xl sm:text-4xl text-slate-800 mb-2">Ahoy, Captain Hero!</h2>
+            <p class="text-base sm:text-lg text-slate-600 max-w-xl mb-6">
+                Build your pirate army by traveling back in time to explore the <strong>Stone Age</strong>! Answer questions, win treasure coins, and unlock cool starship mini-games!
+            </p>
+
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 w-full max-w-2xl mb-8">
+                <div class="silver-badge rounded-2xl p-4 text-center">
+                    <div class="text-3xl mb-1">📜</div>
+                    <div class="font-heading text-slate-700 text-sm">15 Questions</div>
+                    <div class="text-xs text-slate-500">5 exciting levels</div>
+                </div>
+                <div class="silver-badge rounded-2xl p-4 text-center">
+                    <div class="text-3xl mb-1">🪙</div>
+                    <div class="font-heading text-slate-700 text-sm">Win Gold Coins</div>
+                    <div class="text-xs text-slate-500">Collect loot for retries</div>
+                </div>
+                <div class="silver-badge rounded-2xl p-4 text-center">
+                    <div class="text-3xl mb-1">🚀</div>
+                    <div class="font-heading text-slate-700 text-sm">Bonus Mini-Game</div>
+                    <div class="text-xs text-slate-500">Blast pirate asteroids!</div>
+                </div>
+            </div>
+
+            <button onclick="showLevelSelect()" class="gold-btn px-8 py-4 rounded-2xl font-heading text-2xl text-yellow-950 tracking-wide w-full sm:w-auto">
+                ⚔️ START YOUR QUEST! ⚔️️
+            </button>
+        </div>
+
+        <!-- LEVEL SELECT SCREEN -->
+        <div id="screenLevels" class="w-full silver-card rounded-3xl p-6 sm:p-8 hidden">
+            <div class="text-center mb-6">
+                <h2 class="font-heading text-3xl text-slate-800">Select a Treasure Level</h2>
+                <p class="text-sm text-slate-600">Complete each level to recruit new crew members and unlock the space mini-game!</p>
+            </div>
+
+            <div id="levelGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+                <!-- Dynamic Level Cards JS rendered -->
+            </div>
+
+            <div class="flex justify-center">
+                <button onclick="showMainMenu()" class="px-6 py-2.5 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-xl transition">
+                    ⬅️ Back to Main Menu
+                </button>
+            </div>
+        </div>
+
+        <!-- QUIZ SCREEN -->
+        <div id="screenQuiz" class="w-full gold-card rounded-3xl p-6 sm:p-8 hidden relative overflow-hidden">
+            <!-- Progress Bar -->
+            <div class="w-full bg-slate-200 h-3 rounded-full mb-6 overflow-hidden border border-slate-300">
+                <div id="quizProgressBar" class="gold-gradient-bg h-full w-1/3 transition-all duration-300"></div>
+            </div>
+
+            <!-- Quiz Header -->
+            <div class="flex justify-between items-center mb-4">
+                <span id="quizLevelBadge" class="bg-yellow-200 border border-yellow-400 text-yellow-900 font-bold px-3 py-1 rounded-full text-xs sm:text-sm">
+                    Level 1: Early Stone Age
+                </span>
+                <span id="quizQuestionCount" class="font-heading text-slate-600 text-sm sm:text-base">
+                    Question 1 of 3
+                </span>
+            </div>
+
+            <!-- Question Card -->
+            <div class="bg-white rounded-2xl p-5 sm:p-6 mb-6 shadow-sm border border-slate-200 text-center">
+                <div id="quizIcon" class="text-5xl mb-3">🦴</div>
+                <h3 id="quizQuestionText" class="font-heading text-xl sm:text-2xl text-slate-800 leading-snug">
+                    Question loading...
+                </h3>
+            </div>
+
+            <!-- Answer Options Grid -->
+            <div id="quizOptionsGrid" class="grid grid-cols-1 sm:grid-cols-2 gap-3.5 mb-6">
+                <!-- Dynamic Options -->
+            </div>
+
+            <!-- Feedback Overlay / Box -->
+            <div id="quizFeedback" class="hidden rounded-2xl p-4 text-center mb-4 transition-all">
+                <div id="feedbackTitle" class="font-heading text-xl mb-1"></div>
+                <div id="feedbackBody" class="text-sm sm:text-base font-semibold"></div>
+                <button id="feedbackBtn" onclick="nextQuestionOrRetry()" class="gold-btn mt-3 px-6 py-2 rounded-xl font-heading text-slate-900 text-sm">
+                    Continue ➡️
+                </button>
+            </div>
+        </div>
+
+        <!-- LEVEL COMPLETE SCREEN -->
+        <div id="screenLevelComplete" class="w-full silver-card rounded-3xl p-6 sm:p-10 text-center hidden">
+            <div class="text-6xl mb-3 sparkle-anim">🏆🪙✨</div>
+            <h2 class="font-heading text-3xl sm:text-4xl text-slate-800 mb-2">Level Completed!</h2>
+            <p id="levelCompleteMessage" class="text-base sm:text-lg text-slate-600 mb-6">
+                Shiver me timbers! You proved yourself a true Stone Age historian!
+            </p>
+
+            <div class="bg-yellow-50 border border-yellow-200 rounded-2xl p-4 max-w-sm mx-auto mb-6 flex items-center justify-around">
+                <div class="text-center">
+                    <div class="text-xs text-yellow-700 font-bold uppercase">Stars Earned</div>
+                    <div id="completedStars" class="text-2xl font-heading text-yellow-800">⭐⭐⭐</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-xs text-yellow-700 font-bold uppercase">Coins Earned</div>
+                    <div id="completedCoins" class="text-2xl font-heading text-yellow-800">+150 🪙</div>
+                </div>
+            </div>
+
+            <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                <button onclick="startAsteroidGame()" class="gold-btn px-6 py-3.5 rounded-xl font-heading text-slate-900 text-lg">
+                    🚀 Play Asteroid Shooter Mini-Game!
+                </button>
+                <button onclick="showLevelSelect()" class="px-6 py-3.5 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-xl transition">
+                    🗺️ Level Map
+                </button>
+            </div>
+        </div>
+
+        <!-- ASTEROID SHOOTER MINI-GAME SCREEN -->
+        <div id="screenAsteroid" class="w-full silver-card rounded-3xl p-4 sm:p-6 text-center hidden flex flex-col items-center">
+            <div class="flex justify-between items-center w-full max-w-2xl mb-2 px-2">
+                <div class="text-left">
+                    <div class="font-heading text-lg text-slate-800">🚀 Pirate Starship Shooter</div>
+                    <div class="text-xs text-slate-500">Shoot asteroids to gather gold space-ore!</div>
+                </div>
+                <div class="flex items-center gap-4 font-heading text-sm sm:text-base">
+                    <div class="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full border border-yellow-300">⏱️ Time: <span id="gameTimer">30</span>s</div>
+                    <div class="bg-amber-100 text-amber-800 px-3 py-1 rounded-full border border-amber-300">🪙 Score: <span id="miniGameScore">0</span></div>
+                </div>
+            </div>
+
+            <!-- Canvas Container -->
+            <div class="relative w-full max-w-2xl h-80 sm:h-96 rounded-2xl overflow-hidden shadow-inner border-4 border-slate-400 mb-4 bg-slate-900">
+                <canvas id="gameCanvas" class="w-full h-full block"></canvas>
+
+                <!-- Game Over Overlay on Canvas -->
+                <div id="miniGameOverOverlay" class="absolute inset-0 bg-slate-950/85 text-white flex flex-col items-center justify-center p-6 hidden">
+                    <div class="text-5xl mb-2">⭐🚀🪙</div>
+                    <h3 class="font-heading text-3xl text-yellow-400 mb-1">Time's Up, Captain!</h3>
+                    <p class="text-slate-300 text-sm mb-4">You collected <strong id="finalMiniScore" class="text-yellow-300">0</strong> bonus gold coins for Your Pirate Army!</p>
+                    <div class="flex gap-3">
+                        <button onclick="startAsteroidGame()" class="gold-btn px-5 py-2.5 rounded-xl font-heading text-slate-900 text-sm">
+                            🔄 Play Again
+                        </button>
+                        <button onclick="showLevelSelect()" class="px-5 py-2.5 bg-slate-700 hover:bg-slate-600 text-white font-bold rounded-xl transition text-sm">
+                            🗺️ Back to Map
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Touch Controls for Mobile/Tablet -->
+            <div class="w-full max-w-2xl flex justify-between items-center gap-2 sm:hidden px-2">
+                <div class="flex gap-2">
+                    <button id="btnLeft" class="bg-slate-700 active:bg-slate-900 text-white font-heading px-5 py-3 rounded-xl text-xl">⬅️</button>
+                    <button id="btnRight" class="bg-slate-700 active:bg-slate-900 text-white font-heading px-5 py-3 rounded-xl text-xl">➡️</button>
+                </div>
+                <button id="btnFire" class="gold-btn font-heading px-8 py-3 rounded-xl text-slate-900 text-lg flex-grow">🔥 FIRE!</button>
+            </div>
+            <p class="hidden sm:block text-xs text-slate-500 mt-1">Controls: Use Left/Right Arrow Keys (or A/D) to steer, Spacebar to fire!</p>
+        </div>
+
+    </main>
+
+    <!-- Safe Footer -->
+    <footer class="w-full max-w-4xl text-center py-3 text-xs text-slate-500 font-semibold">
+        🛡️ 100% Safe Educational Game for Kids • UK Year 3 History Curriculum
+    </footer>
+
+    <script>
+        /* --- GAME DATA & CURRICULUM QUESTIONS --- */
+        const LEVELS_DATA = [
+            {
+                id: 1,
+                title: "Level 1: Palaeolithic Pioneers",
+                subtitle: "Early Stone Age & Survival",
+                icon: "🦴",
+                questions: [
+                    {
+                        question: "What did early Stone Age people use to make their clothes to stay warm?",
+                        options: [
+                            "Cotton t-shirts and jeans",
+                            "Warm animal skins and furs",
+                            "Leaves knitted together",
+                            "Plastic coats"
+                        ],
+                        correct: 1,
+                        fact: "Early humans used animal hides and furs to stay warm during cold weather!"
+                    },
+                    {
+                        question: "How did early Stone Age hunter-gatherers get their food?",
+                        options: [
+                            "They bought food at a supermarket",
+                            "They ordered delivery pizza",
+                            "They hunted wild animals and gathered nuts and berries",
+                            "They grew vegetables on huge farms"
+                        ],
+                        correct: 2,
+                        fact: "Before farming, people gathered wild seeds, fruits, and hunted animals."
+                    },
+                    {
+                        question: "Where did early Stone Age people often shelter and draw famous wall paintings?",
+                        options: [
+                            "Wooden castles",
+                            "Deep caves",
+                            "Brick houses",
+                            "Tents made of glass"
+                        ],
+                        correct: 1,
+                        fact: "Cave art was created deep inside caves using natural powders like charcoal and clay!"
+                    }
+                ]
+            },
+            {
+                id: 2,
+                title: "Level 2: Mesolithic Master Craftsmen",
+                subtitle: "Middle Stone Age & Tools",
+                icon: "🪵",
+                questions: [
+                    {
+                        question: "Which hard, sharp rock was most famous for making Stone Age tools and arrowheads?",
+                        options: [
+                            "Soft chalk",
+                            "Flint",
+                            "Shiny gold",
+                            "Sponge stone"
+                        ],
+                        correct: 1,
+                        fact: "Flint could be knapped (chipped) into super sharp blades and arrow points!"
+                    },
+                    {
+                        question: "What giant woolly animal lived during the ice cold parts of the Stone Age?",
+                        options: [
+                            "Woolly Mammoth",
+                            "Giant Giraffe",
+                            "Saber-Toothed Hamster",
+                            "Ice Dinosaur"
+                        ],
+                        correct: 0,
+                        fact: "Mammoths were large elephant-like creatures covered in thick fur!"
+                    },
+                    {
+                        question: "During the Middle Stone Age (Mesolithic), how did people move across rivers and lakes?",
+                        options: [
+                            "Steam trains",
+                            "Wooden dugout canoes",
+                            "Submarines",
+                            "Metal speedboats"
+                        ],
+                        correct: 1,
+                        fact: "They hollowed out thick tree trunks using axe tools to make sturdy dugout canoes."
+                    }
+                ]
+            },
+            {
+                id: 3,
+                title: "Level 3: Neolithic Farmers",
+                subtitle: "Late Stone Age & First Farms",
+                icon: "🌾",
+                questions: [
+                    {
+                        question: "What major change happened in the late Stone Age (Neolithic period)?",
+                        options: [
+                            "People invented cars",
+                            "People started farming crops and keeping tame animals",
+                            "People flew to the moon",
+                            "Everyone moved into skyscraper towers"
+                        ],
+                        correct: 1,
+                        fact: "Farming meant people didn't have to keep moving to hunt food!"
+                    },
+                    {
+                        question: "Which animal was one of the FIRST to be domesticated (tamed) by Stone Age people?",
+                        options: [
+                            "T-Rex",
+                            "Dogs and Sheep",
+                            "Penguins",
+                            "Lions"
+                        ],
+                        correct: 1,
+                        fact: "Dogs helped with hunting, while sheep and goats provided milk and wool!"
+                    },
+                    {
+                        question: "What new invention helped Neolithic farmers store seed grains and water safely?",
+                        options: [
+                            "Clay Pottery pots",
+                            "Plastic Tupperware",
+                            "Glass bottles",
+                            "Cardboard boxes"
+                        ],
+                        correct: 0,
+                        fact: "Clay was shaped by hand and baked in fires to make durable pots!"
+                    }
+                ]
+            },
+            {
+                id: 4,
+                title: "Level 4: Builders & Monuments",
+                subtitle: "Skara Brae & Stonehenge",
+                icon: "🗿",
+                questions: [
+                    {
+                        question: "Which world-famous stone circle monument in England was started during the Stone Age?",
+                        options: [
+                            "The Eiffel Tower",
+                            "Stonehenge",
+                            "Big Ben",
+                            "The London Eye"
+                        ],
+                        correct: 1,
+                        fact: "Stonehenge was built using giant standing stones moved over great distances!"
+                    },
+                    {
+                        question: "What is 'Skara Brae' in Scotland famous for?",
+                        options: [
+                            "An amazingly preserved Stone Age stone village",
+                            "A Stone Age pirate ship",
+                            "A giant cave painting of a dragon",
+                            "A castle made of ice"
+                        ],
+                        correct: 0,
+                        fact: "Skara Brae has intact stone beds, stone dressers, and stone hearths!"
+                    },
+                    {
+                        question: "What do historians call the giant, massive stones used to build prehistoric monuments?",
+                        options: [
+                            "Pebbles",
+                            "Megaliths",
+                            "Micro-stones",
+                            "Brickettes"
+                        ],
+                        correct: 1,
+                        fact: "'Megalith' comes from ancient words meaning 'Huge Stone'!"
+                    }
+                ]
+            },
+            {
+                id: 5,
+                title: "Level 5: Prehistoric Masters",
+                subtitle: "Otzi the Iceman & End of Stone Age",
+                icon: "🏔️",
+                questions: [
+                    {
+                        question: "Who was 'Ötzi the Iceman' discovered by hikers in the icy mountains?",
+                        options: [
+                            "A modern adventurer",
+                            "A perfectly preserved naturally frozen man from the Stone Age",
+                            "A mythical pirate captain",
+                            "A roman soldier"
+                        ],
+                        correct: 1,
+                        fact: "Ötzi was preserved in ice for over 5,000 years with his bow, arrows, and copper axe!"
+                    },
+                    {
+                        question: "What era came directly AFTER the Stone Age when people discovered how to smelt metals?",
+                        options: [
+                            "The Plastic Age",
+                            "The Bronze Age",
+                            "The Computer Age",
+                            "The Robot Age"
+                        ],
+                        correct: 1,
+                        fact: "People learned to mix copper and tin to create strong Bronze tools!"
+                    },
+                    {
+                        question: "About how long did the ENTIRE Stone Age last in human history?",
+                        options: [
+                            "Only 10 years",
+                            "About 100 years",
+                            "Over 2 Million years!",
+                            "Exactly 5 days"
+                        ],
+                        correct: 2,
+                        fact: "The Stone Age covers almost all of human history up until metalworking began!"
+                    }
+                ]
+            }
+        ];
+
+        /* --- STATE VARIABLES --- */
+        let playerCoins = 0;
+        let unlockedLevels = 1; // 1 to 5
+        let levelStars = [0, 0, 0, 0, 0, 0]; // 1-indexed for levels 1-5
+
+        let currentLevel = 1;
+        let currentQuestionIdx = 0;
+        let levelCorrectCount = 0;
+        let waitingForContinue = false;
+
+        /* --- SCREEN SWITCHING --- */
+        function hideAllScreens() {
+            document.getElementById('screenMenu').classList.add('hidden');
+            document.getElementById('screenLevels').classList.add('hidden');
+            document.getElementById('screenQuiz').classList.add('hidden');
+            document.getElementById('screenLevelComplete').classList.add('hidden');
+            document.getElementById('screenAsteroid').classList.add('hidden');
+            stopAsteroidGame();
+        }
+
+        function showMainMenu() {
+            hideAllScreens();
+            document.getElementById('screenMenu').classList.remove('hidden');
+            updateHeaderUI();
+        }
+
+        function showLevelSelect() {
+            hideAllScreens();
+            renderLevelGrid();
+            document.getElementById('screenLevels').classList.remove('hidden');
+            updateHeaderUI();
+        }
+
+        function updateHeaderUI() {
+            document.getElementById('totalCoins').innerText = playerCoins;
+            let sumStars = levelStars.reduce((a, b) => a + b, 0);
+            document.getElementById('totalStars').innerText = `${sumStars} / 15`;
+        }
+
+        /* --- LEVEL GRID RENDERER --- */
+        function renderLevelGrid() {
+            const grid = document.getElementById('levelGrid');
+            grid.innerHTML = '';
+
+            LEVELS_DATA.forEach((lvl) => {
+                const isUnlocked = lvl.id <= unlockedLevels;
+                const stars = levelStars[lvl.id] || 0;
+
+                let starsHtml = '';
+                for (let i = 1; i <= 3; i++) {
+                    starsHtml += i <= stars ? '⭐' : '⚪';
+                }
+
+                const card = document.createElement('div');
+                card.className = `p-5 rounded-2xl border-2 flex flex-col justify-between transition-all ${
+                    isUnlocked 
+                    ? 'bg-white border-yellow-400 shadow-md hover:shadow-lg hover:-translate-y-1 cursor-pointer' 
+                    : 'bg-slate-100 border-slate-300 opacity-70'
+                }`;
+
+                card.innerHTML = `
+                    <div>
+                        <div class="flex justify-between items-start mb-2">
+                            <span class="text-4xl">${lvl.icon}</span>
+                            <span class="text-lg">${isUnlocked ? starsHtml : '🔒'}</span>
+                        </div>
+                        <h3 class="font-heading text-lg text-slate-800 mb-0.5">${lvl.title}</h3>
+                        <p class="text-xs text-slate-500 mb-4">${lvl.subtitle}</p>
+                    </div>
+                    <button ${isUnlocked ? `onclick="startQuizLevel(${lvl.id})"` : 'disabled'} 
+                            class="${isUnlocked ? 'gold-btn' : 'bg-slate-300 text-slate-500 cursor-not-allowed'} w-full py-2.5 rounded-xl font-heading text-sm text-slate-900">
+                        ${isUnlocked ? (stars > 0 ? 'Play Again ⚔️' : 'Start Level ⚔️') : 'Locked 🔒'}
+                    </button>
+                `;
+
+                grid.appendChild(card);
+            });
+        }
+
+        /* --- QUIZ ENGINE --- */
+        function startQuizLevel(lvlId) {
+            currentLevel = lvlId;
+            currentQuestionIdx = 0;
+            levelCorrectCount = 0;
+            waitingForContinue = false;
+
+            hideAllScreens();
+            document.getElementById('screenQuiz').classList.remove('hidden');
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            waitingForContinue = false;
+            const lvlData = LEVELS_DATA.find(l => l.id === currentLevel);
+            const qData = lvlData.questions[currentQuestionIdx];
+
+            // Hide Feedback
+            document.getElementById('quizFeedback').classList.add('hidden');
+
+            // Header info
+            document.getElementById('quizLevelBadge').innerText = lvlData.title;
+            document.getElementById('quizQuestionCount').innerText = `Question ${currentQuestionIdx + 1} of ${lvlData.questions.length}`;
+
+            // Progress bar
+            const progPct = ((currentQuestionIdx) / lvlData.questions.length) * 100;
+            document.getElementById('quizProgressBar').style.width = `${progPct}%`;
+
+            // Question content
+            document.getElementById('quizIcon').innerText = lvlData.icon;
+            document.getElementById('quizQuestionText').innerText = qData.question;
+
+            // Render options
+            const optionsGrid = document.getElementById('quizOptionsGrid');
+            optionsGrid.innerHTML = '';
+
+            qData.options.forEach((optText, index) => {
+                const btn = document.createElement('button');
+                btn.className = `p-4 rounded-xl font-semibold text-slate-800 border-2 border-slate-200 bg-slate-50 hover:bg-yellow-50 hover:border-yellow-400 text-left transition-all text-sm sm:text-base flex items-center justify-between shadow-sm`;
+                btn.innerHTML = `
+                    <span>${optText}</span>
+                    <span class="w-6 h-6 rounded-full border border-slate-300 flex items-center justify-center text-xs font-bold bg-white text-slate-500">
+                        ${['A','B','C','D'][index]}
+                    </span>
+                `;
+                btn.onclick = () => checkAnswer(index, btn);
+                optionsGrid.appendChild(btn);
+            });
+        }
+
+        function checkAnswer(selectedIndex, btnElement) {
+            if (waitingForContinue) return;
+            waitingForContinue = true;
+
+            const lvlData = LEVELS_DATA.find(l => l.id === currentLevel);
+            const qData = lvlData.questions[currentQuestionIdx];
+            const feedbackBox = document.getElementById('quizFeedback');
+            const feedbackTitle = document.getElementById('feedbackTitle');
+            const feedbackBody = document.getElementById('feedbackBody');
+            const feedbackBtn = document.getElementById('feedbackBtn');
+
+            const allOptionBtns = document.getElementById('quizOptionsGrid').children;
+
+            if (selectedIndex === qData.correct) {
+                // Correct Answer!
+                levelCorrectCount++;
+                playerCoins += 20;
+                updateHeaderUI();
+
+                btnElement.className = "p-4 rounded-xl font-semibold text-green-900 border-2 border-green-500 bg-green-100 text-left flex items-center justify-between shadow-md";
+
+                feedbackBox.className = "rounded-2xl p-4 text-center mb-4 bg-green-100 border-2 border-green-400 text-green-950 block";
+                feedbackTitle.innerText = "🎉 Hooray! Splendid Job, Captain Hero!";
+                feedbackBody.innerText = `Correct! 🪙 +20 Gold Coins! ${qData.fact}`;
+                feedbackBtn.innerText = "Next Question ➡️";
+            } else {
+                // Friendly Retry Answer
+                btnElement.className = "p-4 rounded-xl font-semibold text-rose-900 border-2 border-rose-400 bg-rose-100 text-left flex items-center justify-between shadow-sm";
+
+                // Highlight correct one softly
+                allOptionBtns[qData.correct].className = "p-4 rounded-xl font-semibold text-green-900 border-2 border-green-400 bg-green-50 text-left flex items-center justify-between shadow-sm";
+
+                feedbackBox.className = "rounded-2xl p-4 text-center mb-4 bg-amber-100 border-2 border-amber-400 text-amber-950 block";
+                feedbackTitle.innerText = "⚓ Nice Try, Brave Explorer!";
+                feedbackBody.innerText = `Not quite right! Don't worry, here is a handy pirate hint: ${qData.fact}`;
+                feedbackBtn.innerText = "Try Next Question ➡️";
+            }
+
+            // Disable buttons temporarily
+            for (let b of allOptionBtns) {
+                b.disabled = true;
+            }
+        }
+
+        function nextQuestionOrRetry() {
+            currentQuestionIdx++;
+            const lvlData = LEVELS_DATA.find(l => l.id === currentLevel);
+
+            if (currentQuestionIdx < lvlData.questions.length) {
+                loadQuestion();
+            } else {
+                completeLevel();
+            }
+        }
+
+        /* --- LEVEL COMPLETE --- */
+        function completeLevel() {
+            hideAllScreens();
+
+            // Stars calculation
+            let starsEarned = levelCorrectCount; // Max 3
+            if (starsEarned < 1) starsEarned = 1; // Friendly min 1 star encouragement for attempting
+
+            if (starsEarned > (levelStars[currentLevel] || 0)) {
+                levelStars[currentLevel] = starsEarned;
+            }
+
+            // Unlock next level
+            if (currentLevel < 5 && unlockedLevels < currentLevel + 1) {
+                unlockedLevels = currentLevel + 1;
+            }
+
+            const bonusCoins = starsEarned * 50;
+            playerCoins += bonusCoins;
+            updateHeaderUI();
+
+            let starsStr = '';
+            for (let i = 0; i < starsEarned; i++) starsStr += '⭐';
+
+            document.getElementById('completedStars').innerText = starsStr;
+            document.getElementById('completedCoins').innerText = `+${bonusCoins} 🪙`;
+
+            document.getElementById('levelCompleteMessage').innerText = 
+                `Superb work! You scored ${levelCorrectCount} out of 3 questions correctly! Your Pirate Army grows stronger!`;
+
+            document.getElementById('screenLevelComplete').classList.remove('hidden');
+        }
+
+        /* --- ASTEROID SHOOTER MINI-GAME --- */
+        let canvas, ctx;
+        let gameLoopReq;
+        let timerInterval;
+
+        let gameTimeLeft = 30;
+        let miniScore = 0;
+
+        let ship = { x: 0, y: 0, width: 44, height: 44, speed: 7 };
+        let bullets = [];
+        let asteroids = [];
+        let keys = {};
+
+        function startAsteroidGame() {
+            hideAllScreens();
+            document.getElementById('screenAsteroid').classList.remove('hidden');
+            document.getElementById('miniGameOverOverlay').classList.add('hidden');
+
+            canvas = document.getElementById('gameCanvas');
+            ctx = canvas.getContext('2d');
+
+            // Responsive resolution adjustment
+            canvas.width = canvas.parentElement.clientWidth;
+            canvas.height = canvas.parentElement.clientHeight;
+
+            ship.x = canvas.width / 2 - ship.width / 2;
+            ship.y = canvas.height - ship.height - 15;
+
+            bullets = [];
+            asteroids = [];
+            miniScore = 0;
+            gameTimeLeft = 30;
+
+            document.getElementById('miniGameScore').innerText = miniScore;
+            document.getElementById('gameTimer').innerText = gameTimeLeft;
+
+            // Clear previous timers
+            if (timerInterval) clearInterval(timerInterval);
+
+            timerInterval = setInterval(() => {
+                gameTimeLeft--;
+                document.getElementById('gameTimer').innerText = gameTimeLeft;
+
+                if (gameTimeLeft <= 0) {
+                    endAsteroidGame();
+                }
+            }, 1000);
+
+            // Controls setup
+            window.addEventListener('keydown', handleKeyDown);
+            window.addEventListener('keyup', handleKeyUp);
+
+            setupTouchControls();
+
+            // Start animation loop
+            if (gameLoopReq) cancelAnimationFrame(gameLoopReq);
+            runAsteroidLoop();
+        }
+
+        function handleKeyDown(e) {
+            keys[e.code] = true;
+            if (e.code === 'Space' && document.getElementById('screenAsteroid').classList.contains('hidden') === false) {
+                fireBullet();
+                e.preventDefault();
+            }
+        }
+
+        function handleKeyUp(e) {
+            keys[e.code] = false;
+        }
+
+        function setupTouchControls() {
+            const btnLeft = document.getElementById('btnLeft');
+            const btnRight = document.getElementById('btnRight');
+            const btnFire = document.getElementById('btnFire');
+
+            btnLeft.ontouchstart = (e) => { e.preventDefault(); keys['ArrowLeft'] = true; };
+            btnLeft.ontouchend = (e) => { e.preventDefault(); keys['ArrowLeft'] = false; };
+
+            btnRight.ontouchstart = (e) => { e.preventDefault(); keys['ArrowRight'] = true; };
+            btnRight.ontouchend = (e) => { e.preventDefault(); keys['ArrowRight'] = false; };
+
+            btnFire.ontouchstart = (e) => { e.preventDefault(); fireBullet(); };
+        }
+
+        function fireBullet() {
+            bullets.push({
+                x: ship.x + ship.width / 2 - 4,
+                y: ship.y,
+                width: 8,
+                height: 16,
+                speed: 10
+            });
+        }
+
+        function runAsteroidLoop() {
+            updateAsteroidGame();
+            drawAsteroidGame();
+
+            if (gameTimeLeft > 0) {
+                gameLoopReq = requestAnimationFrame(runAsteroidLoop);
+            }
+        }
+
+        function updateAsteroidGame() {
+            // Ship movement
+            if ((keys['ArrowLeft'] || keys['KeyA']) && ship.x > 0) {
+                ship.x -= ship.speed;
+            }
+            if ((keys['ArrowRight'] || keys['KeyD']) && ship.x < canvas.width - ship.width) {
+                ship.x += ship.speed;
+            }
+
+            // Update Bullets
+            for (let i = bullets.length - 1; i >= 0; i--) {
+                bullets[i].y -= bullets[i].speed;
+                if (bullets[i].y < -20) bullets.splice(i, 1);
+            }
+
+            // Spawn Asteroids
+            if (Math.random() < 0.045) {
+                const radius = Math.random() * 14 + 16;
+                asteroids.push({
+                    x: Math.random() * (canvas.width - radius * 2) + radius,
+                    y: -radius * 2,
+                    radius: radius,
+                    speed: Math.random() * 2 + 1.5,
+                    gold: Math.random() > 0.4
+                });
+            }
+
+            // Update Asteroids & Collision Detection
+            for (let aIdx = asteroids.length - 1; aIdx >= 0; aIdx--) {
+                const ast = asteroids[aIdx];
+                ast.y += ast.speed;
+
+                // Bullet collisions
+                for (let bIdx = bullets.length - 1; bIdx >= 0; bIdx--) {
+                    const b = bullets[bIdx];
+                    const dist = Math.hypot((b.x + b.width / 2) - ast.x, (b.y + b.height / 2) - ast.y);
+
+                    if (dist < ast.radius + b.width) {
+                        // Destroyed asteroid!
+                        miniScore += ast.gold ? 25 : 10;
+                        document.getElementById('miniGameScore').innerText = miniScore;
+
+                        bullets.splice(bIdx, 1);
+                        asteroids.splice(aIdx, 1);
+                        break;
+                    }
+                }
+
+                // Off-screen cleanup
+                if (ast && ast.y > canvas.height + 50) {
+                    asteroids.splice(aIdx, 1);
+                }
+            }
+        }
+
+        function drawAsteroidGame() {
+            // Clear Background
+            ctx.fillStyle = '#0f172a';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Draw Stars
+            ctx.fillStyle = '#ffffff';
+            for (let i = 0; i < 25; i++) {
+                const x = (i * 37) % canvas.width;
+                const y = (i * 73 + Date.now() * 0.02) % canvas.height;
+                ctx.fillRect(x, y, (i % 2) + 1, (i % 2) + 1);
+            }
+
+            // Draw Ship (Pirate Starship shape with gold accents)
+            ctx.fillStyle = '#FFD700';
+            ctx.beginPath();
+            ctx.moveTo(ship.x + ship.width / 2, ship.y);
+            ctx.lineTo(ship.x + ship.width, ship.y + ship.height);
+            ctx.lineTo(ship.x + ship.width / 2, ship.y + ship.height - 8);
+            ctx.lineTo(ship.x, ship.y + ship.height);
+            ctx.closePath();
+            ctx.fill();
+
+            // Ship pirate flag skull accent
+            ctx.fillStyle = '#000000';
+            ctx.beginPath();
+            ctx.arc(ship.x + ship.width / 2, ship.y + ship.height / 2 + 4, 4, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Draw Bullets (Glowing Golden Energy)
+            ctx.fillStyle = '#FFE55C';
+            ctx.shadowColor = '#FFD700';
+            ctx.shadowBlur = 8;
+            bullets.forEach(b => {
+                ctx.fillRect(b.x, b.y, b.width, b.height);
+            });
+            ctx.shadowBlur = 0; // Reset shadow
+
+            // Draw Asteroids
+            asteroids.forEach(ast => {
+                ctx.beginPath();
+                ctx.arc(ast.x, ast.y, ast.radius, 0, Math.PI * 2);
+                ctx.fillStyle = ast.gold ? '#DAA520' : '#64748b';
+                ctx.fill();
+                ctx.lineWidth = 3;
+                ctx.strokeStyle = ast.gold ? '#FFE55C' : '#94a3b8';
+                ctx.stroke();
+
+                // Add small crater details
+                ctx.fillStyle = ast.gold ? '#B8860B' : '#475569';
+                ctx.beginPath();
+                ctx.arc(ast.x - ast.radius * 0.3, ast.y - ast.radius * 0.2, ast.radius * 0.25, 0, Math.PI * 2);
+                ctx.fill();
+            });
+        }
+
+        function endAsteroidGame() {
+            clearInterval(timerInterval);
+            stopAsteroidGame();
+
+            playerCoins += miniScore;
+            updateHeaderUI();
+
+            document.getElementById('finalMiniScore').innerText = miniScore;
+            document.getElementById('miniGameOverOverlay').classList.remove('hidden');
+        }
+
+        function stopAsteroidGame() {
+            if (timerInterval) clearInterval(timerInterval);
+            if (gameLoopReq) cancelAnimationFrame(gameLoopReq);
+            window.removeEventListener('keydown', handleKeyDown);
+            window.removeEventListener('keyup', handleKeyUp);
+        }
+
+        /* Initialize on load */
+        window.onload = function() {
+            showMainMenu();
+        };
+    </script>
+</body>
+</html>

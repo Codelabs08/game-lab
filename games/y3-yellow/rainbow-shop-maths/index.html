@@ -1,0 +1,979 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rainbow Shop Maths Quiz</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Google Fonts for child-friendly typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap" rel="stylesheet">
+
+    <!-- Canvas Confetti -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+    <style>
+        /* Custom CSS styles and Animations */
+        body {
+            font-family: 'Fredoka', sans-serif;
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: manipulation;
+        }
+
+        /* Animated Rainbow Background */
+        .rainbow-bg {
+            background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 20%, #a1c4fd 40%, #c2e9fb 60%, #e0c3fc 80%, #8ec5fc 100%);
+            background-size: 300% 300%;
+            animation: rainbowGradient 12s ease infinite;
+        }
+
+        @keyframes rainbowGradient {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* Rainbow Border Container */
+        .rainbow-border {
+            border: 6px solid transparent;
+            border-image: linear-gradient(to right, #ff4b1f, #ff9068, #ffeb3b, #4caf50, #00bcd4, #ab47bc) 1;
+            border-radius: 1.5rem;
+        }
+
+        .rainbow-border-card {
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+            background-clip: padding-box;
+            position: relative;
+        }
+
+        .rainbow-border-card::before {
+            content: '';
+            position: absolute;
+            top: -5px; bottom: -5px; left: -5px; right: -5px;
+            background: linear-gradient(45deg, #ff595e, #ffca3a, #8ac926, #1982c4, #6a4c93);
+            border-radius: 1.75rem;
+            z-index: -1;
+            animation: rainbowRotate 6s linear infinite;
+        }
+
+        @keyframes rainbowRotate {
+            0% { filter: hue-rotate(0deg); }
+            100% { filter: hue-rotate(360deg); }
+        }
+
+        /* Bounce Animations */
+        .bounce-hover:hover {
+            transform: translateY(-4px) scale(1.02);
+        }
+
+        .bounce-active:active {
+            transform: translateY(2px) scale(0.98);
+        }
+
+        .sebby-float {
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(-1deg); }
+            50% { transform: translateY(-10px) rotate(2deg); }
+        }
+
+        /* Shimmer effect for buttons */
+        .shimmer {
+            position: relative;
+            overflow: hidden;
+        }
+        .shimmer::after {
+            content: '';
+            position: absolute;
+            top: -50%; left: -50%;
+            width: 200%; height: 200%;
+            background: linear-gradient(60deg, transparent 30%, rgba(255,255,255,0.4) 50%, transparent 70%);
+            transform: rotate(30deg);
+            animation: shimmerMove 3s infinite;
+        }
+        @keyframes shimmerMove {
+            0% { transform: translate(-100%, -100%) rotate(30deg); }
+            100% { transform: translate(100%, 100%) rotate(30deg); }
+        }
+    </style>
+</head>
+<body class="rainbow-bg min-h-screen text-slate-800 flex flex-col justify-between overflow-x-hidden p-2 sm:p-4">
+
+    <!-- TOP HEADER / NAV -->
+    <header class="w-full max-w-4xl mx-auto bg-white/90 backdrop-blur-md rounded-2xl p-3 sm:p-4 shadow-lg flex items-center justify-between border-2 border-white/80 z-20">
+        <!-- Logo & Title -->
+        <div class="flex items-center space-x-3">
+            <div class="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-tr from-pink-400 via-purple-400 to-indigo-400 rounded-full flex items-center justify-center text-2xl shadow-inner cursor-pointer" onclick="goHome()">
+                🦄
+            </div>
+            <div>
+                <h1 class="text-xl sm:text-2xl font-bold bg-gradient-to-r from-red-500 via-yellow-500 via-green-500 to-blue-500 bg-clip-text text-transparent">Rainbow Shop Maths Quiz</h1>
+                <p class="text-xs sm:text-sm font-semibold text-slate-500 hidden sm:block">Year 3 Math Adventure!</p>
+            </div>
+        </div>
+
+        <!-- Score & Mute Toggle -->
+        <div class="flex items-center space-x-3 sm:space-x-5">
+            <!-- Total Stars Display -->
+            <div class="flex items-center bg-amber-100 border-2 border-amber-300 px-3 py-1.5 rounded-full shadow-sm">
+                <span class="text-xl sm:text-2xl mr-1">⭐</span>
+                <span id="global-stars" class="font-bold text-lg sm:text-xl text-amber-800">0</span>
+            </div>
+
+            <!-- Mute Audio Button -->
+            <button id="mute-btn" onclick="toggleMute()" class="w-10 h-10 sm:w-12 sm:h-12 bg-indigo-100 hover:bg-indigo-200 border-2 border-indigo-300 rounded-full flex items-center justify-center text-xl transition-all shadow-sm">
+                🔊
+            </button>
+        </div>
+    </header>
+
+    <!-- MAIN CONTENT CONTAINER -->
+    <main class="w-full max-w-4xl mx-auto my-3 sm:my-6 flex-grow flex items-center justify-center relative z-10">
+
+        <!-- ================= START SCREEN ================= -->
+        <div id="start-screen" class="w-full bg-white/95 backdrop-blur-md rounded-3xl p-6 sm:p-10 text-center shadow-2xl border-4 border-white rainbow-border-card transition-all duration-300">
+            <!-- Hero Mascot Greeting -->
+            <div class="relative inline-block mb-4">
+                <div class="w-28 h-28 sm:w-36 sm:h-36 mx-auto bg-gradient-to-tr from-yellow-300 via-pink-300 to-cyan-300 rounded-full p-2 shadow-md sebby-float flex items-center justify-center text-6xl sm:text-7xl">
+                    🦄
+                </div>
+                <div class="absolute -bottom-2 -right-2 bg-pink-500 text-white font-bold text-xs sm:text-sm px-3 py-1 rounded-full shadow-md border-2 border-white">
+                    Hi! I'm Hero!
+                </div>
+            </div>
+
+            <h2 class="text-2xl sm:text-4xl font-extrabold text-indigo-900 mb-2">Ready to Master Times Tables?</h2>
+            <p class="text-slate-600 text-base sm:text-lg mb-6 max-w-lg mx-auto">
+                Answer 15 fun maths questions (2s, 3s, 4s, 5s & 10s) and play the <strong>Star Shooter</strong> mini-game after every level!
+            </p>
+
+            <button onclick="startQuiz()" class="shimmer bg-gradient-to-r from-emerald-400 via-teal-500 to-cyan-500 hover:from-emerald-500 hover:to-cyan-600 text-white font-bold text-xl sm:text-2xl px-8 py-4 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-200 bounce-hover bounce-active w-full sm:w-auto">
+                🚀 Start Game!
+            </button>
+        </div>
+
+        <!-- ================= QUIZ SCREEN ================= -->
+        <div id="quiz-screen" class="hidden w-full bg-white/95 backdrop-blur-md rounded-3xl p-4 sm:p-8 shadow-2xl border-4 border-white rainbow-border-card transition-all duration-300">
+            <!-- Level Header & Progress Bar -->
+            <div class="mb-6">
+                <div class="flex flex-wrap justify-between items-center mb-2 gap-2">
+                    <span id="level-badge" class="bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold px-4 py-1.5 rounded-full text-sm sm:text-base shadow">
+                        Level 1 / 5
+                    </span>
+                    <span id="question-tracker" class="text-slate-600 font-bold text-sm sm:text-base">
+                        Question 1 of 3 in Level
+                    </span>
+                </div>
+                <!-- Progress bar -->
+                <div class="w-full bg-slate-200 h-4 rounded-full overflow-hidden border border-slate-300 shadow-inner">
+                    <div id="progress-bar-fill" class="bg-gradient-to-r from-amber-400 via-pink-500 to-cyan-400 h-full transition-all duration-500 w-0"></div>
+                </div>
+            </div>
+
+            <!-- Hero Speech Bubble & Question -->
+            <div class="flex flex-col sm:flex-row items-center gap-4 mb-6">
+                <div class="flex-shrink-0 text-center">
+                    <div class="w-20 h-20 sm:w-24 sm:h-24 bg-gradient-to-br from-indigo-200 to-pink-200 rounded-full flex items-center justify-center text-4xl sm:text-5xl shadow-md border-2 border-white sebby-float">
+                        🦄
+                    </div>
+                    <span class="text-xs font-bold text-indigo-700 mt-1 block">Hero</span>
+                </div>
+
+                <div class="flex-grow w-full bg-indigo-50 border-2 border-indigo-200 rounded-2xl p-4 sm:p-6 relative shadow-inner">
+                    <div class="text-xs font-semibold text-indigo-500 uppercase tracking-wider mb-1" id="level-topic-hint">
+                        Level 1: 2s & 10s Tables
+                    </div>
+                    <div id="question-text" class="text-2xl sm:text-4xl font-extrabold text-slate-800 tracking-wide text-center sm:text-left">
+                        2 × 5 = ?
+                    </div>
+                </div>
+            </div>
+
+            <!-- Answer Buttons Grid -->
+            <div id="options-grid" class="grid grid-cols-2 gap-3 sm:gap-4 mb-4">
+                <!-- Buttons injected dynamically -->
+            </div>
+
+            <!-- Feedback Bar / Encourage Text -->
+            <div id="feedback-area" class="min-h-[50px] flex items-center justify-center rounded-xl p-2 text-center font-bold text-base sm:text-lg transition-all duration-300">
+                <span class="text-slate-400 italic">Tap an answer above!</span>
+            </div>
+        </div>
+
+        <!-- ================= ASTEROID/STAR SHOOTER SCREEN ================= -->
+        <div id="shooter-screen" class="hidden w-full bg-slate-900 rounded-3xl p-3 sm:p-6 shadow-2xl border-4 border-indigo-400 rainbow-border-card text-white relative overflow-hidden flex flex-col items-center">
+            <!-- Mini Game Top Dashboard -->
+            <div class="w-full flex justify-between items-center mb-3 bg-slate-800/80 px-4 py-2 rounded-2xl border border-slate-700">
+                <div class="text-amber-300 font-bold text-sm sm:text-base flex items-center">
+                    ⭐ Bonus Stars: <span id="shooter-score" class="text-xl sm:text-2xl ml-2 font-extrabold text-yellow-400">0</span>
+                </div>
+                <div class="text-cyan-300 font-bold text-sm sm:text-base flex items-center">
+                    ⏳ Time Left: <span id="shooter-timer" class="text-xl sm:text-2xl ml-2 font-extrabold text-white">20</span>s
+                </div>
+            </div>
+
+            <!-- Game Canvas Container -->
+            <div class="relative w-full max-w-2xl bg-black rounded-2xl overflow-hidden shadow-inner border-2 border-indigo-500/50 aspect-[4/3] max-h-[60vh]">
+                <canvas id="shooter-canvas" class="w-full h-full block cursor-crosshair"></canvas>
+
+                <!-- Overlay message before start -->
+                <div id="shooter-start-overlay" class="absolute inset-0 bg-slate-950/85 backdrop-blur-sm flex flex-col items-center justify-center p-6 text-center z-20">
+                    <div class="text-4xl sm:text-5xl mb-2">🌌✨</div>
+                    <h3 class="text-2xl sm:text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-pink-400 to-cyan-300 mb-2">
+                        Rainbow Star Blaster!
+                    </h3>
+                    <p class="text-slate-300 text-sm sm:text-base max-w-md mb-4">
+                        Shoot floating space crystals and cosmic asteroids! Collect extra stars for your final score!
+                    </p>
+                    <p class="text-amber-300 text-xs sm:text-sm font-semibold mb-6">
+                        💡 Controls: Touch/Drag or Left/Right Arrows to move. Spacebar or Tap to Shoot!
+                    </p>
+                    <button onclick="startShooterRound()" class="bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white font-bold text-lg sm:text-xl px-8 py-3 rounded-2xl shadow-lg bounce-hover bounce-active">
+                        🚀 Blast Off!
+                    </button>
+                </div>
+            </div>
+
+            <!-- Mobile Touch Controls -->
+            <div class="w-full max-w-2xl flex justify-between gap-3 mt-3 sm:hidden">
+                <button id="btn-left" class="flex-1 bg-slate-800 active:bg-slate-700 border border-slate-600 text-3xl py-3 rounded-xl flex items-center justify-center">👈</button>
+                <button id="btn-shoot" class="flex-2 bg-gradient-to-r from-pink-500 to-purple-600 text-white font-bold text-lg px-6 py-3 rounded-xl flex items-center justify-center shadow">🚀 SHOOT</button>
+                <button id="btn-right" class="flex-1 bg-slate-800 active:bg-slate-700 border border-slate-600 text-3xl py-3 rounded-xl flex items-center justify-center">👉</button>
+            </div>
+        </div>
+
+        <!-- ================= VICTORY SCREEN ================= -->
+        <div id="victory-screen" class="hidden w-full bg-white/95 backdrop-blur-md rounded-3xl p-6 sm:p-10 text-center shadow-2xl border-4 border-white rainbow-border-card transition-all duration-300">
+            <div class="text-6xl sm:text-7xl mb-2 animate-bounce">🏆</div>
+            <h2 class="text-3xl sm:text-5xl font-black bg-gradient-to-r from-red-500 via-yellow-500 via-green-500 to-indigo-500 bg-clip-text text-transparent mb-2">
+                SUPER WELL DONE!
+            </h2>
+            <p class="text-slate-600 font-bold text-lg sm:text-xl mb-6">
+                You passed all 5 levels and completed Your Rainbow Shop Quiz!
+            </p>
+
+            <!-- Final Score Breakdown Card -->
+            <div class="max-w-md mx-auto bg-gradient-to-br from-amber-50 to-pink-50 border-2 border-amber-200 rounded-2xl p-6 mb-8 shadow-inner">
+                <div class="text-slate-500 font-semibold text-sm uppercase mb-1">Your Total Score</div>
+                <div class="text-4xl sm:text-6xl font-black text-amber-500 my-2 flex items-center justify-center">
+                    <span>⭐</span>
+                    <span id="final-star-count" class="ml-2">0</span>
+                </div>
+                <p id="badge-rank" class="text-indigo-800 font-extrabold text-lg mt-2">
+                    🌟 Master Math Rainbow Champion 🌟
+                </p>
+                <p class="text-xs text-slate-500 mt-2">
+                    Correct Answers: <span id="correct-count" class="font-bold text-slate-700">15/15</span>
+                </p>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex flex-col sm:flex-row justify-center gap-4">
+                <button onclick="resetGame()" class="shimmer bg-gradient-to-r from-emerald-400 to-cyan-500 hover:from-emerald-500 hover:to-cyan-600 text-white font-bold text-xl px-8 py-4 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-200 bounce-hover bounce-active">
+                    🔄 Play Again!
+                </button>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="w-full max-w-4xl mx-auto text-center py-2 text-xs sm:text-sm font-semibold text-slate-600 bg-white/60 rounded-full backdrop-blur-sm border border-white/40">
+        ✨ Safe & Safe Child-Friendly Learning • Made with ❤️️ for Year 3 Math Masters ✨
+    </footer>
+
+    <script>
+        /* ===================================================================
+           1. GAME DATA & STATE
+           =================================================================== */
+
+        // 15 Year 3 Math Questions (2, 5, 10, plus 3 and 4) split into 5 levels
+        const quizLevels = [
+            {
+                level: 1,
+                topic: "Level 1: 2s & 10s Tables (Easy)",
+                questions: [
+                    { q: "2 × 5", options: ["10", "8", "12", "15"], answer: 0 },
+                    { q: "10 × 3", options: ["20", "30", "13", "33"], answer: 1 },
+                    { q: "2 × 8", options: ["14", "18", "16", "20"], answer: 2 }
+                ]
+            },
+            {
+                level: 2,
+                topic: "Level 2: 5s & 10s Tables",
+                questions: [
+                    { q: "5 × 4", options: ["15", "25", "20", "24"], answer: 2 },
+                    { q: "10 × 7", options: ["70", "17", "60", "77"], answer: 0 },
+                    { q: "5 × 6", options: ["35", "25", "30", "20"], answer: 2 }
+                ]
+            },
+            {
+                level: 3,
+                topic: "Level 3: Intro to 3s & 4s",
+                questions: [
+                    { q: "3 × 3", options: ["6", "9", "12", "15"], answer: 1 },
+                    { q: "4 × 2", options: ["8", "6", "10", "12"], answer: 0 },
+                    { q: "3 × 5", options: ["12", "18", "15", "20"], answer: 2 }
+                ]
+            },
+            {
+                level: 4,
+                topic: "Level 4: 3s & 4s Practice",
+                questions: [
+                    { q: "4 × 4", options: ["12", "16", "20", "14"], answer: 1 },
+                    { q: "3 × 8", options: ["21", "27", "24", "18"], answer: 2 },
+                    { q: "4 × 5", options: ["20", "15", "25", "24"], answer: 0 }
+                ]
+            },
+            {
+                level: 5,
+                topic: "Level 5: Master Challenge!",
+                questions: [
+                    { q: "3 × 7", options: ["21", "24", "18", "27"], answer: 0 },
+                    { q: "4 × 8", options: ["28", "36", "32", "30"], answer: 2 },
+                    { q: "5 × 9", options: ["40", "45", "50", "35"], answer: 1 }
+                ]
+            }
+        ];
+
+        // Encouragement text array
+        const positivePhrases = [
+            "🌟 Super Star! Spot on!",
+            "🎉 Brilliant job!",
+            "🚀 Fantastic math skills!",
+            "💖 You are amazing!",
+            "🌈 Rainbow Power! Correct!",
+            "✨ Wow, perfectly done!"
+        ];
+
+        // Global State Variables
+        let currentLevelIdx = 0;
+        let currentQuestionIdx = 0;
+        let totalStars = 0;
+        let correctAnswersCount = 0;
+        let isAudioMuted = false;
+        let isAnsweringBlocked = false;
+
+        /* ===================================================================
+           2. WEB AUDIO API SYNTHESIZER (No external MP3 files required)
+           =================================================================== */
+        let audioCtx = null;
+
+        function getAudioContext() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+            return audioCtx;
+        }
+
+        function toggleMute() {
+            isAudioMuted = !isAudioMuted;
+            document.getElementById('mute-btn').innerText = isAudioMuted ? "🔇" : "🔊";
+        }
+
+        function playSound(type) {
+            if (isAudioMuted) return;
+            try {
+                const ctx = getAudioContext();
+                const now = ctx.currentTime;
+
+                if (type === 'correct') {
+                    // Cheerful arpeggio (C5 - E5 - G5 - C6)
+                    const freqs = [523.25, 659.25, 783.99, 1046.50];
+                    freqs.forEach((f, idx) => {
+                        const osc = ctx.createOscillator();
+                        const gain = ctx.createGain();
+                        osc.type = 'triangle';
+                        osc.frequency.setValueAtTime(f, now + idx * 0.08);
+                        gain.gain.setValueAtTime(0.2, now + idx * 0.08);
+                        gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.08 + 0.25);
+                        osc.connect(gain);
+                        gain.connect(ctx.destination);
+                        osc.start(now + idx * 0.08);
+                        osc.stop(now + idx * 0.08 + 0.25);
+                    });
+                } else if (type === 'wrong') {
+                    // Gentle low double chime
+                    const osc = ctx.createOscillator();
+                    const gain = ctx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(220, now);
+                    osc.frequency.setValueAtTime(180, now + 0.15);
+                    gain.gain.setValueAtTime(0.2, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.35);
+                    osc.connect(gain);
+                    gain.connect(ctx.destination);
+                    osc.start(now);
+                    osc.stop(now + 0.35);
+                } else if (type === 'shoot') {
+                    // Laser pop sound
+                    const osc = ctx.createOscillator();
+                    const gain = ctx.createGain();
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(600, now);
+                    osc.frequency.exponentialRampToValueAtTime(100, now + 0.12);
+                    gain.gain.setValueAtTime(0.15, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.12);
+                    osc.connect(gain);
+                    gain.connect(ctx.destination);
+                    osc.start(now);
+                    osc.stop(now + 0.12);
+                } else if (type === 'pop') {
+                    // Pop / Star collect sound
+                    const osc = ctx.createOscillator();
+                    const gain = ctx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(800, now);
+                    osc.frequency.exponentialRampToValueAtTime(1400, now + 0.08);
+                    gain.gain.setValueAtTime(0.2, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.08);
+                    osc.connect(gain);
+                    gain.connect(ctx.destination);
+                    osc.start(now);
+                    osc.stop(now + 0.08);
+                } else if (type === 'fanfare') {
+                    // Celebration fanfare
+                    const notes = [523.25, 659.25, 783.99, 1046.50, 880, 1046.50];
+                    const times = [0, 0.12, 0.24, 0.36, 0.52, 0.68];
+                    notes.forEach((f, i) => {
+                        const osc = ctx.createOscillator();
+                        const gain = ctx.createGain();
+                        osc.type = 'triangle';
+                        osc.frequency.setValueAtTime(f, now + times[i]);
+                        gain.gain.setValueAtTime(0.25, now + times[i]);
+                        gain.gain.exponentialRampToValueAtTime(0.001, now + times[i] + 0.3);
+                        osc.connect(gain);
+                        gain.connect(ctx.destination);
+                        osc.start(now + times[i]);
+                        osc.stop(now + times[i] + 0.3);
+                    });
+                }
+            } catch (e) {
+                console.log("Audio play error:", e);
+            }
+        }
+
+        /* ===================================================================
+           3. QUIZ FLOW CONTROLLER
+           =================================================================== */
+
+        function showScreen(screenId) {
+            ['start-screen', 'quiz-screen', 'shooter-screen', 'victory-screen'].forEach(id => {
+                const el = document.getElementById(id);
+                if (id === screenId) {
+                    el.classList.remove('hidden');
+                } else {
+                    el.classList.add('hidden');
+                }
+            });
+        }
+
+        function goHome() {
+            if (confirm("Would you like to return to the start screen?")) {
+                showScreen('start-screen');
+            }
+        }
+
+        function startQuiz() {
+            getAudioContext();
+            currentLevelIdx = 0;
+            currentQuestionIdx = 0;
+            totalStars = 0;
+            correctAnswersCount = 0;
+            updateStarDisplay();
+            loadQuestion();
+            showScreen('quiz-screen');
+        }
+
+        function updateStarDisplay() {
+            document.getElementById('global-stars').innerText = totalStars;
+        }
+
+        function loadQuestion() {
+            isAnsweringBlocked = false;
+            const levelData = quizLevels[currentLevelIdx];
+            const qData = levelData.questions[currentQuestionIdx];
+
+            // Update Level Header
+            document.getElementById('level-badge').innerText = `Level ${levelData.level} / 5`;
+            document.getElementById('level-topic-hint').innerText = levelData.topic;
+            document.getElementById('question-tracker').innerText = `Question ${currentQuestionIdx + 1} of 3`;
+
+            // Update Progress Bar Fill
+            const progressPercent = (((currentLevelIdx * 3) + currentQuestionIdx) / 15) * 100;
+            document.getElementById('progress-bar-fill').style.width = `${progressPercent}%`;
+
+            // Set Question Text
+            document.getElementById('question-text').innerText = `${qData.q} = ?`;
+
+            // Reset Feedback Area
+            const feedbackEl = document.getElementById('feedback-area');
+            feedbackEl.className = "min-h-[50px] flex items-center justify-center rounded-xl p-2 text-center font-bold text-base sm:text-lg bg-slate-100 text-slate-500 border border-slate-200";
+            feedbackEl.innerHTML = `<span>Pick the correct number button! 💡</span>`;
+
+            // Render Options
+            const grid = document.getElementById('options-grid');
+            grid.innerHTML = '';
+
+            const btnColors = [
+                'from-pink-400 to-rose-500 hover:from-pink-500 hover:to-rose-600 border-pink-300',
+                'from-blue-400 to-indigo-500 hover:from-blue-500 hover:to-indigo-600 border-blue-300',
+                'from-amber-400 to-orange-500 hover:from-amber-500 hover:to-orange-600 border-amber-300',
+                'from-emerald-400 to-teal-500 hover:from-emerald-500 hover:to-teal-600 border-emerald-300'
+            ];
+
+            qData.options.forEach((opt, idx) => {
+                const btn = document.createElement('button');
+                btn.className = `bg-gradient-to-r ${btnColors[idx % btnColors.length]} text-white font-extrabold text-2xl sm:text-4xl py-5 sm:py-6 rounded-2xl shadow-md border-b-4 hover:shadow-lg transition-all duration-150 bounce-hover bounce-active flex items-center justify-center`;
+                btn.innerText = opt;
+                btn.onclick = () => handleAnswer(idx, btn);
+                grid.appendChild(btn);
+            });
+        }
+
+        function handleAnswer(selectedIndex, btnElement) {
+            if (isAnsweringBlocked) return;
+            isAnsweringBlocked = true;
+
+            const qData = quizLevels[currentLevelIdx].questions[currentQuestionIdx];
+            const feedbackEl = document.getElementById('feedback-area');
+
+            if (selectedIndex === qData.answer) {
+                // Correct Answer
+                playSound('correct');
+                totalStars += 10;
+                correctAnswersCount++;
+                updateStarDisplay();
+
+                btnElement.classList.add('ring-4', 'ring-green-400', 'scale-105');
+                feedbackEl.className = "min-h-[50px] flex items-center justify-center rounded-xl p-2 text-center font-bold text-base sm:text-lg bg-emerald-100 text-emerald-800 border-2 border-emerald-300 shadow-sm animate-bounce";
+                const randomPhrase = positivePhrases[Math.floor(Math.random() * positivePhrases.length)];
+                feedbackEl.innerHTML = `<span>${randomPhrase} +10 Stars ⭐</span>`;
+
+                // Small Confetti Blast
+                if (typeof confetti === 'function') {
+                    confetti({ particleCount: 30, spread: 60, origin: { y: 0.7 } });
+                }
+
+                setTimeout(() => {
+                    advanceQuiz();
+                }, 1400);
+
+            } else {
+                // Incorrect attempt (Encouraging feedback)
+                playSound('wrong');
+                btnElement.classList.add('opacity-50', 'scale-95');
+                feedbackEl.className = "min-h-[50px] flex items-center justify-center rounded-xl p-2 text-center font-bold text-base sm:text-lg bg-amber-100 text-amber-900 border-2 border-amber-300 shadow-sm";
+                feedbackEl.innerHTML = `<span>Great try! The correct answer is <strong>${qData.options[qData.answer]}</strong>! Let's keep going! 👍</span>`;
+
+                setTimeout(() => {
+                    advanceQuiz();
+                }, 2000);
+            }
+        }
+
+        function advanceQuiz() {
+            currentQuestionIdx++;
+
+            // Check if level finished (3 questions per level)
+            if (currentQuestionIdx >= 3) {
+                currentQuestionIdx = 0;
+                currentLevelIdx++;
+
+                if (currentLevelIdx >= quizLevels.length) {
+                    // All 5 Levels Complete!
+                    finishQuizGame();
+                } else {
+                    // Launch Reward Mini-Game round!
+                    prepareShooterRound();
+                }
+            } else {
+                loadQuestion();
+            }
+        }
+
+        function finishQuizGame() {
+            playSound('fanfare');
+            if (typeof confetti === 'function') {
+                confetti({ particleCount: 120, spread: 100, origin: { y: 0.5 } });
+            }
+
+            document.getElementById('final-star-count').innerText = totalStars;
+            document.getElementById('correct-count').innerText = `${correctAnswersCount} / 15`;
+
+            let badgeTitle = "🌟 Master Math Rainbow Champion!";
+            if (totalStars < 100) badgeTitle = "🌈 Rainbow Times Table Explorer!";
+            if (totalStars < 60) badgeTitle = "⭐ Star Math Scholar!";
+            document.getElementById('badge-rank').innerText = badgeTitle;
+
+            showScreen('victory-screen');
+        }
+
+        function resetGame() {
+            showScreen('start-screen');
+        }
+
+        /* ===================================================================
+           4. ASTEROID & STAR SHOOTER MINI-GAME (HTML5 Canvas Engine)
+           =================================================================== */
+
+        let canvas = null;
+        let ctx = null;
+        let gameLoopReq = null;
+        let shooterTimerInterval = null;
+
+        let shooterScore = 0;
+        let shooterTimeLeft = 20;
+        let isShooterRunning = false;
+
+        // Player Ship Properties
+        const player = {
+            x: 0,
+            y: 0,
+            width: 50,
+            height: 50,
+            speed: 7,
+            dx: 0
+        };
+
+        // Game Entities
+        let lasers = [];
+        let targets = [];
+        let particles = [];
+
+        // Key states
+        const keys = {
+            left: false,
+            right: false,
+            space: false
+        };
+
+        function initShooterCanvas() {
+            canvas = document.getElementById('shooter-canvas');
+            ctx = canvas.getContext('2d');
+
+            // Handle Canvas Resizing
+            const rect = canvas.parentElement.getBoundingClientRect();
+            canvas.width = rect.width || 600;
+            canvas.height = rect.height || 450;
+
+            player.x = canvas.width / 2 - player.width / 2;
+            player.y = canvas.height - player.height - 15;
+        }
+
+        function prepareShooterRound() {
+            showScreen('shooter-screen');
+            document.getElementById('shooter-start-overlay').classList.remove('hidden');
+            document.getElementById('shooter-score').innerText = "0";
+            document.getElementById('shooter-timer').innerText = "20";
+            shooterScore = 0;
+
+            setTimeout(() => {
+                initShooterCanvas();
+            }, 50);
+        }
+
+        function startShooterRound() {
+            document.getElementById('shooter-start-overlay').classList.add('hidden');
+            initShooterCanvas();
+
+            shooterScore = 0;
+            shooterTimeLeft = 20;
+            isShooterRunning = true;
+            lasers = [];
+            targets = [];
+            particles = [];
+
+            document.getElementById('shooter-score').innerText = shooterScore;
+            document.getElementById('shooter-timer').innerText = shooterTimeLeft;
+
+            // Start Timer
+            clearInterval(shooterTimerInterval);
+            shooterTimerInterval = setInterval(() => {
+                shooterTimeLeft--;
+                document.getElementById('shooter-timer').innerText = shooterTimeLeft;
+
+                if (shooterTimeLeft <= 0) {
+                    endShooterRound();
+                }
+            }, 1000);
+
+            // Game Loop
+            cancelAnimationFrame(gameLoopReq);
+            shooterLoop();
+        }
+
+        function endShooterRound() {
+            isShooterRunning = false;
+            clearInterval(shooterTimerInterval);
+            cancelAnimationFrame(gameLoopReq);
+
+            // Add Mini-Game bonus stars to Total Stars
+            totalStars += shooterScore;
+            updateStarDisplay();
+
+            // Overlay display & transition back to Quiz
+            ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            ctx.fillStyle = '#facc15';
+            ctx.font = 'bold 28px Fredoka, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText('🌟 Level Bonus Star Blast Complete! 🌟', canvas.width / 2, canvas.height / 2 - 20);
+
+            ctx.fillStyle = '#ffffff';
+            ctx.font = 'bold 20px Fredoka, sans-serif';
+            ctx.fillText(`Earned +${shooterScore} Bonus Stars!`, canvas.width / 2, canvas.height / 2 + 20);
+
+            playSound('fanfare');
+
+            setTimeout(() => {
+                showScreen('quiz-screen');
+                loadQuestion();
+            }, 2500);
+        }
+
+        // Spawn targets (Asteroids / Cosmic Stars)
+        function spawnTarget() {
+            if (Math.random() < 0.04) {
+                const types = [
+                    { type: 'star', emoji: '⭐', pts: 5, size: 36, color: '#facc15' },
+                    { type: 'crystal', emoji: '💎', pts: 3, size: 34, color: '#38bdf8' },
+                    { type: 'asteroid', emoji: '🪨', pts: 2, size: 38, color: '#a7f3d0' }
+                ];
+                const selected = types[Math.floor(Math.random() * types.length)];
+
+                targets.push({
+                    x: Math.random() * (canvas.width - 40) + 20,
+                    y: -40,
+                    speed: 1.5 + Math.random() * 2.5,
+                    type: selected.type,
+                    emoji: selected.emoji,
+                    pts: selected.pts,
+                    size: selected.size
+                });
+            }
+        }
+
+        function shooterLoop() {
+            if (!isShooterRunning) return;
+
+            // Clear Canvas
+            ctx.fillStyle = '#090d16';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Draw Stars in background
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+            for (let i = 0; i < 20; i++) {
+                const sx = (i * 37) % canvas.width;
+                const sy = (i * 53 + Date.now() * 0.05) % canvas.height;
+                ctx.fillRect(sx, sy, 2, 2);
+            }
+
+            // Move Player
+            if (keys.left && player.x > 0) {
+                player.x -= player.speed;
+            }
+            if (keys.right && player.x < canvas.width - player.width) {
+                player.x += player.speed;
+            }
+
+            // Draw Player Ship (Friendly Rainbow Rocket)
+            ctx.font = '40px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('🚀', player.x + player.width / 2, player.y + player.height / 2);
+
+            // Shoot action
+            if (keys.space) {
+                fireLaser();
+                keys.space = false; // Prevents continuous spamming per frame
+            }
+
+            // Update & Draw Lasers
+            for (let i = lasers.length - 1; i >= 0; i--) {
+                const l = lasers[i];
+                l.y -= l.speed;
+
+                // Draw Rainbow Sparkle Laser
+                ctx.fillStyle = l.color;
+                ctx.beginPath();
+                ctx.arc(l.x, l.y, 5, 0, Math.PI * 2);
+                ctx.fill();
+
+                if (l.y < -10) {
+                    lasers.splice(i, 1);
+                }
+            }
+
+            // Spawn & Update Targets
+            spawnTarget();
+            for (let tIdx = targets.length - 1; tIdx >= 0; tIdx--) {
+                const t = targets[tIdx];
+                t.y += t.speed;
+
+                ctx.font = `${t.size}px sans-serif`;
+                ctx.fillText(t.emoji, t.x, t.y);
+
+                // Collision Detection with Lasers
+                for (let lIdx = lasers.length - 1; lIdx >= 0; lIdx--) {
+                    const l = lasers[lIdx];
+                    const dist = Math.hypot(l.x - t.x, l.y - t.y);
+
+                    if (dist < t.size / 1.5) {
+                        // Hit Target!
+                        playSound('pop');
+                        shooterScore += t.pts;
+                        document.getElementById('shooter-score').innerText = shooterScore;
+
+                        // Create Explosion Particles
+                        createParticles(t.x, t.y);
+
+                        // Remove Target & Laser
+                        targets.splice(tIdx, 1);
+                        lasers.splice(lIdx, 1);
+                        break;
+                    }
+                }
+
+                // Remove targets that go off-screen
+                if (t.y > canvas.height + 40) {
+                    targets.splice(tIdx, 1);
+                }
+            }
+
+            // Update & Draw Explosive Sparkle Particles
+            for (let pIdx = particles.length - 1; pIdx >= 0; pIdx--) {
+                const p = particles[pIdx];
+                p.x += p.vx;
+                p.y += p.vy;
+                p.alpha -= 0.03;
+
+                if (p.alpha <= 0) {
+                    particles.splice(pIdx, 1);
+                } else {
+                    ctx.fillStyle = p.color;
+                    ctx.globalAlpha = p.alpha;
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.globalAlpha = 1.0;
+                }
+            }
+
+            gameLoopReq = requestAnimationFrame(shooterLoop);
+        }
+
+        function fireLaser() {
+            if (!isShooterRunning) return;
+            playSound('shoot');
+            const rainbowColors = ['#ff595e', '#ffca3a', '#8ac926', '#1982c4', '#6a4c93'];
+            lasers.push({
+                x: player.x + player.width / 2,
+                y: player.y,
+                speed: 10,
+                color: rainbowColors[Math.floor(Math.random() * rainbowColors.length)]
+            });
+        }
+
+        function createParticles(x, y) {
+            const colors = ['#facc15', '#f43f5e', '#38bdf8', '#a855f7'];
+            for (let i = 0; i < 8; i++) {
+                particles.push({
+                    x: x,
+                    y: y,
+                    vx: (Math.random() - 0.5) * 6,
+                    vy: (Math.random() - 0.5) * 6,
+                    alpha: 1.0,
+                    size: Math.random() * 4 + 2,
+                    color: colors[Math.floor(Math.random() * colors.length)]
+                });
+            }
+        }
+
+        /* ===================================================================
+           5. EVENT LISTENERS (Keyboard, Touch & Mobile)
+           =================================================================== */
+
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowLeft' || e.key === 'a') keys.left = true;
+            if (e.key === 'ArrowRight' || e.key === 'd') keys.right = true;
+            if (e.key === ' ' || e.key === 'Spacebar') {
+                e.preventDefault();
+                keys.space = true;
+            }
+        });
+
+        window.addEventListener('keyup', (e) => {
+            if (e.key === 'ArrowLeft' || e.key === 'a') keys.left = false;
+            if (e.key === 'ArrowRight' || e.key === 'd') keys.right = false;
+            if (e.key === ' ' || e.key === 'Spacebar') keys.space = false;
+        });
+
+        // Touch Control Button Bindings
+        document.addEventListener('DOMContentLoaded', () => {
+            const btnLeft = document.getElementById('btn-left');
+            const btnRight = document.getElementById('btn-right');
+            const btnShoot = document.getElementById('btn-shoot');
+
+            if (btnLeft) {
+                btnLeft.addEventListener('touchstart', (e) => { e.preventDefault(); keys.left = true; });
+                btnLeft.addEventListener('touchend', (e) => { e.preventDefault(); keys.left = false; });
+                btnLeft.addEventListener('mousedown', () => { keys.left = true; });
+                btnLeft.addEventListener('mouseup', () => { keys.left = false; });
+            }
+
+            if (btnRight) {
+                btnRight.addEventListener('touchstart', (e) => { e.preventDefault(); keys.right = true; });
+                btnRight.addEventListener('touchend', (e) => { e.preventDefault(); keys.right = false; });
+                btnRight.addEventListener('mousedown', () => { keys.right = true; });
+                btnRight.addEventListener('mouseup', () => { keys.right = false; });
+            }
+
+            if (btnShoot) {
+                btnShoot.addEventListener('click', () => { fireLaser(); });
+            }
+
+            // Canvas touch drag to move ship
+            const canvasEl = document.getElementById('shooter-canvas');
+            if (canvasEl) {
+                canvasEl.addEventListener('touchmove', (e) => {
+                    if (!isShooterRunning) return;
+                    e.preventDefault();
+                    const rect = canvasEl.getBoundingClientRect();
+                    const touchX = e.touches[0].clientX - rect.left;
+                    player.x = touchX - player.width / 2;
+                });
+                canvasEl.addEventListener('click', () => {
+                    if (isShooterRunning) fireLaser();
+                });
+            }
+        });
+
+        // Window resize adjustment for canvas
+        window.addEventListener('resize', () => {
+            if (canvas && canvas.parentElement) {
+                const rect = canvas.parentElement.getBoundingClientRect();
+                canvas.width = rect.width || 600;
+                canvas.height = rect.height || 450;
+                player.y = canvas.height - player.height - 15;
+            }
+        });
+
+        // Initialize state on load
+        window.onload = function() {
+            showScreen('start-screen');
+        };
+    </script>
+</body>
+</html>

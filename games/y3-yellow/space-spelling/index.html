@@ -1,0 +1,1233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Space Spelling Adventure</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Quicksand:wght@500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --space-bg: #0B0E28;
+            --space-card: #161B40;
+            --neon-blue: #00f0ff;
+            --neon-purple: #9d4edd;
+            --neon-pink: #ff2a85;
+            --neon-yellow: #ffb703;
+            --neon-green: #06d6a0;
+        }
+
+        body {
+            font-family: 'Quicksand', sans-serif;
+            background-color: var(--space-bg);
+            color: #ffffff;
+            overflow-x: hidden;
+            touch-action: manipulation;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        .font-fredoka {
+            font-family: 'Fredoka One', cursive;
+        }
+
+        /* Animated Starry Background */
+        #star-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        /* Glow Effects & Buttons */
+        .glow-blue {
+            box-shadow: 0 0 20px rgba(0, 240, 255, 0.4);
+        }
+        
+        .glow-purple {
+            box-shadow: 0 0 20px rgba(157, 78, 221, 0.4);
+        }
+
+        .glow-yellow {
+            box-shadow: 0 0 20px rgba(255, 183, 3, 0.5);
+        }
+
+        .space-card {
+            background: rgba(22, 27, 64, 0.85);
+            backdrop-filter: blur(12px);
+            border: 2px solid rgba(0, 240, 255, 0.25);
+            border-radius: 2rem;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        }
+
+        .btn-option {
+            transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border: 3px solid rgba(255, 255, 255, 0.15);
+        }
+
+        .btn-option:hover:not(:disabled) {
+            transform: translateY(-4px) scale(1.02);
+            border-color: var(--neon-blue);
+            box-shadow: 0 10px 25px -5px rgba(0, 240, 255, 0.5);
+        }
+
+        .btn-option:active:not(:disabled) {
+            transform: translateY(2px) scale(0.98);
+        }
+
+        .btn-correct {
+            background-color: #059669 !important;
+            border-color: #34d399 !important;
+            animation: pulse-correct 0.6s ease-in-out infinite alternate;
+        }
+
+        .btn-incorrect {
+            background-color: #dc2626 !important;
+            border-color: #f87171 !important;
+            animation: shake 0.4s ease-in-out;
+        }
+
+        @keyframes pulse-correct {
+            0% { transform: scale(1); box-shadow: 0 0 10px #34d399; }
+            100% { transform: scale(1.03); box-shadow: 0 0 25px #34d399; }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-8px); }
+            40%, 80% { transform: translateX(8px); }
+        }
+
+        /* Floating Planet Animation */
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-12px) rotate(3deg); }
+        }
+
+        .floating {
+            animation: float 4s ease-in-out infinite;
+        }
+
+        /* Game Canvas Container */
+        #game-canvas-container {
+            width: 100%;
+            max-width: 600px;
+            aspect-ratio: 4/5;
+            position: relative;
+        }
+
+        canvas#brick-breaker-canvas {
+            background: linear-gradient(180deg, #050814 0%, #0e1338 100%);
+            border-radius: 1.5rem;
+            border: 3px solid var(--neon-blue);
+            box-shadow: 0 0 30px rgba(0, 240, 255, 0.3);
+        }
+
+        /* Confetti Burst */
+        .star-burst {
+            position: absolute;
+            pointer-events: none;
+            animation: star-fly 1s forwards ease-out;
+        }
+
+        @keyframes star-fly {
+            0% { transform: translate(0,0) scale(0.5); opacity: 1; }
+            100% { transform: translate(var(--tw-x), var(--tw-y)) scale(1.2); opacity: 0; }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between items-center relative overflow-x-hidden p-3 md:p-6">
+
+    <!-- Background Canvas for Stars & Nebulae -->
+    <canvas id="star-canvas"></canvas>
+
+    <!-- Header Navigation / Top Bar -->
+    <header class="w-full max-w-4xl z-10 flex justify-between items-center mb-2 px-2">
+        <div class="flex items-center gap-3 cursor-pointer" onclick="showScreen('screen-main')">
+            <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-cyan-500 to-purple-600 flex items-center justify-center text-white shadow-lg glow-blue transform hover:scale-105 transition-transform">
+                <i class="fa-solid font-fredoka text-2xl">🚀</i>
+            </div>
+            <div>
+                <h1 class="font-fredoka text-3xl md:text-4xl text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-pink-400 to-yellow-300 tracking-wide drop-shadow">Space Spelling Adventure</h1>
+                <p class="text-xs text-cyan-200/80 font-bold tracking-wider uppercase">Space Spelling</p>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-3">
+            <!-- Global Stars Indicator -->
+            <div class="bg-indigo-950/80 border border-yellow-500/40 rounded-full px-4 py-1.5 flex items-center gap-2 shadow-inner">
+                <i class="fa-solid fa-star text-yellow-400 text-lg animate-pulse"></i>
+                <span id="total-stars-count" class="font-fredoka text-yellow-300 text-xl">0</span>
+            </div>
+
+            <!-- Sound Toggle Button -->
+            <button id="btn-sound-toggle" onclick="toggleSound()" class="w-11 h-11 rounded-full bg-indigo-900/80 border border-cyan-400/30 flex items-center justify-center text-cyan-300 hover:text-white hover:bg-indigo-800 transition-all text-lg">
+                <i id="sound-icon" class="fa-solid fa-volume-high"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- MAIN CONTENT CONTAINER -->
+    <main class="w-full max-w-3xl z-10 my-auto py-2">
+
+        <!-- 1. MAIN MENU SCREEN -->
+        <section id="screen-main" class="space-card p-6 md:p-10 text-center relative overflow-hidden">
+            <div class="absolute -top-10 -right-10 w-32 h-32 bg-cyan-500/10 rounded-full blur-2xl"></div>
+            <div class="absolute -bottom-10 -left-10 w-32 h-32 bg-purple-500/10 rounded-full blur-2xl"></div>
+
+            <div class="mb-6 floating inline-block">
+                <div class="text-7xl md:text-8xl filter drop-shadow-[0_10px_15px_rgba(0,240,255,0.4)]">👨‍🚀</div>
+            </div>
+
+            <h2 class="font-fredoka text-3xl md:text-5xl text-white mb-3">
+                Ready for Takeoff?
+            </h2>
+            <p class="text-cyan-100 text-base md:text-xl max-w-md mx-auto mb-8 font-medium">
+                Blast off into Year 3 spelling! Earn stars to unlock the cosmic <span class="text-yellow-300 font-bold">Space Debris Buster</span> game!
+            </p>
+
+            <div class="flex flex-col sm:flex-row gap-4 justify-center items-center max-w-md mx-auto">
+                <button onclick="startLevelSelection()" class="w-full sm:w-auto flex-1 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-fredoka text-2xl py-4 px-8 rounded-2xl shadow-lg glow-blue transform hover:-translate-y-1 transition-all flex items-center justify-center gap-3">
+                    <i class="fa-solid fa-play"></i> PLAY NOW
+                </button>
+            </div>
+
+            <!-- Reward Game Banner (If Unlocked or Preview) -->
+            <div id="reward-game-banner" class="mt-8 p-4 rounded-2xl border border-yellow-500/30 bg-gradient-to-r from-purple-900/50 to-indigo-900/50 flex items-center justify-between text-left cursor-pointer hover:border-yellow-400/70 transition-all" onclick="openBrickBreakerIfUnlocked()">
+                <div class="flex items-center gap-4">
+                    <div class="text-4xl">🕹️</div>
+                    <div>
+                        <h4 class="font-fredoka text-yellow-300 text-lg">Space Debris Buster</h4>
+                        <p id="reward-banner-status" class="text-xs text-indigo-200">Complete Level 5 to unlock this arcade game!</p>
+                    </div>
+                </div>
+                <div id="reward-banner-badge" class="px-3 py-1 bg-gray-800 border border-gray-600 text-gray-400 text-xs font-bold rounded-full uppercase">
+                    Locked 🔒
+                </div>
+            </div>
+        </section>
+
+        <!-- 2. LEVEL SELECT SCREEN -->
+        <section id="screen-level-select" class="space-card p-6 md:p-8 text-center hidden">
+            <h2 class="font-fredoka text-3xl md:text-4xl text-white mb-2">Select Your Mission</h2>
+            <p class="text-cyan-200 text-sm md:text-base mb-8">Choose a sector to practice your spelling!</p>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mb-8" id="levels-grid">
+                <!-- Level cards dynamically rendered here -->
+            </div>
+
+            <button onclick="showScreen('screen-main')" class="bg-indigo-900/80 hover:bg-indigo-800 border border-cyan-400/30 text-cyan-200 font-bold py-3 px-6 rounded-xl transition-all">
+                <i class="fa-solid fa-arrow-left mr-2"></i> Back to Main Menu
+            </button>
+        </section>
+
+        <!-- 3. QUIZ QUESTION SCREEN -->
+        <section id="screen-quiz" class="space-card p-5 md:p-8 hidden relative">
+            <!-- Quiz Header Info -->
+            <div class="flex justify-between items-center mb-6 border-b border-indigo-800/80 pb-4">
+                <div>
+                    <span id="quiz-level-indicator" class="font-fredoka text-cyan-400 text-lg block">Level 1: Nebula 1</span>
+                    <span id="quiz-progress-text" class="text-xs text-indigo-200 font-bold uppercase tracking-wider">Question 1 of 3</span>
+                </div>
+                <!-- Progress Bar -->
+                <div class="w-32 sm:w-48 bg-indigo-950 rounded-full h-3.5 border border-indigo-700/50 p-0.5">
+                    <div id="quiz-progress-bar" class="bg-gradient-to-r from-cyan-400 to-purple-500 h-full rounded-full transition-all duration-300" style="width: 33%"></div>
+                </div>
+            </div>
+
+            <!-- Question Box -->
+            <div class="text-center mb-6">
+                <div class="inline-flex items-center justify-center gap-3 bg-indigo-950/80 border border-cyan-500/30 px-5 py-2.5 rounded-2xl mb-4 shadow-inner">
+                    <button id="btn-speak" onclick="speakCurrentWord()" class="w-12 h-12 rounded-full bg-cyan-500 hover:bg-cyan-400 text-slate-900 flex items-center justify-center text-xl shadow-md transform active:scale-90 transition-all" title="Listen to word">
+                        <i class="fa-solid fa-volume-high"></i>
+                    </button>
+                    <span class="text-sm font-bold text-cyan-300">Tap speaker to hear sentence!</span>
+                </div>
+
+                <h3 id="question-sentence" class="font-fredoka text-2xl md:text-3xl text-white leading-relaxed my-2">
+                    Loading question...
+                </h3>
+                <p id="question-hint" class="text-sm text-cyan-200/80 italic mt-1">Fill in the missing word</p>
+            </div>
+
+            <!-- 4 Multiple Choice Options -->
+            <div id="options-container" class="grid grid-cols-1 sm:grid-cols-2 gap-4 my-6">
+                <!-- Buttons rendered dynamically -->
+            </div>
+
+            <!-- Encouragement Banner (Hidden until answer selected) -->
+            <div id="quiz-feedback" class="min-h-[50px] flex items-center justify-center text-center p-3 rounded-xl transition-all opacity-0">
+                <p id="quiz-feedback-text" class="font-fredoka text-xl text-white"></p>
+            </div>
+        </section>
+
+        <!-- 4. LEVEL COMPLETE MODAL / SCREEN -->
+        <section id="screen-level-complete" class="space-card p-6 md:p-10 text-center hidden">
+            <div class="text-6xl mb-3 floating">🎉</div>
+            <h2 class="font-fredoka text-3xl md:text-4xl text-white mb-1">Mission Completed!</h2>
+            <p id="complete-level-name" class="text-cyan-300 text-lg font-bold mb-6">Level 1 Passed</p>
+
+            <!-- Star Rating Display -->
+            <div class="flex justify-center items-center gap-3 mb-6" id="level-stars-result">
+                <i class="fa-solid fa-star text-5xl text-yellow-400 filter drop-shadow-[0_0_10px_rgba(255,183,3,0.8)]"></i>
+                <i class="fa-solid fa-star text-5xl text-yellow-400 filter drop-shadow-[0_0_10px_rgba(255,183,3,0.8)]"></i>
+                <i class="fa-solid fa-star text-5xl text-yellow-400 filter drop-shadow-[0_0_10px_rgba(255,183,3,0.8)]"></i>
+            </div>
+
+            <p id="complete-message" class="text-xl text-cyan-100 font-bold mb-8">
+                Out of this world! You spelled all words correctly!
+            </p>
+
+            <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                <button onclick="showScreen('screen-level-select')" class="bg-indigo-900/80 border border-cyan-400/30 hover:bg-indigo-800 text-cyan-200 font-fredoka text-xl py-3 px-6 rounded-2xl transition-all">
+                    Levels Menu
+                </button>
+                <button id="btn-next-level" onclick="playNextLevel()" class="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-fredoka text-xl py-3 px-8 rounded-2xl shadow-lg glow-green transition-all">
+                    Next Level 🚀
+                </button>
+            </div>
+        </section>
+
+        <!-- 5. REWARD GAME: BRICK BREAKER (SPACE DEBRIS BUSTER) -->
+        <section id="screen-brick-breaker" class="space-card p-4 md:p-6 text-center hidden">
+            <div class="flex justify-between items-center mb-3 px-2">
+                <div>
+                    <h3 class="font-fredoka text-xl text-yellow-300">Space Debris Buster</h3>
+                    <p class="text-xs text-cyan-200">Reward Game Unlocked!</p>
+                </div>
+                <div class="flex items-center gap-4 text-sm font-bold">
+                    <span class="text-cyan-300">SCORE: <span id="bb-score" class="text-white text-lg font-fredoka">0</span></span>
+                    <span class="text-pink-400">LIVES: <span id="bb-lives" class="text-lg">❤️❤️❤️</span></span>
+                </div>
+            </div>
+
+            <!-- Game Canvas Container -->
+            <div class="mx-auto flex justify-center items-center my-2">
+                <div id="game-canvas-container" class="w-full">
+                    <canvas id="brick-breaker-canvas" width="500" height="600" class="w-full h-full block"></canvas>
+                </div>
+            </div>
+
+            <!-- Mobile Touch Controls -->
+            <div class="flex justify-between items-center gap-3 mt-3 max-w-xs mx-auto md:hidden">
+                <button id="btn-touch-left" class="flex-1 bg-indigo-900/80 border border-cyan-400/40 text-cyan-200 font-fredoka text-2xl py-3 rounded-2xl active:bg-cyan-500 active:text-slate-900 transition-colors">
+                    ◀ LEFT
+                </button>
+                <button id="btn-touch-right" class="flex-1 bg-indigo-900/80 border border-cyan-400/40 text-cyan-200 font-fredoka text-2xl py-3 rounded-2xl active:bg-cyan-500 active:text-slate-900 transition-colors">
+                    RIGHT ▶
+                </button>
+            </div>
+
+            <div class="mt-4 flex justify-between items-center px-2">
+                <button onclick="exitBrickBreaker()" class="bg-indigo-950 border border-indigo-700 text-cyan-300 font-bold text-sm py-2 px-4 rounded-xl hover:bg-indigo-900">
+                    <i class="fa-solid fa-arrow-left mr-1"></i> Exit Game
+                </button>
+                <button id="btn-restart-bb" onclick="startBrickBreakerGame()" class="bg-yellow-500 hover:bg-yellow-400 text-slate-950 font-fredoka text-sm py-2 px-4 rounded-xl">
+                    <i class="fa-solid fa-rotate-right mr-1"></i> Restart Game
+                </button>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer Encouragement & Safety -->
+    <footer class="w-full max-w-4xl z-10 text-center py-3 text-xs text-cyan-300/60 font-medium">
+        ✨ Safe & Friendly Learning Space for Year 3 Explorers | No Ads & No Data Collected ✨
+    </footer>
+
+    <!-- JAVASCRIPT LOGIC -->
+    <script>
+        // --- GAME DATASET: Year 3 Spelling Words (15 Questions, 5 Levels) ---
+        const QUIZ_DATA = [
+            {
+                level: 1,
+                name: "Level 1: Moon Orbit",
+                description: "Vowels & Simple Prefixes",
+                questions: [
+                    {
+                        sentence: "The rocket will _____ high into the sky.",
+                        target: "sail",
+                        options: ["sail", "sayl", "sael", "sale"],
+                        hint: "Uses the 'ai' sound!"
+                    },
+                    {
+                        sentence: "It is _____ to leave your helmet behind.",
+                        target: "unsafe",
+                        options: ["unsafe", "onsafe", "unsaef", "unsaf"],
+                        hint: "Prefix 'un-' means not!"
+                    },
+                    {
+                        sentence: "We saw a shiny _____ shooting past.",
+                        target: "ray",
+                        options: ["ray", "rai", "rae", "rey"],
+                        hint: "Ends with the 'ay' pattern!"
+                    }
+                ]
+            },
+            {
+                level: 2,
+                name: "Level 2: Asteroid Belt",
+                description: "Suffixes & Double Consonants",
+                questions: [
+                    {
+                        sentence: "The astronaut was _____ across the spaceship.",
+                        target: "running",
+                        options: ["running", "runing", "runnnig", "runeng"],
+                        hint: "Double the 'n' before adding -ing!"
+                    },
+                    {
+                        sentence: "The cosmic comet _____ brighter than before.",
+                        target: "shined",
+                        options: ["shined", "shind", "shineed", "shinned"],
+                        hint: "Regular past tense with -ed!"
+                    },
+                    {
+                        sentence: "She was the _____ explorer in the fleet.",
+                        target: "fastest",
+                        options: ["fastest", "fastist", "fastestt", "fasstest"],
+                        hint: "Superlative suffix -est!"
+                    }
+                ]
+            },
+            {
+                level: 3,
+                name: "Level 3: Jupiter Rings",
+                description: "Prefixes dis-, mis-, re-",
+                questions: [
+                    {
+                        sentence: "Did the space alien _____ in the cloud?",
+                        target: "disappear",
+                        options: ["disappear", "dissappear", "disapear", "desappear"],
+                        hint: "Prefix 'dis-' + appear!"
+                    },
+                    {
+                        sentence: "Be careful not to _____ the space map.",
+                        target: "misplace",
+                        options: ["misplace", "missplace", "mesplace", "misplaice"],
+                        hint: "Prefix 'mis-' means wrong!"
+                    },
+                    {
+                        sentence: "We must _____ the batteries for the rover.",
+                        target: "recharge",
+                        options: ["recharge", "reecharge", "richarge", "rechargee"],
+                        hint: "Prefix 're-' means again!"
+                    }
+                ]
+            },
+            {
+                level: 4,
+                name: "Level 4: Saturn Station",
+                description: "Silent Letters & -ation",
+                questions: [
+                    {
+                        sentence: "The team got an _____ to visit space camp.",
+                        target: "invitation",
+                        options: ["invitation", "invitashun", "invitatione", "invetation"],
+                        hint: "Ends with '-ation'!"
+                    },
+                    {
+                        sentence: "The stars shine _____ in the night sky.",
+                        target: "brightly",
+                        options: ["brightly", "brightley", "brite-ly", "brightli"],
+                        hint: "Add suffix '-ly' to bright!"
+                    },
+                    {
+                        sentence: "He knew the _____ answer to the galaxy riddle.",
+                        target: "know",
+                        options: ["know", "now", "knowe", "knew"],
+                        hint: "Silent 'k' at the start!"
+                    }
+                ]
+            },
+            {
+                level: 5,
+                name: "Level 5: Galaxy Core",
+                description: "Year 3 Challenge Words",
+                questions: [
+                    {
+                        sentence: "Spacesuits are _____ for floating in space.",
+                        target: "necessary",
+                        options: ["necessary", "neccessary", "necesary", "necessery"],
+                        hint: "1 collar (c), 2 sleeves (ss)!"
+                    },
+                    {
+                        sentence: "Each planet looks very _____ from above.",
+                        target: "different",
+                        options: ["different", "diffrent", "diferent", "differant"],
+                        hint: "Double 'f' in the middle!"
+                    },
+                    {
+                        sentence: "Check the space flight _____ for launch day.",
+                        target: "calendar",
+                        options: ["calendar", "calender", "calandar", "calender"],
+                        hint: "Ends with '-ar'!"
+                    }
+                ]
+            }
+        ];
+
+        // Kind Encouragement Messages
+        const PRAISE_MESSAGES = [
+            "Out of this world! 🌟",
+            "Stellar spelling! 🚀",
+            "Cosmic perfection! ✨",
+            "You are a star explorer! ⭐",
+            "Super galactic work! 🪐",
+            "Brilliant rocket brain! 🧠"
+        ];
+
+        // --- GLOBAL APP STATE ---
+        let userProgress = {
+            totalStars: 0,
+            unlockedLevel: 1,
+            levelStars: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
+            rewardUnlocked: false
+        };
+
+        let currentLevelIdx = 0;
+        let currentQuestionIdx = 0;
+        let currentLevelScore = 0;
+        let soundEnabled = true;
+
+        // Load Saved State
+        function loadSaveData() {
+            try {
+                const saved = localStorage.getItem('lev_space_spelling_save');
+                if (saved) {
+                    userProgress = JSON.parse(saved);
+                    updateStarsDisplay();
+                }
+            } catch (e) {
+                console.warn("Could not load local storage", e);
+            }
+        }
+
+        function saveData() {
+            try {
+                localStorage.setItem('lev_space_spelling_save', JSON.stringify(userProgress));
+            } catch (e) {
+                console.warn("Could not save to local storage", e);
+            }
+        }
+
+        function updateStarsDisplay() {
+            document.getElementById('total-stars-count').innerText = userProgress.totalStars;
+            updateRewardBanner();
+        }
+
+        function toggleSound() {
+            soundEnabled = !soundEnabled;
+            const icon = document.getElementById('sound-icon');
+            if (soundEnabled) {
+                icon.className = 'fa-solid fa-volume-high';
+            } else {
+                icon.className = 'fa-solid fa-volume-xmark text-red-400';
+            }
+        }
+
+        // Web Speech API Synthesis
+        function speakWord(text) {
+            if (!soundEnabled || !('speechSynthesis' in window)) return;
+            window.speechSynthesis.cancel(); // Stop current speech
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.rate = 0.85; // Slightly slower for children
+            utterance.pitch = 1.0;
+            utterance.lang = 'en-GB'; // British English for UK Year 3
+            window.speechSynthesis.speak(utterance);
+        }
+
+        function speakCurrentWord() {
+            const currentQ = QUIZ_DATA[currentLevelIdx].questions[currentQuestionIdx];
+            const spokenText = currentQ.sentence.replace('_____', currentQ.target);
+            speakWord(spokenText);
+        }
+
+        // Screen Navigation Handler
+        function showScreen(screenId) {
+            const screens = ['screen-main', 'screen-level-select', 'screen-quiz', 'screen-level-complete', 'screen-brick-breaker'];
+            screens.forEach(id => {
+                const el = document.getElementById(id);
+                if (id === screenId) {
+                    el.classList.remove('hidden');
+                } else {
+                    el.classList.add('hidden');
+                }
+            });
+
+            if (screenId === 'screen-level-select') {
+                renderLevelSelect();
+            }
+        }
+
+        function startLevelSelection() {
+            showScreen('screen-level-select');
+        }
+
+        // Render Level Selection Cards
+        function renderLevelSelect() {
+            const container = document.getElementById('levels-grid');
+            container.innerHTML = '';
+
+            QUIZ_DATA.forEach((lvl, idx) => {
+                const levelNum = idx + 1;
+                const isUnlocked = levelNum <= userProgress.unlockedLevel;
+                const starsEarned = userProgress.levelStars[levelNum] || 0;
+
+                const card = document.createElement('div');
+                card.className = `p-5 rounded-2xl border transition-all text-left flex flex-col justify-between ${
+                    isUnlocked 
+                    ? 'bg-indigo-900/60 border-cyan-400/40 hover:border-cyan-300 cursor-pointer hover:transform hover:-translate-y-1' 
+                    : 'bg-slate-900/50 border-gray-700/50 opacity-60 cursor-not-allowed'
+                }`;
+
+                let starsHtml = '';
+                for (let i = 1; i <= 3; i++) {
+                    if (i <= starsEarned) {
+                        starsHtml += `<i class="fa-solid fa-star text-yellow-400 text-lg"></i>`;
+                    } else {
+                        starsHtml += `<i class="fa-regular fa-star text-gray-600 text-lg"></i>`;
+                    }
+                }
+
+                card.innerHTML = `
+                    <div>
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="font-fredoka text-xs uppercase px-2.5 py-1 rounded-full ${isUnlocked ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30' : 'bg-gray-800 text-gray-400'}">
+                                ${isUnlocked ? `Sector ${levelNum}` : 'Locked 🔒'}
+                            </span>
+                            <div class="flex gap-1">${starsHtml}</div>
+                        </div>
+                        <h3 class="font-fredoka text-xl text-white mb-1">${lvl.name}</h3>
+                        <p class="text-xs text-indigo-200/80 mb-4">${lvl.description}</p>
+                    </div>
+                    <button ${!isUnlocked ? 'disabled' : ''} onclick="startQuizLevel(${idx})" class="w-full py-2.5 rounded-xl font-fredoka text-sm ${
+                        isUnlocked 
+                        ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-md hover:from-cyan-400 hover:to-blue-500' 
+                        : 'bg-gray-800 text-gray-500'
+                    }">
+                        ${isUnlocked ? (starsEarned > 0 ? 'Replay Mission' : 'Launch Mission 🚀') : 'Locked'}
+                    </button>
+                `;
+
+                container.appendChild(card);
+            });
+        }
+
+        // Start Specific Quiz Level
+        function startQuizLevel(levelIdx) {
+            currentLevelIdx = levelIdx;
+            currentQuestionIdx = 0;
+            currentLevelScore = 0;
+            showScreen('screen-quiz');
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            const levelData = QUIZ_DATA[currentLevelIdx];
+            const qData = levelData.questions[currentQuestionIdx];
+
+            // Header info
+            document.getElementById('quiz-level-indicator').innerText = levelData.name;
+            document.getElementById('quiz-progress-text').innerText = `Question ${currentQuestionIdx + 1} of ${levelData.questions.length}`;
+            
+            // Progress Bar Width
+            const progressPercent = ((currentQuestionIdx + 1) / levelData.questions.length) * 100;
+            document.getElementById('quiz-progress-bar').style.width = `${progressPercent}%`;
+
+            // Sentence with missing blank format
+            const parts = qData.sentence.split('_____');
+            document.getElementById('question-sentence').innerHTML = `
+                ${parts[0]} <span class="text-yellow-300 font-bold underline decoration-cyan-400 decoration-wavy underline-offset-8 px-2">? ? ?</span> ${parts[1] || ''}
+            `;
+            document.getElementById('question-hint').innerText = qData.hint || "Choose the correct spelling!";
+
+            // Reset feedback banner
+            const feedbackEl = document.getElementById('quiz-feedback');
+            feedbackEl.className = 'min-h-[50px] flex items-center justify-center text-center p-3 rounded-xl transition-all opacity-0';
+
+            // Shuffle Options
+            const shuffledOptions = [...qData.options].sort(() => Math.random() - 0.5);
+
+            // Options Buttons Container
+            const container = document.getElementById('options-container');
+            container.innerHTML = '';
+
+            shuffledOptions.forEach((optText) => {
+                const btn = document.createElement('button');
+                btn.className = 'btn-option bg-indigo-900/80 hover:bg-indigo-800 text-white font-fredoka text-2xl py-5 px-6 rounded-2xl shadow-md flex items-center justify-center';
+                btn.innerText = optText;
+                btn.onclick = () => handleAnswerSelect(optText, qData.target, btn);
+                container.appendChild(btn);
+            });
+
+            // Speak sentence automatically after short delay
+            setTimeout(() => {
+                speakCurrentWord();
+            }, 300);
+        }
+
+        function handleAnswerSelect(selectedOption, correctAnswer, clickedBtn) {
+            const allOptionBtns = document.querySelectorAll('.btn-option');
+            allOptionBtns.forEach(btn => btn.disabled = true);
+
+            const isCorrect = (selectedOption === correctAnswer);
+            const feedbackEl = document.getElementById('quiz-feedback');
+            const feedbackText = document.getElementById('quiz-feedback-text');
+
+            if (isCorrect) {
+                currentLevelScore++;
+                clickedBtn.classList.add('btn-correct');
+                
+                const randomPraise = PRAISE_MESSAGES[Math.floor(Math.random() * PRAISE_MESSAGES.length)];
+                feedbackText.innerText = randomPraise;
+                feedbackEl.className = 'min-h-[50px] flex items-center justify-center text-center p-3 rounded-xl transition-all opacity-100 bg-emerald-500/20 border border-emerald-400/40 text-emerald-300';
+                
+                triggerConfetti(clickedBtn);
+                if (soundEnabled) playSoundEffect('correct');
+            } else {
+                clickedBtn.classList.add('btn-incorrect');
+                
+                // Highlight correct option
+                allOptionBtns.forEach(btn => {
+                    if (btn.innerText === correctAnswer) {
+                        btn.classList.add('btn-correct');
+                    }
+                });
+
+                feedbackText.innerText = `Great try! The word is "${correctAnswer}". You've got this!`;
+                feedbackEl.className = 'min-h-[50px] flex items-center justify-center text-center p-3 rounded-xl transition-all opacity-100 bg-pink-500/20 border border-pink-400/40 text-pink-300';
+                
+                if (soundEnabled) playSoundEffect('incorrect');
+            }
+
+            // Next Question or Level Finish Delay
+            setTimeout(() => {
+                currentQuestionIdx++;
+                if (currentQuestionIdx < QUIZ_DATA[currentLevelIdx].questions.length) {
+                    loadQuestion();
+                } else {
+                    finishQuizLevel();
+                }
+            }, 2200);
+        }
+
+        function finishQuizLevel() {
+            const levelNum = currentLevelIdx + 1;
+            const previousStars = userProgress.levelStars[levelNum] || 0;
+            
+            // Calculate stars earned (3 questions total: 3 correct = 3 stars, 2 = 2 stars, 1 = 1 star)
+            let starsEarned = currentLevelScore;
+            if (starsEarned < 1 && currentLevelScore > 0) starsEarned = 1;
+
+            // Update user progress
+            if (starsEarned > previousStars) {
+                const newStarsGained = starsEarned - previousStars;
+                userProgress.totalStars += newStarsGained;
+                userProgress.levelStars[levelNum] = starsEarned;
+            }
+
+            // Unlock next level
+            if (levelNum < 5 && userProgress.unlockedLevel < levelNum + 1) {
+                userProgress.unlockedLevel = levelNum + 1;
+            }
+
+            // Unlock Reward Game if level 5 finished
+            if (levelNum === 5) {
+                userProgress.rewardUnlocked = true;
+            }
+
+            saveData();
+            updateStarsDisplay();
+
+            // Render Results Screen
+            document.getElementById('complete-level-name').innerText = QUIZ_DATA[currentLevelIdx].name;
+            
+            const starsContainer = document.getElementById('level-stars-result');
+            starsContainer.innerHTML = '';
+            for (let i = 1; i <= 3; i++) {
+                if (i <= starsEarned) {
+                    starsContainer.innerHTML += `<i class="fa-solid fa-star text-5xl text-yellow-400 filter drop-shadow-[0_0_12px_rgba(255,183,3,0.9)] animate-bounce"></i>`;
+                } else {
+                    starsContainer.innerHTML += `<i class="fa-regular fa-star text-5xl text-gray-600"></i>`;
+                }
+            }
+
+            const completeMsg = document.getElementById('complete-message');
+            if (starsEarned === 3) {
+                completeMsg.innerText = "🌟 Perfect Score! You are a Space Spelling Master!";
+            } else if (starsEarned === 2) {
+                completeMsg.innerText = "🚀 Fantastic work! Almost all correct!";
+            } else {
+                completeMsg.innerText = "👍 Nice effort! Practice makes perfect!";
+            }
+
+            const nextBtn = document.getElementById('btn-next-level');
+            if (levelNum >= 5) {
+                nextBtn.innerText = "Play Reward Arcade Game! 🕹️";
+                nextBtn.onclick = () => showScreen('screen-brick-breaker');
+            } else {
+                nextBtn.innerText = "Next Level 🚀";
+                nextBtn.onclick = () => playNextLevel();
+            }
+
+            showScreen('screen-level-complete');
+        }
+
+        function playNextLevel() {
+            if (currentLevelIdx < QUIZ_DATA.length - 1) {
+                startQuizLevel(currentLevelIdx + 1);
+            } else {
+                showScreen('screen-level-select');
+            }
+        }
+
+        function updateRewardBanner() {
+            const banner = document.getElementById('reward-game-banner');
+            const statusText = document.getElementById('reward-banner-status');
+            const badge = document.getElementById('reward-banner-badge');
+
+            if (userProgress.rewardUnlocked) {
+                statusText.innerText = "UNLOCKED! Tap to play Space Debris Buster!";
+                badge.innerText = "UNLOCKED 🔓";
+                badge.className = "px-3 py-1 bg-yellow-500 text-slate-950 font-fredoka text-xs rounded-full uppercase shadow-md animate-pulse";
+            } else {
+                statusText.innerText = "Complete Level 5 to unlock this arcade game!";
+                badge.innerText = "Locked 🔒";
+                badge.className = "px-3 py-1 bg-gray-800 border border-gray-600 text-gray-400 text-xs font-bold rounded-full uppercase";
+            }
+        }
+
+        function openBrickBreakerIfUnlocked() {
+            if (userProgress.rewardUnlocked) {
+                showScreen('screen-brick-breaker');
+                startBrickBreakerGame();
+            } else {
+                alert("Complete Level 5 in the Spelling Quiz to unlock the Space Debris Buster game!");
+            }
+        }
+
+        // Simple Web Audio API Synthesizer for feedback sounds
+        function playSoundEffect(type) {
+            try {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+
+                if (type === 'correct') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(523.25, ctx.currentTime); // C5
+                    osc.frequency.exponentialRampToValueAtTime(880, ctx.currentTime + 0.3); // A5
+                    gain.gain.setValueAtTime(0.2, ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
+                    osc.start();
+                    osc.stop(ctx.currentTime + 0.3);
+                } else if (type === 'incorrect') {
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(220, ctx.currentTime); // A3
+                    osc.frequency.linearRampToValueAtTime(130.81, ctx.currentTime + 0.3); // C4
+                    gain.gain.setValueAtTime(0.2, ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
+                    osc.start();
+                    osc.stop(ctx.currentTime + 0.3);
+                }
+            } catch (e) {
+                // Audio context not allowed or supported
+            }
+        }
+
+        // Particle Burst visual feedback
+        function triggerConfetti(targetBtn) {
+            const rect = targetBtn.getBoundingClientRect();
+            const centerX = rect.left + rect.width / 2;
+            const centerY = rect.top + rect.height / 2;
+
+            for (let i = 0; i < 12; i++) {
+                const star = document.createElement('div');
+                star.className = 'star-burst text-yellow-300 text-xl';
+                star.innerText = '⭐';
+                star.style.left = `${centerX}px`;
+                star.style.top = `${centerY}px`;
+                
+                const angle = (i / 12) * Math.PI * 2;
+                const distance = 80 + Math.random() * 40;
+                const tx = Math.cos(angle) * distance;
+                const ty = Math.sin(angle) * distance;
+
+                star.style.setProperty('--tw-x', `${tx}px`);
+                star.style.setProperty('--tw-y', `${ty}px`);
+
+                document.body.appendChild(star);
+                setTimeout(() => star.remove(), 1000);
+            }
+        }
+
+        // --- 5. REWARD GAME: SPACE DEBRIS BUSTER (BRICK BREAKER) ---
+        let bbCanvas, bbCtx;
+        let bbAnimationId = null;
+        let bbScore = 0;
+        let bbLives = 3;
+
+        // Game Objects
+        const paddle = {
+            width: 100,
+            height: 16,
+            x: 0,
+            y: 0,
+            speed: 8,
+            dx: 0
+        };
+
+        const ball = {
+            x: 0,
+            y: 0,
+            radius: 8,
+            speed: 5,
+            dx: 4,
+            dy: -4
+        };
+
+        let bricks = [];
+        const brickConfig = {
+            rowCount: 5,
+            colCount: 7,
+            padding: 8,
+            offsetTop: 50,
+            offsetLeft: 15,
+            height: 22
+        };
+
+        const BRICK_COLORS = ['#ff2a85', '#9d4edd', '#00f0ff', '#06d6a0', '#ffb703'];
+
+        function initBrickBreakerCanvas() {
+            bbCanvas = document.getElementById('brick-breaker-canvas');
+            bbCtx = bbCanvas.getContext('2d');
+
+            // Responsive resolution sizing
+            const container = document.getElementById('game-canvas-container');
+            bbCanvas.width = 500;
+            bbCanvas.height = 600;
+
+            // Touch & Mouse Listeners for Paddle
+            bbCanvas.addEventListener('mousemove', (e) => {
+                const rect = bbCanvas.getBoundingClientRect();
+                const scaleX = bbCanvas.width / rect.width;
+                const mouseX = (e.clientX - rect.left) * scaleX;
+                paddle.x = mouseX - paddle.width / 2;
+            });
+
+            bbCanvas.addEventListener('touchmove', (e) => {
+                if (e.touches.length > 0) {
+                    const rect = bbCanvas.getBoundingClientRect();
+                    const scaleX = bbCanvas.width / rect.width;
+                    const touchX = (e.touches[0].clientX - rect.left) * scaleX;
+                    paddle.x = touchX - paddle.width / 2;
+                }
+            }, { passive: true });
+
+            // Button controls for touch screen
+            const btnLeft = document.getElementById('btn-touch-left');
+            const btnRight = document.getElementById('btn-touch-right');
+
+            btnLeft.ontouchstart = (e) => { e.preventDefault(); paddle.dx = -paddle.speed; };
+            btnLeft.ontouchend = (e) => { e.preventDefault(); paddle.dx = 0; };
+            btnRight.ontouchstart = (e) => { e.preventDefault(); paddle.dx = paddle.speed; };
+            btnRight.ontouchend = (e) => { e.preventDefault(); paddle.dx = 0; };
+
+            // Keyboard controls
+            window.addEventListener('keydown', (e) => {
+                if (e.key === 'ArrowLeft' || e.key === 'a') paddle.dx = -paddle.speed;
+                if (e.key === 'ArrowRight' || e.key === 'd') paddle.dx = paddle.speed;
+            });
+
+            window.addEventListener('keyup', (e) => {
+                if (['ArrowLeft', 'ArrowRight', 'a', 'd'].includes(e.key)) paddle.dx = 0;
+            });
+        }
+
+        function startBrickBreakerGame() {
+            if (!bbCanvas) initBrickBreakerCanvas();
+
+            if (bbAnimationId) cancelAnimationFrame(bbAnimationId);
+
+            bbScore = 0;
+            bbLives = 3;
+            updateBBUI();
+
+            // Setup Paddle
+            paddle.x = (bbCanvas.width - paddle.width) / 2;
+            paddle.y = bbCanvas.height - 35;
+            paddle.dx = 0;
+
+            // Setup Ball
+            resetBall();
+
+            // Setup Bricks Grid
+            bricks = [];
+            const calculatedWidth = (bbCanvas.width - (brickConfig.offsetLeft * 2) - (brickConfig.padding * (brickConfig.colCount - 1))) / brickConfig.colCount;
+            
+            for (let r = 0; r < brickConfig.rowCount; r++) {
+                bricks[r] = [];
+                for (let c = 0; c < brickConfig.colCount; c++) {
+                    bricks[r][c] = {
+                        x: 0,
+                        y: 0,
+                        width: calculatedWidth,
+                        height: brickConfig.height,
+                        status: 1,
+                        color: BRICK_COLORS[r % BRICK_COLORS.length]
+                    };
+                }
+            }
+
+            // Start Game Loop
+            bbGameLoop();
+        }
+
+        function resetBall() {
+            ball.x = bbCanvas.width / 2;
+            ball.y = paddle.y - 15;
+            ball.dx = (Math.random() > 0.5 ? 1 : -1) * (3.5 + Math.random() * 1.5);
+            ball.dy = -4.5;
+        }
+
+        function updateBBUI() {
+            document.getElementById('bb-score').innerText = bbScore;
+            document.getElementById('bb-lives').innerText = '❤️'.repeat(bbLives);
+        }
+
+        function exitBrickBreaker() {
+            if (bbAnimationId) cancelAnimationFrame(bbAnimationId);
+            showScreen('screen-main');
+        }
+
+        function bbGameLoop() {
+            // 1. Clear Canvas
+            bbCtx.clearRect(0, 0, bbCanvas.width, bbCanvas.height);
+
+            // 2. Draw Objects
+            drawBricks();
+            drawPaddle();
+            drawBall();
+
+            // 3. Move Paddle
+            paddle.x += paddle.dx;
+            if (paddle.x < 0) paddle.x = 0;
+            if (paddle.x + paddle.width > bbCanvas.width) paddle.x = bbCanvas.width - paddle.width;
+
+            // 4. Move Ball
+            ball.x += ball.dx;
+            ball.y += ball.dy;
+
+            // Ball Collision with Left/Right Walls
+            if (ball.x + ball.radius > bbCanvas.width || ball.x - ball.radius < 0) {
+                ball.dx = -ball.dx;
+            }
+
+            // Ball Collision with Top Wall
+            if (ball.y - ball.radius < 0) {
+                ball.dy = -ball.dy;
+            }
+
+            // Ball Collision with Paddle
+            if (
+                ball.y + ball.radius >= paddle.y &&
+                ball.y - ball.radius <= paddle.y + paddle.height &&
+                ball.x >= paddle.x &&
+                ball.x <= paddle.x + paddle.width
+            ) {
+                // Adjust bounce angle based on where it hit the paddle
+                const hitPoint = (ball.x - (paddle.x + paddle.width / 2)) / (paddle.width / 2);
+                ball.dx = hitPoint * 6;
+                ball.dy = -Math.abs(ball.dy);
+            }
+
+            // Ball Misses Paddle (Bottom)
+            if (ball.y + ball.radius > bbCanvas.height) {
+                bbLives--;
+                updateBBUI();
+                if (bbLives <= 0) {
+                    drawGameOver("GAME OVER!");
+                    return;
+                } else {
+                    resetBall();
+                }
+            }
+
+            // Collision with Bricks
+            checkBrickCollisions();
+
+            // Check Win Condition
+            if (checkAllBricksCleared()) {
+                drawGameOver("VICTORY! ALL DEBRIS CLEARED! 🎉");
+                return;
+            }
+
+            bbAnimationId = requestAnimationFrame(bbGameLoop);
+        }
+
+        function drawPaddle() {
+            bbCtx.save();
+            bbCtx.fillStyle = '#00f0ff';
+            bbCtx.shadowColor = '#00f0ff';
+            bbCtx.shadowBlur = 12;
+            
+            // Rounded Rocket Shield Paddle
+            bbCtx.beginPath();
+            bbCtx.roundRect(paddle.x, paddle.y, paddle.width, paddle.height, 8);
+            bbCtx.fill();
+            
+            // Inner metallic core
+            bbCtx.fillStyle = '#ffffff';
+            bbCtx.beginPath();
+            bbCtx.roundRect(paddle.x + 10, paddle.y + 4, paddle.width - 20, paddle.height - 8, 4);
+            bbCtx.fill();
+            bbCtx.restore();
+        }
+
+        function drawBall() {
+            bbCtx.save();
+            bbCtx.beginPath();
+            bbCtx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
+            bbCtx.fillStyle = '#ffb703';
+            bbCtx.shadowColor = '#ffb703';
+            bbCtx.shadowBlur = 15;
+            bbCtx.fill();
+            bbCtx.closePath();
+            bbCtx.restore();
+        }
+
+        function drawBricks() {
+            for (let r = 0; r < brickConfig.rowCount; r++) {
+                for (let c = 0; c < brickConfig.colCount; c++) {
+                    const b = bricks[r][c];
+                    if (b.status === 1) {
+                        const brickX = (c * (b.width + brickConfig.padding)) + brickConfig.offsetLeft;
+                        const brickY = (r * (b.height + brickConfig.padding)) + brickConfig.offsetTop;
+                        b.x = brickX;
+                        b.y = brickY;
+
+                        bbCtx.save();
+                        bbCtx.fillStyle = b.color;
+                        bbCtx.shadowColor = b.color;
+                        bbCtx.shadowBlur = 6;
+                        bbCtx.beginPath();
+                        bbCtx.roundRect(brickX, brickY, b.width, b.height, 6);
+                        bbCtx.fill();
+                        bbCtx.restore();
+                    }
+                }
+            }
+        }
+
+        function checkBrickCollisions() {
+            for (let r = 0; r < brickConfig.rowCount; r++) {
+                for (let c = 0; c < brickConfig.colCount; c++) {
+                    const b = bricks[r][c];
+                    if (b.status === 1) {
+                        if (
+                            ball.x > b.x &&
+                            ball.x < b.x + b.width &&
+                            ball.y > b.y &&
+                            ball.y < b.y + b.height
+                        ) {
+                            ball.dy = -ball.dy;
+                            b.status = 0;
+                            bbScore += 10;
+                            updateBBUI();
+                        }
+                    }
+                }
+            }
+        }
+
+        function checkAllBricksCleared() {
+            for (let r = 0; r < brickConfig.rowCount; r++) {
+                for (let c = 0; c < brickConfig.colCount; c++) {
+                    if (bricks[r][c].status === 1) return false;
+                }
+            }
+            return true;
+        }
+
+        function drawGameOver(message) {
+            bbCtx.save();
+            bbCtx.fillStyle = 'rgba(11, 14, 40, 0.85)';
+            bbCtx.fillRect(0, 0, bbCanvas.width, bbCanvas.height);
+
+            bbCtx.font = '30px "Fredoka One", cursive';
+            bbCtx.fillStyle = '#ffb703';
+            bbCtx.textAlign = 'center';
+            bbCtx.fillText(message, bbCanvas.width / 2, bbCanvas.height / 2 - 20);
+
+            bbCtx.font = '18px "Quicksand", sans-serif';
+            bbCtx.fillStyle = '#ffffff';
+            bbCtx.fillText(`Final Score: ${bbScore}`, bbCanvas.width / 2, bbCanvas.height / 2 + 20);
+            bbCtx.restore();
+        }
+
+        // --- BACKGROUND STARFIELD ANIMATION ---
+        function initStarfield() {
+            const canvas = document.getElementById('star-canvas');
+            const ctx = canvas.getContext('2d');
+            let stars = [];
+
+            function resize() {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+                createStars();
+            }
+
+            function createStars() {
+                stars = [];
+                const count = Math.floor((canvas.width * canvas.height) / 3000);
+                for (let i = 0; i < count; i++) {
+                    stars.push({
+                        x: Math.random() * canvas.width,
+                        y: Math.random() * canvas.height,
+                        radius: Math.random() * 1.8,
+                        alpha: Math.random(),
+                        speed: 0.005 + Math.random() * 0.015
+                    });
+                }
+            }
+
+            function render() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.fillStyle = '#ffffff';
+
+                stars.forEach(star => {
+                    star.alpha += star.speed;
+                    if (star.alpha > 1 || star.alpha < 0) {
+                        star.speed = -star.speed;
+                    }
+                    ctx.save();
+                    ctx.globalAlpha = Math.max(0.1, Math.min(1, star.alpha));
+                    ctx.beginPath();
+                    ctx.arc(star.x, star.y, star.radius, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.restore();
+                });
+
+                requestAnimationFrame(render);
+            }
+
+            window.addEventListener('resize', resize);
+            resize();
+            render();
+        }
+
+        // Initialize application on load
+        window.onload = function() {
+            initStarfield();
+            loadSaveData();
+        };
+    </script>
+</body>
+</html>

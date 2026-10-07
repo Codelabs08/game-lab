@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Stone Age Boy Spelling</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Quicksand:wght@600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <style>
+        body {
+            font-family: 'Quicksand', sans-serif;
+            background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 30%, #a1c4fd 70%, #c2e9fb 100%);
+            touch-action: manipulation;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        .font-game {
+            font-family: 'Fredoka One', cursive;
+        }
+        .rainbow-text {
+            background: linear-gradient(to right, #ef4444, #f97316, #eab308, #22c55e, #3b82f6, #a855f7);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .pop-btn {
+            transition: transform 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.15s ease;
+        }
+        .pop-btn:active {
+            transform: scale(0.92);
+        }
+        .bounce-anim {
+            animation: bounce 1.2s infinite alternate;
+        }
+        @keyframes bounce {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(-10px); }
+        }
+        /* Custom scrollbar for safe overflow if needed */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #f472b6;
+            border-radius: 9999px;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between items-center p-3 md:p-6 text-slate-800">
+
+    <script>
+        // Web Audio API Sound Effects (Zero external assets needed)
+        class AudioFX {
+            constructor() {
+                this.ctx = null;
+            }
+            init() {
+                if (!this.ctx) {
+                    this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+                }
+            }
+            playTone(freq, type, duration, gainVal = 0.1) {
+                if (!this.ctx) return;
+                try {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = type;
+                    osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+                    gain.gain.setValueAtTime(gainVal, this.ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + duration);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start();
+                    osc.stop(this.ctx.currentTime + duration);
+                } catch (e) {}
+            }
+            correct() {
+                this.init();
+                this.playTone(523.25, 'sine', 0.15, 0.2); // C5
+                setTimeout(() => this.playTone(659.25, 'sine', 0.15, 0.2), 100); // E5
+                setTimeout(() => this.playTone(783.99, 'sine', 0.25, 0.2), 200); // G5
+            }
+            wrong() {
+                this.init();
+                this.playTone(300, 'sawtooth', 0.2, 0.15);
+                setTimeout(() => this.playTone(220, 'sawtooth', 0.3, 0.15), 150);
+            }
+            bounce() {
+                this.init();
+                this.playTone(440, 'triangle', 0.08, 0.15);
+            }
+            brick() {
+                this.init();
+                this.playTone(880, 'square', 0.08, 0.1);
+            }
+            win() {
+                this.init();
+                const notes = [523.25, 659.25, 783.99, 1046.50];
+                notes.forEach((n, i) => {
+                    setTimeout(() => this.playTone(n, 'sine', 0.3, 0.2), i * 120);
+                });
+            }
+        }
+        const sound = new AudioFX();
+    </script>
+
+    <!-- Top Bar / App Title -->
+    <header class="w-full max-w-2xl flex justify-between items-center bg-white/80 backdrop-blur-md rounded-2xl p-3 md:p-4 shadow-lg mb-4 border-2 border-white">
+        <div class="flex items-center space-x-3">
+            <span class="text-3xl md:text-4xl">🦴</span>
+            <div>
+                <h1 class="text-xl md:text-2xl font-game rainbow-text tracking-wide">Spelling Game</h1>
+                <p class="text-xs md:text-sm font-bold text-amber-700">Stone Age Boy Edition</p>
+            </div>
+        </div>
+        <!-- Mute/Sound Toggle Button -->
+        <button id="sound-btn" onclick="sound.init(); toggleMute()" class="bg-amber-100 hover:bg-amber-200 p-2.5 rounded-xl border-2 border-amber-300 pop-btn text-xl">
+            🔊
+        </button>
+    </header>
+
+    <main class="w-full max-w-2xl flex-grow flex flex-col justify-center items-center">
+
+        <!-- 1. START SCREEN -->
+        <section id="start-screen" class="w-full bg-white/90 backdrop-blur-md rounded-3xl p-6 md:p-8 shadow-2xl text-center border-4 border-yellow-300">
+            <div class="text-6xl md:text-7xl mb-4 bounce-anim">🏕️</div>
+            <h2 class="text-2xl md:text-3xl font-game text-indigo-900 mb-3">Welcome, Young Explorer!</h2>
+            <p class="text-slate-600 font-semibold mb-6 text-sm md:text-base leading-relaxed">
+                Journey back to the <strong class="text-amber-600">Stone Age</strong>! Help Om and the Stone Age Boy with spellings, missing letters, and word meanings across 5 exciting levels!
+            </p>
+            <button onclick="startGame()" class="pop-btn w-full py-4 bg-gradient-to-r from-emerald-400 to-green-500 hover:from-emerald-500 hover:to-green-600 text-white font-game text-xl md:text-2xl rounded-2xl shadow-xl border-b-4 border-green-700 tracking-wider">
+                START ADVENTURE 🚀
+            </button>
+            <div class="mt-6 flex justify-center items-center gap-2 text-xs text-emerald-700 font-bold bg-emerald-50 py-2 px-4 rounded-full inline-flex border border-emerald-200">
+                🛡️ Safe Child Space: No Ads • Kid Friendly
+            </div>
+        </section>
+
+        <!-- 2. QUIZ SCREEN -->
+        <section id="quiz-screen" class="hidden w-full bg-white/90 backdrop-blur-md rounded-3xl p-5 md:p-7 shadow-2xl border-4 border-amber-200 flex flex-col justify-between min-h-[440px]">
+            <!-- Progress Header -->
+            <div>
+                <div class="flex justify-between items-center mb-3 font-game text-sm md:text-base">
+                    <span id="level-badge" class="bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full border border-indigo-300">Level 1 of 5</span>
+                    <span id="question-tracker" class="bg-amber-100 text-amber-800 px-3 py-1 rounded-full border border-amber-300">Question 1/3</span>
+                </div>
+                <!-- Progress Bar -->
+                <div class="w-full bg-slate-200 h-4 rounded-full overflow-hidden p-0.5 border border-slate-300 mb-5">
+                    <div id="progress-bar" class="bg-gradient-to-r from-yellow-400 to-emerald-500 h-full rounded-full transition-all duration-500 w-0"></div>
+                </div>
+            </div>
+
+            <!-- Question Card -->
+            <div class="my-auto text-center py-2">
+                <div id="question-icon" class="text-5xl md:text-6xl mb-3">🔥</div>
+                <h3 id="question-title" class="text-lg md:text-xl font-bold text-slate-800 mb-4 px-2">
+                    Loading Question...
+                </h3>
+
+                <!-- Fill-in-the-blank letter slot UI (Hidden by default) -->
+                <div id="fill-blank-container" class="hidden mb-6 flex justify-center items-center gap-2 text-2xl md:text-3xl font-game text-indigo-900">
+                    <!-- Dynamic slots populated by JS -->
+                </div>
+
+                <!-- Answer Choices Area -->
+                <div id="answers-container" class="grid grid-cols-1 md:grid-cols-2 gap-3 w-full max-w-md mx-auto">
+                    <!-- Dynamic answer buttons -->
+                </div>
+            </div>
+
+            <!-- Feedback Display Area -->
+            <div id="feedback-box" class="min-h-[50px] flex items-center justify-center mt-3 text-center font-game text-lg"></div>
+        </section>
+
+        <!-- 3. BRICK BREAKER REWARD SCREEN -->
+        <section id="reward-screen" class="hidden w-full bg-slate-900 rounded-3xl p-4 md:p-6 shadow-2xl border-4 border-pink-400 text-center flex flex-col items-center">
+            <div class="mb-3 flex justify-between items-center w-full max-w-md px-2">
+                <span class="font-game text-pink-300 text-sm md:text-lg">🧱 Brick Breaker Mini-Game!</span>
+                <span id="brick-score" class="font-game text-yellow-300 text-sm md:text-base">Bricks: 0</span>
+            </div>
+
+            <p class="text-xs md:text-sm text-slate-300 mb-3 font-semibold">
+                Drag paddle or use ⬅️ ➡️ arrow keys to bounce the ball!
+            </p>
+
+            <div class="relative w-full max-w-md aspect-[4/3] bg-slate-950 rounded-2xl overflow-hidden border-2 border-slate-700 shadow-inner">
+                <canvas id="breakoutCanvas" class="w-full h-full block"></canvas>
+            </div>
+
+            <div class="mt-4 flex gap-3 w-full max-w-md">
+                <button id="next-level-btn" onclick="finishRewardRound()" class="pop-btn flex-1 py-3 bg-gradient-to-r from-emerald-400 to-teal-500 hover:from-emerald-500 hover:to-teal-600 text-white font-game text-base md:text-lg rounded-xl shadow-lg border-b-4 border-teal-700">
+                    Next Level ➡️
+                </button>
+            </div>
+        </section>
+
+        <!-- 4. FINAL CELEBRATION SCREEN -->
+        <section id="win-screen" class="hidden w-full bg-white/90 backdrop-blur-md rounded-3xl p-6 md:p-8 shadow-2xl text-center border-4 border-emerald-300">
+            <div class="text-7xl mb-3 bounce-anim">👑</div>
+            <h2 class="text-3xl font-game rainbow-text mb-2">SUPER STONE AGE MASTER!</h2>
+            <p class="text-slate-600 font-bold mb-6">You solved all 15 questions and mastered the Stone Age Boy words!</p>
+            
+            <div class="bg-amber-50 rounded-2xl p-4 border-2 border-amber-200 mb-6 flex justify-around items-center">
+                <div>
+                    <span class="text-xs text-amber-700 font-bold uppercase block">Stars Earned</span>
+                    <span class="text-3xl font-game text-amber-500">⭐⭐⭐⭐⭐</span>
+                </div>
+                <div>
+                    <span class="text-xs text-amber-700 font-bold uppercase block">Accuracy</span>
+                    <span id="final-accuracy" class="text-2xl font-game text-emerald-600">100%</span>
+                </div>
+            </div>
+
+            <button onclick="startGame()" class="pop-btn w-full py-4 bg-gradient-to-r from-purple-500 to-indigo-600 text-white font-game text-xl rounded-2xl shadow-xl border-b-4 border-indigo-800">
+                PLAY AGAIN 🔄
+            </button>
+        </section>
+
+    </main>
+
+    <footer class="mt-4 text-center text-xs font-bold text-slate-700/80">
+        Spelling Game • Stone Age Boy • Primary English Year 3
+    </footer>
+
+    <script>
+        // Mute state
+        let isMuted = false;
+        function toggleMute() {
+            isMuted = !isMuted;
+            document.getElementById('sound-btn').innerText = isMuted ? '🔇' : '🔊';
+        }
+
+        // 15 Year 3 Questions (3 per Level, gradually increasing in difficulty)
+        const levelsData = [
+            // Level 1: Foundational 3-4 Letter Story Words / Simple Spellings
+            {
+                level: 1,
+                questions: [
+                    {
+                        type: 'choice',
+                        icon: '🔥',
+                        question: "Which word means the cozy fire spot inside a cave or shelter?",
+                        options: ["Hearth", "Heart", "Harth", "Harht"],
+                        correct: "Hearth"
+                    },
+                    {
+                        type: 'fill',
+                        icon: '🏕️',
+                        word: "CAVE",
+                        missingIndex: 2, // C A _ E
+                        question: "Fill in the missing letter for where Stone Age people lived:",
+                        options: ["V", "B", "F", "P"],
+                        correct: "V"
+                    },
+                    {
+                        type: 'choice',
+                        icon: '🐻',
+                        question: "Select the correct spelling for the animal skin clothes they wore:",
+                        options: ["Pelt", "Pelted", "Plte", "Peltt"],
+                        correct: "Pelt"
+                    }
+                ]
+            },
+            // Level 2: Core Stone Age Tools & Story Concepts
+            {
+                level: 2,
+                questions: [
+                    {
+                        type: 'choice',
+                        icon: '🗡️',
+                        question: "Which sharp stone was used to make arrowheads and axes?",
+                        options: ["Flint", "Flynt", "Flintt", "Flinty"],
+                        correct: "Flint"
+                    },
+                    {
+                        type: 'fill',
+                        icon: '🛖',
+                        word: "SHELTER",
+                        missingIndex: 4, // S H E L _ E R
+                        question: "Complete the word for a safe place or camp:",
+                        options: ["T", "D", "K", "L"],
+                        correct: "T"
+                    },
+                    {
+                        type: 'choice',
+                        icon: '🌾',
+                        question: "People who searched for berries, nuts, and roots were called:",
+                        options: ["Gatherers", "Gathrers", "Gatheres", "Gathereers"],
+                        correct: "Gatherers"
+                    }
+                ]
+            },
+            // Level 3: Hunting & Vocabulary Extensions
+            {
+                level: 3,
+                questions: [
+                    {
+                        type: 'choice',
+                        icon: '🏹',
+                        question: "Which wooden weapon with a sharp tip was used for hunting?",
+                        options: ["Spear", "Speer", "Speare", "Spere"],
+                        correct: "Spear"
+                    },
+                    {
+                        type: 'fill',
+                        icon: '🦣',
+                        word: "MAMMOTH",
+                        missingIndex: 2, // M A _ M O T H
+                        question: "Complete the name of the huge woolly creature:",
+                        options: ["M", "N", "U", "W"],
+                        correct: "M"
+                    },
+                    {
+                        type: 'choice',
+                        icon: '🏃',
+                        question: "What is the correct spelling for a person who hunts wild animals?",
+                        options: ["Hunter", "Huntur", "Hounter", "Huntr"],
+                        correct: "Hunter"
+                    }
+                ]
+            },
+            // Level 4: Challenging Story Vocabulary
+            {
+                level: 4,
+                questions: [
+                    {
+                        type: 'choice',
+                        icon: '🪨',
+                        question: "A tool used to clean and scrape animal skins is a:",
+                        options: ["Scraper", "Skraper", "Scrapur", "Scrappar"],
+                        correct: "Scraper"
+                    },
+                    {
+                        type: 'fill',
+                        icon: '👥',
+                        word: "TRIBE",
+                        missingIndex: 4, // T R I B _
+                        question: "Find the missing letter for a group of people living together:",
+                        options: ["E", "A", "O", "I"],
+                        correct: "E"
+                    },
+                    {
+                        type: 'choice',
+                        icon: '🌋',
+                        question: "Which dark volcanic glass stone was made into extra sharp blades?",
+                        options: ["Obsidian", "Obsidien", "Obsidyan", "Opsidian"],
+                        correct: "Obsidian"
+                    }
+                ]
+            },
+            // Level 5: Tricky Year 3 Multi-Syllable & Historical Words
+            {
+                level: 5,
+                questions: [
+                    {
+                        type: 'choice',
+                        icon: '⏳',
+                        question: "Which word means the long time in history before written records?",
+                        options: ["Prehistory", "Preehistory", "Prehistorie", "Prihistory"],
+                        correct: "Prehistory"
+                    },
+                    {
+                        type: 'choice',
+                        icon: '🔍',
+                        question: "Who is an expert that digs up ancient bones and objects?",
+                        options: ["Archaeologist", "Archeologist", "Archaelogist", "Arkaiologist"],
+                        correct: "Archaeologist"
+                    },
+                    {
+                        type: 'fill',
+                        icon: '🎨',
+                        word: "PAINTING",
+                        missingIndex: 5, // P A I N T _ N G
+                        question: "Complete the word for art found on cave walls:",
+                        options: ["I", "E", "A", "Y"],
+                        correct: "I"
+                    }
+                ]
+            }
+        ];
+
+        // State variables
+        let currentLevelIndex = 0;
+        let currentQuestionIndex = 0;
+        let totalScore = 0;
+        let totalAttempts = 0;
+
+        // UI Element References
+        const startScreen = document.getElementById('start-screen');
+        const quizScreen = document.getElementById('quiz-screen');
+        const rewardScreen = document.getElementById('reward-screen');
+        const winScreen = document.getElementById('win-screen');
+
+        const levelBadge = document.getElementById('level-badge');
+        const questionTracker = document.getElementById('question-tracker');
+        const progressBar = document.getElementById('progress-bar');
+        const questionIcon = document.getElementById('question-icon');
+        const questionTitle = document.getElementById('question-title');
+        const fillBlankContainer = document.getElementById('fill-blank-container');
+        const answersContainer = document.getElementById('answers-container');
+        const feedbackBox = document.getElementById('feedback-box');
+
+        function startGame() {
+            sound.init();
+            currentLevelIndex = 0;
+            currentQuestionIndex = 0;
+            totalScore = 0;
+            totalAttempts = 0;
+
+            startScreen.classList.add('hidden');
+            winScreen.classList.add('hidden');
+            rewardScreen.classList.add('hidden');
+            quizScreen.classList.remove('hidden');
+
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            feedbackBox.innerHTML = '';
+            answersContainer.innerHTML = '';
+            fillBlankContainer.innerHTML = '';
+            fillBlankContainer.classList.add('hidden');
+
+            const levelData = levelsData[currentLevelIndex];
+            const q = levelData.questions[currentQuestionIndex];
+
+            // Update Header Stats
+            levelBadge.innerText = `Level ${levelData.level} of 5`;
+            questionTracker.innerText = `Question ${currentQuestionIndex + 1}/3`;
+
+            // Update Progress Bar
+            const totalProgress = ((currentLevelIndex * 3) + currentQuestionIndex) / 15 * 100;
+            progressBar.style.width = `${totalProgress}%`;
+
+            questionIcon.innerText = q.icon;
+            questionTitle.innerText = q.question;
+
+            if (q.type === 'fill') {
+                fillBlankContainer.classList.remove('hidden');
+                // Build fill in the blank boxes
+                for (let i = 0; i < q.word.length; i++) {
+                    const letterBox = document.createElement('div');
+                    letterBox.className = "w-10 h-12 md:w-12 md:h-14 flex items-center justify-center border-4 rounded-xl bg-amber-50 font-game text-2xl shadow-inner";
+                    if (i === q.missingIndex) {
+                        letterBox.className += " border-dashed border-indigo-500 text-indigo-600 bg-indigo-50 animate-pulse";
+                        letterBox.innerText = "_";
+                    } else {
+                        letterBox.className += " border-amber-300 text-amber-900";
+                        letterBox.innerText = q.word[i];
+                    }
+                    fillBlankContainer.appendChild(letterBox);
+                }
+            }
+
+            // Shuffle options for varied gameplay
+            const shuffledOptions = [...q.options].sort(() => Math.random() - 0.5);
+
+            shuffledOptions.forEach(option => {
+                const btn = document.createElement('button');
+                btn.className = "pop-btn w-full py-3.5 px-4 bg-amber-100 hover:bg-amber-200 text-amber-950 font-bold text-base md:text-lg rounded-2xl border-2 border-amber-300 shadow-md flex justify-center items-center";
+                btn.innerText = option;
+                btn.onclick = () => checkAnswer(option, q.correct);
+                answersContainer.appendChild(btn);
+            });
+        }
+
+        function checkAnswer(selected, correct) {
+            totalAttempts++;
+            const buttons = answersContainer.querySelectorAll('button');
+            buttons.forEach(b => b.disabled = true); // Disable while giving feedback
+
+            if (selected === correct) {
+                totalScore++;
+                if (!isMuted) sound.correct();
+                feedbackBox.innerHTML = `<span class="text-emerald-600 font-game animate-bounce inline-block">🌟 Super Job! That's Correct!</span>`;
+                
+                // Highlight correct button
+                buttons.forEach(b => {
+                    if (b.innerText === correct) {
+                        b.className = "w-full py-3.5 px-4 bg-emerald-500 text-white font-bold text-base md:text-lg rounded-2xl border-2 border-emerald-600 shadow-lg scale-105";
+                    }
+                });
+
+                setTimeout(nextQuestion, 1200);
+            } else {
+                if (!isMuted) sound.wrong();
+                feedbackBox.innerHTML = `<span class="text-rose-500 font-game">Great try! Let's try again! 💪</span>`;
+
+                // Highlight incorrect button
+                buttons.forEach(b => {
+                    if (b.innerText === selected) {
+                        b.className = "w-full py-3.5 px-4 bg-rose-400 text-white font-bold text-base md:text-lg rounded-2xl border-2 border-rose-500";
+                    }
+                });
+
+                setTimeout(() => {
+                    buttons.forEach(b => b.disabled = false);
+                    feedbackBox.innerHTML = '';
+                }, 1300);
+            }
+        }
+
+        function nextQuestion() {
+            currentQuestionIndex++;
+            if (currentQuestionIndex >= 3) {
+                // Completed a level! Start reward round
+                currentQuestionIndex = 0;
+                startRewardRound();
+            } else {
+                loadQuestion();
+            }
+        }
+
+        let canvas, ctx;
+        let paddleHeight = 12, paddleWidth = 75, paddleX = 0;
+        let ballRadius = 8, ballX = 0, ballY = 0, dx = 3, dy = -3;
+        let brickRowCount = 3, brickColumnCount = 5;
+        let brickWidth = 60, brickHeight = 18, brickPadding = 8, brickOffsetTop = 25, brickOffsetLeft = 15;
+        let bricks = [];
+        let score = 0;
+        let animationFrameId = null;
+
+        function startRewardRound() {
+            quizScreen.classList.add('hidden');
+            rewardScreen.classList.remove('hidden');
+
+            if (confetti) {
+                confetti({ particleCount: 50, spread: 60, origin: { y: 0.6 } });
+            }
+
+            canvas = document.getElementById('breakoutCanvas');
+            ctx = canvas.getContext('2d');
+
+            // Responsive Canvas Internal Sizing
+            canvas.width = 360;
+            canvas.height = 270;
+
+            paddleWidth = 70;
+            paddleX = (canvas.width - paddleWidth) / 2;
+            ballX = canvas.width / 2;
+            ballY = canvas.height - 30;
+            dx = (Math.random() > 0.5 ? 1 : -1) * 2.5;
+            dy = -2.8;
+            score = 0;
+
+            // Setup colorful bricks
+            const colors = ["#f87171", "#fbbf24", "#34d399", "#60a5fa", "#a78bfa"];
+            bricks = [];
+            for (let c = 0; c < brickColumnCount; c++) {
+                bricks[c] = [];
+                for (let r = 0; r < brickRowCount; r++) {
+                    bricks[c][r] = { x: 0, y: 0, status: 1, color: colors[(c + r) % colors.length] };
+                }
+            }
+
+            // Touch / Mouse Control Listeners
+            canvas.onmousemove = (e) => {
+                const rect = canvas.getBoundingClientRect();
+                const relativeX = (e.clientX - rect.left) * (canvas.width / rect.width);
+                if (relativeX > 0 && relativeX < canvas.width) {
+                    paddleX = relativeX - paddleWidth / 2;
+                }
+            };
+
+            canvas.ontouchmove = (e) => {
+                if (e.touches.length > 0) {
+                    const rect = canvas.getBoundingClientRect();
+                    const relativeX = (e.touches[0].clientX - rect.left) * (canvas.width / rect.width);
+                    if (relativeX > 0 && relativeX < canvas.width) {
+                        paddleX = relativeX - paddleWidth / 2;
+                    }
+                }
+            };
+
+            document.onkeydown = (e) => {
+                if (e.key === "Right" || e.key === "ArrowRight") {
+                    paddleX = Math.min(canvas.width - paddleWidth, paddleX + 18);
+                } else if (e.key === "Left" || e.key === "ArrowLeft") {
+                    paddleX = Math.max(0, paddleX - 18);
+                }
+            };
+
+            if (animationFrameId) cancelAnimationFrame(animationFrameId);
+            drawBreakout();
+        }
+
+        function collisionDetection() {
+            for (let c = 0; c < brickColumnCount; c++) {
+                for (let r = 0; r < brickRowCount; r++) {
+                    let b = bricks[c][r];
+                    if (b.status === 1) {
+                        if (ballX > b.x && ballX < b.x + brickWidth && ballY > b.y && ballY < b.y + brickHeight) {
+                            dy = -dy;
+                            b.status = 0;
+                            score++;
+                            if (!isMuted) sound.brick();
+                            document.getElementById('brick-score').innerText = `Bricks: ${score}`;
+
+                            // Check Win in Reward Game
+                            if (score === brickRowCount * brickColumnCount) {
+                                if (!isMuted) sound.win();
+                                if (confetti) confetti({ particleCount: 70, spread: 80 });
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        function drawBreakout() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Draw Bricks
+            for (let c = 0; c < brickColumnCount; c++) {
+                for (let r = 0; r < brickRowCount; r++) {
+                    if (bricks[c][r].status === 1) {
+                        let brickX = (c * (brickWidth + brickPadding)) + brickOffsetLeft;
+                        let brickY = (r * (brickHeight + brickPadding)) + brickOffsetTop;
+                        bricks[c][r].x = brickX;
+                        bricks[c][r].y = brickY;
+                        ctx.beginPath();
+                        ctx.roundRect(brickX, brickY, brickWidth, brickHeight, 4);
+                        ctx.fillStyle = bricks[c][r].color;
+                        ctx.fill();
+                        ctx.closePath();
+                    }
+                }
+            }
+
+            // Draw Ball
+            ctx.beginPath();
+            ctx.arc(ballX, ballY, ballRadius, 0, Math.PI * 2);
+            ctx.fillStyle = "#facc15";
+            ctx.fill();
+            ctx.strokeStyle = "#eab308";
+            ctx.stroke();
+            ctx.closePath();
+
+            // Draw Paddle
+            ctx.beginPath();
+            ctx.roundRect(paddleX, canvas.height - paddleHeight - 5, paddleWidth, paddleHeight, 6);
+            ctx.fillStyle = "#38bdf8";
+            ctx.fill();
+            ctx.closePath();
+
+            collisionDetection();
+
+            // Wall Bounce
+            if (ballX + dx > canvas.width - ballRadius || ballX + dx < ballRadius) {
+                dx = -dx;
+                if (!isMuted) sound.bounce();
+            }
+            if (ballY + dy < ballRadius) {
+                dy = -dy;
+                if (!isMuted) sound.bounce();
+            } else if (ballY + dy > canvas.height - ballRadius - 5) {
+                // Paddle Bounce
+                if (ballX > paddleX && ballX < paddleX + paddleWidth) {
+                    dy = -dy;
+                    if (!isMuted) sound.bounce();
+                } else if (ballY + dy > canvas.height) {
+                    // Soft Reset ball if missed for young kids
+                    ballX = canvas.width / 2;
+                    ballY = canvas.height - 30;
+                    dy = -2.5;
+                }
+            }
+
+            ballX += dx;
+            ballY += dy;
+
+            animationFrameId = requestAnimationFrame(drawBreakout);
+        }
+
+        function finishRewardRound() {
+            if (animationFrameId) cancelAnimationFrame(animationFrameId);
+            currentLevelIndex++;
+
+            if (currentLevelIndex >= levelsData.length) {
+                // Whole game completed!
+                showWinScreen();
+            } else {
+                rewardScreen.classList.add('hidden');
+                quizScreen.classList.remove('hidden');
+                loadQuestion();
+            }
+        }
+
+        function showWinScreen() {
+            rewardScreen.classList.add('hidden');
+            quizScreen.classList.add('hidden');
+            winScreen.classList.remove('hidden');
+
+            const accuracy = Math.round((totalScore / Math.max(totalAttempts, 15)) * 100);
+            document.getElementById('final-accuracy').innerText = `${accuracy}%`;
+
+            if (!isMuted) sound.win();
+
+            if (confetti) {
+                confetti({ particleCount: 120, spread: 100, origin: { y: 0.5 } });
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,916 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Piggy Pompom Science &amp; Dress Up</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Quicksand:wght@500;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'piggy-pink': '#FFC0CB',
+                        'piggy-bright': '#FF69B4',
+                        'piggy-dark': '#C71585',
+                        'piggy-deep': '#8B008B',
+                        'piggy-bg': '#FFF0F5',
+                        'piggy-card': '#FFE4E1',
+                    },
+                    fontFamily: {
+                        'fredoka': ['"Fredoka One"', 'cursive'],
+                        'quicksand': ['Quicksand', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Quicksand', sans-serif;
+            background-color: #FFF0F5;
+            background-image: radial-gradient(#FFB6C1 1.5px, transparent 1.5px), radial-gradient(#FFB6C1 1.5px, #FFF0F5 1.5px);
+            background-size: 60px 60px;
+            background-position: 0 0, 30px 30px;
+            user-select: none;
+            touch-action: manipulation;
+        }
+
+        .font-headline {
+            font-family: 'Fredoka One', cursive;
+        }
+
+        /* Cute CSS Animations */
+        @keyframes bounce-slow {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-12px); }
+        }
+
+        @keyframes wiggle {
+            0%, 100% { transform: rotate(-4deg); }
+            50% { transform: rotate(4deg); }
+        }
+
+        @keyframes pulse-gentle {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.04); }
+        }
+
+        @keyframes cheer-jump {
+            0%, 100% { transform: translateY(0) scale(1); }
+            30% { transform: translateY(-30px) scale(1.1) rotate(-5deg); }
+            60% { transform: translateY(-15px) scale(1.05) rotate(5deg); }
+        }
+
+        .animate-bounce-slow { animation: bounce-slow 2.5s infinite ease-in-out; }
+        .animate-wiggle { animation: wiggle 1.2s infinite ease-in-out; }
+        .animate-pulse-gentle { animation: pulse-gentle 2s infinite ease-in-out; }
+        .animate-cheer { animation: cheer-jump 0.8s ease-in-out; }
+
+        .btn-piggy {
+            background: linear-gradient(180deg, #FF69B4 0%, #C71585 100%);
+            box-shadow: 0 8px 0 #8B008B, 0 12px 20px rgba(139, 0, 139, 0.3);
+            transition: all 0.15s ease;
+        }
+        .btn-piggy:active {
+            transform: translateY(6px);
+            box-shadow: 0 2px 0 #8B008B, 0 4px 10px rgba(139, 0, 139, 0.3);
+        }
+
+        .btn-option {
+            background: #FFFFFF;
+            border: 4px solid #FFB6C1;
+            box-shadow: 0 6px 0 #FF69B4, 0 8px 15px rgba(255, 105, 180, 0.2);
+            transition: all 0.15s ease;
+        }
+        .btn-option:hover {
+            border-color: #FF69B4;
+            background: #FFF5F8;
+            transform: translateY(-2px);
+        }
+        .btn-option:active {
+            transform: translateY(4px);
+            box-shadow: 0 2px 0 #FF69B4;
+        }
+
+        .card-pink {
+            background: rgba(255, 255, 255, 0.92);
+            border: 5px solid #FFB6C1;
+            box-shadow: 0 12px 30px rgba(199, 21, 133, 0.15);
+            border-radius: 2rem;
+        }
+
+        /* Sparkle / Confetti Particle Styles */
+        .confetti-particle {
+            position: absolute;
+            pointer-events: none;
+            animation: fall 2.5s linear forwards;
+        }
+
+        @keyframes fall {
+            0% { transform: translateY(-50px) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(600px) rotate(720deg); opacity: 0; }
+        }
+
+        /* Custom scrollbar for dress up items */
+        .custom-scroll::-webkit-scrollbar {
+            height: 10px;
+        }
+        .custom-scroll::-webkit-scrollbar-track {
+            background: #FFE4E1;
+            border-radius: 10px;
+        }
+        .custom-scroll::-webkit-scrollbar-thumb {
+            background: #FF69B4;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between items-center p-3 md:p-6 overflow-x-hidden text-gray-800">
+
+    <!-- Top Bar Navigation / Scoreboard -->
+    <header class="w-full max-w-4xl flex justify-between items-center mb-4 card-pink px-6 py-3">
+        <div class="flex items-center gap-3">
+            <div class="w-12 h-12 rounded-full bg-piggy-bright flex items-center justify-center text-white font-headline text-2xl shadow-md border-2 border-white">
+                🐷
+            </div>
+            <div>
+                <h1 class="font-headline text-piggy-dark text-xl md:text-2xl tracking-wide">Piggy Pompom</h1>
+                <p id="level-indicator" class="text-xs md:text-sm text-pink-600 font-bold">Level 1: Animals & Food</p>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-4">
+            <!-- Progress Stars -->
+            <div id="star-container" class="flex gap-1 text-2xl">
+                <span>⭐</span><span>⭐</span><span>⭐</span><span>⭐</span><span>⭐</span>
+            </div>
+            <button id="sound-btn" onclick="toggleSound()" class="w-10 h-10 rounded-full bg-pink-100 hover:bg-pink-200 border-2 border-pink-300 flex items-center justify-center text-xl transition">
+                🔊
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Game Container -->
+    <main id="app-container" class="w-full max-w-4xl flex-1 flex flex-col justify-center items-center relative">
+
+        <!-- START SCREEN -->
+        <section id="start-screen" class="w-full card-pink p-6 md:p-10 text-center flex flex-col items-center">
+            <div class="relative w-48 h-48 md:w-56 md:h-56 mb-4 animate-bounce-slow">
+                <div id="start-piggy-svg" class="w-full h-full"></div>
+            </div>
+            <h2 class="font-headline text-3xl md:text-5xl text-piggy-dark mb-3">Welcome Little Scientist!</h2>
+            <p class="text-base md:text-xl text-gray-700 max-w-lg mb-6 leading-relaxed">
+                Join <span class="font-bold text-piggy-bright">Piggy Pompom</span> on a fun Science adventure about <strong>Animals & Humans</strong>! Answer questions to unlock super cute outfits! 🎉
+            </p>
+            <button onclick="startGame()" class="btn-piggy font-headline text-white text-2xl px-10 py-4 rounded-full tracking-wider hover:scale-105 transition transform">
+                PLAY GAME NOW! 🚀
+            </button>
+        </section>
+
+        <!-- QUIZ SCREEN -->
+        <section id="quiz-screen" class="w-full card-pink p-5 md:p-8 flex flex-col gap-6 hidden">
+            <!-- Level Progress Bar -->
+            <div class="w-full bg-pink-100 rounded-full h-5 border-2 border-pink-200 overflow-hidden relative">
+                <div id="progress-bar" class="bg-gradient-to-r from-piggy-bright to-piggy-dark h-full transition-all duration-500 rounded-full" style="width: 0%;"></div>
+                <div id="progress-text" class="absolute inset-0 flex items-center justify-center text-xs font-bold text-piggy-dark drop-shadow">
+                    Question 1 of 3
+                </div>
+            </div>
+
+            <!-- Question Area & Character Box -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
+                <!-- Piggy Reaction Side -->
+                <div class="flex flex-col items-center justify-center p-4 bg-pink-50 rounded-2xl border-2 border-pink-200 relative min-h-[180px]">
+                    <div id="quiz-piggy-svg" class="w-36 h-36 md:w-40 md:h-40 transition-transform duration-300"></div>
+                    <div id="speech-bubble" class="bg-white border-2 border-piggy-bright rounded-2xl p-2 md:p-3 text-center text-xs md:text-sm font-bold text-piggy-dark shadow-sm mt-2 w-full">
+                        "You can do it! Think carefully!"
+                    </div>
+                </div>
+
+                <!-- Question Text & Options -->
+                <div class="md:col-span-2 flex flex-col gap-4">
+                    <div class="bg-pink-100/70 p-4 md:p-5 rounded-2xl border-2 border-pink-200">
+                        <span id="question-badge" class="bg-piggy-bright text-white text-xs px-3 py-1 rounded-full font-bold uppercase tracking-wide">
+                            Level 1 • Question 1
+                        </span>
+                        <h3 id="question-text" class="font-headline text-xl md:text-2xl text-piggy-deep mt-2 leading-snug">
+                            Loading question...
+                        </h3>
+                    </div>
+
+                    <!-- Options Grid -->
+                    <div id="options-container" class="grid grid-cols-1 gap-3">
+                        <!-- Dynamic Options Generated Here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Feedback Overlay / Next Button -->
+            <div id="feedback-panel" class="hidden flex flex-col md:flex-row items-center justify-between p-4 rounded-2xl border-2 transition-all">
+                <p id="feedback-text" class="font-bold text-base md:text-lg mb-3 md:mb-0"></p>
+                <button id="next-btn" onclick="nextQuestion()" class="btn-piggy text-white font-headline px-8 py-3 rounded-full text-lg hidden">
+                    NEXT ➔
+                </button>
+            </div>
+        </section>
+
+        <!-- DRESS UP REWARD SCREEN -->
+        <section id="dress-screen" class="w-full card-pink p-5 md:p-8 flex flex-col items-center hidden">
+            <div class="text-center mb-4">
+                <span class="bg-yellow-300 text-yellow-900 font-bold px-4 py-1 rounded-full text-sm animate-pulse">
+                    🏆 LEVEL COMPLETED! 🏆
+                </span>
+                <h2 class="font-headline text-2xl md:text-4xl text-piggy-dark mt-2">
+                    Dress My Quizmaster!
+                </h2>
+                <p class="text-sm md:text-base text-gray-600">Pick awesome outfits for Piggy Pompom to wear in the next level!</p>
+            </div>
+
+            <div class="w-full grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+                <!-- Live Preview Canvas -->
+                <div id="dress-canvas-container" class="relative bg-gradient-to-b from-sky-100 to-pink-100 border-4 border-piggy-bright rounded-3xl h-72 md:h-80 flex items-center justify-center overflow-hidden shadow-inner">
+                    <!-- Background SVG element -->
+                    <div id="dress-bg-layer" class="absolute inset-0 pointer-events-none"></div>
+                    <!-- Piggy Character SVG element -->
+                    <div id="dress-piggy-svg" class="w-52 h-52 md:w-60 md:h-60 relative z-10 transition-all"></div>
+                </div>
+
+                <!-- Dress-Up Controls / Tabs -->
+                <div class="flex flex-col gap-3">
+                    <!-- Category Tabs -->
+                    <div class="flex gap-2 overflow-x-auto pb-1 custom-scroll">
+                        <button onclick="switchCategory('hats')" id="tab-hats" class="px-4 py-2 rounded-xl font-bold text-xs md:text-sm bg-piggy-bright text-white shadow">Hats 🎩</button>
+                        <button onclick="switchCategory('glasses')" id="tab-glasses" class="px-4 py-2 rounded-xl font-bold text-xs md:text-sm bg-pink-200 text-piggy-dark">Glasses 👓</button>
+                        <button onclick="switchCategory('outfits')" id="tab-outfits" class="px-4 py-2 rounded-xl font-bold text-xs md:text-sm bg-pink-200 text-piggy-dark">Outfits 👗</button>
+                        <button onclick="switchCategory('bgs')" id="tab-bgs" class="px-4 py-2 rounded-xl font-bold text-xs md:text-sm bg-pink-200 text-piggy-dark">Backgrounds 🏰</button>
+                    </div>
+
+                    <!-- Wardrobe Items Grid -->
+                    <div id="wardrobe-items" class="grid grid-cols-3 gap-3 p-3 bg-pink-50 rounded-2xl border-2 border-pink-200 max-h-56 overflow-y-auto">
+                        <!-- Wardrobe Items Injected Dynamically -->
+                    </div>
+
+                    <button onclick="continueToNextLevel()" class="btn-piggy font-headline text-white text-xl py-3 rounded-full mt-2 w-full text-center tracking-wider">
+                        READY FOR NEXT LEVEL! 🚀
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- CERTIFICATE / FINAL SCREEN -->
+        <section id="cert-screen" class="w-full card-pink p-6 md:p-10 text-center flex flex-col items-center hidden">
+            <div class="border-8 border-double border-pink-300 p-6 md:p-8 rounded-3xl bg-white w-full max-w-2xl relative shadow-2xl">
+                <!-- Ribbon Badge -->
+                <div class="text-5xl mb-2">🎓👑</div>
+                <h2 class="font-headline text-3xl md:text-5xl text-piggy-dark">SUPER STAR CERTIFICATE!</h2>
+                <p class="text-sm md:text-base font-bold text-pink-500 uppercase tracking-widest my-2">Official Science Genius</p>
+
+                <p class="text-lg md:text-xl text-gray-700 my-4">
+                    This certifies that <br>
+                    <span class="font-headline text-2xl md:text-3xl text-piggy-deep underline">A Wonderful Year 3 Scientist</span><br>
+                    has completed all 5 Science Levels with Piggy Pompom!
+                </p>
+
+                <!-- Final Outfit Piggy Display -->
+                <div class="flex justify-center items-center my-4">
+                    <div id="final-piggy-svg" class="w-48 h-48 border-4 border-dashed border-pink-300 rounded-2xl bg-pink-50 p-2"></div>
+                </div>
+
+                <div class="flex justify-around items-center text-sm md:text-base font-bold text-pink-700 bg-pink-100 p-3 rounded-xl mb-6">
+                    <div>Questions Correct: <span id="final-score" class="text-xl text-piggy-dark">15/15</span></div>
+                    <div>Grade: <span class="text-xl text-piggy-dark">Science Master 🌟</span></div>
+                </div>
+
+                <div class="flex flex-col md:flex-row gap-4 justify-center">
+                    <button onclick="restartGame()" class="btn-piggy font-headline text-white px-8 py-3 rounded-full text-lg">
+                        PLAY AGAIN 🔄
+                    </button>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="mt-6 text-center text-xs font-bold text-pink-700 opacity-80">
+        Piggy Pompom • Year 3 Science (Animals Including Humans) • Kid-Friendly Learning Fun 💖
+    </footer>
+
+    <script>
+        /* WEB AUDIO SYNTHESIZER (No external audio files required!) */
+        let audioCtx = null;
+        let soundEnabled = true;
+
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        }
+
+        function toggleSound() {
+            soundEnabled = !soundEnabled;
+            document.getElementById('sound-btn').innerText = soundEnabled ? '🔊' : '🔇';
+        }
+
+        function playPopSound() {
+            if (!soundEnabled) return;
+            initAudio();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(400, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(800, audioCtx.currentTime + 0.1);
+            gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.1);
+        }
+
+        function playCheerSound() {
+            if (!soundEnabled) return;
+            initAudio();
+            const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+            notes.forEach((freq, index) => {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(freq, audioCtx.currentTime + index * 0.08);
+                gain.gain.setValueAtTime(0.2, audioCtx.currentTime + index * 0.08);
+                gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + index * 0.08 + 0.25);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start(audioCtx.currentTime + index * 0.08);
+                osc.stop(audioCtx.currentTime + index * 0.08 + 0.25);
+            });
+        }
+
+        function playWrongSound() {
+            if (!soundEnabled) return;
+            initAudio();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(250, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(150, audioCtx.currentTime + 0.25);
+            gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.25);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.25);
+        }
+
+        /* 15 YEAR 3 SCIENCE QUESTIONS (5 LEVELS x 3 QUESTIONS) */
+        const quizData = [
+            // LEVEL 1: Animals & Food
+            {
+                level: 1,
+                title: "Level 1: Animals & Food",
+                question: "What do we call animals that eat ONLY plants?",
+                options: ["Herbivores", "Carnivores", "Omnivores", "Insectivores"],
+                correct: 0,
+                explanation: "Herbivores like cows and rabbits only eat plants!"
+            },
+            {
+                level: 1,
+                title: "Level 1: Animals & Food",
+                question: "Which of these foods gives us lots of energy and helps us grow?",
+                options: ["Only Fizzy Drinks", "A Balanced Diet with Vegetables", "Just Sweets", "Only Mud"],
+                correct: 1,
+                explanation: "A balanced diet with veggies, protein, and fruit keeps us healthy!"
+            },
+            {
+                level: 1,
+                title: "Level 1: Animals & Food",
+                question: "What do ALL animals and humans need to drink to stay alive?",
+                options: ["Fruit Juice", "Water", "Hot Chocolate", "Lemonade"],
+                correct: 1,
+                explanation: "Water is essential for every single living creature!"
+            },
+
+            // LEVEL 2: Skeletons & Bones
+            {
+                level: 2,
+                title: "Level 2: Skeletons & Bones",
+                question: "Which strong bone acts like a helmet to protect your brain?",
+                options: ["Ribcage", "Skull", "Kneecap", "Spine"],
+                correct: 1,
+                explanation: "The skull protects our precious brain from bumps!"
+            },
+            {
+                level: 2,
+                title: "Level 2: Skeletons & Bones",
+                question: "What do we call animals that have a backbone inside them?",
+                options: ["Invertebrates", "Vertebrates", "Jellyfish", "Insects"],
+                correct: 1,
+                explanation: "Vertebrates (like humans, dogs, and birds) all have backbones!"
+            },
+            {
+                level: 2,
+                title: "Level 2: Skeletons & Bones",
+                question: "Which animal DOES NOT have a skeleton inside its body?",
+                options: ["Dog", "Worm", "Frog", "Human"],
+                correct: 1,
+                explanation: "Worms are invertebrates – they have soft bodies with no bones!"
+            },
+
+            // LEVEL 3: Muscles & Movement
+            {
+                level: 3,
+                title: "Level 3: Muscles & Movement",
+                question: "How do muscles help our bones move around?",
+                options: ["Muscles push bones", "Muscles pull on bones", "Muscles blow air", "Muscles sleep"],
+                correct: 1,
+                explanation: "Muscles pull on bones to move our arms, legs, and fingers!"
+            },
+            {
+                level: 3,
+                title: "Level 3: Muscles & Movement",
+                question: "How do your arm muscles work when you bend your elbow?",
+                options: ["In pairs (one tightens, one relaxes)", "All by themselves", "They fall off", "They freeze"],
+                correct: 0,
+                explanation: "Muscles work in pairs – when one contracts, the other relaxes!"
+            },
+            {
+                level: 3,
+                title: "Level 3: Muscles & Movement",
+                question: "Which special muscle pumps blood all around your body?",
+                options: ["Bicep", "Heart", "Tongue", "Tummy"],
+                correct: 1,
+                explanation: "Your heart is a super hard-working muscle that never stops!"
+            },
+
+            // LEVEL 4: Animal Families
+            {
+                level: 4,
+                title: "Level 4: Animal Families",
+                question: "Which group of animals has fur or hair and feeds milk to its babies?",
+                options: ["Reptiles", "Fish", "Mammals", "Birds"],
+                correct: 2,
+                explanation: "Mammals (like humans, cats, and pigs) have fur/hair and milk!"
+            },
+            {
+                level: 4,
+                title: "Level 4: Animal Families",
+                question: "How do fish breathe underwater?",
+                options: ["With Lungs", "With Gills", "With Wings", "With Noses"],
+                correct: 1,
+                explanation: "Fish use gills to take oxygen straight out of the water!"
+            },
+            {
+                level: 4,
+                title: "Level 4: Animal Families",
+                question: "What makes Birds different from all other animal groups?",
+                options: ["They have Feathers", "They have four legs", "They live in deep water", "They have scales"],
+                correct: 0,
+                explanation: "Birds are the only animals in the world that have feathers!"
+            },
+
+            // LEVEL 5: Health & Growth
+            {
+                level: 5,
+                title: "Level 5: Health & Growth",
+                question: "Why should we brush our teeth twice every single day?",
+                options: ["To make them grow giant", "To remove germs and prevent decay", "To change their color to pink", "Just for fun"],
+                correct: 1,
+                explanation: "Brushing cleans away sticky food and bacteria to keep teeth strong!"
+            },
+            {
+                level: 5,
+                title: "Level 5: Health & Growth",
+                question: "What happens to your heart when you run and exercise?",
+                options: ["It beats faster to carry oxygen", "It stops completely", "It gets smaller", "It goes to sleep"],
+                correct: 0,
+                explanation: "Running makes your heart beat faster to supply energy to your muscles!"
+            },
+            {
+                level: 5,
+                title: "Level 5: Health & Growth",
+                question: "What place in your body allows two bones to bend together (like your knee)?",
+                options: ["Joint", "Muscle", "Nail", "Hair"],
+                correct: 0,
+                explanation: "Joints like knees and elbows let our bones bend nicely!"
+            }
+        ];
+
+        // Customization State
+        const playerOutfit = {
+            hat: 'none',
+            glasses: 'none',
+            outfit: 'none',
+            bg: 'meadow'
+        };
+
+        // Render SVG Vector Piggy Character with active items equipped
+        function getPiggySVG(expression = 'happy', pompomAnimation = false) {
+            let mouth = `<path d="M 85 115 Q 100 130 115 115" stroke="#C71585" stroke-width="4" fill="none" stroke-linecap="round"/>`;
+            if (expression === 'excited') {
+                mouth = `<path d="M 85 110 Q 100 135 115 110 Z" fill="#C71585" />`;
+            } else if (expression === 'sad') {
+                mouth = `<path d="M 88 122 Q 100 110 112 122" stroke="#C71585" stroke-width="4" fill="none" stroke-linecap="round"/>`;
+            }
+
+            // Hats Layer
+            let hatSVG = '';
+            if (playerOutfit.hat === 'bow') {
+                hatSVG = `<g transform="translate(100, 35)">
+                    <path d="M-20,-10 L0,0 L-20,10 Z" fill="#FF1493"/>
+                    <path d="M20,-10 L0,0 L20,10 Z" fill="#FF1493"/>
+                    <circle cx="0" cy="0" r="7" fill="#FFD700"/>
+                </g>`;
+            } else if (playerOutfit.hat === 'crown') {
+                hatSVG = `<path d="M 70 45 L 80 20 L 95 35 L 100 10 L 105 35 L 120 20 L 130 45 Z" fill="#FFD700" stroke="#DAA520" stroke-width="2"/>
+                <circle cx="80" cy="20" r="3" fill="#FF0000"/>
+                <circle cx="100" cy="10" r="3" fill="#00DEF" />
+                <circle cx="120" cy="20" r="3" fill="#FF0000"/>`;
+            } else if (playerOutfit.hat === 'party') {
+                hatSVG = `<polygon points="100,10 75,50 125,50" fill="#FF69B4" stroke="#FFF" stroke-width="2"/>
+                <circle cx="100" cy="10" r="6" fill="#FFD700"/>
+                <line x1="80" y1="30" x2="120" y2="30" stroke="#00FFFF" stroke-width="3"/>`;
+            } else if (playerOutfit.hat === 'chef') {
+                hatSVG = `<path d="M 75 45 C 60 20, 80 0, 100 10 C 120 0, 140 20, 125 45 Z" fill="#FFFFFF" stroke="#DDD" stroke-width="2"/>
+                <rect x="75" y="42" width="50" height="10" fill="#FFFFFF" stroke="#CCC"/>`;
+            }
+
+            // Glasses Layer
+            let glassesSVG = '';
+            if (playerOutfit.glasses === 'hearts') {
+                glassesSVG = `<g fill="#FF1493" opacity="0.85">
+                    <path d="M 65 75 C 65 65, 80 65, 85 75 C 90 65, 105 65, 105 75 C 105 85, 85 95, 85 95 C 85 95, 65 85, 65 75 Z" transform="scale(0.5) translate(50, 60)"/>
+                    <path d="M 65 75 C 65 65, 80 65, 85 75 C 90 65, 105 65, 105 75 C 105 85, 85 95, 85 95 C 85 95, 65 85, 65 75 Z" transform="scale(0.5) translate(145, 60)"/>
+                    <line x1="88" y1="78" x2="112" y2="78" stroke="#FF1493" stroke-width="3"/>
+                </g>`;
+            } else if (playerOutfit.glasses === 'star') {
+                glassesSVG = `<g fill="#FFD700" stroke="#FF8C00" stroke-width="1.5">
+                    <polygon points="80,70 83,78 92,78 85,83 87,91 80,86 73,91 75,83 68,78 77,78"/>
+                    <polygon points="120,70 123,78 132,78 125,83 127,91 120,86 113,91 115,83 108,78 117,78"/>
+                    <line x1="92" y1="80" x2="108" y2="80" stroke="#FF8C00" stroke-width="3"/>
+                </g>`;
+            } else if (playerOutfit.glasses === 'cool') {
+                glassesSVG = `<g fill="#222">
+                    <rect x="68" y="72" width="28" height="18" rx="4"/>
+                    <rect x="104" y="72" width="28" height="18" rx="4"/>
+                    <line x1="96" y1="78" x2="104" y2="78" stroke="#222" stroke-width="4"/>
+                </g>`;
+            }
+
+            // Outfits Layer
+            let outfitSVG = '';
+            if (playerOutfit.outfit === 'cape') {
+                outfitSVG = `<path d="M 60 135 Q 100 145 140 135 L 155 185 Q 100 195 45 185 Z" fill="#FF0055" opacity="0.9"/>`;
+            } else if (playerOutfit.outfit === 'tutu') {
+                outfitSVG = `<path d="M 55 145 Q 100 160 145 145 L 155 170 Q 100 185 45 170 Z" fill="#FFB6C1" stroke="#FF69B4" stroke-width="2"/>
+                <path d="M 60 150 Q 100 165 140 150" fill="none" stroke="#FFF" stroke-width="3" stroke-dasharray="4,4"/>`;
+            } else if (playerOutfit.outfit === 'apron') {
+                outfitSVG = `<path d="M 75 135 L 125 135 L 130 180 L 70 180 Z" fill="#FFFFFF" stroke="#FF69B4" stroke-width="2"/>
+                <circle cx="100" cy="155" r="8" fill="#FF69B4"/>`;
+            } else if (playerOutfit.outfit === 'vest') {
+                outfitSVG = `<path d="M 65 135 L 135 135 L 130 180 L 70 180 Z" fill="#90EE90" stroke="#2E8B57" stroke-width="2"/>
+                <line x1="100" y1="135" x2="100" y2="180" stroke="#2E8B57" stroke-width="2"/>`;
+            }
+
+            return `
+            <svg viewBox="0 0 200 200" class="w-full h-full drop-shadow-lg">
+                <!-- Cape Behind Body -->
+                ${playerOutfit.outfit === 'cape' ? outfitSVG : ''}
+
+                <!-- Ears -->
+                <ellipse cx="60" cy="50" rx="16" ry="25" fill="#FFB6C1" stroke="#FF69B4" stroke-width="4" transform="rotate(-20 60 50)"/>
+                <ellipse cx="60" cy="50" rx="9" ry="15" fill="#FF69B4" transform="rotate(-20 60 50)"/>
+                <ellipse cx="140" cy="50" rx="16" ry="25" fill="#FFB6C1" stroke="#FF69B4" stroke-width="4" transform="rotate(20 140 50)"/>
+                <ellipse cx="140" cy="50" rx="9" ry="15" fill="#FF69B4" transform="rotate(20 140 50)"/>
+
+                <!-- Body -->
+                <ellipse cx="100" cy="140" rx="50" ry="45" fill="#FFB6C1" stroke="#FF69B4" stroke-width="4"/>
+
+                <!-- Outfits On Front Body -->
+                ${playerOutfit.outfit !== 'cape' ? outfitSVG : ''}
+
+                <!-- Head -->
+                <circle cx="100" cy="90" r="48" fill="#FFC0CB" stroke="#FF69B4" stroke-width="4"/>
+
+                <!-- Cheeks -->
+                <circle cx="72" cy="102" r="10" fill="#FF69B4" opacity="0.4"/>
+                <circle cx="128" cy="102" r="10" fill="#FF69B4" opacity="0.4"/>
+
+                <!-- Eyes -->
+                <ellipse cx="80" cy="80" rx="6" ry="9" fill="#222"/>
+                <circle cx="82" cy="77" r="2.5" fill="#FFF"/>
+                <ellipse cx="120" cy="80" rx="6" ry="9" fill="#222"/>
+                <circle cx="122" cy="77" r="2.5" fill="#FFF"/>
+
+                <!-- Snout -->
+                <ellipse cx="100" cy="100" rx="18" ry="13" fill="#FF69B4" stroke="#C71585" stroke-width="2"/>
+                <ellipse cx="93" cy="100" rx="4" ry="6" fill="#C71585"/>
+                <ellipse cx="107" cy="100" rx="4" ry="6" fill="#C71585"/>
+
+                <!-- Mouth -->
+                ${mouth}
+
+                <!-- Glasses -->
+                ${glassesSVG}
+
+                <!-- Hat -->
+                ${hatSVG}
+
+                <!-- Signature POMPOMS in Hands -->
+                <g class="${pompomAnimation ? 'animate-wiggle' : ''}">
+                    <!-- Left Pompom -->
+                    <circle cx="38" cy="125" r="16" fill="#FF1493"/>
+                    <circle cx="32" cy="120" r="12" fill="#FF69B4"/>
+                    <circle cx="44" cy="130" r="10" fill="#FFB6C1"/>
+
+                    <!-- Right Pompom -->
+                    <circle cx="162" cy="125" r="16" fill="#FF1493"/>
+                    <circle cx="168" cy="120" r="12" fill="#FF69B4"/>
+                    <circle cx="156" cy="130" r="10" fill="#FFB6C1"/>
+                </g>
+            </svg>`;
+        }
+
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let selectedCategory = 'hats';
+
+        // Initialize SVGs on Start
+        window.addEventListener('load', () => {
+            renderPiggySVGs();
+        });
+
+        function renderPiggySVGs(expression = 'happy', cheering = false) {
+            const svgContent = getPiggySVG(expression, cheering);
+            document.getElementById('start-piggy-svg').innerHTML = svgContent;
+            document.getElementById('quiz-piggy-svg').innerHTML = svgContent;
+            document.getElementById('dress-piggy-svg').innerHTML = svgContent;
+            document.getElementById('final-piggy-svg').innerHTML = svgContent;
+            renderDressBackground();
+        }
+
+        function startGame() {
+            playPopSound();
+            currentQuestionIndex = 0;
+            score = 0;
+            document.getElementById('start-screen').classList.add('hidden');
+            document.getElementById('quiz-screen').classList.remove('hidden');
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            const q = quizData[currentQuestionIndex];
+
+            // UI Header updates
+            document.getElementById('level-indicator').innerText = q.title;
+            document.getElementById('question-badge').innerText = `Level ${q.level} • Question ${(currentQuestionIndex % 3) + 1} of 3`;
+            document.getElementById('question-text').innerText = q.question;
+
+            // Progress Bar
+            const progPercent = (((currentQuestionIndex % 3) + 1) / 3) * 100;
+            document.getElementById('progress-bar').style.width = `${progPercent}%`;
+            document.getElementById('progress-text').innerText = `Question ${(currentQuestionIndex % 3) + 1} of 3`;
+
+            // Speech Bubble Reset
+            document.getElementById('speech-bubble').innerText = '"You can do it! Read carefully!"';
+            renderPiggySVGs('happy');
+
+            // Feedback Reset
+            const feedbackPanel = document.getElementById('feedback-panel');
+            feedbackPanel.classList.add('hidden');
+            document.getElementById('next-btn').classList.add('hidden');
+
+            // Render Options
+            const optionsContainer = document.getElementById('options-container');
+            optionsContainer.innerHTML = '';
+
+            q.options.forEach((opt, idx) => {
+                const btn = document.createElement('button');
+                btn.className = 'btn-option font-headline text-lg md:text-xl text-piggy-deep p-4 rounded-2xl text-left w-full flex items-center justify-between';
+                btn.innerHTML = `<span>${opt}</span> <span class="text-pink-300">🌸</span>`;
+                btn.onclick = () => checkAnswer(idx);
+                optionsContainer.appendChild(btn);
+            });
+        }
+
+        function checkAnswer(selectedIndex) {
+            const q = quizData[currentQuestionIndex];
+            const optionsContainer = document.getElementById('options-container');
+            const buttons = optionsContainer.getElementsByTagName('button');
+
+            // Disable further clicks on options
+            for (let btn of buttons) {
+                btn.disabled = true;
+                btn.classList.add('opacity-70');
+            }
+
+            const feedbackPanel = document.getElementById('feedback-panel');
+            const feedbackText = document.getElementById('feedback-text');
+            const speechBubble = document.getElementById('speech-bubble');
+            feedbackPanel.classList.remove('hidden');
+
+            if (selectedIndex === q.correct) {
+                // Correct Answer!
+                playCheerSound();
+                score++;
+                triggerConfetti();
+
+                buttons[selectedIndex].classList.remove('opacity-70');
+                buttons[selectedIndex].classList.add('bg-green-100', 'border-green-400', 'text-green-800');
+
+                feedbackPanel.className = 'flex flex-col md:flex-row items-center justify-between p-4 rounded-2xl border-2 bg-green-50 border-green-300 text-green-800';
+                feedbackText.innerHTML = `🎉 <strong>YAY! PERFECT!</strong> ${q.explanation}`;
+                speechBubble.innerText = '"Woohoo! You are super smart!" 🌟';
+
+                renderPiggySVGs('excited', true);
+                document.getElementById('quiz-piggy-svg').classList.add('animate-cheer');
+                setTimeout(() => document.getElementById('quiz-piggy-svg').classList.remove('animate-cheer'), 800);
+
+            } else {
+                // Incorrect Answer
+                playWrongSound();
+
+                buttons[selectedIndex].classList.remove('opacity-70');
+                buttons[selectedIndex].classList.add('bg-red-100', 'border-red-300', 'text-red-800');
+                buttons[q.correct].classList.remove('opacity-70');
+                buttons[q.correct].classList.add('bg-green-100', 'border-green-400', 'text-green-800');
+
+                feedbackPanel.className = 'flex flex-col md:flex-row items-center justify-between p-4 rounded-2xl border-2 bg-pink-50 border-pink-300 text-pink-900';
+                feedbackText.innerHTML = `💡 <strong>Oopsie!</strong> The right answer is <b>${q.options[q.correct]}</b>. ${q.explanation}`;
+                speechBubble.innerText = '"Nice try! Don\'t worry, learning is a superpower!" 💪';
+
+                renderPiggySVGs('sad');
+            }
+
+            document.getElementById('next-btn').classList.remove('hidden');
+        }
+
+        function nextQuestion() {
+            playPopSound();
+            currentQuestionIndex++;
+
+            // Check if Level is finished (3 questions per level)
+            if (currentQuestionIndex % 3 === 0) {
+                showDressUpReward();
+            } else {
+                loadQuestion();
+            }
+        }
+
+        function showDressUpReward() {
+            document.getElementById('quiz-screen').classList.add('hidden');
+            document.getElementById('dress-screen').classList.remove('hidden');
+            renderPiggySVGs('happy');
+            switchCategory('hats');
+        }
+
+        const wardrobeData = {
+            hats: [
+                { id: 'none', label: 'No Hat ❌' },
+                { id: 'bow', label: 'Pink Bow 🎀' },
+                { id: 'crown', label: 'Gold Crown 👑' },
+                { id: 'party', label: 'Party Hat 🥳' },
+                { id: 'chef', label: 'Chef Hat 🧑‍🍳' }
+            ],
+            glasses: [
+                { id: 'none', label: 'No Glasses ❌' },
+                { id: 'hearts', label: 'Heart Shades 🕶️' },
+                { id: 'star', label: 'Star Glasses ⭐' },
+                { id: 'cool', label: 'Cool Shades 😎' }
+            ],
+            outfits: [
+                { id: 'none', label: 'No Outfit ❌' },
+                { id: 'cape', label: 'Hero Cape 🦸' },
+                { id: 'tutu', label: 'Pink Tutu 👗' },
+                { id: 'apron', label: 'Chef Apron 🍳' },
+                { id: 'vest', label: 'Explorer Vest 🧭' }
+            ],
+            bgs: [
+                { id: 'meadow', label: 'Flower Meadow 🌸' },
+                { id: 'castle', label: 'Pink Castle 🏰' },
+                { id: 'candyland', label: 'Candy Land 🍭' },
+                { id: 'disco', label: 'Disco Party 🪩' }
+            ]
+        };
+
+        function switchCategory(cat) {
+            playPopSound();
+            selectedCategory = cat;
+
+            // Highlight Tab Buttons
+            ['hats', 'glasses', 'outfits', 'bgs'].forEach(c => {
+                const tab = document.getElementById(`tab-${c}`);
+                if (c === cat) {
+                    tab.className = "px-4 py-2 rounded-xl font-bold text-xs md:text-sm bg-piggy-bright text-white shadow";
+                } else {
+                    tab.className = "px-4 py-2 rounded-xl font-bold text-xs md:text-sm bg-pink-200 text-piggy-dark hover:bg-pink-300";
+                }
+            });
+
+            // Populate Wardrobe Items
+            const wardrobeItems = document.getElementById('wardrobe-items');
+            wardrobeItems.innerHTML = '';
+
+            wardrobeData[cat].forEach(item => {
+                const itemBtn = document.createElement('button');
+                const isSelected = playerOutfit[cat === 'bgs' ? 'bg' : cat.slice(0, -1)] === item.id;
+
+                itemBtn.className = `p-3 rounded-xl border-2 font-bold text-xs md:text-sm transition flex flex-col items-center justify-center text-center ${
+                    isSelected ? 'bg-piggy-bright text-white border-piggy-dark shadow-md scale-105' : 'bg-white border-pink-200 text-piggy-dark hover:bg-pink-100'
+                }`;
+                itemBtn.innerText = item.label;
+                itemBtn.onclick = () => equipItem(cat, item.id);
+                wardrobeItems.appendChild(itemBtn);
+            });
+        }
+
+        function equipItem(category, itemId) {
+            playPopSound();
+            if (category === 'hats') playerOutfit.hat = itemId;
+            if (category === 'glasses') playerOutfit.glasses = itemId;
+            if (category === 'outfits') playerOutfit.outfit = itemId;
+            if (category === 'bgs') playerOutfit.bg = itemId;
+
+            renderPiggySVGs('happy');
+            switchCategory(category); // Refresh selection state
+        }
+
+        function renderDressBackground() {
+            const bgLayer = document.getElementById('dress-bg-layer');
+            if (!bgLayer) return;
+
+            if (playerOutfit.bg === 'castle') {
+                bgLayer.className = "absolute inset-0 bg-gradient-to-b from-purple-200 to-pink-200 flex items-end justify-center opacity-40";
+                bgLayer.innerHTML = `<div class="text-8xl pb-2">🏰✨</div>`;
+            } else if (playerOutfit.bg === 'candyland') {
+                bgLayer.className = "absolute inset-0 bg-gradient-to-b from-yellow-100 to-pink-200 flex items-end justify-around opacity-40";
+                bgLayer.innerHTML = `<div class="text-7xl">🍭</div><div class="text-7xl">🍬</div><div class="text-7xl">🧁</div>`;
+            } else if (playerOutfit.bg === 'disco') {
+                bgLayer.className = "absolute inset-0 bg-gradient-to-b from-purple-900 to-pink-800 flex items-center justify-center opacity-50";
+                bgLayer.innerHTML = `<div class="text-8xl animate-pulse">🪩✨</div>`;
+            } else {
+                // Meadow
+                bgLayer.className = "absolute inset-0 bg-gradient-to-b from-sky-100 to-green-100 flex items-end justify-between px-6 opacity-50";
+                bgLayer.innerHTML = `<div class="text-6xl">🌸</div><div class="text-6xl">🌼</div><div class="text-6xl">🌺</div>`;
+            }
+        }
+
+        function continueToNextLevel() {
+            playPopSound();
+            document.getElementById('dress-screen').classList.add('hidden');
+
+            if (currentQuestionIndex >= quizData.length) {
+                // Game Finished!
+                showCertificate();
+            } else {
+                // Load Next Question in Quiz
+                document.getElementById('quiz-screen').classList.remove('hidden');
+                loadQuestion();
+            }
+        }
+
+        function showCertificate() {
+            document.getElementById('cert-screen').classList.remove('hidden');
+            document.getElementById('final-score').innerText = `${score} / ${quizData.length}`;
+            renderPiggySVGs('excited', true);
+            triggerConfetti();
+            playCheerSound();
+        }
+
+        function restartGame() {
+            playPopSound();
+            playerOutfit.hat = 'none';
+            playerOutfit.glasses = 'none';
+            playerOutfit.outfit = 'none';
+            playerOutfit.bg = 'meadow';
+            currentQuestionIndex = 0;
+            score = 0;
+
+            document.getElementById('cert-screen').classList.add('hidden');
+            document.getElementById('start-screen').classList.remove('hidden');
+            renderPiggySVGs();
+        }
+
+        function triggerConfetti() {
+            const colors = ['#FF69B4', '#FFD700', '#00FFFF', '#FF1493', '#7B68EE'];
+            const container = document.getElementById('app-container');
+
+            for (let i = 0; i < 30; i++) {
+                const confetti = document.createElement('div');
+                confetti.className = 'confetti-particle';
+                confetti.style.left = `${Math.random() * 100}%`;
+                confetti.style.top = `-20px`;
+                confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                confetti.style.width = `${Math.random() * 10 + 8}px`;
+                confetti.style.height = `${Math.random() * 10 + 8}px`;
+                confetti.style.borderRadius = Math.random() > 0.5 ? '50%' : '2px';
+                confetti.style.animationDuration = `${Math.random() * 1.5 + 1.5}s`;
+
+                container.appendChild(confetti);
+
+                setTimeout(() => confetti.remove(), 2500);
+            }
+        }
+    </script>
+</body>
+</html>

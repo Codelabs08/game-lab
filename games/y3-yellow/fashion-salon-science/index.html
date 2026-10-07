@@ -1,0 +1,1180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fashion Salon &amp; Science Studio</title>
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        aestheticPink: '#FFD1DC',
+                        aestheticPinkDark: '#E07A5F',
+                        lavenderPurple: '#D8B4F8',
+                        lavenderDark: '#7209B7',
+                        skyBlue: '#A2D2FF',
+                        skyBlueDark: '#0077B6',
+                        warmGold: '#F4A261',
+                        studioBg: '#F8F9FA'
+                    },
+                    fontFamily: {
+                        sans: ['Fredoka', 'Comic Sans MS', 'Chalkboard SE', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        @keyframes floatSlow {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-6px); }
+        }
+        @keyframes sparkleTwinkle {
+            0%, 100% { opacity: 0.2; transform: scale(0.8) rotate(0deg); }
+            50% { opacity: 1; transform: scale(1.25) rotate(15deg); }
+        }
+        @keyframes pulseSoft {
+            0%, 100% { opacity: 0.9; }
+            50% { opacity: 1; transform: scale(1.02); }
+        }
+
+        .animate-float { animation: floatSlow 4s ease-in-out infinite; }
+        .animate-sparkle { animation: sparkleTwinkle 2.5s ease-in-out infinite; }
+        .animate-pulse-soft { animation: pulseSoft 3s ease-in-out infinite; }
+
+        .bubble-btn {
+            transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 0 6px 14px rgba(114, 9, 183, 0.12);
+        }
+        .bubble-btn:hover {
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 10px 20px rgba(114, 9, 183, 0.2);
+        }
+        .bubble-btn:active {
+            transform: translateY(2px) scale(0.98);
+            box-shadow: 0 3px 8px rgba(114, 9, 183, 0.15);
+        }
+
+        .studio-pattern {
+            background-color: #FAF6FB;
+            background-image: radial-gradient(#D8B4F8 1.5px, transparent 1.5px), radial-gradient(#FFD1DC 1.5px, #FAF6FB 1.5px);
+            background-size: 36px 36px;
+            background-position: 0 0, 18px 18px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 7px;
+            height: 7px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #F1F5F9;
+            border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #C084FC;
+            border-radius: 10px;
+        }
+
+        /* Photo Filters for Canvas Overlay */
+        .filter-none { filter: none; }
+        .filter-vintage { filter: sepia(0.35) contrast(1.08) brightness(0.95); }
+        .filter-softglow { filter: brightness(1.1) saturate(1.15) contrast(0.95); }
+        .filter-pastel { filter: saturate(0.85) hue-rotate(-10deg) brightness(1.08); }
+        .filter-vibrant { filter: saturate(1.4) contrast(1.1); }
+    </style>
+</head>
+<body class="studio-pattern font-sans min-h-screen text-slate-800 flex flex-col justify-between select-none overflow-x-hidden">
+
+    <!-- Header / Navigation Bar -->
+    <header class="w-full bg-white/95 backdrop-blur-md shadow-sm border-b-2 border-lavenderPurple/50 px-4 py-3 flex justify-between items-center z-30 sticky top-0">
+        <div class="flex items-center gap-3 cursor-pointer" onclick="showScreen('main-menu')">
+            <div class="w-11 h-11 rounded-2xl bg-gradient-to-br from-pink-300 via-purple-300 to-sky-300 flex items-center justify-center text-white text-2xl shadow-md">
+                💎
+            </div>
+            <div>
+                <h1 class="text-xl sm:text-2xl font-black bg-gradient-to-r from-pink-500 via-purple-600 to-sky-600 bg-clip-text text-transparent leading-none">Fashion Salon &amp; Science Studio</h1>
+                <span class="text-xs font-bold text-purple-700">Photorealistic Salon & Year 3 Science</span>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-2 sm:gap-3">
+            <button id="tts-btn" onclick="toggleTTS()" class="w-9 h-9 rounded-full bg-pink-100 text-pink-600 flex items-center justify-center hover:bg-pink-500 hover:text-white transition shadow-sm" title="Toggle Question Voice Speech">
+                <i class="fa-solid fa-volume-high text-sm"></i>
+            </button>
+            <button id="sound-btn" onclick="toggleSound()" class="w-9 h-9 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center hover:bg-purple-600 hover:text-white transition shadow-sm" title="Toggle Sound FX">
+                <i class="fa-solid fa-music text-sm"></i>
+            </button>
+            <button onclick="showScreen('main-menu')" class="w-9 h-9 rounded-full bg-sky-100 text-sky-600 flex items-center justify-center hover:bg-sky-600 hover:text-white transition shadow-sm" title="Main Menu">
+                <i class="fa-solid fa-house text-sm"></i>
+            </button>
+        </div>
+    </header>
+
+    <main class="flex-grow flex items-center justify-center p-3 sm:p-6 relative min-h-[85vh]">
+        <canvas id="confetti-canvas" class="fixed inset-0 pointer-events-none z-50"></canvas>
+
+        <!-- SCREEN 1: Main Menu -->
+        <section id="screen-main-menu" class="screen-section w-full max-w-3xl bg-white/95 rounded-3xl p-6 sm:p-10 shadow-xl border-2 border-lavenderPurple/60 text-center animate-float">
+            <div class="mb-4">
+                <span class="inline-block bg-gradient-to-r from-pink-100 via-purple-100 to-sky-100 text-purple-800 text-xs sm:text-sm font-extrabold px-4 py-1.5 rounded-full border border-purple-200 mb-3">
+                    ✨ Realistic Fashion Studio & Science Quiz ✨
+                </span>
+                <h2 class="text-3xl sm:text-5xl font-black text-slate-800 tracking-tight leading-tight">
+                    Dress Up & Science Studio
+                </h2>
+                <p class="text-gray-500 text-sm sm:text-base font-medium mt-2 max-w-lg mx-auto">
+                    Cut & style hair, apply realistic makeup, choose detailed footwear & explore Year 3 Science about Rocks, Soils & Fossils!
+                </p>
+            </div>
+
+            <!-- Avatar Preview Badge -->
+            <div class="w-32 h-32 mx-auto bg-gradient-to-tr from-pink-100 via-purple-50 to-sky-100 rounded-full flex items-center justify-center border-4 border-white shadow-lg my-6 relative overflow-hidden">
+                <span class="text-6xl animate-pulse-soft">💄</span>
+            </div>
+
+            <div class="flex flex-col sm:flex-row justify-center gap-4">
+                <button onclick="playSound('click'); showScreen('salon')" class="bubble-btn bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-black text-lg px-8 py-4 rounded-2xl border-b-4 border-purple-900 flex items-center justify-center gap-3">
+                    <i class="fa-solid fa-scissors text-xl"></i> Open Realistic Salon
+                </button>
+                <button onclick="playSound('click'); showScreen('level-select')" class="bubble-btn bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white font-black text-lg px-8 py-4 rounded-2xl border-b-4 border-pink-700 flex items-center justify-center gap-3">
+                    <i class="fa-solid fa-graduation-cap text-xl"></i> Play Science Quiz
+                </button>
+            </div>
+        </section>
+
+        <!-- SCREEN 2: Science Level Select -->
+        <section id="screen-level-select" class="screen-section hidden w-full max-w-4xl bg-white/95 rounded-3xl p-6 sm:p-8 shadow-xl border-2 border-skyBlue/80">
+            <div class="text-center mb-6">
+                <h2 class="text-3xl font-black text-slate-800">Year 3 Science Map</h2>
+                <p class="text-gray-500 font-medium text-sm">Pass quizzes to unlock high-fashion clothes, shoes & makeup palettes!</p>
+            </div>
+
+            <div id="level-cards-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+                <!-- Level cards generated dynamically -->
+            </div>
+
+            <div class="mt-8 text-center">
+                <button onclick="playSound('click'); showScreen('main-menu')" class="bubble-btn bg-gray-200 hover:bg-gray-300 text-slate-700 font-bold px-6 py-2.5 rounded-xl border-b-4 border-gray-400 text-sm">
+                    <i class="fa-solid fa-arrow-left mr-1"></i> Home
+                </button>
+            </div>
+        </section>
+
+        <!-- SCREEN 3: Active Science Quiz -->
+        <section id="screen-quiz" class="screen-section hidden w-full max-w-2xl bg-white/95 rounded-3xl p-6 sm:p-8 shadow-xl border-2 border-pink-300">
+            <div class="flex justify-between items-center border-b border-gray-100 pb-4 mb-4">
+                <div>
+                    <span id="quiz-level-badge" class="bg-purple-600 text-white text-xs font-black px-3 py-1 rounded-full">Level 1</span>
+                    <span id="quiz-question-counter" class="text-gray-500 font-bold ml-2 text-xs sm:text-sm">Question 1/3</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button onclick="readCurrentQuestionSpeech()" class="bg-pink-100 text-pink-600 px-3 py-1 rounded-full text-xs font-bold hover:bg-pink-500 hover:text-white transition">
+                        <i class="fa-solid fa-volume-high mr-1"></i> Read Out
+                    </button>
+                    <div class="flex items-center gap-1 text-amber-400 font-bold text-sm ml-2">
+                        <i class="fa-solid fa-star"></i>
+                        <span id="quiz-stars-counter" class="text-slate-700">0</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="w-full bg-gray-100 h-3 rounded-full overflow-hidden mb-6">
+                <div id="quiz-progress-bar" class="bg-gradient-to-r from-pink-400 via-purple-500 to-sky-400 h-full w-0 transition-all duration-300"></div>
+            </div>
+
+            <div class="mb-6">
+                <h3 id="quiz-question-text" class="text-lg sm:text-xl font-black text-slate-800 mb-6 text-center leading-relaxed">
+                    Question text goes here?
+                </h3>
+                <div id="quiz-options-container" class="grid grid-cols-1 gap-3">
+                    <!-- Dynamic choices -->
+                </div>
+            </div>
+
+            <div id="quiz-feedback-box" class="hidden p-4 rounded-2xl mb-4 border text-center transition-all">
+                <p id="quiz-feedback-text" class="font-bold text-sm sm:text-base"></p>
+                <button id="quiz-next-btn" onclick="nextQuestion()" class="mt-3 bubble-btn bg-purple-600 hover:bg-purple-700 text-white font-black px-6 py-2 rounded-xl text-sm shadow">
+                    Continue <i class="fa-solid fa-arrow-right ml-1"></i>
+                </button>
+            </div>
+        </section>
+
+        <!-- SCREEN 4: Realistic Photorealistic Salon & Dress-Up -->
+        <section id="screen-salon" class="screen-section hidden w-full max-w-6xl bg-white/95 rounded-3xl p-4 sm:p-6 shadow-2xl border-2 border-purple-200">
+            <div class="flex flex-col lg:flex-row gap-6">
+                
+                <!-- Left Column: Realistic Canvas Viewport & Studio Controls -->
+                <div class="w-full lg:w-5/12 flex flex-col items-center">
+                    <div class="flex justify-between items-center w-full mb-2 px-1">
+                        <h3 class="text-xl font-black text-slate-800 flex items-center gap-2">
+                            <span>✨ Realistic Studio</span>
+                        </h3>
+                        <span id="unlocked-count-text" class="text-xs font-bold bg-purple-100 text-purple-700 px-3 py-1 rounded-full">Unlocked: 15/50</span>
+                    </div>
+
+                    <!-- Canvas Box Stage with Dynamic Photo Filter -->
+                    <div id="stage-frame" class="relative w-full max-w-sm h-[440px] sm:h-[480px] rounded-3xl border-4 border-white shadow-2xl overflow-hidden flex items-center justify-center transition-all bg-slate-900">
+                        <canvas id="realistic-canvas" width="360" height="480" class="w-full h-full object-contain"></canvas>
+
+                        <!-- Hair-Cutting Real-time Scissors Effect Badge -->
+                        <div id="cutting-mode-badge" class="hidden absolute top-3 right-3 bg-red-500 text-white text-xs font-black px-3 py-1 rounded-full shadow-lg animate-pulse flex items-center gap-1">
+                            <i class="fa-solid fa-scissors"></i> Hair Cut Mode Active
+                        </div>
+                    </div>
+
+                    <!-- Interactive Hair Cutting & Salon Tools Bar -->
+                    <div class="grid grid-cols-4 gap-2 w-full mt-3">
+                        <button onclick="trimHairLength()" class="bubble-btn bg-pink-100 text-pink-700 font-extrabold text-xs py-2.5 rounded-xl hover:bg-pink-500 hover:text-white flex items-center justify-center gap-1">
+                            <i class="fa-solid fa-scissors"></i> Trim Hair
+                        </button>
+                        <button onclick="growHairLength()" class="bubble-btn bg-purple-100 text-purple-700 font-extrabold text-xs py-2.5 rounded-xl hover:bg-purple-600 hover:text-white flex items-center justify-center gap-1">
+                            <i class="fa-solid fa-arrow-up"></i> Grow Hair
+                        </button>
+                        <button onclick="cyclePhotoFilter()" class="bubble-btn bg-sky-100 text-sky-700 font-extrabold text-xs py-2.5 rounded-xl hover:bg-sky-600 hover:text-white flex items-center justify-center gap-1">
+                            <i class="fa-solid fa-wand-magic-sparkles"></i> Filter
+                        </button>
+                        <button onclick="snapPhoto()" class="bubble-btn bg-amber-100 text-amber-700 font-extrabold text-xs py-2.5 rounded-xl hover:bg-amber-500 hover:text-white flex items-center justify-center gap-1">
+                            <i class="fa-solid fa-camera"></i> Snap Photo
+                        </button>
+                    </div>
+
+                    <div class="flex gap-2 mt-3 w-full">
+                        <button onclick="randomizeStyle()" class="bubble-btn flex-1 bg-gradient-to-r from-purple-600 to-pink-500 text-white font-extrabold text-xs sm:text-sm py-2.5 rounded-xl text-center">
+                            🎲 Surprise Glam!
+                        </button>
+                        <button onclick="downloadArtwork()" class="bubble-btn flex-1 bg-gradient-to-r from-teal-500 to-emerald-500 text-white font-extrabold text-xs sm:text-sm py-2.5 rounded-xl text-center">
+                            💾 Save Picture
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Right Column: Multi-Tab Detailed Studio Customizer -->
+                <div class="w-full lg:w-7/12 flex flex-col justify-between">
+                    <div>
+                        <!-- Main Studio Category Tabs -->
+                        <div class="flex gap-1.5 border-b border-gray-100 pb-2 mb-3 overflow-x-auto custom-scrollbar">
+                            <button onclick="setSalonCategory('hair')" class="salon-tab font-black text-xs sm:text-sm px-3.5 py-2 rounded-xl bg-purple-600 text-white whitespace-nowrap" data-cat="hair">💇‍♀️ Salon & Hair</button>
+                            <button onclick="setSalonCategory('makeup')" class="salon-tab font-black text-xs sm:text-sm px-3.5 py-2 rounded-xl bg-gray-100 text-gray-600 hover:bg-gray-200 whitespace-nowrap" data-cat="makeup">💄 Makeup Studio</button>
+                            <button onclick="setSalonCategory('tops')" class="salon-tab font-black text-xs sm:text-sm px-3.5 py-2 rounded-xl bg-gray-100 text-gray-600 hover:bg-gray-200 whitespace-nowrap" data-cat="tops">👔 Tops & Dresses</button>
+                            <button onclick="setSalonCategory('bottoms')" class="salon-tab font-black text-xs sm:text-sm px-3.5 py-2 rounded-xl bg-gray-100 text-gray-600 hover:bg-gray-200 whitespace-nowrap" data-cat="bottoms">👖 Bottoms</button>
+                            <button onclick="setSalonCategory('shoes')" class="salon-tab font-black text-xs sm:text-sm px-3.5 py-2 rounded-xl bg-gray-100 text-gray-600 hover:bg-gray-200 whitespace-nowrap" data-cat="shoes">👟 Footwear</button>
+                            <button onclick="setSalonCategory('accessories')" class="salon-tab font-black text-xs sm:text-sm px-3.5 py-2 rounded-xl bg-gray-100 text-gray-600 hover:bg-gray-200 whitespace-nowrap" data-cat="accessories">👑 Accessories</button>
+                            <button onclick="setSalonCategory('backdrops')" class="salon-tab font-black text-xs sm:text-sm px-3.5 py-2 rounded-xl bg-gray-100 text-gray-600 hover:bg-gray-200 whitespace-nowrap" data-cat="backdrops">🖼 Photo Stage</button>
+                        </div>
+
+                        <!-- Secondary Sub-Controls Bar (Hair Dye, Eye Color Picker, etc.) -->
+                        <div id="sub-controls-bar" class="mb-3 p-3 bg-purple-50 rounded-2xl border border-purple-100 flex flex-wrap items-center gap-3 text-xs font-bold">
+                            <!-- Dynamic sub controls populated via JS -->
+                        </div>
+
+                        <!-- Wardrobe Grid -->
+                        <div id="salon-items-grid" class="grid grid-cols-3 sm:grid-cols-4 gap-2.5 max-h-[300px] overflow-y-auto pr-1 custom-scrollbar">
+                            <!-- Populated dynamically -->
+                        </div>
+                    </div>
+
+                    <div class="mt-4 flex justify-between items-center border-t border-gray-100 pt-3">
+                        <p class="text-xs text-gray-500 font-bold">Earn 3 Stars in Year 3 Science to unlock high-fashion items!</p>
+                        <button onclick="playSound('click'); showScreen('level-select')" class="bubble-btn bg-pink-500 hover:bg-pink-600 text-white font-black text-xs sm:text-sm px-4 py-2 rounded-xl">
+                            <i class="fa-solid fa-graduation-cap mr-1"></i> Science Map
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SCREEN 5: Level Celebration Modal -->
+        <section id="screen-celebration" class="screen-section hidden w-full max-w-md bg-white/95 rounded-3xl p-6 shadow-2xl border-2 border-amber-300 text-center animate-float">
+            <div class="text-5xl mb-2">🏆</div>
+            <h2 id="celeb-title" class="text-2xl font-black text-slate-800 mb-1">Fantastic Job!</h2>
+            <p id="celeb-subtitle" class="text-gray-500 text-sm font-bold mb-4">You earned 3 Stars!</p>
+
+            <div class="bg-gradient-to-r from-pink-50 to-purple-50 p-4 rounded-2xl border border-purple-100 mb-5">
+                <p id="celeb-reward-desc" class="text-purple-700 font-black text-xs sm:text-sm mb-2">Unlocked new items in the Salon!</p>
+                <div class="flex justify-center gap-2 text-3xl text-amber-400">
+                    <i class="fa-solid fa-star"></i>
+                    <i class="fa-solid fa-star"></i>
+                    <i class="fa-solid fa-star"></i>
+                </div>
+            </div>
+
+            <div class="flex gap-3">
+                <button onclick="playSound('click'); showScreen('salon')" class="bubble-btn flex-1 bg-purple-600 hover:bg-purple-700 text-white font-black text-sm py-3 rounded-xl">
+                    💇‍♀️ Salon Studio
+                </button>
+                <button onclick="playSound('click'); showScreen('level-select')" class="bubble-btn flex-1 bg-pink-500 hover:bg-pink-600 text-white font-black text-sm py-3 rounded-xl">
+                    🗺️ Map
+                </button>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="w-full text-center py-2 text-xs text-purple-800 font-bold bg-white/80 border-t border-purple-100">
+        Fashion Studio • Photorealistic Salon & Year 3 Science Game (Child Safe • No Ads)
+    </footer>
+
+    <script>
+        // System State
+        let soundEnabled = true;
+        let ttsEnabled = true;
+        let currentLevelIndex = 0;
+        let currentQuestionIndex = 0;
+        let levelStars = [0, 0, 0, 0, 0];
+        let unlockedLevels = [true, false, false, false, false];
+        let currentScore = 0;
+        let audioCtx = null;
+        let photoFilterIndex = 0;
+        const photoFilters = ['filter-none', 'filter-softglow', 'filter-vintage', 'filter-pastel', 'filter-vibrant'];
+
+        // Realistic Customization State
+        let realisticState = {
+            hairStyle: 'hair_waves',
+            hairColor: '#4A2E1B',
+            hairLength: 120, // Real-time trim length
+            eyeColor: '#2B5B84',
+            eyeshadowColor: '#E07A5F',
+            lipstickColor: '#D81B60',
+            blushColor: '#FFB7B2',
+            skinTone: '#F5C6A5',
+            top: 'top_blazer',
+            bottom: 'bot_jeans',
+            shoe: 'shoe_boots',
+            accessory: 'acc_necklace',
+            backdrop: 'bg_runway'
+        };
+
+        const salonCategories = {
+            hair: [
+                { id: 'hair_waves', name: 'Chestnut Waves', icon: '👩', reqLevel: 1 },
+                { id: 'hair_bob', name: 'Chic Sleek Bob', icon: '👩‍💼', reqLevel: 1 },
+                { id: 'hair_balayage', name: 'Blonde Balayage', icon: '👱‍♀️', reqLevel: 2 },
+                { id: 'hair_rosegold', name: 'Rose Gold Curls', icon: '👩‍🎤', reqLevel: 3 },
+                { id: 'hair_braids', name: 'Braided Crown', icon: '👸', reqLevel: 4 }
+            ],
+            makeup: [
+                { id: 'mk_nude', name: 'Natural Glam', icon: '💄', lip: '#C86D51', shadow: '#D4A373', reqLevel: 1 },
+                { id: 'mk_rose', name: 'Velvet Rose', icon: '💋', lip: '#D81B60', shadow: '#E07A5F', reqLevel: 1 },
+                { id: 'mk_glitter', name: 'Sparkle Gold', icon: '✨', lip: '#E63946', shadow: '#FFD700', reqLevel: 2 },
+                { id: 'mk_smokey', name: 'Smokey Chic', icon: '👁️', lip: '#B5838D', shadow: '#4A4E69', reqLevel: 3 },
+                { id: 'mk_berry', name: 'Berry Sheen', icon: '🍇', lip: '#7209B7', shadow: '#F72585', reqLevel: 4 }
+            ],
+            tops: [
+                { id: 'top_blazer', name: 'Tailored Blazer', icon: '🧥', reqLevel: 1 },
+                { id: 'top_silk', name: 'Silky Camisole', icon: '👚', reqLevel: 1 },
+                { id: 'top_lab', name: 'Science Lab Coat', icon: '🥼', reqLevel: 2 },
+                { id: 'top_sequin', name: 'Sequin Top', icon: '✨', reqLevel: 3 },
+                { id: 'top_knit', name: 'Cozy Fluffy Knit', icon: '🧶', reqLevel: 4 }
+            ],
+            bottoms: [
+                { id: 'bot_jeans', name: 'Ripped Denim Jeans', icon: '👖', reqLevel: 1 },
+                { id: 'bot_skirt', name: 'Pleated Silk Skirt', icon: '👗', reqLevel: 1 },
+                { id: 'bot_leather', name: 'Leather Pants', icon: '👖', reqLevel: 2 },
+                { id: 'bot_shorts', name: 'Tailored Shorts', icon: '🩳', reqLevel: 3 }
+            ],
+            shoes: [
+                { id: 'shoe_boots', name: 'Leather Ankle Boots', icon: '👢', reqLevel: 1 },
+                { id: 'shoe_sneakers', name: 'Designer Laced Kicks', icon: '👟', reqLevel: 1 },
+                { id: 'shoe_heels', name: 'Sparkle Heels', icon: '👠', reqLevel: 2 },
+                { id: 'shoe_skates', name: 'Metallic Roller Skates', icon: '🛼', reqLevel: 4 }
+            ],
+            accessories: [
+                { id: 'acc_necklace', name: 'Gemstone Pendant', icon: '📿', reqLevel: 1 },
+                { id: 'acc_glasses', name: 'Fashion Glasses', icon: '👓', reqLevel: 1 },
+                { id: 'acc_tiara', name: 'Diamond Tiara', icon: '👑', reqLevel: 2 },
+                { id: 'acc_bag', name: 'Designer Handbag', icon: '👜', reqLevel: 3 }
+            ],
+            backdrops: [
+                { id: 'bg_runway', name: 'Fashion Runway', color1: '#2B2D42', color2: '#8D99AE', reqLevel: 1 },
+                { id: 'bg_paris', name: 'Parisian Street', color1: '#F4A261', color2: '#E76F51', reqLevel: 1 },
+                { id: 'bg_studio', name: 'Modern Art Studio', color1: '#E0AAFF', color2: '#C77DFF', reqLevel: 2 },
+                { id: 'bg_museum', name: 'Rock & Fossil Lab', color1: '#A8DADC', color2: '#457B9D', reqLevel: 3 }
+            ]
+        };
+
+        let currentActiveSalonCat = 'hair';
+
+        // Year 3 Science Question Bank (Rocks & Soil)
+        const quizLevels = [
+            {
+                id: 1,
+                title: "Types of Rocks",
+                desc: "Igneous, Sedimentary & Metamorphic!",
+                icon: "🌋",
+                questions: [
+                    {
+                        q: "Which type of rock is formed when hot liquid lava cools and hardens?",
+                        options: ["Igneous rock", "Sedimentary rock", "Plastic rock"],
+                        correct: 0,
+                        explanation: "Igneous rocks come from liquid magma or lava cooling down!"
+                    },
+                    {
+                        q: "Sedimentary rocks form in layers. What can often be found squashed inside them?",
+                        options: ["Batteries", "Fossils of shells & bones", "Glass marbles"],
+                        correct: 1,
+                        explanation: "Fossils of ancient creatures get trapped between sedimentary rock layers!"
+                    },
+                    {
+                        q: "What causes rocks underground to turn into Metamorphic rocks?",
+                        options: ["Intense Heat and Pressure", "Wind and Ice", "Rainwater"],
+                        correct: 0,
+                        explanation: "Heavy underground pressure and deep Earth heat change existing rocks into metamorphic rocks!"
+                    }
+                ]
+            },
+            {
+                id: 2,
+                title: "Rock Properties",
+                desc: "Permeability, hardness & textures!",
+                icon: "💎",
+                questions: [
+                    {
+                        q: "Pumice is a light igneous rock full of tiny air bubbles. What special thing does it do?",
+                        options: ["It floats on water", "It melts like ice", "It turns green"],
+                        correct: 0,
+                        explanation: "Trapped air bubbles make pumice so light that it floats on water!"
+                    },
+                    {
+                        q: "If a rock lets water soak through tiny holes inside it, the rock is called...",
+                        options: ["Permeable", "Bounceable", "Elastic"],
+                        correct: 0,
+                        explanation: "Permeable rocks have tiny microscopic holes that absorb water!"
+                    },
+                    {
+                        q: "Why is soft chalk sedimentary rock useful for writing on blackboards?",
+                        options: ["It crumbles easily into marks", "It is hard like diamond", "It turns into liquid"],
+                        correct: 0,
+                        explanation: "Chalk is soft and leaves a powder line when rubbed!"
+                    }
+                ]
+            },
+            {
+                id: 3,
+                title: "Soil & Earthworms",
+                desc: "Humus, clay & soil layers!",
+                icon: "🌱",
+                questions: [
+                    {
+                        q: "Soil contains rock fragments, air, water, and dead leaves. What is the rich dark layer called?",
+                        options: ["Humus", "Custard", "Chalk"],
+                        correct: 0,
+                        explanation: "Humus is dark, rich soil made from rotted plants!"
+                    },
+                    {
+                        q: "How do earthworms help garden soil stay healthy?",
+                        options: ["They dig tunnels to let air & water in", "They eat all the rocks", "They paint leaves"],
+                        correct: 0,
+                        explanation: "Worm burrows loosen soil so plant roots, water, and air can move!"
+                    },
+                    {
+                        q: "Which type of soil feels sticky when wet and holds a lot of water?",
+                        options: ["Clay soil", "Sandy soil", "Gravel"],
+                        correct: 0,
+                        explanation: "Clay soil particles are microscopic and stick together, holding water!"
+                    }
+                ]
+            },
+            {
+                id: 4,
+                title: "Fossils & Mary Anning",
+                desc: "Jurassic Coast discoveries!",
+                icon: "🦴",
+                questions: [
+                    {
+                        q: "How long does it take for a dead sea creature to turn into a fossil in rock?",
+                        options: ["Millions of years", "2 weeks", "10 days"],
+                        correct: 0,
+                        explanation: "Fossilisation takes millions of years as minerals replace bones!"
+                    },
+                    {
+                        q: "Who was Mary Anning, the famous English fossil hunter?",
+                        options: ["She found sea dinosaur fossils in Lyme Regis", "She built railways", "She flew planes"],
+                        correct: 0,
+                        explanation: "Mary Anning made world-famous fossil discoveries on Dorset's Jurassic Coast!"
+                    },
+                    {
+                        q: "What do we call a scientist who studies Earth's rocks and fossils?",
+                        options: ["Geologist", "Chef", "Astronaut"],
+                        correct: 0,
+                        explanation: "Geologists study rocks, minerals, and Earth history!"
+                    }
+                ]
+            },
+            {
+                id: 5,
+                title: "Uses of Rocks",
+                desc: "Slate roofs & building stone!",
+                icon: "🏰",
+                questions: [
+                    {
+                        q: "Which waterproof rock splits into thin flat sheets for house roofs?",
+                        options: ["Slate", "Sandstone", "Chalk"],
+                        correct: 0,
+                        explanation: "Slate is waterproof and splits into thin smooth tiles!"
+                    },
+                    {
+                        q: "Granite is a hard igneous rock. Where is it commonly used?",
+                        options: ["Kitchen counter tops and monuments", "Soft pillows", "Glass windows"],
+                        correct: 0,
+                        explanation: "Granite is tough and scratch-resistant, perfect for counters!"
+                    },
+                    {
+                        q: "Why do plants need fertile topsoil to grow strong?",
+                        options: ["It gives roots nutrients, support & water", "It makes flowers blue", "It stops rain"],
+                        correct: 0,
+                        explanation: "Healthy soil feeds plants nutrients and holds water for roots!"
+                    }
+                ]
+            }
+        ];
+
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        }
+
+        function playSound(type) {
+            if (!soundEnabled) return;
+            initAudio();
+            if (!audioCtx) return;
+            const now = audioCtx.currentTime;
+
+            if (type === 'click') {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(500, now);
+                osc.frequency.exponentialRampToValueAtTime(900, now + 0.07);
+                gain.gain.setValueAtTime(0.12, now);
+                gain.gain.linearRampToValueAtTime(0.01, now + 0.07);
+                osc.connect(gain); gain.connect(audioCtx.destination);
+                osc.start(now); osc.stop(now + 0.07);
+            } else if (type === 'snip') {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(1200, now);
+                osc.frequency.exponentialRampToValueAtTime(300, now + 0.05);
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.linearRampToValueAtTime(0.01, now + 0.05);
+                osc.connect(gain); gain.connect(audioCtx.destination);
+                osc.start(now); osc.stop(now + 0.05);
+            } else if (type === 'camera') {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(800, now);
+                osc.frequency.exponentialRampToValueAtTime(200, now + 0.1);
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.linearRampToValueAtTime(0.01, now + 0.1);
+                osc.connect(gain); gain.connect(audioCtx.destination);
+                osc.start(now); osc.stop(now + 0.1);
+            } else if (type === 'correct') {
+                [523.25, 659.25, 783.99].forEach((freq, i) => {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(freq, now + i * 0.08);
+                    gain.gain.setValueAtTime(0.15, now + i * 0.08);
+                    gain.gain.linearRampToValueAtTime(0.01, now + i * 0.08 + 0.2);
+                    osc.connect(gain); gain.connect(audioCtx.destination);
+                    osc.start(now + i * 0.08); osc.stop(now + i * 0.08 + 0.2);
+                });
+            }
+        }
+
+        function toggleSound() {
+            soundEnabled = !soundEnabled;
+            const btn = document.getElementById('sound-btn');
+            btn.className = soundEnabled ? 'w-9 h-9 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center transition shadow-sm' : 'w-9 h-9 rounded-full bg-gray-200 text-gray-400 flex items-center justify-center transition shadow-sm';
+        }
+
+        function toggleTTS() {
+            ttsEnabled = !ttsEnabled;
+            const btn = document.getElementById('tts-btn');
+            btn.className = ttsEnabled ? 'w-9 h-9 rounded-full bg-pink-100 text-pink-600 flex items-center justify-center transition shadow-sm' : 'w-9 h-9 rounded-full bg-gray-200 text-gray-400 flex items-center justify-center transition shadow-sm';
+        }
+
+        function readCurrentQuestionSpeech() {
+            if (!('speechSynthesis' in window)) return;
+            window.speechSynthesis.cancel();
+            const level = quizLevels[currentLevelIndex];
+            const q = level.questions[currentQuestionIndex];
+            const u = new SpeechSynthesisUtterance(q.q);
+            u.rate = 0.9; u.pitch = 1.1;
+            window.speechSynthesis.speak(u);
+        }
+
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen-section').forEach(sec => sec.classList.add('hidden'));
+            const target = document.getElementById(`screen-${screenId}`);
+            if (target) target.classList.remove('hidden');
+
+            if (screenId === 'level-select') renderLevelSelect();
+            else if (screenId === 'salon') renderSalonStudio();
+        }
+
+        function renderLevelSelect() {
+            const grid = document.getElementById('level-cards-grid');
+            grid.innerHTML = '';
+
+            quizLevels.forEach((lvl, idx) => {
+                const isUnlocked = unlockedLevels[idx];
+                const stars = levelStars[idx];
+
+                const card = document.createElement('div');
+                card.className = `p-5 rounded-3xl border text-center transition-all ${
+                    isUnlocked 
+                        ? 'bg-gradient-to-b from-white to-pink-50/50 border-purple-200 shadow-md hover:scale-105 cursor-pointer' 
+                        : 'bg-gray-100 border-gray-200 opacity-60 cursor-not-allowed'
+                }`;
+
+                let starsHtml = '';
+                for (let i = 0; i < 3; i++) {
+                    starsHtml += `<i class="fa-solid fa-star ${i < stars ? 'text-amber-400' : 'text-gray-300'} text-base"></i>`;
+                }
+
+                card.innerHTML = `
+                    <div class="text-3xl mb-1">${lvl.icon}</div>
+                    <span class="text-[10px] font-black bg-purple-600 text-white px-2.5 py-0.5 rounded-full">Level ${lvl.id}</span>
+                    <h4 class="text-base font-black text-slate-800 mt-2">${lvl.title}</h4>
+                    <p class="text-xs text-gray-500 font-bold my-1.5">${lvl.desc}</p>
+                    <div class="flex justify-center gap-1 my-2">${isUnlocked ? starsHtml : '<span class="text-xs text-gray-400 font-bold"><i class="fa-solid fa-lock"></i> Locked</span>'}</div>
+                    ${isUnlocked ? `<button class="bubble-btn w-full bg-sky-500 text-white font-black py-1.5 rounded-xl text-xs">${stars > 0 ? 'Replay' : 'Start'}</button>` : ''}
+                `;
+
+                if (isUnlocked) card.onclick = () => startQuizLevel(idx);
+                grid.appendChild(card);
+            });
+        }
+
+        function startQuizLevel(idx) {
+            currentLevelIndex = idx;
+            currentQuestionIndex = 0;
+            currentScore = 0;
+            showScreen('quiz');
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            const level = quizLevels[currentLevelIndex];
+            const q = level.questions[currentQuestionIndex];
+
+            document.getElementById('quiz-level-badge').innerText = `Level ${level.id}: ${level.title}`;
+            document.getElementById('quiz-question-counter').innerText = `Question ${currentQuestionIndex + 1}/${level.questions.length}`;
+            document.getElementById('quiz-stars-counter').innerText = currentScore;
+            
+            const pct = ((currentQuestionIndex) / level.questions.length) * 100;
+            document.getElementById('quiz-progress-bar').style.width = `${pct}%`;
+
+            document.getElementById('quiz-question-text').innerText = q.q;
+            document.getElementById('quiz-feedback-box').classList.add('hidden');
+
+            if (ttsEnabled) readCurrentQuestionSpeech();
+
+            const container = document.getElementById('quiz-options-container');
+            container.innerHTML = '';
+
+            q.options.forEach((opt, idx) => {
+                const btn = document.createElement('button');
+                btn.className = "option-btn bubble-btn bg-white hover:bg-purple-50 text-slate-800 font-bold p-3.5 rounded-2xl border border-purple-100 text-left text-sm sm:text-base flex items-center justify-between transition";
+                btn.innerHTML = `
+                    <span>${opt}</span>
+                    <span class="w-7 h-7 rounded-full bg-pink-100 text-pink-600 flex items-center justify-center text-xs font-black">${String.fromCharCode(65 + idx)}</span>
+                `;
+                btn.onclick = () => checkAnswer(idx);
+                container.appendChild(btn);
+            });
+        }
+
+        function checkAnswer(selectedIdx) {
+            window.speechSynthesis && window.speechSynthesis.cancel();
+            const q = quizLevels[currentLevelIndex].questions[currentQuestionIndex];
+            const feedbackBox = document.getElementById('quiz-feedback-box');
+            const feedbackText = document.getElementById('quiz-feedback-text');
+            const optionBtns = document.querySelectorAll('.option-btn');
+
+            optionBtns.forEach(b => b.onclick = null);
+
+            if (selectedIdx === q.correct) {
+                playSound('correct');
+                currentScore++;
+                optionBtns[selectedIdx].classList.add('bg-emerald-100', 'border-emerald-400', 'text-emerald-900');
+                feedbackBox.className = "p-4 rounded-2xl mb-4 border bg-emerald-50 border-emerald-300 text-emerald-900";
+                feedbackText.innerHTML = `🌟 <strong>Awesome! Correct!</strong><br><span class="text-xs">${q.explanation}</span>`;
+            } else {
+                playSound('click');
+                optionBtns[selectedIdx].classList.add('bg-rose-100', 'border-rose-300', 'text-rose-800');
+                optionBtns[q.correct].classList.add('bg-emerald-100', 'border-emerald-400');
+                feedbackBox.className = "p-4 rounded-2xl mb-4 border bg-pink-50 border-pink-200 text-pink-900";
+                feedbackText.innerHTML = `💡 <strong>Good try!</strong><br><span class="text-xs">${q.explanation}</span>`;
+            }
+
+            feedbackBox.classList.remove('hidden');
+        }
+
+        function nextQuestion() {
+            playSound('click');
+            currentQuestionIndex++;
+            if (currentQuestionIndex < quizLevels[currentLevelIndex].questions.length) {
+                loadQuestion();
+            } else {
+                finishLevel();
+            }
+        }
+
+        function finishLevel() {
+            levelStars[currentLevelIndex] = Math.max(levelStars[currentLevelIndex], currentScore);
+            if (currentLevelIndex + 1 < quizLevels.length) unlockedLevels[currentLevelIndex + 1] = true;
+
+            triggerConfetti();
+
+            document.getElementById('celeb-title').innerText = `Level ${currentLevelIndex + 1} Complete!`;
+            document.getElementById('celeb-subtitle').innerText = `You earned ${currentScore} out of 3 stars!`;
+            showScreen('celebration');
+        }
+
+        function renderSalonStudio() {
+            renderSubControls();
+            renderSalonGrid();
+            drawPhotorealisticAvatar();
+            updateUnlockedCount();
+        }
+
+        function setSalonCategory(cat) {
+            playSound('click');
+            currentActiveSalonCat = cat;
+            document.querySelectorAll('.salon-tab').forEach(tab => {
+                if (tab.dataset.cat === cat) {
+                    tab.className = "salon-tab font-black text-xs sm:text-sm px-3.5 py-2 rounded-xl bg-purple-600 text-white whitespace-nowrap";
+                } else {
+                    tab.className = "salon-tab font-black text-xs sm:text-sm px-3.5 py-2 rounded-xl bg-gray-100 text-gray-600 hover:bg-gray-200 whitespace-nowrap";
+                }
+            });
+            renderSubControls();
+            renderSalonGrid();
+        }
+
+        function renderSubControls() {
+            const bar = document.getElementById('sub-controls-bar');
+            bar.innerHTML = '';
+
+            if (currentActiveSalonCat === 'hair') {
+                bar.innerHTML = `
+                    <div class="flex items-center gap-2">
+                        <span>Hair Color:</span>
+                        <input type="color" value="${realisticState.hairColor}" onchange="changeHairColor(this.value)" class="w-7 h-7 rounded-full cursor-pointer border-0">
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span>Length:</span>
+                        <input type="range" min="40" max="180" value="${realisticState.hairLength}" oninput="setHairLength(this.value)" class="w-24 accent-purple-600">
+                    </div>
+                `;
+            } else if (currentActiveSalonCat === 'makeup') {
+                bar.innerHTML = `
+                    <div class="flex items-center gap-2">
+                        <span>Eye Lens:</span>
+                        <select onchange="changeEyeColor(this.value)" class="bg-white border rounded-lg px-2 py-1 text-xs">
+                            <option value="#2B5B84">Sapphire Blue</option>
+                            <option value="#2A6B47">Emerald Green</option>
+                            <option value="#5A3E2B">Hazel Brown</option>
+                            <option value="#8E2DE2">Violet Sparkle</option>
+                        </select>
+                    </div>
+                `;
+            } else {
+                bar.innerHTML = `<span class="text-gray-500 font-medium">Customize your style with ultra-realistic textures!</span>`;
+            }
+        }
+
+        function changeHairColor(val) {
+            realisticState.hairColor = val;
+            drawPhotorealisticAvatar();
+        }
+
+        function setHairLength(val) {
+            realisticState.hairLength = parseInt(val);
+            drawPhotorealisticAvatar();
+        }
+
+        function changeEyeColor(val) {
+            realisticState.eyeColor = val;
+            drawPhotorealisticAvatar();
+        }
+
+        function trimHairLength() {
+            playSound('snip');
+            realisticState.hairLength = Math.max(30, realisticState.hairLength - 15);
+            const badge = document.getElementById('cutting-mode-badge');
+            badge.classList.remove('hidden');
+            setTimeout(() => badge.classList.add('hidden'), 1200);
+            drawPhotorealisticAvatar();
+            renderSubControls();
+        }
+
+        function growHairLength() {
+            playSound('click');
+            realisticState.hairLength = Math.min(200, realisticState.hairLength + 15);
+            drawPhotorealisticAvatar();
+            renderSubControls();
+        }
+
+        function renderSalonGrid() {
+            const grid = document.getElementById('salon-items-grid');
+            grid.innerHTML = '';
+            const items = salonCategories[currentActiveSalonCat] || [];
+
+            items.forEach(item => {
+                const isUnlocked = item.reqLevel <= 1 || levelStars[item.reqLevel - 2] > 0;
+                const card = document.createElement('div');
+                card.className = `p-2.5 rounded-2xl border flex flex-col items-center justify-center text-center cursor-pointer transition relative bg-white hover:border-purple-400 ${
+                    !isUnlocked ? 'opacity-50 bg-gray-100 cursor-not-allowed' : ''
+                }`;
+
+                card.innerHTML = `
+                    <span class="text-2xl mb-1">${item.icon}</span>
+                    <span class="text-[11px] font-bold text-slate-700 leading-tight">${item.name}</span>
+                    ${!isUnlocked ? `<span class="text-[9px] bg-gray-400 text-white font-bold px-1.5 py-0.5 rounded-full mt-1">Lvl ${item.reqLevel}</span>` : ''}
+                `;
+
+                if (isUnlocked) card.onclick = () => equipSalonItem(currentActiveSalonCat, item);
+                grid.appendChild(card);
+            });
+        }
+
+        function equipSalonItem(cat, item) {
+            playSound('click');
+            if (cat === 'hair') realisticState.hairStyle = item.id;
+            else if (cat === 'makeup') {
+                realisticState.lipstickColor = item.lip;
+                realisticState.eyeshadowColor = item.shadow;
+            } else if (cat === 'tops') realisticState.top = item.id;
+            else if (cat === 'bottoms') realisticState.bottom = item.id;
+            else if (cat === 'shoes') realisticState.shoe = item.id;
+            else if (cat === 'accessories') realisticState.accessory = item.id;
+            else if (cat === 'backdrops') realisticState.backdrop = item.id;
+
+            drawPhotorealisticAvatar();
+        }
+
+        function cyclePhotoFilter() {
+            playSound('click');
+            photoFilterIndex = (photoFilterIndex + 1) % photoFilters.length;
+            const frame = document.getElementById('stage-frame');
+            frame.className = `relative w-full max-w-sm h-[440px] sm:h-[480px] rounded-3xl border-4 border-white shadow-2xl overflow-hidden flex items-center justify-center transition-all bg-slate-900 ${photoFilters[photoFilterIndex]}`;
+        }
+
+        function snapPhoto() {
+            playSound('camera');
+            triggerConfetti();
+        }
+
+        function randomizeStyle() {
+            playSound('click');
+            const colors = ['#4A2E1B', '#D4A373', '#222222', '#C77DFF', '#E07A5F'];
+            realisticState.hairColor = colors[Math.floor(Math.random() * colors.length)];
+            realisticState.hairLength = Math.floor(Math.random() * 120) + 50;
+            drawPhotorealisticAvatar();
+        }
+
+        function downloadArtwork() {
+            playSound('click');
+            const canvas = document.getElementById('realistic-canvas');
+            const link = document.createElement('a');
+            link.download = "Mila_K_Realistic_Styling.png";
+            link.href = canvas.toDataURL("image/png");
+            link.click();
+        }
+
+        function updateUnlockedCount() {
+            let total = 0, unlocked = 0;
+            Object.keys(salonCategories).forEach(cat => {
+                salonCategories[cat].forEach(item => {
+                    total++;
+                    if (item.reqLevel <= 1 || levelStars[item.reqLevel - 2] > 0) unlocked++;
+                });
+            });
+            document.getElementById('unlocked-count-text').innerText = `Unlocked: ${unlocked}/${total}`;
+        }
+
+        // Photorealistic Canvas Engine
+        function drawPhotorealisticAvatar() {
+            const canvas = document.getElementById('realistic-canvas');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // 1. Photorealistic Backdrop & Studio Lighting
+            const bgItem = salonCategories.backdrops.find(b => b.id === realisticState.backdrop) || salonCategories.backdrops[0];
+            const bgGrad = ctx.createRadialGradient(180, 180, 20, 180, 240, 300);
+            bgGrad.addColorStop(0, bgItem.color1);
+            bgGrad.addColorStop(1, bgItem.color2);
+            ctx.fillStyle = bgGrad;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // 2. Realistic Soft Drop Shadow under feet
+            ctx.fillStyle = "rgba(0,0,0,0.25)";
+            ctx.beginPath();
+            ctx.ellipse(180, 445, 85, 16, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            // 3. Realistic Back Hair Layer (Trimmable Length)
+            ctx.fillStyle = realisticState.hairColor;
+            ctx.beginPath();
+            ctx.ellipse(180, 210, 68, realisticState.hairLength, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            // 4. Skin Torso & Neck Gradient (Realistic Skin Shader)
+            const skinGrad = ctx.createLinearGradient(0, 100, 0, 400);
+            skinGrad.addColorStop(0, '#FFE0D3');
+            skinGrad.addColorStop(1, '#F5C6A5');
+            ctx.fillStyle = skinGrad;
+
+            // Neck
+            ctx.fillRect(166, 175, 28, 35);
+
+            // Legs Base
+            ctx.fillRect(152, 320, 22, 105);
+            ctx.fillRect(186, 320, 22, 105);
+
+            // 5. Realistic Footwear Rendering
+            const shoe = realisticState.shoe;
+            if (shoe === 'shoe_boots') {
+                // Leather texture boots
+                ctx.fillStyle = "#2B1E1A";
+                ctx.fillRect(148, 380, 28, 55);
+                ctx.fillRect(184, 380, 28, 55);
+                // Metallic Buckles
+                ctx.fillStyle = "#FFD700";
+                ctx.fillRect(150, 400, 24, 4);
+                ctx.fillRect(186, 400, 24, 4);
+            } else if (shoe === 'shoe_sneakers') {
+                // High-top sneakers with rubber sole
+                ctx.fillStyle = "#FFFFFF";
+                ctx.fillRect(146, 415, 30, 22);
+                ctx.fillRect(184, 415, 30, 22);
+                ctx.fillStyle = "#E07A5F";
+                ctx.fillRect(146, 395, 30, 20);
+                ctx.fillRect(184, 395, 30, 20);
+            }
+
+            // 6. Realistic Bottoms (Denim Jeans / Silk Skirt)
+            const bot = realisticState.bottom;
+            if (bot === 'bot_jeans') {
+                // Denim Texture Gradient
+                const denimGrad = ctx.createLinearGradient(0, 250, 0, 390);
+                denimGrad.addColorStop(0, '#2B4C7E');
+                denimGrad.addColorStop(1, '#1A3258');
+                ctx.fillStyle = denimGrad;
+                ctx.fillRect(150, 250, 26, 135);
+                ctx.fillRect(184, 250, 26, 135);
+                // Stitching Details
+                ctx.strokeStyle = "#F4A261";
+                ctx.lineWidth = 1.5;
+                ctx.strokeRect(150, 250, 26, 135);
+                ctx.strokeRect(184, 250, 26, 135);
+            } else if (bot === 'bot_skirt') {
+                // Silk Pleated Skirt
+                ctx.fillStyle = "#D81B60";
+                ctx.beginPath();
+                ctx.moveTo(135, 250);
+                ctx.lineTo(225, 250);
+                ctx.lineTo(240, 320);
+                ctx.lineTo(120, 320);
+                ctx.closePath();
+                ctx.fill();
+            }
+
+            // 7. Realistic Tops / Blazer
+            const top = realisticState.top;
+            if (top === 'top_blazer') {
+                // Tailored Blazer with Lapels
+                ctx.fillStyle = "#1D3557";
+                ctx.beginPath();
+                ctx.roundRect(138, 195, 84, 70, 8);
+                ctx.fill();
+                // Collar Lapels
+                ctx.fillStyle = "#457B9D";
+                ctx.beginPath();
+                ctx.moveTo(138, 195); ctx.lineTo(168, 235); ctx.lineTo(180, 195);
+                ctx.moveTo(222, 195); ctx.lineTo(192, 235); ctx.lineTo(180, 195);
+                ctx.fill();
+            } else if (top === 'top_silk') {
+                ctx.fillStyle = "#FFB7B2";
+                ctx.fillRect(145, 200, 70, 55);
+            }
+
+            // 8. Arms & Skin Contours
+            ctx.fillStyle = "#F5C6A5";
+            ctx.fillRect(124, 200, 16, 85);
+            ctx.fillRect(220, 200, 16, 85);
+
+            // 9. Photorealistic Face Structure & Head
+            const headGrad = ctx.createRadialGradient(180, 130, 10, 180, 130, 50);
+            headGrad.addColorStop(0, '#FFE5D9');
+            headGrad.addColorStop(1, '#F4ACB7');
+            ctx.fillStyle = headGrad;
+            ctx.beginPath();
+            ctx.ellipse(180, 130, 46, 52, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            // 10. Cosmetics: Realistic Blush
+            ctx.fillStyle = realisticState.blushColor + "66"; // Soft transparency
+            ctx.beginPath();
+            ctx.ellipse(155, 140, 12, 6, 0, 0, Math.PI * 2);
+            ctx.ellipse(205, 140, 12, 6, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            // 11. Cosmetics: Eyeshadow
+            ctx.fillStyle = realisticState.eyeshadowColor;
+            ctx.beginPath();
+            ctx.ellipse(162, 124, 11, 6, -0.1, 0, Math.PI * 2);
+            ctx.ellipse(198, 124, 11, 6, 0.1, 0, Math.PI * 2);
+            ctx.fill();
+
+            // 12. Photorealistic Eyes (Multi-Layer Iris & Gloss Refraction)
+            [-1, 1].forEach(side => {
+                const cx = 180 + side * 18;
+                const cy = 126;
+
+                // Sclera (Eye White)
+                ctx.fillStyle = "#FFFFFF";
+                ctx.beginPath();
+                ctx.ellipse(cx, cy, 9, 6, 0, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Iris
+                ctx.fillStyle = realisticState.eyeColor;
+                ctx.beginPath();
+                ctx.arc(cx, cy, 5, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Pupil
+                ctx.fillStyle = "#000000";
+                ctx.beginPath();
+                ctx.arc(cx, cy, 2.5, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Gloss Reflection Specular Spot
+                ctx.fillStyle = "#FFFFFF";
+                ctx.beginPath();
+                ctx.arc(cx - 1.5, cy - 1.5, 1.2, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Eyelashes Eyeliner Line
+                ctx.strokeStyle = "#1A1A1A";
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.arc(cx, cy - 1, 9, 3.3, 6.2);
+                ctx.stroke();
+            });
+
+            // Eyebrows
+            ctx.strokeStyle = realisticState.hairColor;
+            ctx.lineWidth = 2.5;
+            ctx.beginPath();
+            ctx.moveTo(150, 115); ctx.lineTo(171, 115);
+            ctx.moveTo(189, 115); ctx.lineTo(210, 115);
+            ctx.stroke();
+
+            // Nose Highlight
+            ctx.strokeStyle = "#E07A5F44";
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(180, 128); ctx.lineTo(180, 138); ctx.lineTo(183, 139);
+            ctx.stroke();
+
+            // 13. Cosmetics: Lips & Gloss
+            ctx.fillStyle = realisticState.lipstickColor;
+            ctx.beginPath();
+            ctx.ellipse(180, 153, 10, 5, 0, 0, Math.PI * 2);
+            ctx.fill();
+            // Lip Specular Shine
+            ctx.fillStyle = "#FFFFFF88";
+            ctx.beginPath();
+            ctx.ellipse(180, 152, 4, 1.5, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            // 14. Front Hair Bangs & Cut Length Style
+            ctx.fillStyle = realisticState.hairColor;
+            ctx.beginPath();
+            ctx.arc(180, 98, 48, 0.8 * Math.PI, 2.2 * Math.PI);
+            ctx.fill();
+
+            // Side hair strands according to hair length
+            const strLen = Math.min(130, realisticState.hairLength);
+            ctx.fillRect(132, 100, 16, strLen);
+            ctx.fillRect(212, 100, 16, strLen);
+
+            // 15. Accessories (Gemstone Necklace / Glasses)
+            const acc = realisticState.accessory;
+            if (acc === 'acc_necklace') {
+                ctx.strokeStyle = "#FFD700";
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.arc(180, 182, 16, 0.1 * Math.PI, 0.9 * Math.PI);
+                ctx.stroke();
+                // Gem Pendant
+                ctx.fillStyle = "#7209B7";
+                ctx.beginPath();
+                ctx.arc(180, 198, 4, 0, Math.PI * 2);
+                ctx.fill();
+            } else if (acc === 'acc_glasses') {
+                ctx.strokeStyle = "#1A1A1A";
+                ctx.lineWidth = 2.5;
+                ctx.strokeRect(150, 118, 24, 16);
+                ctx.strokeRect(186, 118, 24, 16);
+                ctx.beginPath(); ctx.moveTo(174, 124); ctx.lineTo(186, 124); ctx.stroke();
+            }
+        }
+
+        function triggerConfetti() {
+            const canvas = document.getElementById('confetti-canvas');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+
+            const particles = [];
+            const colors = ['#FFD1DC', '#D8B4F8', '#A2D2FF', '#FFD700', '#F4A261'];
+
+            for (let i = 0; i < 80; i++) {
+                particles.push({
+                    x: Math.random() * canvas.width,
+                    y: -10,
+                    size: Math.random() * 7 + 4,
+                    color: colors[Math.floor(Math.random() * colors.length)],
+                    speedY: Math.random() * 4 + 2,
+                    speedX: (Math.random() - 0.5) * 2
+                });
+            }
+
+            function animate() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                let alive = false;
+                particles.forEach(p => {
+                    p.y += p.speedY; p.x += p.speedX;
+                    if (p.y < canvas.height) alive = true;
+                    ctx.fillStyle = p.color;
+                    ctx.fillRect(p.x, p.y, p.size, p.size);
+                });
+                if (alive) requestAnimationFrame(animate);
+            }
+            animate();
+        }
+
+        window.onload = function() {
+            showScreen('main-menu');
+        };
+    </script>
+</body>
+</html>

@@ -1,0 +1,840 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>T-Rex Maths Adventure</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@600;800;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Nunito', sans-serif;
+            background-color: #2b1f1d;
+            color: #fff;
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: manipulation;
+        }
+        .font-fredoka {
+            font-family: 'Fredoka One', cursive;
+        }
+        /* Stone texture card styling */
+        .stone-card {
+            background: linear-gradient(145deg, #4a3832, #382a26);
+            border: 6px solid #8c6d58;
+            box-shadow: 0 10px 0 #1f1412, inset 0 2px 4px rgba(255,255,255,0.2);
+            border-radius: 28px;
+        }
+        .stone-button {
+            background: linear-gradient(180deg, #e67e22, #d35400);
+            border: 4px solid #f39c12;
+            box-shadow: 0 6px 0 #a04000, 0 8px 10px rgba(0,0,0,0.4);
+            transition: transform 0.1s, box-shadow 0.1s, background-color 0.2s;
+        }
+        .stone-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 0 #a04000, 0 12px 14px rgba(0,0,0,0.4);
+        }
+        .stone-button:active {
+            transform: translateY(4px);
+            box-shadow: 0 2px 0 #a04000, 0 4px 6px rgba(0,0,0,0.4);
+        }
+        .option-btn {
+            background: linear-gradient(180deg, #5c433b, #43302a);
+            border: 4px solid #8c6e63;
+            box-shadow: 0 6px 0 #281a17;
+            border-radius: 20px;
+            transition: all 0.15s ease;
+        }
+        .option-btn:hover {
+            border-color: #f39c12;
+            transform: scale(1.02);
+        }
+        .option-btn:active {
+            transform: scale(0.98);
+        }
+        .option-btn.correct {
+            background: linear-gradient(180deg, #27ae60, #1e8449) !important;
+            border-color: #2ecc71 !important;
+            box-shadow: 0 6px 0 #145a32 !important;
+            animation: bounce 0.5s;
+        }
+        .option-btn.wrong {
+            background: linear-gradient(180deg, #e74c3c, #c0392b) !important;
+            border-color: #f1948a !important;
+            box-shadow: 0 6px 0 #78281f !important;
+            animation: shake 0.4s;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-12px); }
+        }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-8px); }
+            40%, 80% { transform: translateX(8px); }
+        }
+
+        /* SVG Volcano Smoke Animation */
+        @keyframes smoke {
+            0% { transform: translateY(0) scale(1); opacity: 0.8; }
+            100% { transform: translateY(-40px) scale(1.8); opacity: 0; }
+        }
+        .smoke-puff {
+            animation: smoke 3s infinite ease-out;
+        }
+
+        /* Dino Animations */
+        .dino-happy {
+            animation: happyDance 0.6s ease infinite alternate;
+        }
+        @keyframes happyDance {
+            0% { transform: translateY(0) rotate(0deg); }
+            100% { transform: translateY(-15px) rotate(5deg); }
+        }
+
+        /* Star Sparkle */
+        @keyframes pulseGlow {
+            0%, 100% { filter: drop-shadow(0 0 5px #f1c40f); }
+            50% { filter: drop-shadow(0 0 15px #f39c12); }
+        }
+        .glow-star {
+            animation: pulseGlow 1.5s infinite;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between items-center p-3 sm:p-6 overflow-x-hidden relative">
+
+    <!-- Background Volcano & Cave Art Atmosphere -->
+    <div class="fixed inset-0 pointer-events-none z-0 overflow-hidden opacity-30">
+        <!-- Volcano Silhouette -->
+        <svg class="absolute bottom-0 right-0 w-96 h-80 text-amber-950 fill-current" viewBox="0 0 300 200">
+            <polygon points="20,200 120,50 180,50 280,200" />
+            <polygon points="120,50 150,20 180,50" fill="#e74c3c" />
+            <circle class="smoke-puff" cx="140" cy="30" r="12" fill="#7f8c8d" />
+            <circle class="smoke-puff" cx="160" cy="20" r="16" fill="#95a5a6" style="animation-delay: 1s;" />
+        </svg>
+        <!-- Cave Handprints / Wall Art -->
+        <svg class="absolute top-10 left-8 w-24 h-24 text-amber-800 opacity-40 fill-current" viewBox="0 0 100 100">
+            <path d="M50 80 C 40 80, 35 65, 35 50 C 35 45, 30 45, 30 35 C 30 25, 38 25, 38 35 C 38 20, 47 20, 47 32 C 47 15, 57 15, 57 32 C 57 20, 66 20, 66 35 C 66 30, 72 30, 72 40 C 72 55, 65 80, 50 80 Z" />
+        </svg>
+        <svg class="absolute top-1/3 right-12 w-20 h-20 text-amber-800 opacity-30 fill-current" viewBox="0 0 100 100">
+            <path d="M20,50 L80,50 L70,40 M80,50 L70,60" stroke="currentColor" stroke-width="8" stroke-linecap="round"/>
+        </svg>
+    </div>
+
+    <!-- Header Navigation & Sound Toggle -->
+    <header class="w-full max-w-3xl z-10 flex justify-between items-center mb-2">
+        <div class="flex items-center space-x-2">
+            <span class="text-3xl">🦴</span>
+            <h1 class="font-fredoka text-2xl sm:text-3xl text-amber-400 tracking-wider drop-shadow-md">T-REX MATHS</h1>
+        </div>
+        <button id="sound-btn" onclick="toggleSound()" class="bg-amber-900 border-2 border-amber-600 rounded-full p-2 px-4 flex items-center gap-2 text-amber-200 text-sm font-bold shadow-md hover:bg-amber-800 transition">
+            <span id="sound-icon">🔊</span>
+            <span id="sound-text">SOUND ON</span>
+        </button>
+    </header>
+
+    <!-- MAIN CONTAINER -->
+    <main class="w-full max-w-2xl z-10 my-auto flex flex-col items-center">
+
+        <!-- 1. WELCOME SCREEN -->
+        <div id="welcome-screen" class="stone-card w-full p-6 sm:p-8 text-center flex flex-col items-center">
+            <div id="welcome-rex-avatar" class="w-40 h-40 my-2 cursor-pointer transition transform hover:scale-105" onclick="rexRoar()">
+                <!-- SVG T-Rex Mascot -->
+                <svg viewBox="0 0 200 200" class="w-full h-full drop-shadow-lg">
+                    <!-- Body -->
+                    <path d="M 60,140 Q 40,110 50,70 Q 60,30 110,30 Q 160,30 170,70 Q 175,90 150,95 Q 130,95 130,110 L 140,150 Q 140,170 120,170 L 100,170 Q 70,170 60,140 Z" fill="#27ae60" />
+                    <!-- Belly -->
+                    <path d="M 80,110 Q 70,80 100,50 Q 120,50 120,90 Q 110,130 80,110 Z" fill="#f1c40f" opacity="0.8" />
+                    <!-- Eyes -->
+                    <circle cx="120" cy="55" r="12" fill="white" />
+                    <circle cx="123" cy="55" r="5" fill="black" />
+                    <circle cx="125" cy="52" r="2" fill="white" />
+                    <!-- Cheek -->
+                    <circle cx="140" cy="70" r="7" fill="#e74c3c" opacity="0.4" />
+                    <!-- Friendly Mouth / Smile -->
+                    <path d="M 125,75 Q 145,85 160,70" stroke="#1e8449" stroke-width="5" stroke-linecap="round" fill="none" />
+                    <!-- Teeth -->
+                    <polygon points="135,77 140,84 145,78" fill="white" />
+                    <!-- Tiny Arm -->
+                    <path d="M 110,100 Q 125,105 120,115" stroke="#1f618d" stroke-width="0" fill="none" />
+                    <path d="M 105,100 Q 125,105 130,100" stroke="#1e8449" stroke-width="8" stroke-linecap="round" fill="none" />
+                    <!-- Tail -->
+                    <path d="M 65,130 Q 30,130 10,100 Q 20,140 60,155 Z" fill="#27ae60" />
+                    <!-- Caveman Tooth Necklace -->
+                    <path d="M 90,85 Q 110,105 130,85" stroke="#f39c12" stroke-width="3" fill="none" />
+                    <polygon points="100,94 103,102 106,94" fill="#ecf0f1" />
+                    <polygon points="118,94 121,102 124,94" fill="#ecf0f1" />
+                </svg>
+            </div>
+
+            <h2 class="font-fredoka text-3xl sm:text-4xl text-amber-300 mb-2 tracking-wide drop-shadow">T-REX MATHS ADVENTURE</h2>
+            <p class="text-amber-100 text-base sm:text-lg mb-6 font-semibold max-w-md">
+                Help Rex the Dinosaur explore the Stone Age by solving 15 fun Year 3 times tables challenge questions!
+            </p>
+
+            <button onclick="startGame()" class="stone-button font-fredoka text-2xl sm:text-3xl text-white px-10 py-4 rounded-2xl w-full sm:w-auto tracking-wider uppercase flex items-center justify-center gap-3">
+                <span>START QUIZ</span>
+                <span class="text-3xl">🐾</span>
+            </button>
+        </div>
+
+        <!-- 2. QUIZ GAMEPLAY SCREEN -->
+        <div id="quiz-screen" class="stone-card w-full p-5 sm:p-7 hidden flex flex-col">
+            <!-- Level & Progress Header -->
+            <div class="flex flex-col sm:flex-row justify-between items-center border-b-2 border-amber-900/60 pb-3 mb-4 gap-2">
+                <div>
+                    <span id="level-title" class="font-fredoka text-xl text-amber-400 block">Level 1: Caveman Counting</span>
+                    <span id="question-count" class="text-xs sm:text-sm text-amber-200 font-bold uppercase tracking-wider">Question 1 of 15</span>
+                </div>
+                <!-- Footprint Progress Tracker -->
+                <div id="footprints-bar" class="flex gap-1.5 bg-amber-950/60 p-2 rounded-xl border border-amber-800">
+                    <!-- Dynamic footprint SVG icons inserted here -->
+                </div>
+            </div>
+
+            <!-- Rex Feedback & Dialogue Row -->
+            <div class="flex items-center gap-3 bg-amber-950/40 p-3 rounded-2xl border border-amber-900/50 mb-5">
+                <div id="quiz-rex-avatar" class="w-16 h-16 shrink-0 transition-transform">
+                    <!-- Mini Rex SVG -->
+                    <svg viewBox="0 0 200 200" class="w-full h-full">
+                        <path d="M 60,140 Q 40,110 50,70 Q 60,30 110,30 Q 160,30 170,70 Q 175,90 150,95 Q 130,95 130,110 L 140,150 Q 140,170 120,170 L 100,170 Q 70,170 60,140 Z" fill="#27ae60" />
+                        <path d="M 80,110 Q 70,80 100,50 Q 120,50 120,90 Q 110,130 80,110 Z" fill="#f1c40f" opacity="0.8" />
+                        <circle cx="120" cy="55" r="12" fill="white" />
+                        <circle cx="123" cy="55" r="5" fill="black" />
+                        <path d="M 125,75 Q 145,85 160,70" stroke="#1e8449" stroke-width="5" stroke-linecap="round" fill="none" />
+                        <path d="M 65,130 Q 30,130 10,100 Q 20,140 60,155 Z" fill="#27ae60" />
+                    </svg>
+                </div>
+                <div class="flex-grow">
+                    <p id="rex-speech" class="text-amber-100 text-sm sm:text-base font-bold leading-tight">
+                        "You can do it! Count the equal groups!"
+                    </p>
+                </div>
+                <button onclick="showHint()" class="bg-amber-700 hover:bg-amber-600 border border-amber-400 rounded-xl px-3 py-2 text-xs font-bold text-amber-100 shrink-0 shadow">
+                    💡 HINT
+                </button>
+            </div>
+
+            <!-- Question Card -->
+            <div class="text-center my-3 py-4 bg-amber-900/30 rounded-2xl border border-amber-800/50">
+                <h3 id="question-text" class="font-fredoka text-2xl sm:text-3xl text-amber-200 tracking-wide px-2">
+                    2 x 5 = ?
+                </h3>
+            </div>
+
+            <!-- Options Grid -->
+            <div id="options-container" class="grid grid-cols-1 sm:grid-cols-2 gap-3.5 my-3">
+                <!-- Option buttons generated via JS -->
+            </div>
+
+            <!-- Hint Modal / Banner (Hidden by default) -->
+            <div id="hint-box" class="hidden mt-3 p-3 bg-yellow-900/90 border border-yellow-500 rounded-xl text-yellow-200 text-sm text-center font-bold">
+                <span id="hint-text">Hint goes here!</span>
+            </div>
+        </div>
+
+        <!-- 3. LEVEL COMPLETE / SCORE SCREEN -->
+        <div id="score-screen" class="stone-card w-full p-6 sm:p-8 text-center hidden flex-col items-center">
+            <span class="text-6xl my-2 glow-star">⭐</span>
+            <h2 id="score-title" class="font-fredoka text-3xl sm:text-4xl text-amber-300 mb-2">ROARING SUCCESS!</h2>
+            <p id="score-subtitle" class="text-amber-100 text-lg mb-4 font-semibold">You answered all questions!</p>
+            
+            <div class="bg-amber-950/60 p-4 rounded-2xl border border-amber-800 w-full max-w-sm mb-6">
+                <div class="flex justify-between items-center text-amber-200 font-bold my-1 text-lg">
+                    <span>Total Score:</span>
+                    <span id="final-score" class="text-amber-400 font-fredoka text-2xl">15 / 15</span>
+                </div>
+                <div class="flex justify-between items-center text-amber-200 font-bold my-1 text-lg">
+                    <span>Stars Earned:</span>
+                    <span id="final-stars" class="text-yellow-400 font-fredoka text-2xl">⭐⭐⭐</span>
+                </div>
+            </div>
+
+            <button id="unlock-reward-btn" onclick="startRewardGame()" class="stone-button font-fredoka text-xl sm:text-2xl text-white px-8 py-4 rounded-2xl w-full sm:w-auto tracking-wider uppercase flex items-center justify-center gap-3">
+                <span>PLAY REWARD GAME!</span>
+                <span class="text-3xl">🌟</span>
+            </button>
+        </div>
+
+        <!-- 4. REWARD MINI-GAME: CATCH THE FALLING STARS -->
+        <div id="reward-screen" class="stone-card w-full p-4 sm:p-6 hidden flex-col items-center">
+            <div class="w-full flex justify-between items-center mb-3 px-2">
+                <div>
+                    <h3 class="font-fredoka text-xl text-amber-300">CATCH THE STARS!</h3>
+                    <p class="text-xs text-amber-200">Move Rex's Bowl with Left/Right arrows or Touch/Mouse</p>
+                </div>
+                <div class="bg-amber-950/80 px-4 py-1.5 rounded-xl border border-amber-700 font-fredoka text-amber-400 text-lg">
+                    STARS: <span id="star-score">0</span>
+                </div>
+            </div>
+
+            <!-- Canvas Container -->
+            <div class="relative w-full h-80 bg-slate-900 rounded-2xl overflow-hidden border-4 border-amber-800 shadow-inner">
+                <canvas id="starCanvas" class="w-full h-full block cursor-pointer"></canvas>
+            </div>
+
+            <!-- Touch / On-screen Controls for Mobile/Tablet -->
+            <div class="w-full flex justify-between items-center gap-4 mt-4">
+                <button id="btn-left" class="stone-button font-fredoka text-2xl text-white py-3 px-8 rounded-xl flex-1 touch-none">
+                    👈 LEFT
+                </button>
+                <button onclick="endRewardGame()" class="bg-amber-900 hover:bg-amber-800 border border-amber-600 text-amber-200 font-bold px-4 py-3 rounded-xl text-sm">
+                    FINISH
+                </button>
+                <button id="btn-right" class="stone-button font-fredoka text-2xl text-white py-3 px-8 rounded-xl flex-1 touch-none">
+                    RIGHT 👉
+                </button>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Footer Tagline -->
+    <footer class="z-10 mt-4 text-center text-amber-200/60 text-xs font-semibold">
+        Safe & Fun Year 3 Educational Learning • Stone Age Edition
+    </footer>
+
+    <script>
+        /* SOUND SYNTHESIZER (Web Audio API) */
+        let audioCtx = null;
+        let soundEnabled = true;
+
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        }
+
+        function playSound(type) {
+            if (!soundEnabled) return;
+            initAudio();
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+
+            const now = audioCtx.currentTime;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            if (type === 'correct') {
+                // Happy arpeggio
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(523.25, now); // C5
+                osc.frequency.setValueAtTime(659.25, now + 0.08); // E5
+                osc.frequency.setValueAtTime(783.99, now + 0.16); // G5
+                osc.frequency.setValueAtTime(1046.50, now + 0.24); // C6
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
+                osc.start(now);
+                osc.stop(now + 0.5);
+            } else if (type === 'wrong') {
+                // Friendly bonk sound
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(220, now); // A3
+                osc.frequency.linearRampToValueAtTime(130, now + 0.25);
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+                osc.start(now);
+                osc.stop(now + 0.3);
+            } else if (type === 'star') {
+                // High chime sound for mini game
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(987.77, now); // B5
+                osc.frequency.setValueAtTime(1318.51, now + 0.06); // E6
+                gain.gain.setValueAtTime(0.15, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
+                osc.start(now);
+                osc.stop(now + 0.2);
+            } else if (type === 'roar') {
+                // Dinosaur roar sound effect
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(150, now);
+                osc.frequency.linearRampToValueAtTime(80, now + 0.4);
+                gain.gain.setValueAtTime(0.3, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
+                osc.start(now);
+                osc.stop(now + 0.5);
+            }
+        }
+
+        function toggleSound() {
+            soundEnabled = !soundEnabled;
+            document.getElementById('sound-icon').innerText = soundEnabled ? '🔊' : '🔇';
+            document.getElementById('sound-text').innerText = soundEnabled ? 'SOUND ON' : 'MUTED';
+        }
+
+        /* YEAR 3 MATHS QUIZ DATA (15 Questions, 5 Levels) */
+        const quizData = [
+            // LEVEL 1: Caveman Counting (2x and 10x tables)
+            {
+                level: 1,
+                levelName: "Level 1: Caveman Counting",
+                question: "2 x 4 = ?",
+                options: ["6", "8", "10", "12"],
+                answer: "8",
+                hint: "Count in 2s four times: 2, 4, 6, 8!"
+            },
+            {
+                level: 1,
+                levelName: "Level 1: Caveman Counting",
+                question: "10 x 5 = ?",
+                options: ["40", "45", "50", "55"],
+                answer: "50",
+                hint: "5 tens equals 50!"
+            },
+            {
+                level: 1,
+                levelName: "Level 1: Caveman Counting",
+                question: "2 x 9 = ?",
+                options: ["18", "16", "20", "14"],
+                answer: "18",
+                hint: "Double 9 to get the answer!"
+            },
+
+            // LEVEL 2: Fossil Finder (5x and 3x tables)
+            {
+                level: 2,
+                levelName: "Level 2: Fossil Finder",
+                question: "5 x 6 = ?",
+                options: ["25", "30", "35", "40"],
+                answer: "30",
+                hint: "Count by 5s six times: 5, 10, 15, 20, 25, 30!"
+            },
+            {
+                level: 2,
+                levelName: "Level 2: Fossil Finder",
+                question: "3 x 4 = ?",
+                options: ["9", "10", "12", "15"],
+                answer: "12",
+                hint: "3, 6, 9, 12!"
+            },
+            {
+                level: 2,
+                levelName: "Level 2: Fossil Finder",
+                question: "3 x 7 = ?",
+                options: ["21", "24", "18", "27"],
+                answer: "21",
+                hint: "7 groups of 3 equals 21!"
+            },
+
+            // LEVEL 3: Volcano Multiplication (4x and 8x tables)
+            {
+                level: 3,
+                levelName: "Level 3: Volcano Multiplication",
+                question: "4 x 4 = ?",
+                options: ["12", "14", "16", "20"],
+                answer: "16",
+                hint: "Double 4 is 8, and double 8 is 16!"
+            },
+            {
+                level: 3,
+                levelName: "Level 3: Volcano Multiplication",
+                question: "8 x 3 = ?",
+                options: ["21", "24", "28", "32"],
+                answer: "24",
+                hint: "8, 16, 24!"
+            },
+            {
+                level: 3,
+                levelName: "Level 3: Volcano Multiplication",
+                question: "4 x 8 = ?",
+                options: ["32", "28", "36", "24"],
+                answer: "32",
+                hint: "4 groups of 8 makes 32!"
+            },
+
+            // LEVEL 4: Dino Divide (Missing factors and simple division)
+            {
+                level: 4,
+                levelName: "Level 4: Dino Divide",
+                question: "12 ÷ 3 = ?",
+                options: ["3", "4", "5", "6"],
+                answer: "4",
+                hint: "How many 3s fit into 12? Count: 3, 6, 9, 12 (that's 4)!"
+            },
+            {
+                level: 4,
+                levelName: "Level 4: Dino Divide",
+                question: "20 ÷ 5 = ?",
+                options: ["2", "4", "5", "10"],
+                answer: "4",
+                hint: "What multiplied by 5 equals 20?"
+            },
+            {
+                level: 4,
+                levelName: "Level 4: Dino Divide",
+                question: "16 ÷ 2 = ?",
+                options: ["6", "7", "8", "9"],
+                answer: "8",
+                hint: "What is half of 16?"
+            },
+
+            // LEVEL 5: T-REX Master Challenge (Word Problems & Challenge)
+            {
+                level: 5,
+                levelName: "Level 5: T-REX Master",
+                question: "Rex has 3 cave baskets. Each basket has 8 shiny stones. How many stones in total?",
+                options: ["21", "24", "27", "30"],
+                answer: "24",
+                hint: "Calculate 3 x 8!"
+            },
+            {
+                level: 5,
+                levelName: "Level 5: T-REX Master",
+                question: "8 x 5 = ?",
+                options: ["35", "40", "45", "50"],
+                answer: "40",
+                hint: "Count by 5s eight times to reach 40!"
+            },
+            {
+                level: 5,
+                levelName: "Level 5: T-REX Master",
+                question: "Rex shares 18 bones equally between 2 dingoes. How many bones does each dingo get?",
+                options: ["8", "9", "10", "12"],
+                answer: "9",
+                hint: "18 ÷ 2 = ?"
+            }
+        ];
+
+        /* GAME STATE VARIABLES */
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let canAnswer = true;
+
+        function startGame() {
+            initAudio();
+            currentQuestionIndex = 0;
+            score = 0;
+            showScreen('quiz-screen');
+            loadQuestion();
+        }
+
+        function showScreen(screenId) {
+            document.getElementById('welcome-screen').classList.add('hidden');
+            document.getElementById('quiz-screen').classList.add('hidden');
+            document.getElementById('score-screen').classList.add('hidden');
+            document.getElementById('reward-screen').classList.add('hidden');
+
+            document.getElementById(screenId).classList.remove('hidden');
+        }
+
+        function loadQuestion() {
+            canAnswer = true;
+            document.getElementById('hint-box').classList.add('hidden');
+            
+            const q = quizData[currentQuestionIndex];
+            document.getElementById('level-title').innerText = q.levelName;
+            document.getElementById('question-count').innerText = `Question ${currentQuestionIndex + 1} of ${quizData.length}`;
+            document.getElementById('question-text').innerText = q.question;
+            document.getElementById('hint-text').innerText = q.hint;
+
+            // Update Rex encouraging message
+            const friendlyQuotes = [
+                "You're doing great! Keep going!",
+                "Roar-some job! What's the answer?",
+                "Use your super math powers!",
+                "Take your time, you've got this!",
+                "Rex believes in you!"
+            ];
+            document.getElementById('rex-speech').innerText = `"${friendlyQuotes[currentQuestionIndex % friendlyQuotes.length]}"`;
+
+            // Render Footprints Progress Tracker
+            const footprintsContainer = document.getElementById('footprints-bar');
+            footprintsContainer.innerHTML = '';
+            for (let i = 0; i < quizData.length; i++) {
+                const isCompleted = i < currentQuestionIndex;
+                const isCurrent = i === currentQuestionIndex;
+                
+                const step = document.createElement('span');
+                step.className = `text-xs sm:text-base ${isCompleted ? 'opacity-100 scale-110' : isCurrent ? 'opacity-100 animate-pulse' : 'opacity-30'}`;
+                step.innerText = isCompleted ? '🐾' : isCurrent ? '🦴' : '•';
+                footprintsContainer.appendChild(step);
+            }
+
+            // Render Answer Buttons
+            const container = document.getElementById('options-container');
+            container.innerHTML = '';
+            
+            q.options.forEach(opt => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn font-fredoka text-xl sm:text-2xl text-amber-100 py-3.5 px-4 flex items-center justify-center gap-3';
+                btn.innerHTML = `<span>${opt}</span>`;
+                btn.onclick = () => checkAnswer(opt, btn);
+                container.appendChild(btn);
+            });
+        }
+
+        function checkAnswer(selectedOpt, btnElement) {
+            if (!canAnswer) return;
+            canAnswer = false;
+
+            const q = quizData[currentQuestionIndex];
+            const isCorrect = selectedOpt === q.answer;
+
+            const rexAvatar = document.getElementById('quiz-rex-avatar');
+
+            if (isCorrect) {
+                score++;
+                playSound('correct');
+                btnElement.classList.add('correct');
+                document.getElementById('rex-speech').innerText = '"ROAR! That is CORRECT! High five!" ✋';
+                rexAvatar.classList.add('dino-happy');
+            } else {
+                playSound('wrong');
+                btnElement.classList.add('wrong');
+                document.getElementById('rex-speech').innerText = `"Nice try! The correct answer was ${q.answer}."`;
+                
+                // Highlight correct button
+                const allButtons = document.querySelectorAll('.option-btn');
+                allButtons.forEach(b => {
+                    if (b.innerText.trim() === q.answer) {
+                        b.classList.add('correct');
+                    }
+                });
+            }
+
+            setTimeout(() => {
+                rexAvatar.classList.remove('dino-happy');
+                currentQuestionIndex++;
+                if (currentQuestionIndex < quizData.length) {
+                    loadQuestion();
+                } else {
+                    finishQuiz();
+                }
+            }, 1800);
+        }
+
+        function showHint() {
+            const hintBox = document.getElementById('hint-box');
+            hintBox.classList.toggle('hidden');
+        }
+
+        function rexRoar() {
+            playSound('roar');
+            const avatar = document.getElementById('welcome-rex-avatar');
+            avatar.classList.add('dino-happy');
+            setTimeout(() => avatar.classList.remove('dino-happy'), 600);
+        }
+
+        function finishQuiz() {
+            showScreen('score-screen');
+            document.getElementById('final-score').innerText = `${score} / ${quizData.length}`;
+            
+            let stars = '⭐⭐⭐';
+            if (score < 10) stars = '⭐';
+            else if (score < 14) stars = '⭐⭐';
+            document.getElementById('final-stars').innerText = stars;
+
+            if (score >= 10) {
+                document.getElementById('score-title').innerText = "ROARING SUCCESS!";
+                document.getElementById('score-subtitle').innerText = "You unlocked the Falling Stars reward game!";
+            } else {
+                document.getElementById('score-title').innerText = "GREAT EFFORT!";
+                document.getElementById('score-subtitle').innerText = "You can play the reward game or try again!";
+            }
+        }
+
+        /* CATCH THE FALLING STARS MINI-GAME */
+        let canvas, ctx;
+        let starGameActive = false;
+        let starScore = 0;
+        let basket = { x: 0, y: 0, w: 70, h: 25, speed: 7 };
+        let stars = [];
+        let keys = { left: false, right: false };
+        let animationFrameId;
+
+        function startRewardGame() {
+            showScreen('reward-screen');
+            canvas = document.getElementById('starCanvas');
+            ctx = canvas.getContext('2d');
+            
+            // Adjust resolution
+            canvas.width = canvas.parentElement.clientWidth;
+            canvas.height = canvas.parentElement.clientHeight;
+
+            basket.x = canvas.width / 2 - basket.w / 2;
+            basket.y = canvas.height - 40;
+
+            starScore = 0;
+            stars = [];
+            starGameActive = true;
+            document.getElementById('star-score').innerText = starScore;
+
+            setupRewardControls();
+            requestAnimationFrame(gameLoop);
+        }
+
+        function setupRewardControls() {
+            // Keyboard controls
+            window.onkeydown = (e) => {
+                if (e.key === 'ArrowLeft' || e.key === 'a') keys.left = true;
+                if (e.key === 'ArrowRight' || e.key === 'd') keys.right = true;
+            };
+            window.onkeyup = (e) => {
+                if (e.key === 'ArrowLeft' || e.key === 'a') keys.left = false;
+                if (e.key === 'ArrowRight' || e.key === 'd') keys.right = false;
+            };
+
+            // Touch / On-screen Buttons
+            const btnLeft = document.getElementById('btn-left');
+            const btnRight = document.getElementById('btn-right');
+
+            const startLeft = (e) => { e.preventDefault(); keys.left = true; };
+            const endLeft = (e) => { e.preventDefault(); keys.left = false; };
+            const startRight = (e) => { e.preventDefault(); keys.right = true; };
+            const endRight = (e) => { e.preventDefault(); keys.right = false; };
+
+            btnLeft.onmousedown = startLeft;
+            btnLeft.onmouseup = endLeft;
+            btnLeft.ontouchstart = startLeft;
+            btnLeft.ontouchend = endLeft;
+
+            btnRight.onmousedown = startRight;
+            btnRight.onmouseup = endRight;
+            btnRight.ontouchstart = startRight;
+            btnRight.ontouchend = endRight;
+
+            // Touch Drag / Mouse movement on canvas
+            const handleMove = (e) => {
+                if (!starGameActive) return;
+                const rect = canvas.getBoundingClientRect();
+                const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                const relativeX = clientX - rect.left;
+                basket.x = relativeX - basket.w / 2;
+            };
+            canvas.onmousemove = handleMove;
+            canvas.ontouchmove = handleMove;
+        }
+
+        function spawnStar() {
+            if (Math.random() < 0.04) {
+                stars.push({
+                    x: Math.random() * (canvas.width - 25),
+                    y: -20,
+                    size: 20 + Math.random() * 10,
+                    speed: 2 + Math.random() * 3,
+                    color: Math.random() > 0.2 ? '#f1c40f' : '#e67e22'
+                });
+            }
+        }
+
+        function updateGame() {
+            // Move Basket
+            if (keys.left) basket.x -= basket.speed;
+            if (keys.right) basket.x += basket.speed;
+
+            // Clamp basket within screen
+            if (basket.x < 0) basket.x = 0;
+            if (basket.x + basket.w > canvas.width) basket.x = canvas.width - basket.w;
+
+            // Spawn & Update Stars
+            spawnStar();
+
+            for (let i = stars.length - 1; i >= 0; i--) {
+                let s = stars[i];
+                s.y += s.speed;
+
+                // Check collision with basket
+                if (
+                    s.y + s.size >= basket.y &&
+                    s.y <= basket.y + basket.h &&
+                    s.x + s.size >= basket.x &&
+                    s.x <= basket.x + basket.w
+                ) {
+                    starScore += 10;
+                    playSound('star');
+                    document.getElementById('star-score').innerText = starScore;
+                    stars.splice(i, 1);
+                    continue;
+                }
+
+                // Remove out of bounds stars
+                if (s.y > canvas.height) {
+                    stars.splice(i, 1);
+                }
+            }
+        }
+
+        function renderGame() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Draw Night Sky Background with Distant Volcano
+            ctx.fillStyle = '#0f172a';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Draw Volcano Silhouette
+            ctx.fillStyle = '#1e100c';
+            ctx.beginPath();
+            ctx.moveTo(canvas.width - 120, canvas.height);
+            ctx.lineTo(canvas.width - 60, canvas.height - 100);
+            ctx.lineTo(canvas.width, canvas.height);
+            ctx.fill();
+
+            // Draw Basket (Cave Bowl)
+            ctx.fillStyle = '#8c6d58';
+            ctx.beginPath();
+            ctx.roundRect(basket.x, basket.y, basket.w, basket.h, [0, 0, 15, 15]);
+            ctx.fill();
+            ctx.strokeStyle = '#d35400';
+            ctx.lineWidth = 3;
+            ctx.stroke();
+
+            // Draw Basket Handles/Bone Accent
+            ctx.fillStyle = '#ecf0f1';
+            ctx.fillRect(basket.x - 5, basket.y + 4, 6, 8);
+            ctx.fillRect(basket.x + basket.w - 1, basket.y + 4, 6, 8);
+
+            // Draw Falling Stars
+            stars.forEach(s => {
+                ctx.fillStyle = s.color;
+                ctx.beginPath();
+                // Simple 5-point star rendering
+                const cx = s.x + s.size/2;
+                const cy = s.y + s.size/2;
+                const outerRadius = s.size / 2;
+                const innerRadius = outerRadius / 2;
+                
+                for (let i = 0; i < 5; i++) {
+                    ctx.lineTo(
+                        cx + Math.cos((18 + i * 72) * Math.PI / 180) * outerRadius,
+                        cy - Math.sin((18 + i * 72) * Math.PI / 180) * outerRadius
+                    );
+                    ctx.lineTo(
+                        cx + Math.cos((54 + i * 72) * Math.PI / 180) * innerRadius,
+                        cy - Math.sin((54 + i * 72) * Math.PI / 180) * innerRadius
+                    );
+                }
+                ctx.closePath();
+                ctx.fill();
+            });
+        }
+
+        function gameLoop() {
+            if (!starGameActive) return;
+            updateGame();
+            renderGame();
+            animationFrameId = requestAnimationFrame(gameLoop);
+        }
+
+        function endRewardGame() {
+            starGameActive = false;
+            cancelAnimationFrame(animationFrameId);
+            showScreen('welcome-screen');
+        }
+
+        // Window Resize Listener for Canvas
+        window.addEventListener('resize', () => {
+            if (canvas && starGameActive) {
+                canvas.width = canvas.parentElement.clientWidth;
+                canvas.height = canvas.parentElement.clientHeight;
+                basket.y = canvas.height - 40;
+            }
+        });
+    </script>
+</body>
+</html>

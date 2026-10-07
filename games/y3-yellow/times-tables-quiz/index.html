@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Year 3 Times Tables Quiz</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            font-family: 'Fredoka', cursive, sans-serif;
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: manipulation;
+        }
+
+        body {
+            background-color: #0b1d3a;
+            color: #1e293b;
+            overflow-x: hidden;
+        }
+
+        /* Custom Color Styles */
+        .bg-custom-navy { background-color: #0b1d3a; }
+        .bg-custom-red { background-color: #e11d48; }
+        .text-custom-red { color: #e11d48; }
+        .border-custom-red { border-color: #e11d48; }
+
+        /* Playful animations */
+        @keyframes bounce-gentle {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
+        }
+
+        @keyframes pop-in {
+            0% { transform: scale(0.8); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        @keyframes star-glow {
+            0%, 100% { filter: drop-shadow(0 0 5px #f59e0b); }
+            50% { filter: drop-shadow(0 0 15px #fbbf24); }
+        }
+
+        .animate-bounce-gentle { animation: bounce-gentle 2s infinite; }
+        .animate-pop { animation: pop-in 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+        .star-glow { animation: star-glow 1.5s infinite; }
+
+        /* Game canvas styling */
+        canvas {
+            touch-action: none;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-2 sm:p-4 text-white">
+
+    <!-- Main App Container -->
+    <div id="app-container" class="w-full max-w-2xl bg-white rounded-3xl shadow-2xl overflow-hidden border-8 border-rose-500 relative min-h-[580px] flex flex-col justify-between text-slate-800">
+        
+        <!-- Header Bar -->
+        <header class="bg-custom-navy p-4 text-white flex items-center justify-between border-b-4 border-rose-500">
+            <div class="flex items-center space-x-2">
+                <span class="text-3xl">⭐</span>
+                <h1 class="text-xl sm:text-2xl font-bold tracking-wide text-rose-400">Maths Education</h1>
+            </div>
+            <div id="header-stats" class="hidden flex items-center space-x-4 text-sm sm:text-base font-semibold">
+                <div class="bg-rose-500/20 border border-rose-400 px-3 py-1 rounded-full text-rose-300">
+                    Level <span id="current-level-num">1</span>/5
+                </div>
+                <div class="bg-amber-500/20 border border-amber-400 px-3 py-1 rounded-full text-amber-300 flex items-center gap-1">
+                    <span>⭐</span> <span id="total-stars-count">0</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Dynamic Content Area -->
+        <main id="main-content" class="p-4 sm:p-6 flex-1 flex flex-col justify-center items-center text-center">
+            <!-- Screen content injected dynamically via JavaScript -->
+        </main>
+
+        <!-- Footer Bar -->
+        <footer class="bg-slate-100 p-3 text-center text-xs text-slate-500 border-t border-slate-200 flex justify-between items-center px-6">
+            <span>Year 3 Maths Practice</span>
+            <button id="sound-toggle" class="bg-slate-200 hover:bg-slate-300 text-slate-700 px-3 py-1 rounded-full font-bold transition">
+                🔊 Sound: ON
+            </button>
+        </footer>
+    </div>
+
+    <script>
+        // Game State Engine
+        const gameState = {
+            currentLevel: 1,
+            currentQuestionIdx: 0,
+            levelScores: [0, 0, 0, 0, 0], // Correct answers per level
+            levelStars: [0, 0, 0, 0, 0],  // Stars earned per level (0-3)
+            soundEnabled: true,
+            miniGameUnlocked: false,
+            miniGameHighScore: 0
+        };
+
+        // Quiz Questions Database (Year 3 Times Tables curriculum matched)
+        const quizData = [
+            // Level 1: 2s, 5s, 10s
+            {
+                level: 1,
+                title: "Starter Level (2s, 5s & 10s)",
+                questions: [
+                    { q: "What is 2 × 5?", options: ["10", "8", "12", "15"], answer: 0 },
+                    { q: "What is 5 × 4?", options: ["15", "25", "20", "30"], answer: 2 },
+                    { q: "What is 10 × 3?", options: ["13", "30", "33", "20"], answer: 1 }
+                ]
+            },
+            // Level 2: 3s & 4s
+            {
+                level: 2,
+                title: "Level 2 (3s & 4s Tables)",
+                questions: [
+                    { q: "What is 3 × 4?", options: ["9", "14", "12", "16"], answer: 2 },
+                    { q: "What is 4 × 8?", options: ["32", "24", "36", "28"], answer: 0 },
+                    { q: "What is 3 × 7?", options: ["18", "21", "24", "27"], answer: 1 }
+                ]
+            },
+            // Level 3: 8s & Mixed
+            {
+                level: 3,
+                title: "Level 3 (8s & Mixed Tables)",
+                questions: [
+                    { q: "What is 8 × 3?", options: ["24", "16", "32", "28"], answer: 0 },
+                    { q: "What is 8 × 5?", options: ["35", "40", "48", "45"], answer: 1 },
+                    { q: "What is 4 × 6?", options: ["20", "28", "24", "18"], answer: 2 }
+                ]
+            },
+            // Level 4: 6s, 7s & Mixed
+            {
+                level: 4,
+                title: "Level 4 (6s & 7s Tables)",
+                questions: [
+                    { q: "What is 6 × 6?", options: ["30", "36", "42", "24"], answer: 1 },
+                    { q: "What is 7 × 4?", options: ["28", "21", "35", "32"], answer: 0 },
+                    { q: "What is 6 × 8?", options: ["40", "54", "48", "42"], answer: 2 }
+                ]
+            },
+            // Level 5: Challenge up to 10x10
+            {
+                level: 5,
+                title: "Level 5 (Master Challenge)",
+                questions: [
+                    { q: "What is 9 × 3?", options: ["24", "27", "30", "36"], answer: 1 },
+                    { q: "What is 8 × 7?", options: ["56", "48", "64", "54"], answer: 0 },
+                    { q: "What is 9 × 9?", options: ["72", "90", "81", "99"], answer: 2 }
+                ]
+            }
+        ];
+
+        // Web Audio API Sound Effects Generator
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        function playSound(type) {
+            if (!gameState.soundEnabled) return;
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            const now = audioCtx.currentTime;
+
+            if (type === 'correct') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(523.25, now); // C5
+                osc.frequency.exponentialRampToValueAtTime(659.25, now + 0.1); // E5
+                osc.frequency.exponentialRampToValueAtTime(783.99, now + 0.2); // G5
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.35);
+                osc.start(now);
+                osc.stop(now + 0.35);
+            } else if (type === 'wrong') {
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(220, now); // A3
+                osc.frequency.exponentialRampToValueAtTime(164.81, now + 0.25); // E3
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+                osc.start(now);
+                osc.stop(now + 0.3);
+            } else if (type === 'click') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(400, now);
+                gain.gain.setValueAtTime(0.1, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.05);
+                osc.start(now);
+                osc.stop(now + 0.05);
+            } else if (type === 'star') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(880, now); // A5
+                osc.frequency.exponentialRampToValueAtTime(1760, now + 0.15); // A6
+                gain.gain.setValueAtTime(0.15, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+                osc.start(now);
+                osc.stop(now + 0.2);
+            } else if (type === 'catch') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(600, now);
+                osc.frequency.exponentialRampToValueAtTime(1200, now + 0.1);
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.12);
+                osc.start(now);
+                osc.stop(now + 0.12);
+            }
+        }
+
+        const mainContent = document.getElementById('main-content');
+        const headerStats = document.getElementById('header-stats');
+        const totalStarsElem = document.getElementById('total-stars-count');
+        const levelNumElem = document.getElementById('current-level-num');
+
+        function updateTotalStars() {
+            const total = gameState.levelStars.reduce((a, b) => a + b, 0);
+            totalStarsElem.textContent = total;
+            // Unlock mini-game if all 5 levels completed with at least 1 star each, or total stars >= 5
+            if (gameState.levelStars.filter(s => s > 0).length === 5) {
+                gameState.miniGameUnlocked = true;
+            }
+        }
+
+        // --- SCREEN 1: Welcome Screen ---
+        function renderWelcomeScreen() {
+            headerStats.classList.add('hidden');
+            mainContent.innerHTML = `
+                <div class="animate-pop space-y-6 my-auto">
+                    <div class="inline-block bg-rose-100 border-2 border-rose-400 text-rose-700 font-bold px-4 py-1.5 rounded-full text-sm">
+                        ✨ Year 3 Times Tables Fun!
+                    </div>
+                    <h2 class="text-3xl sm:text-4xl font-extrabold text-custom-navy leading-tight">
+                        Become a Maths Superstar! ⭐
+                    </h2>
+                    <p class="text-slate-600 max-w-md mx-auto text-base sm:text-lg">
+                        Practice 15 fun questions across 5 levels. Earn stars and unlock the bonus <strong class="text-rose-600">Catch the Falling Stars</strong> game!
+                    </p>
+                    <div class="pt-2 flex flex-col sm:flex-row gap-4 justify-center">
+                        <button onclick="playSound('click'); renderLevelSelect();" class="bg-custom-red hover:bg-rose-700 text-white font-bold text-xl px-8 py-4 rounded-2xl shadow-lg transform hover:-translate-y-1 active:translate-y-0 transition border-b-4 border-rose-900">
+                            🚀 Start Quiz
+                        </button>
+                        ${gameState.miniGameUnlocked ? `
+                            <button onclick="playSound('click'); startMiniGame();" class="bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold text-xl px-6 py-4 rounded-2xl shadow-lg transform hover:-translate-y-1 transition border-b-4 border-amber-800 flex items-center justify-center gap-2">
+                                🎮 Bonus Mini-Game
+                            </button>
+                        ` : ''}
+                    </div>
+                </div>
+            `;
+        }
+
+        // --- SCREEN 2: Level Select ---
+        function renderLevelSelect() {
+            headerStats.classList.remove('hidden');
+            updateTotalStars();
+            
+            let levelCardsHTML = '';
+            for (let i = 0; i < 5; i++) {
+                const isUnlocked = i === 0 || gameState.levelStars[i - 1] > 0;
+                const stars = gameState.levelStars[i];
+
+                let starIcons = '';
+                for (let s = 1; s <= 3; s++) {
+                    starIcons += s <= stars ? '⭐' : '☆';
+                }
+
+                levelCardsHTML += `
+                    <div class="bg-slate-50 border-2 ${isUnlocked ? 'border-rose-400 hover:border-rose-600 shadow-md hover:shadow-lg cursor-pointer transform hover:-translate-y-1' : 'border-slate-300 opacity-60 cursor-not-allowed'} rounded-2xl p-4 transition flex flex-col justify-between items-center relative"
+                         onclick="${isUnlocked ? `startLevel(${i + 1})` : ''}">
+                        <div class="text-xs font-bold text-rose-500 mb-1">LEVEL ${i + 1}</div>
+                        <div class="font-bold text-slate-800 text-sm sm:text-base text-center mb-2">${quizData[i].title.split('(')[0]}</div>
+                        <div class="text-xl tracking-wider text-amber-500 font-bold mb-2">${starIcons}</div>
+                        <button class="${isUnlocked ? 'bg-custom-navy text-white' : 'bg-slate-300 text-slate-500'} font-bold text-xs px-4 py-1.5 rounded-full">
+                            ${isUnlocked ? (stars > 0 ? 'Replay' : 'Play') : 'Locked'}
+                        </button>
+                    </div>
+                `;
+            }
+
+            mainContent.innerHTML = `
+                <div class="w-full max-w-xl animate-pop my-auto">
+                    <h2 class="text-2xl sm:text-3xl font-extrabold text-custom-navy mb-2">Select a Level</h2>
+                    <p class="text-slate-500 text-sm mb-6">Complete levels to earn stars and unlock the mini-game!</p>
+                    
+                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-6">
+                        ${levelCardsHTML}
+                    </div>
+
+                    ${gameState.miniGameUnlocked ? `
+                        <div class="bg-gradient-to-r from-amber-100 to-rose-100 border-2 border-amber-400 p-3 rounded-2xl flex items-center justify-between">
+                            <div class="text-left">
+                                <span class="text-xs font-bold text-amber-800 bg-amber-300/50 px-2 py-0.5 rounded-full">UNLOCKED!</span>
+                                <div class="font-bold text-slate-800 text-sm">Catch the Falling Stars</div>
+                            </div>
+                            <button onclick="playSound('click'); startMiniGame();" class="bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold px-4 py-2 rounded-xl text-sm shadow">
+                                Play Mini-Game 🎮
+                            </button>
+                        </div>
+                    ` : `
+                        <div class="text-xs text-slate-400 bg-slate-100 p-2.5 rounded-xl">
+                            🔒 Complete all 5 levels to unlock the "Catch the Falling Stars" bonus game!
+                        </div>
+                    `}
+                </div>
+            `;
+        }
+
+        // --- QUIZ LOGIC ---
+        function startLevel(lvl) {
+            playSound('click');
+            gameState.currentLevel = lvl;
+            gameState.currentQuestionIdx = 0;
+            gameState.levelScores[lvl - 1] = 0;
+            renderQuestion();
+        }
+
+        function renderQuestion() {
+            headerStats.classList.remove('hidden');
+            levelNumElem.textContent = gameState.currentLevel;
+            updateTotalStars();
+
+            const levelData = quizData[gameState.currentLevel - 1];
+            const qData = levelData.questions[gameState.currentQuestionIdx];
+
+            mainContent.innerHTML = `
+                <div class="w-full max-w-lg animate-pop my-auto">
+                    <!-- Progress Bar -->
+                    <div class="flex justify-between items-center text-xs font-bold text-slate-500 mb-2">
+                        <span>Question ${gameState.currentQuestionIdx + 1} of 3</span>
+                        <span>Level ${gameState.currentLevel}</span>
+                    </div>
+                    <div class="w-full bg-slate-200 h-3 rounded-full mb-6 overflow-hidden">
+                        <div class="bg-custom-red h-full transition-all duration-300" style="width: ${((gameState.currentQuestionIdx + 1) / 3) * 100}%"></div>
+                    </div>
+
+                    <!-- Question Card -->
+                    <div class="bg-sky-50 border-2 border-sky-200 p-6 rounded-3xl shadow-sm mb-6">
+                        <span class="text-xs font-bold bg-sky-200 text-sky-800 px-3 py-1 rounded-full uppercase">Times Table</span>
+                        <h3 class="text-3xl sm:text-4xl font-extrabold text-custom-navy mt-3">${qData.q}</h3>
+                    </div>
+
+                    <!-- Multiple Choice Options -->
+                    <div id="options-grid" class="grid grid-cols-2 gap-3 mb-4">
+                        ${qData.options.map((opt, idx) => `
+                            <button onclick="checkAnswer(${idx})" class="option-btn bg-white hover:bg-rose-50 text-custom-navy font-bold text-2xl py-4 rounded-2xl border-2 border-slate-200 hover:border-rose-400 shadow transition transform active:scale-95">
+                                ${opt}
+                            </button>
+                        `).join('')}
+                    </div>
+
+                    <!-- Feedback Box (Hidden initially) -->
+                    <div id="feedback-box" class="hidden rounded-2xl p-3 font-bold text-base text-center animate-bounce-gentle"></div>
+                </div>
+            `;
+        }
+
+        function checkAnswer(selectedIdx) {
+            const levelData = quizData[gameState.currentLevel - 1];
+            const qData = levelData.questions[gameState.currentQuestionIdx];
+            const buttons = document.querySelectorAll('.option-btn');
+            const feedbackBox = document.getElementById('feedback-box');
+
+            // Disable all buttons to prevent double-clicking
+            buttons.forEach(btn => btn.disabled = true);
+
+            const isCorrect = selectedIdx === qData.answer;
+
+            if (isCorrect) {
+                playSound('correct');
+                gameState.levelScores[gameState.currentLevel - 1]++;
+                buttons[selectedIdx].classList.remove('bg-white', 'border-slate-200');
+                buttons[selectedIdx].classList.add('bg-emerald-500', 'text-white', 'border-emerald-600');
+                
+                feedbackBox.className = "bg-emerald-100 text-emerald-800 border-2 border-emerald-400 p-3 rounded-2xl font-bold text-base text-center block mt-2";
+                const encouragements = ["Superstar! 🌟", "Brilliant! 🎉", "Spot On! 👏", "Awesome Math Skills! 🚀"];
+                feedbackBox.textContent = encouragements[Math.floor(Math.random() * encouragements.length)];
+            } else {
+                playSound('wrong');
+                buttons[selectedIdx].classList.remove('bg-white', 'border-slate-200');
+                buttons[selectedIdx].classList.add('bg-rose-500', 'text-white', 'border-rose-600');
+                
+                // Highlight correct answer
+                buttons[qData.answer].classList.remove('bg-white', 'border-slate-200');
+                buttons[qData.answer].classList.add('bg-emerald-500', 'text-white', 'border-emerald-600');
+
+                feedbackBox.className = "bg-rose-100 text-rose-800 border-2 border-rose-300 p-3 rounded-2xl font-bold text-base text-center block mt-2";
+                feedbackBox.textContent = `Nice try! The right answer is ${qData.options[qData.answer]}. 💪`;
+            }
+
+            // Next question delay
+            setTimeout(() => {
+                if (gameState.currentQuestionIdx < 2) {
+                    gameState.currentQuestionIdx++;
+                    renderQuestion();
+                } else {
+                    finishLevel();
+                }
+            }, 1600);
+        }
+
+        function finishLevel() {
+            const score = gameState.levelScores[gameState.currentLevel - 1];
+            let stars = 1; // 1 star for finishing
+            if (score === 2) stars = 2;
+            if (score === 3) stars = 3;
+
+            // Update highest earned stars for this level
+            if (stars > gameState.levelStars[gameState.currentLevel - 1]) {
+                gameState.levelStars[gameState.currentLevel - 1] = stars;
+            }
+
+            updateTotalStars();
+            playSound('star');
+
+            let starText = "⭐".repeat(stars) + "☆".repeat(3 - stars);
+
+            mainContent.innerHTML = `
+                <div class="w-full max-w-md animate-pop text-center my-auto">
+                    <div class="text-5xl mb-2 star-glow">${starText}</div>
+                    <h2 class="text-3xl font-extrabold text-custom-navy mb-1">Level ${gameState.currentLevel} Complete!</h2>
+                    <p class="text-slate-600 font-medium mb-4">You scored ${score} out of 3 correct!</p>
+
+                    <div class="bg-rose-50 border-2 border-rose-200 p-4 rounded-2xl mb-6 text-rose-800 font-semibold text-sm">
+                        ${score === 3 ? "Perfect score! You are a multiplication master! 🏆" : "Great effort! Keep practicing to get 3 stars! ⭐"}
+                    </div>
+
+                    <div class="flex flex-col sm:flex-row gap-3 justify-center">
+                        <button onclick="playSound('click'); renderLevelSelect();" class="bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold px-6 py-3 rounded-2xl shadow transition">
+                            Level Menu 📋
+                        </button>
+                        ${gameState.currentLevel < 5 ? `
+                            <button onclick="startLevel(${gameState.currentLevel + 1})" class="bg-custom-red hover:bg-rose-700 text-white font-bold px-6 py-3 rounded-2xl shadow transition">
+                                Next Level ➡️
+                            </button>
+                        ` : `
+                            <button onclick="playSound('click'); startMiniGame();" class="bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold px-6 py-3 rounded-2xl shadow transition">
+                                Bonus Mini-Game! 🎮
+                            </button>
+                        `}
+                    </div>
+                </div>
+            `;
+        }
+
+        // --- MINI-GAME: Catch the Falling Stars ---
+        let miniGameAnimId = null;
+        let miniGameTimerId = null;
+
+        function startMiniGame() {
+            headerStats.classList.add('hidden');
+            
+            mainContent.innerHTML = `
+                <div class="w-full flex flex-col items-center my-auto animate-pop">
+                    <div class="flex justify-between items-center w-full max-w-md mb-2 px-2">
+                        <div class="text-left">
+                            <span class="text-xs text-slate-400 block font-bold">MINI-GAME</span>
+                            <span class="font-extrabold text-lg text-custom-navy">Score: <span id="game-score" class="text-rose-600">0</span></span>
+                        </div>
+                        <div class="bg-amber-100 border border-amber-300 text-amber-800 font-bold px-3 py-1 rounded-full text-sm">
+                            ⏳ Time: <span id="game-timer">30</span>s
+                        </div>
+                    </div>
+
+                    <!-- Canvas Game Viewport -->
+                    <div class="relative w-full max-w-md bg-gradient-to-b from-slate-900 to-indigo-950 rounded-2xl overflow-hidden border-4 border-amber-400 shadow-xl">
+                        <canvas id="star-canvas" width="400" height="350" class="w-full h-[350px] block"></canvas>
+                    </div>
+
+                    <!-- Touch / On-screen Controls for Mobile -->
+                    <div class="flex justify-between w-full max-w-md mt-3 gap-2">
+                        <button id="btn-left" class="bg-slate-200 active:bg-slate-300 text-slate-800 font-bold py-3 px-8 rounded-2xl text-xl flex-1 shadow">
+                            ⬅️ Left
+                        </button>
+                        <button id="btn-right" class="bg-slate-200 active:bg-slate-300 text-slate-800 font-bold py-3 px-8 rounded-2xl text-xl flex-1 shadow">
+                            Right ➡️
+                        </button>
+                    </div>
+                    <p class="text-xs text-slate-400 mt-2">Use Left/Right arrows, touch buttons, or drag on screen to catch stars!</p>
+                </div>
+            `;
+
+            initMiniGameLogic();
+        }
+
+        function initMiniGameLogic() {
+            const canvas = document.getElementById('star-canvas');
+            const ctx = canvas.getContext('2d');
+            const scoreElem = document.getElementById('game-score');
+            const timerElem = document.getElementById('game-timer');
+
+            let score = 0;
+            let timeLeft = 30;
+
+            // Basket state
+            const basket = {
+                width: 70,
+                height: 20,
+                x: canvas.width / 2 - 35,
+                y: canvas.height - 30,
+                speed: 7,
+                dx: 0
+            };
+
+            // Falling items array
+            let stars = [];
+
+            function spawnStar() {
+                stars.push({
+                    x: Math.random() * (canvas.width - 24) + 12,
+                    y: -20,
+                    radius: 12,
+                    speed: 2 + Math.random() * 2.5,
+                    rotation: 0,
+                    rotSpeed: (Math.random() - 0.5) * 0.1,
+                    points: Math.random() > 0.2 ? 10 : 25 // Special gold stars
+                });
+            }
+
+            // Controls setup
+            let keys = {};
+            const handleKeyDown = (e) => { keys[e.key] = true; };
+            const handleKeyUp = (e) => { keys[e.key] = false; };
+
+            window.addEventListener('keydown', handleKeyDown);
+            window.addEventListener('keyup', handleKeyUp);
+
+            // On-screen buttons
+            const btnLeft = document.getElementById('btn-left');
+            const btnRight = document.getElementById('btn-right');
+
+            const startMoveLeft = (e) => { e.preventDefault(); basket.dx = -basket.speed; };
+            const startMoveRight = (e) => { e.preventDefault(); basket.dx = basket.speed; };
+            const stopMove = (e) => { e.preventDefault(); basket.dx = 0; };
+
+            btnLeft.addEventListener('touchstart', startMoveLeft);
+            btnLeft.addEventListener('touchend', stopMove);
+            btnLeft.addEventListener('mousedown', startMoveLeft);
+            btnLeft.addEventListener('mouseup', stopMove);
+
+            btnRight.addEventListener('touchstart', startMoveRight);
+            btnRight.addEventListener('touchend', stopMove);
+            btnRight.addEventListener('mousedown', startMoveRight);
+            btnRight.addEventListener('mouseup', stopMove);
+
+            // Touch drag support on Canvas
+            canvas.addEventListener('touchmove', (e) => {
+                e.preventDefault();
+                const rect = canvas.getBoundingClientRect();
+                const touchX = e.touches[0].clientX - rect.left;
+                const scaleX = canvas.width / rect.width;
+                basket.x = (touchX * scaleX) - basket.width / 2;
+            });
+
+            // Countdown timer
+            miniGameTimerId = setInterval(() => {
+                timeLeft--;
+                timerElem.textContent = timeLeft;
+                if (timeLeft <= 0) {
+                    endMiniGame(score);
+                }
+            }, 1000);
+
+            let spawnCounter = 0;
+
+            function gameLoop() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                // Keyboard movement
+                if (keys['ArrowLeft'] || keys['a']) basket.x -= basket.speed;
+                if (keys['ArrowRight'] || keys['d']) basket.x += basket.speed;
+                basket.x += basket.dx;
+
+                // Keep basket inside canvas
+                if (basket.x < 0) basket.x = 0;
+                if (basket.x + basket.width > canvas.width) basket.x = canvas.width - basket.width;
+
+                // Draw Basket
+                ctx.fillStyle = '#e11d48';
+                ctx.beginPath();
+                ctx.roundRect(basket.x, basket.y, basket.width, basket.height, 8);
+                ctx.fill();
+                ctx.strokeStyle = '#f87171';
+                ctx.lineWidth = 3;
+                ctx.stroke();
+
+                // Spawn Stars
+                spawnCounter++;
+                if (spawnCounter % 35 === 0) {
+                    spawnStar();
+                }
+
+                // Update & Draw Stars
+                for (let i = stars.length - 1; i >= 0; i--) {
+                    const s = stars[i];
+                    s.y += s.speed;
+                    s.rotation += s.rotSpeed;
+
+                    // Draw Star SVG/Shape
+                    ctx.save();
+                    ctx.translate(s.x, s.y);
+                    ctx.rotate(s.rotation);
+                    ctx.fillStyle = s.points === 25 ? '#f59e0b' : '#facc15';
+                    ctx.beginPath();
+                    for (let j = 0; j < 5; j++) {
+                        ctx.lineTo(Math.cos((18 + j * 72) * Math.PI / 180) * s.radius, -Math.sin((18 + j * 72) * Math.PI / 180) * s.radius);
+                        ctx.lineTo(Math.cos((54 + j * 72) * Math.PI / 180) * (s.radius / 2), -Math.sin((54 + j * 72) * Math.PI / 180) * (s.radius / 2));
+                    }
+                    ctx.closePath();
+                    ctx.fill();
+                    ctx.restore();
+
+                    // Collision Detection with Basket
+                    if (
+                        s.y + s.radius >= basket.y &&
+                        s.y - s.radius <= basket.y + basket.height &&
+                        s.x >= basket.x &&
+                        s.x <= basket.x + basket.width
+                    ) {
+                        playSound('catch');
+                        score += s.points;
+                        scoreElem.textContent = score;
+                        stars.splice(i, 1);
+                        continue;
+                    }
+
+                    // Remove offscreen stars
+                    if (s.y > canvas.height + 20) {
+                        stars.splice(i, 1);
+                    }
+                }
+
+                miniGameAnimId = requestAnimationFrame(gameLoop);
+            }
+
+            function endMiniGame(finalScore) {
+                cancelAnimationFrame(miniGameAnimId);
+                clearInterval(miniGameTimerId);
+                window.removeEventListener('keydown', handleKeyDown);
+                window.removeEventListener('keyup', handleKeyUp);
+
+                if (finalScore > gameState.miniGameHighScore) {
+                    gameState.miniGameHighScore = finalScore;
+                }
+
+                mainContent.innerHTML = `
+                    <div class="w-full max-w-md animate-pop text-center my-auto">
+                        <div class="text-6xl mb-2">🏆</div>
+                        <h2 class="text-3xl font-extrabold text-custom-navy mb-1">Time's Up!</h2>
+                        <p class="text-slate-600 font-medium mb-4">You scored <strong class="text-rose-600 text-2xl">${finalScore}</strong> points!</p>
+                        
+                        <div class="bg-amber-50 border-2 border-amber-300 p-4 rounded-2xl mb-6 text-amber-900 font-semibold text-sm">
+                            High Score: ${gameState.miniGameHighScore} pts ⭐
+                        </div>
+
+                        <div class="flex flex-col sm:flex-row gap-3 justify-center">
+                            <button onclick="playSound('click'); renderLevelSelect();" class="bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold px-6 py-3 rounded-2xl shadow transition">
+                                Level Select 📋
+                            </button>
+                            <button onclick="playSound('click'); startMiniGame();" class="bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold px-6 py-3 rounded-2xl shadow transition">
+                                Play Again 🎮
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }
+
+            miniGameAnimId = requestAnimationFrame(gameLoop);
+        }
+
+        // Sound Toggle Handler
+        document.getElementById('sound-toggle').addEventListener('click', (e) => {
+            gameState.soundEnabled = !gameState.soundEnabled;
+            e.target.textContent = gameState.soundEnabled ? '🔊 Sound: ON' : '🔇 Sound: OFF';
+        });
+
+        // Initialize App on Load
+        window.onload = function() {
+            renderWelcomeScreen();
+        };
+    </script>
+</body>
+</html>

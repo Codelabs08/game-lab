@@ -1,0 +1,864 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guess the Quiz: Stone Age</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        pinkPrimary: '#FF69B4',
+                        pinkLight: '#FFB6C1',
+                        pinkSoft: '#FFF0F5',
+                        pinkDark: '#DB7093',
+                        goldAccent: '#FFD700',
+                        warmWhite: '#FAFAFA'
+                    },
+                    fontFamily: {
+                        sans: ['Comic Sans MS', 'Chalkboard SE', 'Fredoka', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-10px) rotate(3deg); }
+        }
+        @keyframes pulseGlow {
+            0%, 100% { box-shadow: 0 0 15px rgba(255, 105, 180, 0.4); }
+            50% { box-shadow: 0 0 30px rgba(255, 105, 180, 0.8); }
+        }
+        @keyframes popIn {
+            0% { transform: scale(0.8); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .animate-float {
+            animation: float 4s ease-in-out infinite;
+        }
+        .animate-pop {
+            animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+        .pink-glow {
+            animation: pulseGlow 3s infinite;
+        }
+        body {
+            background: linear-gradient(135deg, #FFF0F5 0%, #FFB6C1 50%, #FF69B4 100%);
+            min-height: 100vh;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        canvas {
+            touch-action: none;
+        }
+    </style>
+</head>
+<body class="font-sans text-gray-800 flex flex-col items-center justify-between p-4 min-h-screen">
+
+    <!-- Top Navigation / Header -->
+    <header class="w-full max-w-2xl flex justify-between items-center bg-white/80 backdrop-blur-md p-4 rounded-3xl shadow-lg border-4 border-pink-300 mb-4">
+        <div class="flex items-center space-x-3">
+            <span class="text-3xl animate-bounce">🦴</span>
+            <h1 class="text-xl sm:text-2xl font-bold text-pink-600 tracking-wide">Guess the Quiz: Stone Age</h1>
+        </div>
+        <button id="soundToggleBtn" onclick="toggleSound()" class="bg-pink-100 hover:bg-pink-200 text-pink-700 font-bold px-4 py-2 rounded-full border-2 border-pink-400 flex items-center space-x-2 transition transform active:scale-95 shadow">
+            <span id="soundIcon">🔊</span>
+            <span id="soundText" class="text-sm hidden sm:inline">Sound ON</span>
+        </button>
+    </header>
+
+    <main class="w-full max-w-2xl flex-grow flex items-center justify-center relative">
+
+        <!-- SCREEN 1: Welcome Screen -->
+        <div id="welcomeScreen" class="w-full bg-white/90 backdrop-blur-md rounded-3xl p-6 sm:p-8 shadow-2xl border-4 border-pink-300 text-center animate-pop">
+            <div class="text-6xl my-2 animate-float">🦣</div>
+            <h2 class="text-3xl font-extrabold text-pink-600 mb-2">Hello, Hero! 💕</h2>
+            <p class="text-lg text-pink-800 font-medium mb-6">Welcome to your Stone Age History Quiz! Answer 15 fun questions to earn play time in the <span class="text-pink-600 font-bold">Pink Brick Breaker</span> game!</p>
+            
+            <div class="bg-pink-50 p-4 rounded-2xl border-2 border-pink-200 mb-6 text-left">
+                <h3 class="font-bold text-pink-700 mb-2 flex items-center text-lg">⭐ How to Play:</h3>
+                <ul class="list-disc list-inside text-pink-900 space-y-1 text-sm sm:text-base">
+                    <li>5 exciting levels with 3 easy questions each!</li>
+                    <li>Earn stars & score points for every correct answer!</li>
+                    <li>Get up to 2 minutes of fun Brick Breaker time!</li>
+                </ul>
+            </div>
+
+            <button onclick="startQuiz()" class="w-full bg-gradient-to-r from-pink-400 to-pink-500 hover:from-pink-500 hover:to-pink-600 text-white font-black text-2xl py-4 rounded-2xl shadow-xl hover:shadow-2xl transition transform active:scale-95 border-b-4 border-pink-700 flex items-center justify-center space-x-2">
+                <span>START QUIZ!</span>
+                <span>✨</span>
+            </button>
+        </div>
+
+        <!-- SCREEN 2: Quiz Screen -->
+        <div id="quizScreen" class="w-full bg-white/95 backdrop-blur-md rounded-3xl p-6 sm:p-8 shadow-2xl border-4 border-pink-300 hidden animate-pop">
+            <!-- Progress Bar & Level Banner -->
+            <div class="mb-4">
+                <div class="flex justify-between items-center text-xs sm:text-sm font-bold text-pink-600 mb-1">
+                    <span id="levelBadge" class="bg-pink-100 text-pink-700 px-3 py-1 rounded-full border border-pink-300">Level 1: Early Stone Age</span>
+                    <span id="scoreTracker" class="text-amber-500 font-black text-base">⭐ Stars: 0</span>
+                </div>
+                <div class="w-full bg-pink-100 rounded-full h-4 border border-pink-300 overflow-hidden p-0.5">
+                    <div id="progressBar" class="bg-gradient-to-r from-pink-400 to-pink-500 h-full rounded-full transition-all duration-300" style="width: 6.66%;"></div>
+                </div>
+                <div class="text-right text-xs text-pink-500 font-bold mt-1" id="questionNumText">Question 1 of 15</div>
+            </div>
+
+            <!-- Question Box -->
+            <div class="bg-pink-50 border-2 border-pink-200 p-5 rounded-2xl mb-6 text-center min-h-[120px] flex items-center justify-center">
+                <h2 id="questionText" class="text-lg sm:text-2xl font-bold text-pink-900 leading-snug">
+                    Loading question...
+                </h2>
+            </div>
+
+            <!-- Answer Options -->
+            <div id="optionsContainer" class="space-y-3 mb-6">
+                <!-- Buttons injected by JS -->
+            </div>
+
+            <!-- Feedback Modal Banner -->
+            <div id="feedbackBox" class="hidden p-4 rounded-2xl text-center font-bold text-lg border-2 animate-pop">
+                <p id="feedbackText"></p>
+            </div>
+        </div>
+
+        <!-- SCREEN 3: Level Complete / Final Victory Screen -->
+        <div id="resultsScreen" class="w-full bg-white/95 backdrop-blur-md rounded-3xl p-6 sm:p-8 shadow-2xl border-4 border-pink-300 text-center hidden animate-pop">
+            <div class="text-6xl my-2">🏆</div>
+            <h2 class="text-3xl font-extrabold text-pink-600 mb-2">Awesome Job, Hero!</h2>
+            <p class="text-pink-800 text-lg mb-4">You finished all 5 Stone Age Levels!</p>
+
+            <div class="bg-pink-50 border-2 border-pink-200 rounded-2xl p-4 mb-6">
+                <div class="text-4xl font-black text-amber-500 mb-2" id="finalStars">⭐⭐⭐</div>
+                <p class="text-pink-900 font-bold text-xl mb-1">Final Score: <span id="finalScore" class="text-pink-600">0</span> / 15</p>
+                <p class="text-sm text-pink-700 font-medium" id="timeEarnedText">You earned 120 seconds of Brick Breaker time! 🎉</p>
+            </div>
+
+            <button onclick="startRewardGame()" class="w-full bg-gradient-to-r from-amber-400 to-yellow-500 hover:from-amber-500 hover:to-yellow-600 text-white font-black text-xl sm:text-2xl py-4 rounded-2xl shadow-xl transition transform active:scale-95 border-b-4 border-amber-600 flex items-center justify-center space-x-2 pink-glow">
+                <span>PLAY BRICK BREAKER NOW!</span>
+                <span>🎮</span>
+            </button>
+        </div>
+
+        <!-- SCREEN 4: Brick Breaker Reward Game -->
+        <div id="gameScreen" class="w-full bg-white/95 backdrop-blur-md rounded-3xl p-4 sm:p-6 shadow-2xl border-4 border-pink-300 text-center hidden flex flex-col items-center animate-pop">
+            <div class="w-full flex justify-between items-center mb-2 px-2 text-sm sm:text-base font-bold text-pink-700">
+                <span>⏱️ Time Left: <span id="gameTimer" class="text-pink-600 text-lg">60</span>s</span>
+                <span>🧱 Score: <span id="gameScore" class="text-amber-500 text-lg">0</span></span>
+            </div>
+
+            <!-- Canvas for Game -->
+            <div class="relative w-full flex justify-center">
+                <canvas id="brickCanvas" width="400" height="400" class="bg-pink-900 rounded-2xl border-4 border-pink-300 shadow-inner max-w-full"></canvas>
+                
+                <!-- Game Over Overlay inside canvas container -->
+                <div id="gameOverlay" class="absolute inset-0 bg-pink-900/90 rounded-2xl hidden flex flex-col items-center justify-center p-4 text-white">
+                    <h3 class="text-3xl font-bold mb-2 text-pink-200" id="overlayTitle">Time's Up! 🎉</h3>
+                    <p class="text-lg mb-4 text-pink-100" id="overlayDesc">Great playing, Hero!</p>
+                    <div class="flex space-x-3">
+                        <button onclick="restartQuiz()" class="bg-pink-500 hover:bg-pink-600 text-white font-bold px-5 py-2.5 rounded-xl border-b-4 border-pink-700 shadow transition active:scale-95">
+                            Play Quiz Again 🔄
+                        </button>
+                        <button onclick="playAgainGame()" id="replayGameBtn" class="bg-amber-400 hover:bg-amber-500 text-white font-bold px-5 py-2.5 rounded-xl border-b-4 border-amber-600 shadow transition active:scale-95">
+                            Play Game Again 🎮
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Onscreen Controls for Touch / Mobile -->
+            <div class="w-full flex justify-between mt-4 px-4 sm:hidden">
+                <button id="leftBtn" class="bg-pink-400 active:bg-pink-600 text-white text-2xl font-bold py-3 px-8 rounded-2xl shadow border-b-4 border-pink-600 select-none">
+                    ◀️ Left
+                </button>
+                <button id="rightBtn" class="bg-pink-400 active:bg-pink-600 text-white text-2xl font-bold py-3 px-8 rounded-2xl shadow border-b-4 border-pink-600 select-none">
+                    Right ▶️
+                </button>
+            </div>
+            <p class="text-xs text-pink-500 mt-2 hidden sm:block">Use Left & Right Arrow keys or Move Mouse / Touch to play!</p>
+        </div>
+
+    </main>
+
+    <!-- Safe Footer -->
+    <footer class="mt-4 text-center text-xs text-pink-700 font-bold bg-white/60 backdrop-blur-sm px-4 py-2 rounded-full border border-pink-200 shadow-sm">
+        Made with 💕 for Hero | Stone Age History Quiz
+    </footer>
+
+    <script>
+        let audioCtx = null;
+        let soundEnabled = true;
+
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }
+
+        function toggleSound() {
+            soundEnabled = !soundEnabled;
+            document.getElementById('soundIcon').innerText = soundEnabled ? '🔊' : '🔇';
+            document.getElementById('soundText').innerText = soundEnabled ? 'Sound ON' : 'Sound OFF';
+            if (soundEnabled) playSound('click');
+        }
+
+        function playSound(type) {
+            if (!soundEnabled) return;
+            initAudio();
+            if (!audioCtx) return;
+
+            const now = audioCtx.currentTime;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            if (type === 'click') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(400, now);
+                osc.frequency.exponentialRampToValueAtTime(800, now + 0.08);
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.linearRampToValueAtTime(0.01, now + 0.08);
+                osc.start(now);
+                osc.stop(now + 0.08);
+            } else if (type === 'correct') {
+                // Happy chord arpeggio
+                const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+                notes.forEach((freq, idx) => {
+                    const noteOsc = audioCtx.createOscillator();
+                    const noteGain = audioCtx.createGain();
+                    noteOsc.connect(noteGain);
+                    noteGain.connect(audioCtx.destination);
+                    noteOsc.type = 'triangle';
+                    noteOsc.frequency.setValueAtTime(freq, now + idx * 0.08);
+                    noteGain.gain.setValueAtTime(0.2, now + idx * 0.08);
+                    noteGain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.08 + 0.25);
+                    noteOsc.start(now + idx * 0.08);
+                    noteOsc.stop(now + idx * 0.08 + 0.25);
+                });
+            } else if (type === 'wrong') {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(220, now);
+                osc.frequency.linearRampToValueAtTime(160, now + 0.2);
+                gain.gain.setValueAtTime(0.15, now);
+                gain.gain.linearRampToValueAtTime(0.01, now + 0.2);
+                osc.start(now);
+                osc.stop(now + 0.2);
+            } else if (type === 'bounce') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(300, now);
+                osc.frequency.exponentialRampToValueAtTime(500, now + 0.05);
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.linearRampToValueAtTime(0.01, now + 0.05);
+                osc.start(now);
+                osc.stop(now + 0.05);
+            } else if (type === 'break') {
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(600, now);
+                osc.frequency.exponentialRampToValueAtTime(200, now + 0.08);
+                gain.gain.setValueAtTime(0.15, now);
+                gain.gain.linearRampToValueAtTime(0.01, now + 0.08);
+                osc.start(now);
+                osc.stop(now + 0.08);
+            } else if (type === 'fanfare') {
+                const notes = [440, 554.37, 659.25, 880];
+                notes.forEach((freq, idx) => {
+                    const noteOsc = audioCtx.createOscillator();
+                    const noteGain = audioCtx.createGain();
+                    noteOsc.connect(noteGain);
+                    noteGain.connect(audioCtx.destination);
+                    noteOsc.type = 'sine';
+                    noteOsc.frequency.setValueAtTime(freq, now + idx * 0.12);
+                    noteGain.gain.setValueAtTime(0.25, now + idx * 0.12);
+                    noteGain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.12 + 0.4);
+                    noteOsc.start(now + idx * 0.12);
+                    noteOsc.stop(now + idx * 0.12 + 0.4);
+                });
+            }
+        }
+
+        const quizData = [
+            // Level 1: Basics
+            {
+                level: 1,
+                levelName: "Level 1: Early Stone Age",
+                question: "1. Why is it called the Stone Age?",
+                options: [
+                    "A) People made tools out of stone",
+                    "B) Everyone lived inside big rocks",
+                    "C) People ate small shiny stones"
+                ],
+                correct: 0,
+                hint: "They shaped hard stones like flint into tools!"
+            },
+            {
+                level: 1,
+                levelName: "Level 1: Early Stone Age",
+                question: "2. What did Stone Age people use to build early weapons and knives?",
+                options: [
+                    "A) Plastic and glass",
+                    "B) Flint and stones",
+                    "C) Iron and steel"
+                ],
+                correct: 1,
+                hint: "Flint is a very sharp type of stone!"
+            },
+            {
+                level: 1,
+                levelName: "Level 1: Early Stone Age",
+                question: "3. Where did early Stone Age people often shelter from cold weather?",
+                options: [
+                    "A) Tall skyscrapers",
+                    "B) Wooden castles",
+                    "C) Caves and simple tents"
+                ],
+                correct: 2,
+                hint: "Natural caves kept them warm and safe!"
+            },
+
+            // Level 2: Lifestyle
+            {
+                level: 2,
+                levelName: "Level 2: Stone Age Life",
+                question: "4. Which giant hairy animal lived during the Ice Age?",
+                options: [
+                    "A) Woolly Mammoth 🦣",
+                    "B) Giant Dinosaur 🦖",
+                    "C) Cute Penguin 🐧"
+                ],
+                correct: 0,
+                hint: "It looked like a big hairy elephant with long tusks!"
+            },
+            {
+                level: 2,
+                levelName: "Level 2: Stone Age Life",
+                question: "5. What did Stone Age people wear to stay warm?",
+                options: [
+                    "A) T-shirts and jeans",
+                    "B) Animal skins and furs",
+                    "C) Cotton coats"
+                ],
+                correct: 1,
+                hint: "They used animal furs to protect themselves from ice!"
+            },
+            {
+                level: 2,
+                levelName: "Level 2: Stone Age Life",
+                question: "6. What important discovery allowed Stone Age people to cook food?",
+                options: [
+                    "A) Electricity",
+                    "B) Fire 🔥",
+                    "C) Microwave"
+                ],
+                correct: 1,
+                hint: "Fire gave them light, warmth, and yummy cooked food!"
+            },
+
+            // Level 3: Homes & Art
+            {
+                level: 3,
+                levelName: "Level 3: Art & Settlements",
+                question: "7. What did Stone Age people draw on the walls of caves?",
+                options: [
+                    "A) Cartoons and stars",
+                    "B) Animals and handprints",
+                    "C) Alphabet letters"
+                ],
+                correct: 1,
+                hint: "They painted deer, mammoths, and their hands!"
+            },
+            {
+                level: 3,
+                levelName: "Level 3: Art & Settlements",
+                question: "8. What were houses in the famous ancient village of Skara Brae made of?",
+                options: [
+                    "A) Red bricks",
+                    "B) Thick stone",
+                    "C) Mud and leaves"
+                ],
+                correct: 1,
+                hint: "Skara Brae in Scotland had houses built entirely of stone!"
+            },
+            {
+                level: 3,
+                levelName: "Level 3: Art & Settlements",
+                question: "9. How did Stone Age people make fire?",
+                options: [
+                    "A) Striking flint stones together",
+                    "B) Using matchsticks",
+                    "C) Rubbing leaves"
+                ],
+                correct: 0,
+                hint: "Sparks fly when you strike flint against iron pyrites!"
+            },
+
+            // Level 4: Tricker Concepts
+            {
+                level: 4,
+                levelName: "Level 4: Hunters & Gatherers",
+                question: "10. Stone Age humans gathered berries, nuts, and roots. What were they called?",
+                options: [
+                    "A) Supermarket shoppers",
+                    "B) Farmers and gardeners",
+                    "C) Hunter-gatherers"
+                ],
+                correct: 2,
+                hint: "They hunted animals and gathered wild plant foods!"
+            },
+            {
+                level: 4,
+                levelName: "Level 4: Hunters & Gatherers",
+                question: "11. Which order of periods makes up the Stone Age?",
+                options: [
+                    "A) Palaeolithic, Mesolithic, Neolithic",
+                    "B) Ice Age, Gold Age, Diamond Age",
+                    "C) Old Age, Middle Age, New Age"
+                ],
+                correct: 0,
+                hint: "Palaeo means Old, Meso means Middle, Neo means New!"
+            },
+            {
+                level: 4,
+                levelName: "Level 4: Hunters & Gatherers",
+                question: "12. What amazing skill started in the Neolithic (New Stone Age)?",
+                options: [
+                    "A) Building airplanes",
+                    "B) Farming and keeping animals 🌾",
+                    "C) Driving cars"
+                ],
+                correct: 1,
+                hint: "People learned to plant crops and settle down in villages!"
+            },
+
+            // Level 5: Master Stone Age
+            {
+                level: 5,
+                levelName: "Level 5: Stone Age Master",
+                question: "13. What famous giant stone circle monument was built in England?",
+                options: [
+                    "A) Stonehenge 🪨",
+                    "B) The Great Pyramids",
+                    "C) Eiffel Tower"
+                ],
+                correct: 0,
+                hint: "Stonehenge was built with huge standing stones!"
+            },
+            {
+                level: 5,
+                levelName: "Level 5: Stone Age Master",
+                question: "14. Which new shiny material ended the Stone Age?",
+                options: [
+                    "A) Plastic",
+                    "B) Bronze (Metal) 🥉",
+                    "C) Glass"
+                ],
+                correct: 1,
+                hint: "When people discovered how to melt bronze, the Bronze Age began!"
+            },
+            {
+                level: 5,
+                levelName: "Level 5: Stone Age Master",
+                question: "15. What tool helped Stone Age farmers chop down trees for farmland?",
+                options: [
+                    "A) Polished stone axe 🪓",
+                    "B) Electric chainsaw",
+                    "C) Scissors"
+                ],
+                correct: 0,
+                hint: "Neolithic farmers used smooth, sharp stone axes!"
+            }
+        ];
+
+        let currentQuestionIdx = 0;
+        let score = 0;
+        let canAnswer = true;
+
+        function startQuiz() {
+            playSound('click');
+            currentQuestionIdx = 0;
+            score = 0;
+            document.getElementById('welcomeScreen').classList.add('hidden');
+            document.getElementById('resultsScreen').classList.add('hidden');
+            document.getElementById('gameScreen').classList.add('hidden');
+            document.getElementById('quizScreen').classList.remove('hidden');
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            canAnswer = true;
+            const q = quizData[currentQuestionIdx];
+            
+            // Update UI elements
+            document.getElementById('levelBadge').innerText = q.levelName;
+            document.getElementById('scoreTracker').innerText = `⭐ Stars: ${score}`;
+            document.getElementById('questionNumText').innerText = `Question ${currentQuestionIdx + 1} of ${quizData.length}`;
+            
+            const progressPct = ((currentQuestionIdx + 1) / quizData.length) * 100;
+            document.getElementById('progressBar').style.width = `${progressPct}%`;
+            
+            document.getElementById('questionText').innerText = q.question;
+            
+            // Hide feedback box
+            const feedbackBox = document.getElementById('feedbackBox');
+            feedbackBox.classList.add('hidden');
+
+            // Render option buttons
+            const container = document.getElementById('optionsContainer');
+            container.innerHTML = '';
+
+            q.options.forEach((opt, idx) => {
+                const btn = document.createElement('button');
+                btn.className = "w-full text-left bg-white hover:bg-pink-100 text-pink-900 font-bold p-4 rounded-2xl border-2 border-pink-300 shadow-md hover:shadow-lg transition transform active:scale-98 flex items-center justify-between text-base sm:text-lg";
+                btn.innerHTML = `<span>${opt}</span><span class="text-pink-400 text-xl">🌸</span>`;
+                btn.onclick = () => checkAnswer(idx, btn);
+                container.appendChild(btn);
+            });
+        }
+
+        function checkAnswer(selectedIdx, btnElement) {
+            if (!canAnswer) return;
+            canAnswer = false;
+
+            const q = quizData[currentQuestionIdx];
+            const feedbackBox = document.getElementById('feedbackBox');
+            const feedbackText = document.getElementById('feedbackText');
+
+            const allButtons = document.getElementById('optionsContainer').children;
+
+            if (selectedIdx === q.correct) {
+                // Correct!
+                playSound('correct');
+                score++;
+                btnElement.className = "w-full text-left bg-green-100 text-green-900 font-bold p-4 rounded-2xl border-2 border-green-400 shadow-md flex items-center justify-between text-base sm:text-lg";
+                btnElement.innerHTML += `<span class="text-2xl">⭐</span>`;
+
+                feedbackBox.className = "p-4 rounded-2xl text-center font-bold text-lg border-2 bg-green-50 border-green-300 text-green-800 animate-pop mt-4";
+                
+                const cheerfulPraise = ["Super Star, Hero! ⭐", "Great job! You got it! 💕", "Brilliant Stone Age History! 🎉", "Fantastic work! 🌟"];
+                feedbackText.innerText = cheerfulPraise[Math.floor(Math.random() * cheerfulPraise.length)];
+            } else {
+                // Wrong attempt
+                playSound('wrong');
+                btnElement.className = "w-full text-left bg-pink-200 text-pink-800 font-bold p-4 rounded-2xl border-2 border-pink-400 shadow-md flex items-center justify-between text-base sm:text-lg opacity-75";
+                
+                // Highlight correct button gently
+                allButtons[q.correct].className = "w-full text-left bg-green-100 text-green-900 font-bold p-4 rounded-2xl border-2 border-green-400 shadow-md flex items-center justify-between text-base sm:text-lg";
+
+                feedbackBox.className = "p-4 rounded-2xl text-center font-bold text-lg border-2 bg-amber-50 border-amber-300 text-amber-800 animate-pop mt-4";
+                feedbackText.innerText = `Nice try, Hero! 💕 ${q.hint}`;
+            }
+
+            feedbackBox.classList.remove('hidden');
+            document.getElementById('scoreTracker').innerText = `⭐ Stars: ${score}`;
+
+            // Delay for next question or summary
+            setTimeout(() => {
+                currentQuestionIdx++;
+                if (currentQuestionIdx < quizData.length) {
+                    loadQuestion();
+                } else {
+                    finishQuiz();
+                }
+            }, 2200);
+        }
+
+        function finishQuiz() {
+            playSound('fanfare');
+            document.getElementById('quizScreen').classList.add('hidden');
+            document.getElementById('resultsScreen').classList.remove('hidden');
+
+            document.getElementById('finalScore').innerText = score;
+            
+            // Render star icons
+            let starStr = "⭐";
+            if (score >= 12) starStr = "⭐⭐⭐";
+            else if (score >= 7) starStr = "⭐⭐";
+            document.getElementById('finalStars').innerText = starStr;
+
+            // Earned play time (seconds) based on score
+            // Minimum 40s, max 120s
+            earnedGameTime = Math.max(40, score * 8);
+            document.getElementById('timeEarnedText').innerText = `You earned ${earnedGameTime} seconds of Brick Breaker play time! 🎉`;
+        }
+
+        function restartQuiz() {
+            startQuiz();
+        }
+
+        let canvas, ctx;
+        let earnedGameTime = 60;
+        let gameTimerInterval = null;
+        let remainingTime = 60;
+        let brickScore = 0;
+        let animationFrameId = null;
+
+        // Game Objects
+        let paddle = { x: 0, width: 80, height: 12, speed: 6 };
+        let ball = { x: 0, y: 0, dx: 3, dy: -3, radius: 8 };
+        let bricks = [];
+        const brickRowCount = 4;
+        const brickColumnCount = 6;
+        const brickPadding = 8;
+        const brickOffsetTop = 40;
+        const brickOffsetLeft = 15;
+
+        let rightPressed = false;
+        let leftPressed = false;
+
+        function startRewardGame() {
+            playSound('click');
+            document.getElementById('resultsScreen').classList.add('hidden');
+            document.getElementById('gameScreen').classList.remove('hidden');
+            document.getElementById('gameOverlay').classList.add('hidden');
+
+            canvas = document.getElementById('brickCanvas');
+            ctx = canvas.getContext('2d');
+
+            remainingTime = earnedGameTime;
+            brickScore = 0;
+            document.getElementById('gameTimer').innerText = remainingTime;
+            document.getElementById('gameScore').innerText = brickScore;
+
+            // Reset Paddle & Ball
+            paddle.width = 85;
+            paddle.x = (canvas.width - paddle.width) / 2;
+
+            resetBall();
+            initBricks();
+
+            // Set controls
+            setupControls();
+
+            // Start Timer
+            clearInterval(gameTimerInterval);
+            gameTimerInterval = setInterval(() => {
+                remainingTime--;
+                document.getElementById('gameTimer').innerText = remainingTime;
+                if (remainingTime <= 0) {
+                    endRewardGame("Time's Up! ⏰", `Great playing, Hero! You scored ${brickScore} points!`);
+                }
+            }, 1000);
+
+            // Start Game Loop
+            if (animationFrameId) cancelAnimationFrame(animationFrameId);
+            gameLoop();
+        }
+
+        function resetBall() {
+            ball.x = canvas.width / 2;
+            ball.y = canvas.height - 30;
+            ball.dx = 3.5 * (Math.random() > 0.5 ? 1 : -1);
+            ball.dy = -3.5;
+        }
+
+        function initBricks() {
+            const brickWidth = (canvas.width - (brickOffsetLeft * 2) - (brickPadding * (brickColumnCount - 1))) / brickColumnCount;
+            const colors = ['#FF69B4', '#FFB6C1', '#FFD700', '#DB7093'];
+            bricks = [];
+
+            for (let c = 0; c < brickColumnCount; c++) {
+                bricks[c] = [];
+                for (let r = 0; r < brickRowCount; r++) {
+                    bricks[c][r] = {
+                        x: 0,
+                        y: 0,
+                        status: 1,
+                        color: colors[r % colors.length],
+                        width: brickWidth,
+                        height: 18
+                    };
+                }
+            }
+        }
+
+        function setupControls() {
+            // Keyboard Listeners
+            window.onkeydown = (e) => {
+                if (e.key === "Right" || e.key === "ArrowRight") rightPressed = true;
+                if (e.key === "Left" || e.key === "ArrowLeft") leftPressed = true;
+            };
+            window.onkeyup = (e) => {
+                if (e.key === "Right" || e.key === "ArrowRight") rightPressed = false;
+                if (e.key === "Left" || e.key === "ArrowLeft") leftPressed = false;
+            };
+
+            // Touch / Mouse on Canvas
+            canvas.onmousemove = (e) => {
+                const rect = canvas.getBoundingClientRect();
+                const relativeX = e.clientX - rect.left;
+                if (relativeX > 0 && relativeX < canvas.width) {
+                    paddle.x = relativeX - paddle.width / 2;
+                }
+            };
+
+            canvas.ontouchmove = (e) => {
+                if (e.touches.length > 0) {
+                    const rect = canvas.getBoundingClientRect();
+                    const relativeX = e.touches[0].clientX - rect.left;
+                    if (relativeX > 0 && relativeX < canvas.width) {
+                        paddle.x = relativeX - paddle.width / 2;
+                    }
+                }
+            };
+
+            // Mobile Buttons
+            const leftBtn = document.getElementById('leftBtn');
+            const rightBtn = document.getElementById('rightBtn');
+
+            leftBtn.ontouchstart = () => { leftPressed = true; };
+            leftBtn.ontouchend = () => { leftPressed = false; };
+            rightBtn.ontouchstart = () => { rightPressed = true; };
+            rightBtn.ontouchend = () => { rightPressed = false; };
+        }
+
+        function collisionDetection() {
+            for (let c = 0; c < brickColumnCount; c++) {
+                for (let r = 0; r < brickRowCount; r++) {
+                    let b = bricks[c][r];
+                    if (b.status === 1) {
+                        if (
+                            ball.x > b.x &&
+                            ball.x < b.x + b.width &&
+                            ball.y > b.y &&
+                            ball.y < b.y + b.height
+                        ) {
+                            ball.dy = -ball.dy;
+                            b.status = 0;
+                            brickScore += 10;
+                            document.getElementById('gameScore').innerText = brickScore;
+                            playSound('break');
+
+                            // Check if all bricks are broken
+                            if (checkAllBricksCleared()) {
+                                playSound('fanfare');
+                                initBricks(); // Reset bricks for continuous play during reward time!
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        function checkAllBricksCleared() {
+            for (let c = 0; c < brickColumnCount; c++) {
+                for (let r = 0; r < brickRowCount; r++) {
+                    if (bricks[c][r].status === 1) return false;
+                }
+            }
+            return true;
+        }
+
+        function drawBall() {
+            ctx.beginPath();
+            ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
+            ctx.fillStyle = "#FFD700"; // Golden sparkly ball
+            ctx.fill();
+            ctx.strokeStyle = "#FFFFFF";
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            ctx.closePath();
+        }
+
+        function drawPaddle() {
+            ctx.beginPath();
+            ctx.roundRect(paddle.x, canvas.height - paddle.height - 10, paddle.width, paddle.height, 6);
+            ctx.fillStyle = "#FF69B4";
+            ctx.fill();
+            ctx.strokeStyle = "#FFFFFF";
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            ctx.closePath();
+        }
+
+        function drawBricks() {
+            for (let c = 0; c < brickColumnCount; c++) {
+                for (let r = 0; r < brickRowCount; r++) {
+                    if (bricks[c][r].status === 1) {
+                        let brickX = (c * (bricks[c][r].width + brickPadding)) + brickOffsetLeft;
+                        let brickY = (r * (bricks[c][r].height + brickPadding)) + brickOffsetTop;
+                        bricks[c][r].x = brickX;
+                        bricks[c][r].y = brickY;
+
+                        ctx.beginPath();
+                        ctx.roundRect(brickX, brickY, bricks[c][r].width, bricks[c][r].height, 4);
+                        ctx.fillStyle = bricks[c][r].color;
+                        ctx.fill();
+                        ctx.strokeStyle = "#FFF0F5";
+                        ctx.lineWidth = 1.5;
+                        ctx.stroke();
+                        ctx.closePath();
+                    }
+                }
+            }
+        }
+
+        function gameLoop() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            drawBricks();
+            drawBall();
+            drawPaddle();
+            collisionDetection();
+
+            // Ball bounce off left & right walls
+            if (ball.x + ball.dx > canvas.width - ball.radius || ball.x + ball.dx < ball.radius) {
+                ball.dx = -ball.dx;
+                playSound('bounce');
+            }
+
+            // Ball bounce off top wall
+            if (ball.y + ball.dy < ball.radius) {
+                ball.dy = -ball.dy;
+                playSound('bounce');
+            } else if (ball.y + ball.dy > canvas.height - ball.radius - 10) {
+                // Ball hits paddle zone
+                if (ball.x > paddle.x && ball.x < paddle.x + paddle.width) {
+                    ball.dy = -ball.dy;
+                    playSound('bounce');
+                } else if (ball.y + ball.dy > canvas.height - ball.radius) {
+                    // Ball fell past bottom
+                    playSound('wrong');
+                    resetBall();
+                }
+            }
+
+            // Paddle Movement
+            if (rightPressed && paddle.x < canvas.width - paddle.width) {
+                paddle.x += paddle.speed;
+            } else if (leftPressed && paddle.x > 0) {
+                paddle.x -= paddle.speed;
+            }
+
+            ball.x += ball.dx;
+            ball.y += ball.dy;
+
+            animationFrameId = requestAnimationFrame(gameLoop);
+        }
+
+        function endRewardGame(title, message) {
+            clearInterval(gameTimerInterval);
+            if (animationFrameId) cancelAnimationFrame(animationFrameId);
+
+            document.getElementById('overlayTitle').innerText = title;
+            document.getElementById('overlayDesc').innerText = message;
+            document.getElementById('gameOverlay').classList.remove('hidden');
+        }
+
+        function playAgainGame() {
+            startRewardGame();
+        }
+
+        // Initialize audio context on first user interaction
+        window.addEventListener('click', () => { initAudio(); }, { once: true });
+        window.addEventListener('touchstart', () => { initAudio(); }, { once: true });
+    </script>
+</body>
+</html>

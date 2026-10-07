@@ -1,0 +1,877 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>History Battle: Stone Age Quest</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: manipulation;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: #050508;
+            color: #ffffff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            overflow-x: hidden;
+            padding: 10px;
+        }
+
+        /* Neon Glow Effects & Typography */
+        .neon-title {
+            font-size: 2.5rem;
+            font-weight: 900;
+            text-align: center;
+            color: #fff;
+            text-shadow: 
+                0 0 5px #fff,
+                0 0 10px #ff007f,
+                0 0 20px #ff007f,
+                0 0 40px #ff007f;
+            letter-spacing: 2px;
+            margin-bottom: 5px;
+        }
+
+        .neon-sub {
+            font-size: 1.2rem;
+            text-align: center;
+            color: #00f3ff;
+            text-shadow: 0 0 8px #00f3ff;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+
+        /* Container Card */
+        .game-card {
+            background: rgba(15, 15, 30, 0.95);
+            border: 4px solid #00f3ff;
+            box-shadow: 0 0 25px rgba(0, 243, 255, 0.4), inset 0 0 15px rgba(0, 243, 255, 0.2);
+            border-radius: 20px;
+            width: 100%;
+            max-width: 650px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+        }
+
+        /* Badges & Progress Bar */
+        .progress-container {
+            width: 100%;
+            background: #111;
+            border-radius: 10px;
+            height: 20px;
+            border: 2px solid #ff007f;
+            margin-bottom: 15px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .progress-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #ff007f, #00f3ff, #39ff14);
+            box-shadow: 0 0 10px #39ff14;
+            transition: width 0.4s ease;
+        }
+
+        .level-badges {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            margin-bottom: 15px;
+        }
+
+        .badge {
+            background: #1a1a2e;
+            border: 2px solid #444;
+            border-radius: 50%;
+            width: 45px;
+            height: 45px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.4rem;
+            opacity: 0.5;
+            transition: all 0.3s ease;
+        }
+
+        .badge.active {
+            opacity: 1;
+            border-color: #ffe600;
+            box-shadow: 0 0 15px #ffe600;
+            transform: scale(1.15);
+        }
+
+        .badge.completed {
+            opacity: 1;
+            border-color: #39ff14;
+            background: #052b05;
+            box-shadow: 0 0 10px #39ff14;
+        }
+
+        /* Question Box */
+        .question-box {
+            font-size: 1.3rem;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 20px;
+            min-height: 70px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #ffffff;
+            text-shadow: 0 0 5px rgba(255, 255, 255, 0.8);
+            line-height: 1.4;
+        }
+
+        /* Answer Options */
+        .options-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            width: 100%;
+            margin-bottom: 15px;
+        }
+
+        .btn-option {
+            background: #121228;
+            color: #fff;
+            border: 3px solid #ff007f;
+            border-radius: 15px;
+            padding: 15px 20px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: left;
+            display: flex;
+            align-items: center;
+            box-shadow: 0 4px 10px rgba(255, 0, 127, 0.3);
+        }
+
+        .btn-option:active {
+            transform: scale(0.97);
+        }
+
+        .btn-option:hover {
+            background: #ff007f;
+            color: #000;
+            box-shadow: 0 0 15px #ff007f;
+        }
+
+        .btn-option.correct {
+            background: #39ff14 !important;
+            color: #000 !important;
+            border-color: #ffffff !important;
+            box-shadow: 0 0 20px #39ff14 !important;
+        }
+
+        .btn-option.wrong {
+            background: #ff2222 !important;
+            color: #fff !important;
+            border-color: #ffffff !important;
+            box-shadow: 0 0 15px #ff2222 !important;
+        }
+
+        /* Feedback Popup Box */
+        .feedback-box {
+            width: 100%;
+            background: #111;
+            border: 3px solid #ffe600;
+            border-radius: 15px;
+            padding: 15px;
+            text-align: center;
+            margin-top: 10px;
+            display: none;
+            box-shadow: 0 0 15px #ffe600;
+        }
+
+        .feedback-title {
+            font-size: 1.4rem;
+            font-weight: 900;
+            margin-bottom: 5px;
+        }
+
+        .feedback-text {
+            font-size: 1.05rem;
+            margin-bottom: 15px;
+            color: #eee;
+        }
+
+        .btn-action {
+            background: #ffe600;
+            color: #000;
+            border: none;
+            border-radius: 12px;
+            padding: 12px 25px;
+            font-size: 1.2rem;
+            font-weight: 900;
+            cursor: pointer;
+            box-shadow: 0 0 15px #ffe600;
+            transition: transform 0.2s;
+        }
+
+        .btn-action:hover {
+            transform: scale(1.05);
+        }
+
+        /* Controls / Audio Toggle */
+        .top-bar {
+            width: 100%;
+            max-width: 650px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .sound-btn {
+            background: #1a1a2e;
+            border: 2px solid #00f3ff;
+            color: #00f3ff;
+            border-radius: 10px;
+            padding: 8px 15px;
+            font-size: 0.9rem;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        /* Canvas Mini Game View */
+        #game-canvas-container {
+            display: none;
+            width: 100%;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        canvas {
+            background: #000;
+            border: 3px solid #39ff14;
+            border-radius: 15px;
+            box-shadow: 0 0 20px rgba(57, 255, 20, 0.4);
+            max-width: 100%;
+            touch-action: none;
+        }
+
+        .canvas-controls {
+            margin-top: 10px;
+            font-size: 0.9rem;
+            color: #00f3ff;
+            text-align: center;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="top-bar">
+        <div style="font-weight: bold; color: #ffe600; text-shadow: 0 0 5px #ffe600;">YEAR 3 HISTORY QUEST</div>
+        <button id="sound-toggle" class="sound-btn" onclick="toggleSound()">🔊 Sound: ON</button>
+    </div>
+
+    <h1 class="neon-title">HISTORY BATTLE</h1>
+    <div class="neon-sub">THE STONE AGE</div>
+
+    <div class="game-card">
+        
+        <!-- Level Badges -->
+        <div id="badge-row" class="level-badges">
+            <div id="badge-1" class="badge active" title="Level 1">🦴</div>
+            <div id="badge-2" class="badge" title="Level 2">🔥</div>
+            <div id="badge-3" class="badge" title="Level 3">🏹</div>
+            <div id="badge-4" class="badge" title="Level 4">🪨</div>
+            <div id="badge-5" class="badge" title="Level 5">👑</div>
+        </div>
+
+        <!-- Progress Bar -->
+        <div class="progress-container">
+            <div id="progress-bar" class="progress-fill"></div>
+        </div>
+
+        <!-- Quiz Screen -->
+        <div id="quiz-screen" style="width: 100%;">
+            <div id="level-indicator" style="text-align: center; color: #39ff14; font-weight: bold; margin-bottom: 8px;">LEVEL 1 • QUESTION 1 OF 3</div>
+            
+            <div id="question-text" class="question-box">
+                Loading Question...
+            </div>
+
+            <div id="options-container" class="options-grid">
+                <!-- Options generated dynamically -->
+            </div>
+
+            <!-- Feedback Modal -->
+            <div id="feedback-container" class="feedback-box">
+                <div id="feedback-title" class="feedback-title"></div>
+                <div id="feedback-text" class="feedback-text"></div>
+                <button id="next-btn" class="btn-action" onclick="handleNextClick()">NEXT</button>
+            </div>
+        </div>
+
+        <!-- Reward Unlock Screen -->
+        <div id="reward-screen" class="hidden" style="text-align: center;">
+            <h2 style="color: #ffe600; text-shadow: 0 0 15px #ffe600; font-size: 2rem; margin-bottom: 10px;">🏆 CHAMPION OF THE STONE AGE! 🏆</h2>
+            <p style="font-size: 1.1rem; margin-bottom: 20px;">You answered all 15 questions correctly and mastered Stone Age history!</p>
+            <p style="color: #39ff14; font-size: 1.3rem; font-weight: bold; margin-bottom: 20px;">REWARD UNLOCKED: ASTEROID SHOOTER MINI-GAME!</p>
+            <button class="btn-action" onclick="startMiniGame()">PLAY MINI-GAME NOW 🚀</button>
+        </div>
+
+        <!-- Mini Game Screen -->
+        <div id="game-canvas-container">
+            <div style="display: flex; justify-content: space-between; width: 100%; margin-bottom: 8px; font-weight: bold;">
+                <span style="color: #39ff14;">SCORE: <span id="game-score">0</span></span>
+                <span style="color: #ff007f;">ASTEROID SHOOTER</span>
+            </div>
+            <canvas id="arcadeCanvas" width="360" height="420"></canvas>
+            <div class="canvas-controls">
+                💻 Keyboard: Left/Right Arrows or A/D to Move | Spacebar to Shoot<br>
+                📱 Mobile: Drag screen to move & shoot!
+            </div>
+            <button class="btn-action" style="margin-top: 15px; background: #00f3ff; box-shadow: 0 0 10px #00f3ff;" onclick="restartEntireGame()">PLAY QUIZ AGAIN 🔄</button>
+        </div>
+
+    </div>
+
+    <script>
+        // --- Web Audio API Sound Effects (Zero External Files) ---
+        let soundEnabled = true;
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        let audioCtx = null;
+
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new AudioContext();
+            }
+        }
+
+        function toggleSound() {
+            soundEnabled = !soundEnabled;
+            document.getElementById('sound-toggle').innerText = soundEnabled ? "🔊 Sound: ON" : "🔇 Sound: OFF";
+        }
+
+        function playSound(type) {
+            if (!soundEnabled) return;
+            initAudio();
+
+            try {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+
+                const now = audioCtx.currentTime;
+
+                if (type === 'correct') {
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(523.25, now); // C5
+                    osc.frequency.exponentialRampToValueAtTime(659.25, now + 0.1); // E5
+                    osc.frequency.exponentialRampToValueAtTime(783.99, now + 0.2); // G5
+                    gain.gain.setValueAtTime(0.3, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+                    osc.start(now);
+                    osc.stop(now + 0.4);
+                } else if (type === 'wrong') {
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(200, now);
+                    osc.frequency.linearRampToValueAtTime(120, now + 0.25);
+                    gain.gain.setValueAtTime(0.3, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+                    osc.start(now);
+                    osc.stop(now + 0.3);
+                } else if (type === 'laser') {
+                    osc.type = 'square';
+                    osc.frequency.setValueAtTime(800, now);
+                    osc.frequency.exponentialRampToValueAtTime(100, now + 0.15);
+                    gain.gain.setValueAtTime(0.2, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+                    osc.start(now);
+                    osc.stop(now + 0.15);
+                } else if (type === 'boom') {
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(120, now);
+                    osc.frequency.exponentialRampToValueAtTime(30, now + 0.25);
+                    gain.gain.setValueAtTime(0.4, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
+                    osc.start(now);
+                    osc.stop(now + 0.25);
+                } else if (type === 'win') {
+                    osc.type = 'sine';
+                    const notes = [440, 554.37, 659.25, 880];
+                    notes.forEach((freq, index) => {
+                        const noteOsc = audioCtx.createOscillator();
+                        const noteGain = audioCtx.createGain();
+                        noteOsc.connect(noteGain);
+                        noteGain.connect(audioCtx.destination);
+                        noteOsc.frequency.value = freq;
+                        noteGain.gain.setValueAtTime(0.2, now + index * 0.12);
+                        noteGain.gain.exponentialRampToValueAtTime(0.01, now + index * 0.12 + 0.25);
+                        noteOsc.start(now + index * 0.12);
+                        noteOsc.stop(now + index * 0.12 + 0.25);
+                    });
+                }
+            } catch(e) {
+                // Audio safety fallback
+            }
+        }
+
+        // --- Stone Age Curriculum Quiz Data (15 Questions, 5 Levels) ---
+        const quizData = [
+            // Level 1: Basic Paleolithic Life
+            {
+                level: 1,
+                question: "Where did many Early Stone Age people live to stay warm and safe?",
+                options: ["In wooden castles", "Inside dark caves", "In tall brick houses"],
+                answer: 1,
+                explanation: "Correct! Early Stone Age people used caves as natural shelters against rain and wild animals!"
+            },
+            {
+                level: 1,
+                question: "What were tools and weapons made of during the Stone Age?",
+                options: ["Plastic", "Metal and steel", "Stone, bone, and wood"],
+                answer: 2,
+                explanation: "Super job! Before metal was discovered, stone, bones, and sticks were shaped into tools!"
+            },
+            {
+                level: 1,
+                question: "How did Stone Age people get their food at first?",
+                options: ["Hunting animals and gathering plants", "Buying food from shops", "Ordering pizza"],
+                answer: 0,
+                explanation: "Awesome! They were known as Hunter-Gatherers!"
+            },
+
+            // Level 2: Fire & Animals
+            {
+                level: 2,
+                question: "Why was discovering fire so important for Stone Age humans?",
+                options: ["To cook meat, keep warm, and scare away dangerous animals", "To make ice cream", "To power lightbulbs"],
+                answer: 0,
+                explanation: "Spot on! Fire kept them warm, cooked tough meat, and kept wild beasts away at night!"
+            },
+            {
+                level: 2,
+                question: "Which huge, hairy animal with big curved tusks did Stone Age humans hunt?",
+                options: ["T-Rex", "Woolly Mammoth", "Giraffe"],
+                answer: 1,
+                explanation: "Brilliant! Woolly mammoths had thick fur to survive the freezing Ice Age!"
+            },
+            {
+                level: 2,
+                question: "Which sharp-toothed predator lived during the Stone Age Ice Age?",
+                options: ["Sabre-toothed Cat", "Pterodactyl", "Polar Bear"],
+                answer: 0,
+                explanation: "Well done! Sabre-toothed cats had long upper canine teeth like big daggers!"
+            },
+
+            // Level 3: Tools & Materials
+            {
+                level: 3,
+                question: "Which hard stone was chipped and carved to make sharp spearheads and axes?",
+                options: ["Sand", "Flint", "Chalk"],
+                answer: 1,
+                explanation: "Correct! Flint breaks into very sharp edges, perfect for knives and arrowheads!"
+            },
+            {
+                level: 3,
+                question: "What did Stone Age people use to make warm clothes during winter?",
+                options: ["Cotton T-shirts", "Animal skins and furs", "Plastic coats"],
+                answer: 1,
+                explanation: "Great answer! Animal furs were stitched together using bone needles to keep out the cold!"
+            },
+            {
+                level: 3,
+                question: "What special art did Stone Age people leave on cave walls?",
+                options: ["Graffiti posters", "Paintings made from crushed berries and earth", "Framed photographs"],
+                answer: 1,
+                explanation: "You got it! Cave paintings showed hunting scenes using pigments from dirt, charcoal, and berries!"
+            },
+
+            // Level 4: Settlements & Farming (Mesolithic / Neolithic)
+            {
+                level: 4,
+                question: "In the Neolithic (New Stone Age), what big change happened in how people got food?",
+                options: ["They started farming plants and taming animals", "They bought food from boats", "They stopped eating"],
+                answer: 0,
+                explanation: "Fantastic! Farming meant people could settle down in villages instead of moving constantly!"
+            },
+            {
+                level: 4,
+                question: "What famous Stone Age village was discovered in Scotland, made entirely of stone houses?",
+                options: ["London Castle", "Skara Brae", "Stonehenge"],
+                answer: 1,
+                explanation: "Super star! Skara Brae in Orkney has stone beds, stone dressers, and stone hearths!"
+            },
+            {
+                level: 4,
+                question: "What were homes in Neolithic villages often made from?",
+                options: ["Bricks and glass", "Wattle and daub (sticks woven together and covered in mud)", "Cardboard boxes"],
+                answer: 1,
+                explanation: "Correct! Wattle and daub made sturdy, insulated walls for early homes!"
+            },
+
+            // Level 5: Monuments & Bronze Transition
+            {
+                level: 5,
+                question: "What famous ancient monument with huge standing stones was built in Wiltshire, England?",
+                options: ["Stonehenge", "The Eiffel Tower", "The Pyramids"],
+                answer: 0,
+                explanation: "Incredible! Stonehenge was built thousands of years ago using massive stones transported from miles away!"
+            },
+            {
+                level: 5,
+                question: "What weapon tool was invented to shoot arrows for hunting deer?",
+                options: ["Catapult", "Bow and Arrow", "Cannon"],
+                answer: 1,
+                explanation: "Spot on! The bow and arrow allowed hunters to catch fast prey from a safer distance!"
+            },
+            {
+                level: 5,
+                question: "What age came directly AFTER the Stone Age when humans discovered shiny metals?",
+                options: ["The Steam Age", "The Bronze Age", "The Space Age"],
+                answer: 1,
+                explanation: "YOU DID IT! The Bronze Age started when people learned to melt copper and tin together to make bronze!"
+            }
+        ];
+
+        // --- State Variables ---
+        let currentQuestionIndex = 0;
+        let isAnswered = false;
+
+        // Dynamic Elements
+        const questionText = document.getElementById('question-text');
+        const optionsContainer = document.getElementById('options-container');
+        const feedbackContainer = document.getElementById('feedback-container');
+        const feedbackTitle = document.getElementById('feedback-title');
+        const feedbackText = document.getElementById('feedback-text');
+        const nextBtn = document.getElementById('next-btn');
+        const levelIndicator = document.getElementById('level-indicator');
+        const progressBar = document.getElementById('progress-bar');
+
+        // Initializer
+        function loadQuestion() {
+            isAnswered = false;
+            feedbackContainer.style.display = 'none';
+
+            const qData = quizData[currentQuestionIndex];
+            const levelQIndex = (currentQuestionIndex % 3) + 1;
+
+            levelIndicator.innerText = `LEVEL ${qData.level} • QUESTION ${levelQIndex} OF 3`;
+            questionText.innerText = qData.question;
+
+            // Update badges
+            for (let i = 1; i <= 5; i++) {
+                const badge = document.getElementById(`badge-${i}`);
+                if (i < qData.level) {
+                    badge.className = "badge completed";
+                } else if (i === qData.level) {
+                    badge.className = "badge active";
+                } else {
+                    badge.className = "badge";
+                }
+            }
+
+            // Update Progress Bar
+            const progressPercent = (currentQuestionIndex / quizData.length) * 100;
+            progressBar.style.width = `${progressPercent}%`;
+
+            // Clear and build options
+            optionsContainer.innerHTML = '';
+            qData.options.forEach((option, index) => {
+                const btn = document.createElement('button');
+                btn.className = 'btn-option';
+                btn.innerText = `${['A', 'B', 'C'][index]}. ${option}`;
+                btn.onclick = () => selectOption(index, btn);
+                optionsContainer.appendChild(btn);
+            });
+        }
+
+        function selectOption(selectedIndex, buttonElem) {
+            if (isAnswered) return;
+
+            const qData = quizData[currentQuestionIndex];
+            const allOptionButtons = optionsContainer.querySelectorAll('.btn-option');
+
+            if (selectedIndex === qData.answer) {
+                // Correct Answer
+                isAnswered = true;
+                playSound('correct');
+                buttonElem.classList.add('correct');
+
+                // Disable all options
+                allOptionButtons.forEach(btn => btn.style.pointerEvents = 'none');
+
+                feedbackContainer.style.display = 'block';
+                feedbackContainer.style.borderColor = '#39ff14';
+                feedbackContainer.style.boxShadow = '0 0 15px #39ff14';
+                feedbackTitle.innerText = "🌟 AWESOME! THAT'S RIGHT!";
+                feedbackTitle.style.color = '#39ff14';
+                feedbackText.innerText = qData.explanation;
+                nextBtn.innerText = currentQuestionIndex === quizData.length - 1 ? "CLAIM REWARD 🎁" : "NEXT QUESTION ➡️";
+
+            } else {
+                // Wrong Answer (Friendly Retry)
+                playSound('wrong');
+                buttonElem.classList.add('wrong');
+                buttonElem.style.pointerEvents = 'none'; // Disable wrong button so they pick another
+
+                feedbackContainer.style.display = 'block';
+                feedbackContainer.style.borderColor = '#ff007f';
+                feedbackContainer.style.boxShadow = '0 0 15px #ff007f';
+                feedbackTitle.innerText = "💪 TRY AGAIN! YOU CAN DO IT!";
+                feedbackTitle.style.color = '#ff007f';
+                feedbackText.innerText = "That's not quite right. Pick another option above!";
+                nextBtn.innerText = "TRY AGAIN 🔄";
+            }
+        }
+
+        function handleNextClick() {
+            if (!isAnswered) {
+                // Was just a retry message close
+                feedbackContainer.style.display = 'none';
+                return;
+            }
+
+            currentQuestionIndex++;
+
+            if (currentQuestionIndex < quizData.length) {
+                loadQuestion();
+            } else {
+                // All 15 finished! Show reward screen
+                progressBar.style.width = '100%';
+                document.getElementById('quiz-screen').classList.add('hidden');
+                document.getElementById('badge-row').classList.add('hidden');
+                document.querySelector('.progress-container').classList.add('hidden');
+                document.getElementById('reward-screen').classList.remove('hidden');
+                playSound('win');
+            }
+        }
+
+        // --- Asteroid Shooter Game Mechanics ---
+        let canvas, ctx;
+        let gameLoopId = null;
+        let score = 0;
+        let player = { x: 160, y: 360, width: 40, height: 40, speed: 6 };
+        let bullets = [];
+        let asteroids = [];
+        let particles = [];
+        let keys = {};
+        let isTouching = false;
+
+        function startMiniGame() {
+            document.getElementById('reward-screen').classList.add('hidden');
+            document.getElementById('game-canvas-container').style.display = 'flex';
+
+            canvas = document.getElementById('arcadeCanvas');
+            ctx = canvas.getContext('2d');
+
+            // Reset Game Variables
+            score = 0;
+            document.getElementById('game-score').innerText = score;
+            player.x = canvas.width / 2 - 20;
+            bullets = [];
+            asteroids = [];
+            particles = [];
+
+            // Keyboard Listeners
+            window.addEventListener('keydown', e => keys[e.code] = true);
+            window.addEventListener('keyup', e => keys[e.code] = false);
+
+            // Touch / Mouse Pointer Control
+            canvas.addEventListener('pointerdown', handlePointer);
+            canvas.addEventListener('pointermove', handlePointer);
+
+            function handlePointer(e) {
+                const rect = canvas.getBoundingClientRect();
+                const clickX = e.clientX - rect.left;
+                player.x = clickX - player.width / 2;
+
+                // Auto-shoot on tap/drag
+                shootBullet();
+            }
+
+            // Auto-Shoot Interval for keyboard spacebar
+            setInterval(() => {
+                if (keys['Space']) {
+                    shootBullet();
+                }
+            }, 200);
+
+            if (gameLoopId) cancelAnimationFrame(gameLoopId);
+            gameLoop();
+        }
+
+        let lastShootTime = 0;
+        function shootBullet() {
+            const now = Date.now();
+            if (now - lastShootTime > 150) {
+                bullets.push({
+                    x: player.x + player.width / 2 - 3,
+                    y: player.y,
+                    width: 6,
+                    height: 14,
+                    speed: 8
+                });
+                playSound('laser');
+                lastShootTime = now;
+            }
+        }
+
+        function createExplosion(x, y) {
+            for (let i = 0; i < 12; i++) {
+                particles.push({
+                    x: x,
+                    y: y,
+                    vx: (Math.random() - 0.5) * 6,
+                    vy: (Math.random() - 0.5) * 6,
+                    radius: Math.random() * 4 + 2,
+                    color: ['#ff007f', '#ffe600', '#00f3ff', '#39ff14'][Math.floor(Math.random() * 4)],
+                    life: 20
+                });
+            }
+        }
+
+        function gameLoop() {
+            // Update Player Movement
+            if ((keys['ArrowLeft'] || keys['KeyA']) && player.x > 0) {
+                player.x -= player.speed;
+            }
+            if ((keys['ArrowRight'] || keys['KeyD']) && player.x < canvas.width - player.width) {
+                player.x += player.speed;
+            }
+
+            // Clear Screen
+            ctx.fillStyle = '#050510';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Draw Stars background
+            ctx.fillStyle = '#ffffff';
+            for (let i = 0; i < 15; i++) {
+                let sx = (Math.sin(i * 99 + Date.now() * 0.001) * 0.5 + 0.5) * canvas.width;
+                let sy = ((i * 30 + Date.now() * 0.05) % canvas.height);
+                ctx.fillRect(sx, sy, 2, 2);
+            }
+
+            // Draw Player Ship (Neon Triangle)
+            ctx.fillStyle = '#00f3ff';
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = '#00f3ff';
+            ctx.beginPath();
+            ctx.moveTo(player.x + player.width / 2, player.y);
+            ctx.lineTo(player.x, player.y + player.height);
+            ctx.lineTo(player.x + player.width, player.y + player.height);
+            ctx.closePath();
+            ctx.fill();
+            ctx.shadowBlur = 0; // reset
+
+            // Spawn Asteroids
+            if (Math.random() < 0.035) {
+                asteroids.push({
+                    x: Math.random() * (canvas.width - 30),
+                    y: -30,
+                    size: Math.random() * 20 + 20,
+                    speed: Math.random() * 2 + 1.5
+                });
+            }
+
+            // Update & Draw Bullets
+            ctx.fillStyle = '#ffe600';
+            ctx.shadowBlur = 8;
+            ctx.shadowColor = '#ffe600';
+            for (let i = bullets.length - 1; i >= 0; i--) {
+                let b = bullets[i];
+                b.y -= b.speed;
+                ctx.fillRect(b.x, b.y, b.width, b.height);
+
+                if (b.y < -10) bullets.splice(i, 1);
+            }
+            ctx.shadowBlur = 0;
+
+            // Update & Draw Asteroids
+            for (let i = asteroids.length - 1; i >= 0; i--) {
+                let ast = asteroids[i];
+                ast.y += ast.speed;
+
+                // Draw Asteroid (Neon Red Rock)
+                ctx.strokeStyle = '#ff007f';
+                ctx.lineWidth = 3;
+                ctx.fillStyle = '#220515';
+                ctx.beginPath();
+                ctx.arc(ast.x + ast.size / 2, ast.y + ast.size / 2, ast.size / 2, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.stroke();
+
+                // Bullet Collision Check
+                for (let j = bullets.length - 1; j >= 0; j--) {
+                    let b = bullets[j];
+                    if (b.x < ast.x + ast.size &&
+                        b.x + b.width > ast.x &&
+                        b.y < ast.y + ast.size &&
+                        b.y + b.height > ast.y) {
+                        
+                        // Boom!
+                        playSound('boom');
+                        createExplosion(ast.x + ast.size / 2, ast.y + ast.size / 2);
+                        asteroids.splice(i, 1);
+                        bullets.splice(j, 1);
+
+                        score += 10;
+                        document.getElementById('game-score').innerText = score;
+                        break;
+                    }
+                }
+
+                // Remove out of bounds asteroids
+                if (ast && ast.y > canvas.height + 40) {
+                    asteroids.splice(i, 1);
+                }
+            }
+
+            // Update & Draw Particles
+            for (let i = particles.length - 1; i >= 0; i--) {
+                let p = particles[i];
+                p.x += p.vx;
+                p.y += p.vy;
+                p.life--;
+
+                ctx.fillStyle = p.color;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+                ctx.fill();
+
+                if (p.life <= 0) particles.splice(i, 1);
+            }
+
+            gameLoopId = requestAnimationFrame(gameLoop);
+        }
+
+        function restartEntireGame() {
+            if (gameLoopId) cancelAnimationFrame(gameLoopId);
+            currentQuestionIndex = 0;
+            document.getElementById('game-canvas-container').style.display = 'none';
+            document.getElementById('quiz-screen').classList.remove('hidden');
+            document.getElementById('badge-row').classList.remove('hidden');
+            document.querySelector('.progress-container').classList.remove('hidden');
+            loadQuestion();
+        }
+
+        // Initialize First Question on Load
+        window.onload = function() {
+            loadQuestion();
+        };
+    </script>
+</body>
+</html>

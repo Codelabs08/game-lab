@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Stone Age Quiz &amp; Adventure</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Quicksand:wght@500;700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Quicksand', sans-serif;
+      background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 30%, #a1c4fd 70%, #c2e9fb 100%);
+      min-height: 100vh;
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: manipulation;
+    }
+
+    .font-fredoka {
+      font-family: 'Fredoka One', cursive;
+    }
+
+    .rainbow-text {
+      background: linear-gradient(45deg, #ff0055, #ff5000, #ffb700, #00b050, #0070c0, #7030a0);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .rainbow-border {
+      position: relative;
+      background: white;
+      border-radius: 2rem;
+    }
+
+    .rainbow-border::before {
+      content: '';
+      position: absolute;
+      top: -6px; left: -6px; right: -6px; bottom: -6px;
+      background: linear-gradient(45deg, #ff4e50, #f9d423, #24fe41, #00c6ff, #e100ff);
+      border-radius: 2.2rem;
+      z-index: -1;
+      animation: rainbowGlow 6s linear infinite;
+    }
+
+    @keyframes rainbowGlow {
+      0% { filter: hue-rotate(0deg); }
+      100% { filter: hue-rotate(360deg); }
+    }
+
+    .bounce-btn {
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+    .bounce-btn:hover {
+      transform: scale(1.04) translateY(-2px);
+    }
+    .bounce-btn:active {
+      transform: scale(0.96) translateY(2px);
+    }
+
+    .float-anim {
+      animation: float 3s ease-in-out infinite;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0px) rotate(0deg); }
+      50% { transform: translateY(-10px) rotate(2deg); }
+    }
+
+    canvas {
+      touch-action: none;
+    }
+  </style>
+</head>
+<body class="flex flex-col items-center justify-between min-h-screen p-3 md:p-6 overflow-x-hidden text-gray-800">
+
+  <!-- Top Navigation Header -->
+  <header class="w-full max-w-4xl flex items-center justify-between bg-white/80 backdrop-blur-md p-4 rounded-3xl shadow-lg border-2 border-white mb-4">
+    <div class="flex items-center gap-3">
+      <div class="w-12 h-12 bg-amber-400 rounded-2xl flex items-center justify-center text-2xl shadow-md border-2 border-amber-300">
+        🦴
+      </div>
+      <div>
+        <h1 class="text-2xl md:text-3xl font-fredoka rainbow-text leading-none">Stone Age Quiz</h1>
+        <p class="text-xs md:text-sm font-bold text-indigo-600">Stone Age Explorer Game</p>
+      </div>
+    </div>
+
+    <!-- Stats & Sound Controls -->
+    <div class="flex items-center gap-3 md:gap-5">
+      <div class="flex items-center gap-1.5 bg-amber-100 border-2 border-amber-300 px-3 py-1.5 rounded-2xl">
+        <span class="text-xl">⭐</span>
+        <span id="global-stars" class="font-fredoka text-amber-700 text-lg md:text-xl">0</span>
+      </div>
+
+      <button id="sound-btn" onclick="toggleAudio()" class="w-11 h-11 bg-indigo-100 border-2 border-indigo-300 rounded-2xl flex items-center justify-center text-xl shadow-sm bounce-btn">
+        🔊
+      </button>
+    </div>
+  </header>
+
+  <!-- MAIN APP CONTAINER -->
+  <main class="w-full max-w-3xl flex-1 flex flex-col justify-center items-center my-auto">
+
+    <!-- VIEW 1: START SCREEN -->
+    <div id="view-start" class="w-full bg-white/90 backdrop-blur-md p-6 md:p-10 rounded-3xl shadow-2xl border-4 border-white text-center flex flex-col items-center">
+      <!-- Cartoon Mammoth SVG SVG Banner -->
+      <div class="w-36 h-36 md:w-48 md:h-48 mb-4 float-anim">
+        <svg viewBox="0 0 200 200" class="w-full h-full drop-shadow-xl">
+          <!-- Cute Woolly Mammoth -->
+          <ellipse cx="100" cy="120" rx="55" ry="45" fill="#8B4513"/>
+          <circle cx="70" cy="85" r="35" fill="#8B4513"/>
+          <ellipse cx="65" cy="75" rx="38" ry="20" fill="#A0522D"/>
+          <!-- Eyes -->
+          <circle cx="55" cy="80" r="6" fill="#000"/>
+          <circle cx="53" cy="78" r="2" fill="#FFF"/>
+          <circle cx="75" cy="80" r="6" fill="#000"/>
+          <circle cx="73" cy="78" r="2" fill="#FFF"/>
+          <!-- Cheeks -->
+          <circle cx="48" cy="90" r="5" fill="#FF8080" opacity="0.6"/>
+          <circle cx="82" cy="90" r="5" fill="#FF8080" opacity="0.6"/>
+          <!-- Tusks -->
+          <path d="M 50 100 Q 30 110 35 85" stroke="#FFF" stroke-width="8" fill="none" stroke-linecap="round"/>
+          <path d="M 80 100 Q 95 110 90 85" stroke="#FFF" stroke-width="8" fill="none" stroke-linecap="round"/>
+          <!-- Trunk -->
+          <path d="M 65 92 Q 65 125 80 120" stroke="#8B4513" stroke-width="14" fill="none" stroke-linecap="round"/>
+          <!-- Cute Hair Cut -->
+          <path d="M 45 60 Q 70 40 95 60 Q 70 50 45 60" fill="#653700"/>
+        </svg>
+      </div>
+
+      <h2 class="text-3xl md:text-5xl font-fredoka text-indigo-900 mb-2">Welcome, Stone Age Explorer!</h2>
+      <p class="text-base md:text-lg text-gray-600 mb-6 max-w-md font-semibold">
+        Journey through 5 exciting levels, answer fun questions, and catch falling stars! 🌟
+      </p>
+
+      <button onclick="startGame()" class="px-8 py-4 bg-gradient-to-r from-emerald-400 to-teal-500 text-white font-fredoka text-2xl md:text-3xl rounded-3xl shadow-lg hover:shadow-2xl border-4 border-emerald-200 bounce-btn flex items-center gap-3">
+        <span>PLAY NOW</span>
+        <span>🚀</span>
+      </button>
+    </div>
+
+    <!-- VIEW 2: QUIZ GAME -->
+    <div id="view-quiz" class="hidden w-full">
+      <!-- Progress Bar Card -->
+      <div class="bg-white/90 p-4 rounded-3xl shadow-md border-2 border-white mb-4 flex flex-col gap-2">
+        <div class="flex justify-between items-center font-bold text-sm md:text-base text-indigo-900">
+          <span id="level-indicator" class="bg-indigo-100 text-indigo-800 px-3 py-1 rounded-full border border-indigo-200">Level 1 of 5</span>
+          <span id="question-indicator" class="bg-amber-100 text-amber-800 px-3 py-1 rounded-full border border-amber-200">Question 1/3</span>
+        </div>
+        <div class="w-full bg-gray-200 h-4 rounded-full overflow-hidden p-0.5 border border-gray-300">
+          <div id="progress-bar" class="bg-gradient-to-r from-emerald-400 via-sky-400 to-indigo-500 h-full rounded-full transition-all duration-500" style="width: 20%;"></div>
+        </div>
+      </div>
+
+      <!-- Main Question Card -->
+      <div class="rainbow-border p-6 md:p-8 shadow-2xl flex flex-col items-center">
+        <!-- SVG Mascot Helper -->
+        <div class="flex items-center gap-4 w-full mb-4 bg-amber-50/80 p-3 rounded-2xl border border-amber-200">
+          <div class="w-16 h-16 flex-shrink-0">
+            <svg viewBox="0 0 100 100" class="w-full h-full">
+              <!-- Cute Cave Kid -->
+              <circle cx="50" cy="45" r="30" fill="#FFD1B3"/>
+              <!-- Hair -->
+              <path d="M 20 40 C 20 10 80 10 80 40 C 70 25 30 25 20 40 Z" fill="#6B3e2e"/>
+              <path d="M 30 15 L 40 5 L 50 18 L 60 5 L 70 15" stroke="#FFF" stroke-width="3" fill="none"/>
+              <!-- Eyes -->
+              <circle cx="38" cy="42" r="4" fill="#000"/>
+              <circle cx="62" cy="42" r="4" fill="#000"/>
+              <!-- Smile -->
+              <path d="M 40 55 Q 50 65 60 55" stroke="#000" stroke-width="3" fill="none" stroke-linecap="round"/>
+              <!-- Blush -->
+              <circle cx="32" cy="48" r="3" fill="#FF8080"/>
+              <circle cx="68" cy="48" r="3" fill="#FF8080"/>
+            </svg>
+          </div>
+          <p id="mascot-speech" class="text-sm md:text-base font-bold text-amber-900 italic">
+            "You can do it! Think about early history!"
+          </p>
+        </div>
+
+        <h3 id="question-text" class="text-xl md:text-2xl font-fredoka text-center text-slate-800 mb-6 min-h-[60px] flex items-center justify-center">
+          Loading Question...
+        </h3>
+
+        <!-- 3 Multiple Choice Options -->
+        <div id="options-container" class="w-full flex flex-col gap-3.5">
+          <!-- Dynamic Buttons injected here -->
+        </div>
+
+        <!-- Correct Fact Modal / Feedback Box -->
+        <div id="feedback-box" class="hidden mt-6 w-full p-4 rounded-2xl border-2 text-center transition-all animate-bounce-short">
+          <div id="feedback-title" class="font-fredoka text-xl mb-1"></div>
+          <div id="feedback-fact" class="text-sm md:text-base font-semibold text-gray-700"></div>
+          <button id="next-btn" onclick="nextQuestion()" class="mt-4 px-6 py-2.5 bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-fredoka text-lg rounded-2xl shadow-md bounce-btn">
+            Continue ➔
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- VIEW 3: REWARD MINI-GAME (Catch Falling Stars) -->
+    <div id="view-minigame" class="hidden w-full bg-slate-900 text-white p-4 md:p-6 rounded-3xl shadow-2xl border-4 border-indigo-400 flex flex-col items-center">
+      <div class="w-full flex justify-between items-center mb-3">
+        <div>
+          <span class="text-xs text-amber-300 font-bold block">REWARD MINI-GAME</span>
+          <h3 class="text-xl md:text-2xl font-fredoka text-yellow-300">Catch the Stars! ⭐</h3>
+        </div>
+        <div class="flex items-center gap-4">
+          <div class="bg-slate-800 border border-slate-700 px-3 py-1 rounded-xl text-center">
+            <span class="text-xs text-gray-400 block">TIME</span>
+            <span id="game-timer" class="font-fredoka text-xl text-emerald-400">15s</span>
+          </div>
+          <div class="bg-slate-800 border border-slate-700 px-3 py-1 rounded-xl text-center">
+            <span class="text-xs text-gray-400 block">STARS</span>
+            <span id="game-stars" class="font-fredoka text-xl text-amber-400">0</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Canvas Arcade Area -->
+      <div class="relative w-full aspect-[4/3] max-h-[360px] bg-gradient-to-b from-indigo-950 to-purple-950 rounded-2xl overflow-hidden border-2 border-indigo-500/50 shadow-inner">
+        <canvas id="star-canvas" class="w-full h-full"></canvas>
+
+        <!-- Touch Controls overlay for Mobile -->
+        <div class="absolute inset-0 flex justify-between pointer-events-none md:hidden">
+          <div id="touch-left" class="w-1/2 h-full pointer-events-auto active:bg-white/10 flex items-center justify-start pl-4 opacity-40 text-4xl">👈</div>
+          <div id="touch-right" class="w-1/2 h-full pointer-events-auto active:bg-white/10 flex items-center justify-end pr-4 opacity-40 text-4xl">👉</div>
+        </div>
+      </div>
+
+      <p class="text-xs text-indigo-200 mt-2 font-medium text-center">
+        Use <b>Left & Right Arrow Keys</b>, <b>Mouse/Drag</b>, or <b>Tap Sides</b> to move!
+      </p>
+
+      <!-- Mini-game overlay message when finished -->
+      <div id="minigame-summary" class="hidden absolute inset-0 bg-slate-950/90 backdrop-blur-sm rounded-3xl flex flex-col items-center justify-center p-6 text-center z-20">
+        <span class="text-5xl mb-2">🎉</span>
+        <h4 class="text-3xl font-fredoka text-yellow-300 mb-1">Awesome Job!</h4>
+        <p class="text-lg text-indigo-100 mb-4 font-semibold">You caught <span id="summary-stars-count" class="text-amber-300 font-bold">0</span> bonus stars!</p>
+        <button onclick="finishMinigame()" class="px-8 py-3 bg-gradient-to-r from-emerald-400 to-teal-500 text-white font-fredoka text-xl rounded-2xl shadow-lg bounce-btn">
+          Next Level 🚀
+        </button>
+      </div>
+    </div>
+
+    <!-- VIEW 4: VICTORY & CERTIFICATE -->
+    <div id="view-victory" class="hidden w-full bg-white/95 backdrop-blur-md p-6 md:p-8 rounded-3xl shadow-2xl border-4 border-amber-300 text-center flex flex-col items-center">
+      <div class="text-6xl mb-2 float-anim">🏆</div>
+      <h2 class="text-3xl md:text-5xl font-fredoka rainbow-text mb-2">Stone Age Master!</h2>
+      <p class="text-base md:text-lg font-bold text-indigo-900 mb-4">
+        You completed all 5 levels of Stone Age Quiz!
+      </p>
+
+      <div class="bg-amber-50 border-2 border-amber-200 p-4 rounded-2xl mb-6 flex items-center gap-4">
+        <span class="text-4xl">⭐</span>
+        <div class="text-left">
+          <p class="text-xs text-amber-700 font-bold uppercase tracking-wider">Total Score</p>
+          <p class="text-2xl font-fredoka text-amber-900"><span id="final-star-total">0</span> Stars Earned</p>
+        </div>
+      </div>
+
+      <!-- Printable Certificate Box -->
+      <div id="certificate" class="w-full bg-amber-50 border-4 border-dashed border-amber-400 p-6 rounded-2xl text-center relative mb-6">
+        <div class="text-xs font-bold text-amber-800 tracking-widest uppercase mb-1">Official Certificate of Achievement</div>
+        <h3 class="text-2xl font-fredoka text-amber-950 mb-2">Stone Age Explorer Badge</h3>
+        <p class="text-sm text-gray-700 italic mb-3">Awarded to a brilliant Year 3 History Student for mastering the Stone Age!</p>
+        <div class="flex justify-center items-center gap-4 text-3xl my-2">
+          <span>🦣</span> <span>🦴</span> <span>🔥</span> <span>🎨</span>
+        </div>
+        <div class="text-xs text-amber-700 font-semibold mt-2">Stone Age Quiz - History Explorer</div>
+      </div>
+
+      <div class="flex flex-wrap justify-center gap-4">
+        <button onclick="window.print()" class="px-6 py-3 bg-amber-500 hover:bg-amber-600 text-white font-fredoka text-lg rounded-2xl shadow-md bounce-btn flex items-center gap-2">
+          <span>🖨️ Print Certificate</span>
+        </button>
+        <button onclick="restartGame()" class="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-fredoka text-lg rounded-2xl shadow-md bounce-btn flex items-center gap-2">
+          <span>🔄 Play Again</span>
+        </button>
+      </div>
+    </div>
+
+  </main>
+
+  <script>
+    /* ====================================================================
+       AUDIO ENGINE (Web Audio API - Cheerful & Safe Sound Effects)
+       ==================================================================== */
+    let audioCtx = null;
+    let audioMuted = false;
+
+    function initAudio() {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+    }
+
+    function toggleAudio() {
+      audioMuted = !audioMuted;
+      document.getElementById('sound-btn').innerText = audioMuted ? '🔇' : '🔊';
+    }
+
+    function playSound(type) {
+      if (audioMuted) return;
+      initAudio();
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+
+      const now = audioCtx.currentTime;
+
+      if (type === 'correct') {
+        // Happy ascending chime
+        const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+        notes.forEach((freq, idx) => {
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(freq, now + idx * 0.08);
+          gain.gain.setValueAtTime(0.2, now + idx * 0.08);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.08 + 0.25);
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.start(now + idx * 0.08);
+          osc.stop(now + idx * 0.08 + 0.3);
+        });
+      } else if (type === 'tryagain') {
+        // Soft encouraging boop
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(300, now);
+        osc.frequency.exponentialRampToValueAtTime(220, now + 0.2);
+        gain.gain.setValueAtTime(0.2, now);
+        gain.gain.linearRampToValueAtTime(0.01, now + 0.2);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start(now);
+        osc.stop(now + 0.25);
+      } else if (type === 'star') {
+        // High sparkle pop
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(880 + Math.random() * 200, now);
+        osc.frequency.exponentialRampToValueAtTime(1400, now + 0.08);
+        gain.gain.setValueAtTime(0.15, now);
+        gain.gain.linearRampToValueAtTime(0.01, now + 0.08);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start(now);
+        osc.stop(now + 0.1);
+      } else if (type === 'levelcomplete') {
+        // Level up flourish
+        const freqs = [440, 554.37, 659.25, 880];
+        freqs.forEach((f, i) => {
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.type = 'square';
+          osc.frequency.setValueAtTime(f, now + i * 0.1);
+          gain.gain.setValueAtTime(0.1, now + i * 0.1);
+          gain.gain.linearRampToValueAtTime(0.01, now + i * 0.1 + 0.3);
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.start(now + i * 0.1);
+          osc.stop(now + i * 0.1 + 0.35);
+        });
+      }
+    }
+
+    /* ====================================================================
+       15 YEAR 3 STONE AGE QUESTIONS (5 Levels x 3 Questions)
+       ==================================================================== */
+    const quizData = [
+      // LEVEL 1: BASICS
+      {
+        level: 1,
+        questions: [
+          {
+            q: "What is the Stone Age named after?",
+            options: ["Wooden houses", "Tools made from stone", "Gold coins"],
+            answer: 1,
+            fact: "Stone Age humans made almost all their tools out of hard stones like flint!"
+          },
+          {
+            q: "Where did early Stone Age people often shelter?",
+            options: ["In caves and simple tents", "In tall brick castles", "In glass houses"],
+            answer: 0,
+            fact: "Caves gave early humans protection from cold winds and big wild animals!"
+          },
+          {
+            q: "What important discovery kept Stone Age people warm?",
+            options: ["Radiators", "Fire", "Electric blankets"],
+            answer: 1,
+            fact: "Fire kept people warm, cooked food, and kept hungry animals away at night!"
+          }
+        ]
+      },
+      // LEVEL 2: FOOD & TOOLS
+      {
+        level: 2,
+        questions: [
+          {
+            q: "How did early Stone Age people get their food?",
+            options: ["Buying from a shop", "Hunting and gathering wild plants", "Ordering takeaway"],
+            answer: 1,
+            fact: "They were called 'Hunter-Gatherers' because they hunted animals and collected nuts and berries!"
+          },
+          {
+            q: "What sharp stone was best for making spears and hand axes?",
+            options: ["Flint", "Chalk", "Mud"],
+            answer: 0,
+            fact: "Flint chips into sharp edges, making it ideal for spears and cutting tools!"
+          },
+          {
+            q: "Which wild animal did Stone Age hunters try to catch for food?",
+            options: ["Wild boar & deer", "Penguins", "Dragons"],
+            answer: 0,
+            fact: "Red deer and wild boars provided meat, fat, bones, and skin for clothing!"
+          }
+        ]
+      },
+      // LEVEL 3: ANIMALS & LIFE
+      {
+        level: 3,
+        questions: [
+          {
+            q: "Which huge, fluffy creature lived during the Ice Age?",
+            options: ["Woolly Mammoth", "Giraffe", "Panda"],
+            answer: 0,
+            fact: "Woolly Mammoths had thick fur coats and giant curved tusks to survive the freezing cold!"
+          },
+          {
+            q: "What did Stone Age people make warm clothes from?",
+            options: ["Cotton T-shirts", "Animal skins and fur", "Plastic coats"],
+            answer: 1,
+            fact: "They used bone needles to sew animal skins together into cosy outfits!"
+          },
+          {
+            q: "Which large cat had long, curved front teeth?",
+            options: ["Saber-toothed Cat", "Cheetah", "House cat"],
+            answer: 0,
+            fact: "The Saber-toothed cat had canine teeth up to 20 cm long!"
+          }
+        ]
+      },
+      // LEVEL 4: ART & INVENTION
+      {
+        level: 4,
+        questions: [
+          {
+            q: "Where did Stone Age humans paint famous pictures?",
+            options: ["On cave walls", "On wooden fences", "On paper notebooks"],
+            answer: 0,
+            fact: "Cave paintings made thousands of years ago are still preserved inside dark caves!"
+          },
+          {
+            q: "What did they use to make paints for cave art?",
+            options: ["Crushed rocks, charcoal & dirt", "Acrylic paint tubs", "Fruit juice only"],
+            answer: 0,
+            fact: "They mixed red dirt, yellow ochre, and black charcoal with water or animal fat!"
+          },
+          {
+            q: "What craft was invented in the late Stone Age to store food?",
+            options: ["Pottery (clay pots)", "Metal cans", "Cardboard boxes"],
+            answer: 0,
+            fact: "Shaping and baking clay pots allowed farmers to store grain and water easily!"
+          }
+        ]
+      },
+      // LEVEL 5: ERAS & MONUMENTS
+      {
+        level: 5,
+        questions: [
+          {
+            q: "Which period came first in the Stone Age?",
+            options: ["Paleolithic (Old Stone Age)", "Mesolithic (Middle)", "Neolithic (New)"],
+            answer: 0,
+            fact: "'Paleo' means old! The Paleolithic era lasted for thousands of years!"
+          },
+          {
+            q: "What famous stone monument in England was started in the late Stone Age?",
+            options: ["Stonehenge", "Big Ben", "London Bridge"],
+            answer: 0,
+            fact: "Stonehenge was built with giant stones transported from many miles away!"
+          },
+          {
+            q: "In the late Stone Age (Neolithic), what new skill did people learn?",
+            options: ["Farming & growing crops", "Flying aeroplanes", "Driving cars"],
+            answer: 0,
+            fact: "Learning to farm meant people could settle in villages instead of moving constantly!"
+          }
+        ]
+      }
+    ];
+
+    let currentLevelIdx = 0;
+    let currentQuestionIdx = 0;
+    let globalStars = 0;
+    let levelStarsEarned = 0;
+
+    // View References
+    const viewStart = document.getElementById('view-start');
+    const viewQuiz = document.getElementById('view-quiz');
+    const viewMinigame = document.getElementById('view-minigame');
+    const viewVictory = document.getElementById('view-victory');
+
+    function updateGlobalStarsUI() {
+      document.getElementById('global-stars').innerText = globalStars;
+    }
+
+    function showView(view) {
+      [viewStart, viewQuiz, viewMinigame, viewVictory].forEach(v => v.classList.add('hidden'));
+      view.classList.remove('hidden');
+    }
+
+    function startGame() {
+      initAudio();
+      currentLevelIdx = 0;
+      currentQuestionIdx = 0;
+      globalStars = 0;
+      updateGlobalStarsUI();
+      loadQuestion();
+      showView(viewQuiz);
+    }
+
+    function restartGame() {
+      startGame();
+    }
+
+    function loadQuestion() {
+      const levelData = quizData[currentLevelIdx];
+      const qData = levelData.questions[currentQuestionIdx];
+
+      // Update Header & Progress
+      document.getElementById('level-indicator').innerText = `Level ${currentLevelIdx + 1} of 5`;
+      document.getElementById('question-indicator').innerText = `Question ${currentQuestionIdx + 1} of 3`;
+
+      const totalQ = 15;
+      const doneQ = (currentLevelIdx * 3) + currentQuestionIdx;
+      const pct = Math.max(8, Math.round((doneQ / totalQ) * 100));
+      document.getElementById('progress-bar').style.width = `${pct}%`;
+
+      // Set Text
+      document.getElementById('question-text').innerText = qData.q;
+      document.getElementById('mascot-speech').innerText = getEncouragingPhrase();
+
+      // Reset feedback box
+      const fbBox = document.getElementById('feedback-box');
+      fbBox.classList.add('hidden');
+
+      // Options
+      const optionsContainer = document.getElementById('options-container');
+      optionsContainer.innerHTML = '';
+
+      qData.options.forEach((optText, i) => {
+        const btn = document.createElement('button');
+        btn.className = 'w-full p-4 bg-white hover:bg-amber-50 text-indigo-950 font-bold text-base md:text-lg rounded-2xl border-2 border-indigo-100 shadow-sm hover:border-amber-300 transition-all bounce-btn text-left flex items-center justify-between';
+        btn.innerHTML = `
+          <span>${optText}</span>
+          <span class="w-8 h-8 rounded-full bg-indigo-50 flex items-center justify-center text-xs text-indigo-500 border border-indigo-200">${String.fromCharCode(65 + i)}</span>
+        `;
+        btn.onclick = () => handleAnswer(i, btn);
+        optionsContainer.appendChild(btn);
+      });
+    }
+
+    function getEncouragingPhrase() {
+      const phrases = [
+        "You can do it! Give it your best shot!",
+        "Think like a Stone Age explorer!",
+        "You're doing fantastic!",
+        "History is full of fun facts!",
+        "Take your time and pick the best answer!"
+      ];
+      return phrases[Math.floor(Math.random() * phrases.length)];
+    }
+
+    function handleAnswer(selectedIndex, btnElement) {
+      const qData = quizData[currentLevelIdx].questions[currentQuestionIdx];
+      const fbBox = document.getElementById('feedback-box');
+      const fbTitle = document.getElementById('feedback-title');
+      const fbFact = document.getElementById('feedback-fact');
+
+      if (selectedIndex === qData.answer) {
+        // CORRECT ANSWER
+        playSound('correct');
+        globalStars += 5;
+        updateGlobalStarsUI();
+
+        // Style selected button green
+        btnElement.className = btnElement.className.replace('bg-white', 'bg-emerald-100 border-emerald-400 text-emerald-950');
+
+        // Disable all buttons
+        const allBtns = document.querySelectorAll('#options-container button');
+        allBtns.forEach(b => b.onclick = null);
+
+        fbBox.className = 'mt-6 w-full p-4 rounded-2xl border-2 border-emerald-300 bg-emerald-50 text-center animate-bounce-short block';
+        fbTitle.className = 'font-fredoka text-xl text-emerald-700 mb-1';
+        fbTitle.innerText = '🌟 Well Done! That\'s Right! (+5 Stars)';
+        fbFact.innerText = `Fun Fact: ${qData.fact}`;
+
+        // Confetti burst for kids
+        if (window.confetti) {
+          confetti({ particleCount: 35, spread: 60, origin: { y: 0.7 } });
+        }
+
+      } else {
+        // INCORRECT ANSWER (Encouraging, gentle try again)
+        playSound('tryagain');
+
+        btnElement.className = btnElement.className.replace('bg-white', 'bg-pink-100 border-pink-300 text-pink-900');
+        fbBox.className = 'mt-6 w-full p-4 rounded-2xl border-2 border-amber-300 bg-amber-50 text-center block';
+        fbTitle.className = 'font-fredoka text-xl text-amber-800 mb-1';
+        fbTitle.innerText = 'Oops! Almost! 🤔';
+        fbFact.innerText = 'Give it another try! You can do it!';
+      }
+    }
+
+    function nextQuestion() {
+      currentQuestionIdx++;
+      if (currentQuestionIdx >= 3) {
+        // Completed current level -> Play Minigame
+        currentQuestionIdx = 0;
+        playSound('levelcomplete');
+        startMinigame();
+      } else {
+        loadQuestion();
+      }
+    }
+
+    /* ====================================================================
+       REWARD MINI-GAME ("Catch the Falling Stars")
+       ==================================================================== */
+    let canvas, ctx;
+    let gameLoopId = null;
+    let timerInterval = null;
+    let timeLeft = 15;
+    let basketX = 150;
+    let basketWidth = 60;
+    let starsList = [];
+    let gameStarsCollected = 0;
+
+    function startMinigame() {
+      showView(viewMinigame);
+      canvas = document.getElementById('star-canvas');
+      ctx = canvas.getContext('2d');
+
+      // Resize canvas dynamically
+      const rect = canvas.getBoundingClientRect();
+      canvas.width = rect.width || 400;
+      canvas.height = rect.height || 300;
+
+      basketWidth = Math.max(50, canvas.width * 0.18);
+      basketX = (canvas.width - basketWidth) / 2;
+      starsList = [];
+      gameStarsCollected = 0;
+      timeLeft = 15;
+
+      document.getElementById('game-stars').innerText = '0';
+      document.getElementById('game-timer').innerText = '15s';
+      document.getElementById('minigame-summary').classList.add('hidden');
+
+      // Key listeners
+      window.addEventListener('keydown', handleMinigameKeys);
+      canvas.addEventListener('mousemove', handleCanvasMouse);
+      canvas.addEventListener('touchmove', handleCanvasTouch, { passive: false });
+
+      // Mobile touch controls
+      document.getElementById('touch-left').ontouchstart = (e) => { e.preventDefault(); basketX = Math.max(0, basketX - 35); };
+      document.getElementById('touch-right').ontouchstart = (e) => { e.preventDefault(); basketX = Math.min(canvas.width - basketWidth, basketX + 35); };
+
+      // Timer countdown
+      clearInterval(timerInterval);
+      timerInterval = setInterval(() => {
+        timeLeft--;
+        document.getElementById('game-timer').innerText = `${timeLeft}s`;
+        if (timeLeft <= 0) {
+          endMinigame();
+        }
+      }, 1000);
+
+      cancelAnimationFrame(gameLoopId);
+      updateMinigame();
+    }
+
+    function handleMinigameKeys(e) {
+      if (e.key === 'ArrowLeft') basketX = Math.max(0, basketX - 25);
+      if (e.key === 'ArrowRight') basketX = Math.min(canvas.width - basketWidth, basketX + 25);
+    }
+
+    function handleCanvasMouse(e) {
+      const rect = canvas.getBoundingClientRect();
+      const mouseX = e.clientX - rect.left;
+      basketX = Math.max(0, Math.min(canvas.width - basketWidth, mouseX - basketWidth / 2));
+    }
+
+    function handleCanvasTouch(e) {
+      e.preventDefault();
+      if (e.touches.length > 0) {
+        const rect = canvas.getBoundingClientRect();
+        const touchX = e.touches[0].clientX - rect.left;
+        basketX = Math.max(0, Math.min(canvas.width - basketWidth, touchX - basketWidth / 2));
+      }
+    }
+
+    function updateMinigame() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Spawn falling stars
+      if (Math.random() < 0.08) {
+        starsList.push({
+          x: Math.random() * (canvas.width - 20) + 10,
+          y: -10,
+          speed: 2.5 + Math.random() * 2.5,
+          size: 16 + Math.random() * 8,
+          rotation: Math.random() * Math.PI
+        });
+      }
+
+      // Draw Basket / Cute Character (Cave Pouch)
+      ctx.fillStyle = '#f59e0b';
+      ctx.beginPath();
+      ctx.roundRect(basketX, canvas.height - 30, basketWidth, 22, 10);
+      ctx.fill();
+      ctx.strokeStyle = '#b45309';
+      ctx.lineWidth = 3;
+      ctx.stroke();
+
+      // Basket Label / Icon
+      ctx.font = '16px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('🧺', basketX + basketWidth / 2, canvas.height - 12);
+
+      // Draw & Move Stars
+      for (let i = starsList.length - 1; i >= 0; i--) {
+        let s = starsList[i];
+        s.y += s.speed;
+        s.rotation += 0.05;
+
+        // Draw Star Emoji / Vector
+        ctx.save();
+        ctx.translate(s.x, s.y);
+        ctx.rotate(s.rotation);
+        ctx.font = `${s.size}px sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('⭐', 0, 0);
+        ctx.restore();
+
+        // Collision Check with Basket
+        if (s.y >= canvas.height - 35 && s.y <= canvas.height - 10) {
+          if (s.x >= basketX - 10 && s.x <= basketX + basketWidth + 10) {
+            playSound('star');
+            gameStarsCollected++;
+            document.getElementById('game-stars').innerText = gameStarsCollected;
+            starsList.splice(i, 1);
+            continue;
+          }
+        }
+
+        // Remove offscreen
+        if (s.y > canvas.height + 20) {
+          starsList.splice(i, 1);
+        }
+      }
+
+      if (timeLeft > 0) {
+        gameLoopId = requestAnimationFrame(updateMinigame);
+      }
+    }
+
+    function endMinigame() {
+      clearInterval(timerInterval);
+      cancelAnimationFrame(gameLoopId);
+      window.removeEventListener('keydown', handleMinigameKeys);
+
+      globalStars += gameStarsCollected;
+      updateGlobalStarsUI();
+
+      document.getElementById('summary-stars-count').innerText = gameStarsCollected;
+      document.getElementById('minigame-summary').classList.remove('hidden');
+    }
+
+    function finishMinigame() {
+      currentLevelIdx++;
+      if (currentLevelIdx >= 5) {
+        // Game Completed!
+        showVictoryScreen();
+      } else {
+        loadQuestion();
+        showView(viewQuiz);
+      }
+    }
+
+    function showVictoryScreen() {
+      showView(viewVictory);
+      playSound('levelcomplete');
+      document.getElementById('final-star-total').innerText = globalStars;
+
+      if (window.confetti) {
+        confetti({ particleCount: 100, spread: 80, origin: { y: 0.6 } });
+      }
+    }
+  </script>
+</body>
+</html>
