@@ -175,8 +175,29 @@ footer { text-align: center; color: var(--muted); padding: 0 16px 30px; font-siz
 }
 @media (max-width: 560px) {
   .hero { background:
-    radial-gradient(circle at 6% 10%, #ffd166 0 34px, transparent 35px),
-    radial-gradient(circle at 96% 8%, #06d6a0 0 28px, transparent 29px),
-    radial-gradient(circle at 92% 120%, #118ab2 0 50px, transparent 51px),
+    radial-gradient(circle at 6% 10%, #e8202a 0 34px, transparent 35px),
+    radial-gradient(circle at 96% 8%, #7ac143 0 28px, transparent 29px),
+    radial-gradient(circle at 92% 120%, #9a9a9e 0 50px, transparent 51px),
     #101010; }
 }
+
+/* ---------- House sides + background ---------- */
+body {
+  background: linear-gradient(160deg, #c8141c 0%, #c8141c 18%, #4a9a2c 36%, #4a9a2c 52%, #9a9aa0 68%, #9a9aa0 80%, #0b0b0b 100%) fixed;
+}
+.page { background: var(--bg); min-height: 100vh; }
+.side { display: none; }
+@media (min-width: 1000px) {
+  body { padding: 0 176px; }
+  .page { box-shadow: 0 0 0 6px rgba(255,255,255,.9), 0 0 40px rgba(0,0,0,.35); }
+  .houses { display: none; }
+  .side {
+    display: block; position: fixed; top: 0; bottom: 0; width: 132px;
+    background: url(assets/houses/side.png) repeat-y center top / 120px auto;
+    animation: drift 40s linear infinite;
+  }
+  .side-l { left: 22px; }
+  .side-r { right: 22px; animation-direction: reverse; }
+}
+@keyframes drift { from { background-position: center 0; } to { background-position: center 544px; } }
+@media (prefers-reduced-motion: reduce) { .side { animation: none; } }
