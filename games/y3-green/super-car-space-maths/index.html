@@ -1,0 +1,974 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Super Car Space Maths</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts - Fredoka for playful readability -->
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Fredoka', sans-serif;
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: manipulation;
+            overflow: hidden;
+            background-color: #030712;
+            color: #f3f4f6;
+        }
+
+        /* Pulsing & Glow Effects */
+        .glow-blue {
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.6);
+        }
+        .glow-gold {
+            box-shadow: 0 0 20px rgba(245, 158, 11, 0.7);
+        }
+        .text-glow {
+            text-shadow: 0 0 10px rgba(56, 189, 248, 0.8);
+        }
+
+        /* Animations */
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-10px) rotate(1deg); }
+        }
+        .animate-float {
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes bounce-gentle {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-6px); }
+        }
+        .animate-bounce-gentle {
+            animation: bounce-gentle 1.5s infinite;
+        }
+
+        @keyframes pulse-bright {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.05); opacity: 0.95; }
+        }
+        .animate-pulse-bright {
+            animation: pulse-bright 1.2s infinite;
+        }
+
+        /* Responsive Canvas overlay */
+        canvas {
+            display: block;
+        }
+
+        /* Custom Scrollbars */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #1e40af;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body class="h-screen w-screen relative flex flex-col justify-between items-center bg-slate-950 text-white select-none">
+
+    <!-- BACKGROUND CANVAS (STARS & PARTICLES) -->
+    <canvas id="starfieldCanvas" class="absolute inset-0 z-0 w-full h-full pointer-events-none"></canvas>
+
+    <!-- TOP BAR / HUD -->
+    <header class="relative z-10 w-full max-w-4xl px-4 pt-3 pb-2 flex justify-between items-center bg-slate-900/80 backdrop-blur-md border-b-2 border-cyan-500/40 rounded-b-2xl shadow-lg">
+        <div class="flex items-center gap-3">
+            <div class="bg-cyan-500/20 p-2 rounded-xl border border-cyan-400/40 flex items-center justify-center">
+                <i class="fa-solid fa-rocket text-cyan-400 text-2xl"></i>
+            </div>
+            <div>
+                <h1 class="text-xl md:text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 via-sky-300 to-blue-500">Super Car Space Maths</h1>
+                <p class="text-xs text-cyan-300/80 font-medium hidden sm:block">Year 3 Space Math Rocket</p>
+            </div>
+        </div>
+
+        <!-- Score & Mute Control -->
+        <div class="flex items-center gap-4">
+            <div class="flex items-center gap-2 bg-indigo-950/80 px-3 py-1.5 rounded-full border border-yellow-400/50">
+                <i class="fa-solid fa-star text-yellow-400 text-lg animate-spin-slow"></i>
+                <span id="hudScore" class="text-lg md:text-xl font-bold text-yellow-300">0</span>
+            </div>
+
+            <button id="soundToggleBtn" onclick="game.toggleSound()" class="w-10 h-10 rounded-full bg-slate-800 hover:bg-slate-700 active:scale-95 border border-cyan-400/40 flex items-center justify-center text-cyan-300 transition-all shadow-md" title="Toggle Sound">
+                <i id="soundIcon" class="fa-solid fa-volume-high text-lg"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- MAIN CONTAINER FOR SCREENS -->
+    <main class="relative z-10 w-full max-w-3xl flex-1 flex flex-col justify-center items-center p-4 min-h-0">
+
+        <!-- SCREEN 1: START SCREEN -->
+        <div id="startScreen" class="w-full flex flex-col items-center justify-center text-center bg-slate-900/90 border-2 border-cyan-500/50 rounded-3xl p-6 md:p-10 shadow-2xl backdrop-blur-lg animate-float">
+            <!-- Space Super Car Visual SVG -->
+            <div class="relative mb-6">
+                <svg class="w-48 h-28 md:w-64 md:h-36 drop-shadow-[0_0_15px_rgba(6,182,212,0.8)]" viewBox="0 0 200 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <!-- Rocket Thruster Flames -->
+                    <path d="M15 50 Q5 45 0 50 Q5 55 15 50" fill="#f59e0b" class="animate-pulse">
+                        <animate attributeName="d" values="M15 50 Q5 42 0 50 Q5 58 15 50; M15 50 Q0 38 -10 50 Q0 62 15 50; M15 50 Q5 42 0 50 Q5 58 15 50" dur="0.2s" repeatCount="indefinite" />
+                    </path>
+                    <path d="M20 50 Q10 47 5 50 Q10 53 20 50" fill="#ef4444" />
+                    <!-- Car Body Base -->
+                    <path d="M20 55 C20 35 50 25 100 25 C150 25 185 40 195 55 C198 62 190 75 170 75 L30 75 C20 75 15 65 20 55 Z" fill="#0284c7" stroke="#38bdf8" stroke-width="3"/>
+                    <!-- Cockpit / Dome Canopy -->
+                    <path d="M60 30 C75 12 130 12 145 30 Z" fill="#38bdf8" opacity="0.8" stroke="#7dd3fc" stroke-width="2"/>
+                    <!-- Glass Highlight -->
+                    <path d="M75 22 Q100 16 125 22" stroke="#ffffff" stroke-width="2" stroke-linecap="round" opacity="0.7"/>
+                    <!-- Hero Drivers Mask/Helmet -->
+                    <circle cx="95" cy="24" r="8" fill="#fef08a"/>
+                    <path d="M91 23 Q95 20 99 23" stroke="#1e293b" stroke-width="2" stroke-linecap="round"/>
+                    <!-- Neon Racing Stripes -->
+                    <path d="M25 58 L180 58" stroke="#f59e0b" stroke-width="4" stroke-linecap="round"/>
+                    <path d="M30 65 L175 65" stroke="#38bdf8" stroke-width="2"/>
+                    <!-- Glowing Wheels / Hover Pads -->
+                    <ellipse cx="50" cy="75" rx="18" ry="8" fill="#0369a1" stroke="#38bdf8" stroke-width="3" />
+                    <ellipse cx="150" cy="75" rx="18" ry="8" fill="#0369a1" stroke="#38bdf8" stroke-width="3" />
+                    <ellipse cx="50" cy="75" rx="10" ry="4" fill="#38bdf8" class="animate-pulse" />
+                    <ellipse cx="150" cy="75" rx="10" ry="4" fill="#38bdf8" class="animate-pulse" />
+                </svg>
+            </div>
+
+            <h2 class="text-3xl md:text-5xl font-extrabold mb-3 text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-yellow-300 to-blue-400 drop-shadow">
+                Hero Super Car!
+            </h2>
+            <p class="text-blue-200 text-base md:text-lg mb-6 max-w-md">
+                Blast off into space! Solve Year 3 times tables, complete 5 levels, and catch falling stars with Your Super Car!
+            </p>
+
+            <button onclick="game.startQuiz()" class="w-full sm:w-auto px-8 py-4 bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-500 hover:from-amber-400 hover:to-yellow-300 text-slate-950 font-black text-2xl rounded-2xl shadow-xl hover:shadow-yellow-500/50 transform hover:-translate-y-1 active:translate-y-0.5 transition-all duration-150 flex items-center justify-center gap-3 border-2 border-yellow-200">
+                <i class="fa-solid fa-play text-xl"></i> START ADVENTURE
+            </button>
+        </div>
+
+        <!-- SCREEN 2: MATH QUIZ SCREEN -->
+        <div id="quizScreen" class="hidden w-full flex-col items-center bg-slate-900/90 border-2 border-cyan-500/50 rounded-3xl p-5 md:p-8 shadow-2xl backdrop-blur-lg">
+            
+            <!-- Progress Header -->
+            <div class="w-full flex justify-between items-center mb-4 text-sm md:text-base font-bold">
+                <div class="flex items-center gap-2 text-cyan-300">
+                    <span id="levelBadge" class="bg-cyan-950 border border-cyan-400 px-3 py-1 rounded-xl">Level 1 of 5</span>
+                </div>
+                <div class="text-amber-300 font-semibold" id="questionCounter">
+                    Question 1 of 3
+                </div>
+            </div>
+
+            <!-- Progress Bar -->
+            <div class="w-full bg-slate-800 rounded-full h-3.5 mb-6 overflow-hidden p-0.5 border border-cyan-500/30">
+                <div id="progressBar" class="bg-gradient-to-r from-cyan-400 to-blue-500 h-full rounded-full transition-all duration-500" style="width: 20%"></div>
+            </div>
+
+            <!-- Question Card -->
+            <div class="w-full bg-slate-950/80 border-2 border-blue-500/40 rounded-2xl p-6 md:p-8 text-center mb-6 shadow-inner relative overflow-hidden">
+                <div class="text-slate-400 text-xs md:text-sm font-semibold tracking-wider uppercase mb-1" id="tableHint">
+                    Times Tables Practice
+                </div>
+                <div id="questionText" class="text-4xl md:text-6xl font-black text-cyan-300 text-glow my-2 tracking-wide">
+                    2 × 5 = ?
+                </div>
+            </div>
+
+            <!-- Answer Options Grid -->
+            <div id="answersGrid" class="w-full grid grid-cols-2 gap-3 md:gap-4 mb-4">
+                <!-- 4 Option Buttons populated dynamically -->
+            </div>
+
+            <!-- Feedback Alert Bar -->
+            <div id="feedbackBox" class="w-full min-h-[52px] flex items-center justify-center rounded-2xl p-3 text-center text-lg font-bold transition-all duration-300 opacity-0 transform translate-y-2">
+                <span id="feedbackText">Great Job!</span>
+            </div>
+        </div>
+
+        <!-- SCREEN 3: CATCH THE FALLING STARS (REWARD MINI-GAME) -->
+        <div id="rewardScreen" class="hidden w-full flex-col items-center bg-slate-900/95 border-2 border-amber-400/60 rounded-3xl p-4 shadow-2xl backdrop-blur-lg">
+            
+            <!-- Mini-Game Header Info -->
+            <div class="w-full flex justify-between items-center mb-2 px-2">
+                <div class="text-amber-300 font-bold text-lg md:text-xl flex items-center gap-2">
+                    <i class="fa-solid fa-trophy text-yellow-400"></i> Star Catch Bonus!
+                </div>
+                <div class="bg-indigo-950 border border-amber-400/50 px-4 py-1 rounded-xl text-yellow-300 font-bold text-lg">
+                    Timer: <span id="rewardTimer" class="text-white">15</span>s
+                </div>
+            </div>
+
+            <!-- Canvas Game Area -->
+            <div class="relative w-full h-64 md:h-80 bg-slate-950 border-2 border-cyan-500/40 rounded-2xl overflow-hidden shadow-inner touch-none">
+                <canvas id="gameCanvas" class="w-full h-full cursor-pointer"></canvas>
+                
+                <!-- Onscreen Touch Controls Overlay (for mobile accessibility) -->
+                <div class="absolute bottom-2 left-2 right-2 flex justify-between pointer-events-none md:hidden">
+                    <button id="btnMoveLeft" class="pointer-events-auto bg-cyan-500/40 active:bg-cyan-400/70 border border-cyan-300 text-white w-14 h-14 rounded-full text-2xl font-bold flex items-center justify-center backdrop-blur-sm shadow-lg">
+                        <i class="fa-solid fa-arrow-left"></i>
+                    </button>
+                    <button id="btnMoveRight" class="pointer-events-auto bg-cyan-500/40 active:bg-cyan-400/70 border border-cyan-300 text-white w-14 h-14 rounded-full text-2xl font-bold flex items-center justify-center backdrop-blur-sm shadow-lg">
+                        <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                </div>
+            </div>
+
+            <p class="text-xs md:text-sm text-cyan-200 mt-2 text-center">
+                <i class="fa-solid fa-hand-pointer text-amber-400"></i> Drag mouse/finger or use <b>Left/Right Arrow Keys</b> to catch falling stars!
+            </p>
+        </div>
+
+        <!-- SCREEN 4: LEVEL COMPLETED MODAL / INTERMISSION -->
+        <div id="levelCompleteModal" class="hidden w-full flex-col items-center justify-center text-center bg-slate-900/95 border-2 border-amber-400 rounded-3xl p-6 md:p-8 shadow-2xl backdrop-blur-lg animate-bounce-gentle">
+            <div class="w-20 h-20 bg-amber-400/20 border-2 border-amber-400 rounded-full flex items-center justify-center mb-4 text-amber-300 text-4xl shadow-lg">
+                <i class="fa-solid fa-star"></i>
+            </div>
+            <h3 id="modalTitle" class="text-3xl font-extrabold text-amber-300 mb-2">Level Completed!</h3>
+            <p id="modalDesc" class="text-blue-100 mb-6 text-base md:text-lg">Super math skills! You've unlocked the Star Catching Bonus Game!</p>
+            <button id="modalActionBtn" onclick="game.startRewardMiniGame()" class="px-8 py-3.5 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-bold text-xl rounded-2xl shadow-lg hover:shadow-cyan-500/50 transition-all border border-cyan-300">
+                CATCH STARS NOW <i class="fa-solid fa-angles-right ml-1"></i>
+            </button>
+        </div>
+
+        <!-- SCREEN 5: GRAND VICTORY / GAME OVER SCREEN -->
+        <div id="victoryScreen" class="hidden w-full flex-col items-center justify-center text-center bg-slate-900/95 border-2 border-yellow-400 rounded-3xl p-6 md:p-10 shadow-2xl backdrop-blur-lg">
+            <div class="text-6xl mb-3 animate-bounce">
+                🏆
+            </div>
+            <h2 class="text-3xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 via-amber-400 to-yellow-200 mb-2">
+                SUPER HERO CHAMPION!
+            </h2>
+            <p class="text-cyan-200 text-lg mb-6">You solved all 15 times tables and conquered deep space!</p>
+
+            <div class="bg-slate-950/80 border border-amber-400/40 rounded-2xl p-4 w-full max-w-sm mb-6 shadow-inner">
+                <div class="text-slate-400 text-sm font-semibold uppercase tracking-wider mb-1">Final Score</div>
+                <div id="finalScore" class="text-5xl font-black text-yellow-400 drop-shadow">0</div>
+                <div class="text-xs text-cyan-300 mt-2"><i class="fa-solid fa-medal text-amber-400"></i> Year 3 Math Master Badge Earned!</div>
+            </div>
+
+            <button onclick="game.restartGame()" class="px-8 py-4 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-black text-2xl rounded-2xl shadow-xl hover:shadow-emerald-500/50 transition-all border-2 border-emerald-300 flex items-center gap-3">
+                <i class="fa-solid fa-rotate-right"></i> PLAY AGAIN
+            </button>
+        </div>
+
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="relative z-10 w-full text-center py-2 text-xs text-slate-500 font-medium">
+        Child-Safe Educational Math Game • Year 3 Times Tables • Safe & Ad-Free
+    </footer>
+
+    <!-- GAME LOGIC SCRIPT -->
+    <script>
+        /**
+         * Hero Super Car Math Game - Core Engine
+         * Built specifically for Year 3 Kids (Age 7-8)
+         */
+
+        // --- WEB AUDIO API SYNTHESIZER FOR CHILD-FRIENDLY SFX ---
+        class SoundEngine {
+            constructor() {
+                this.ctx = null;
+                this.muted = false;
+            }
+
+            init() {
+                if (!this.ctx) {
+                    const AudioContext = window.AudioContext || window.webkitAudioContext;
+                    if (AudioContext) {
+                        this.ctx = new AudioContext();
+                    }
+                }
+            }
+
+            playPop() {
+                if (this.muted) return;
+                this.init();
+                if (!this.ctx) return;
+
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(300, this.ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(800, this.ctx.currentTime + 0.08);
+
+                gain.gain.setValueAtTime(0.3, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.08);
+
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.08);
+            }
+
+            playCorrect() {
+                if (this.muted) return;
+                this.init();
+                if (!this.ctx) return;
+
+                const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+                notes.forEach((freq, idx) => {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(freq, this.ctx.currentTime + idx * 0.07);
+
+                    gain.gain.setValueAtTime(0.2, this.ctx.currentTime + idx * 0.07);
+                    gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + idx * 0.07 + 0.2);
+
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start(this.ctx.currentTime + idx * 0.07);
+                    osc.stop(this.ctx.currentTime + idx * 0.07 + 0.2);
+                });
+            }
+
+            playWrong() {
+                if (this.muted) return;
+                this.init();
+                if (!this.ctx) return;
+
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(220, this.ctx.currentTime);
+                osc.frequency.linearRampToValueAtTime(150, this.ctx.currentTime + 0.25);
+
+                gain.gain.setValueAtTime(0.2, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.25);
+
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.25);
+            }
+
+            playCatch() {
+                if (this.muted) return;
+                this.init();
+                if (!this.ctx) return;
+
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(800, this.ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(1400, this.ctx.currentTime + 0.1);
+
+                gain.gain.setValueAtTime(0.25, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.1);
+
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.1);
+            }
+        }
+
+        const sound = new SoundEngine();
+
+        // --- QUESTION BANK BY LEVEL (15 TOTAL / 3 PER LEVEL) ---
+        const LEVEL_QUESTIONS = [
+            // Level 1: 2, 5, 10 Times Tables
+            [
+                { num1: 2, num2: 5, hint: "2 & 5 Times Tables" },
+                { num1: 5, num2: 4, hint: "2 & 5 Times Tables" },
+                { num1: 10, num2: 3, hint: "10 Times Tables" }
+            ],
+            // Level 2: 3, 4 Times Tables
+            [
+                { num1: 3, num2: 4, hint: "3 & 4 Times Tables" },
+                { num1: 4, num2: 6, hint: "3 & 4 Times Tables" },
+                { num1: 3, num2: 7, hint: "3 & 4 Times Tables" }
+            ],
+            // Level 3: 4, 8 Times Tables
+            [
+                { num1: 4, num2: 7, hint: "4 & 8 Times Tables" },
+                { num1: 8, num2: 3, hint: "4 & 8 Times Tables" },
+                { num1: 8, num2: 5, hint: "4 & 8 Times Tables" }
+            ],
+            // Level 4: 6, 7 Times Tables
+            [
+                { num1: 6, num2: 4, hint: "6 & 7 Times Tables" },
+                { num1: 7, num2: 3, hint: "6 & 7 Times Tables" },
+                { num1: 6, num2: 7, hint: "6 & 7 Times Tables" }
+            ],
+            // Level 5: 8, 9, 11, 12 Times Tables (Super Challenge)
+            [
+                { num1: 9, num2: 4, hint: "Super Challenge!" },
+                { num1: 8, num2: 6, hint: "Super Challenge!" },
+                { num1: 12, num2: 3, hint: "Super Challenge!" }
+            ]
+        ];
+
+        // --- ENCOURAGING FEEDBACK PHRASES ---
+        const PRAISE_MESSAGES = [
+            "🌟 Super Blast!",
+            "🚀 Star Power!",
+            "✨ Fantastic Math!",
+            "🎯 Right on Target!",
+            "⚡ Lightning Fast!",
+            "🎉 Brilliant Work!"
+        ];
+
+        const ENCOURAGE_MESSAGES = [
+            "Almost there! Try again! 💪",
+            "Good try! You can do it! 👍",
+            "Give it another shot! 🚀",
+            "Keep going, space explorer! ⭐"
+        ];
+
+        // --- MAIN GAME CONTROLLER ---
+        class GameEngine {
+            constructor() {
+                this.currentLevel = 0; // 0 to 4
+                this.currentQuestionIdx = 0; // 0 to 2
+                this.score = 0;
+                this.isAnsweringLocked = false;
+
+                // DOM Elements
+                this.hudScore = document.getElementById('hudScore');
+                this.startScreen = document.getElementById('startScreen');
+                this.quizScreen = document.getElementById('quizScreen');
+                this.rewardScreen = document.getElementById('rewardScreen');
+                this.levelCompleteModal = document.getElementById('levelCompleteModal');
+                this.victoryScreen = document.getElementById('victoryScreen');
+
+                this.levelBadge = document.getElementById('levelBadge');
+                this.questionCounter = document.getElementById('questionCounter');
+                this.progressBar = document.getElementById('progressBar');
+                this.questionText = document.getElementById('questionText');
+                this.tableHint = document.getElementById('tableHint');
+                this.answersGrid = document.getElementById('answersGrid');
+                this.feedbackBox = document.getElementById('feedbackBox');
+                this.feedbackText = document.getElementById('feedbackText');
+
+                // Reward game canvas setup
+                this.miniGame = new CatchStarsMiniGame(this);
+            }
+
+            toggleSound() {
+                sound.muted = !sound.muted;
+                const icon = document.getElementById('soundIcon');
+                if (sound.muted) {
+                    icon.className = "fa-solid fa-volume-xmark text-lg text-slate-400";
+                } else {
+                    icon.className = "fa-solid fa-volume-high text-lg text-cyan-300";
+                    sound.playPop();
+                }
+            }
+
+            hideAllScreens() {
+                this.startScreen.classList.add('hidden');
+                this.quizScreen.classList.add('hidden');
+                this.rewardScreen.classList.add('hidden');
+                this.levelCompleteModal.classList.add('hidden');
+                this.victoryScreen.classList.add('hidden');
+            }
+
+            updateScore(points) {
+                this.score += points;
+                this.hudScore.innerText = this.score;
+            }
+
+            startQuiz() {
+                sound.playPop();
+                this.currentLevel = 0;
+                this.currentQuestionIdx = 0;
+                this.score = 0;
+                this.hudScore.innerText = "0";
+                this.showQuestion();
+            }
+
+            showQuestion() {
+                this.hideAllScreens();
+                this.quizScreen.classList.remove('hidden');
+                this.quizScreen.classList.add('flex');
+
+                this.isAnsweringLocked = false;
+                this.resetFeedback();
+
+                const totalQuestionsPlayed = (this.currentLevel * 3) + this.currentQuestionIdx + 1;
+                const qData = LEVEL_QUESTIONS[this.currentLevel][this.currentQuestionIdx];
+
+                // Update Progress UI
+                this.levelBadge.innerText = `Level ${this.currentLevel + 1} of 5`;
+                this.questionCounter.innerText = `Question ${this.currentQuestionIdx + 1} of 3`;
+                this.progressBar.style.width = `${(totalQuestionsPlayed / 15) * 100}%`;
+                
+                this.tableHint.innerText = qData.hint;
+                this.questionText.innerText = `${qData.num1} × ${qData.num2} = ?`;
+
+                // Generate 4 multiple choices (1 correct, 3 wrong)
+                const correctAnswer = qData.num1 * qData.num2;
+                const options = this.generateMultipleChoiceOptions(correctAnswer, qData.num1);
+
+                // Render Answer Buttons
+                this.answersGrid.innerHTML = '';
+                options.forEach(opt => {
+                    const btn = document.createElement('button');
+                    btn.className = "w-full py-4 md:py-6 px-4 bg-gradient-to-b from-slate-800 to-slate-900 hover:from-cyan-900 hover:to-slate-800 active:scale-95 text-cyan-200 font-extrabold text-2xl md:text-3xl rounded-2xl border-2 border-cyan-500/40 shadow-lg hover:border-cyan-300 transition-all duration-150 flex items-center justify-center";
+                    btn.innerText = opt;
+                    btn.onclick = () => this.handleAnswer(opt, correctAnswer, btn);
+                    this.answersGrid.appendChild(btn);
+                });
+            }
+
+            generateMultipleChoiceOptions(correct, factor) {
+                const choices = new Set([correct]);
+                while (choices.size < 4) {
+                    // Create realistic wrong options close to the answer
+                    let offset = (Math.floor(Math.random() * 5) - 2) * factor;
+                    if (offset === 0) offset = factor;
+                    let wrong = correct + offset;
+                    if (wrong <= 0 || wrong === correct) {
+                        wrong = correct + Math.floor(Math.random() * 10) + 1;
+                    }
+                    choices.add(wrong);
+                }
+                // Shuffle choices
+                return Array.from(choices).sort(() => Math.random() - 0.5);
+            }
+
+            handleAnswer(selected, correct, buttonElem) {
+                if (this.isAnsweringLocked) return;
+
+                if (selected === correct) {
+                    this.isAnsweringLocked = true;
+                    sound.playCorrect();
+                    
+                    // Highlight Button
+                    buttonElem.className = "w-full py-4 md:py-6 px-4 bg-gradient-to-b from-emerald-500 to-teal-700 text-white font-extrabold text-2xl md:text-3xl rounded-2xl border-2 border-emerald-200 shadow-xl scale-105 transition-all duration-150 flex items-center justify-center";
+
+                    this.showFeedback(true);
+                    this.updateScore(100);
+
+                    setTimeout(() => {
+                        this.nextQuestion();
+                    }, 1400);
+
+                } else {
+                    sound.playWrong();
+                    buttonElem.classList.add('opacity-40', 'border-red-500/50');
+                    buttonElem.disabled = true;
+                    this.showFeedback(false);
+                }
+            }
+
+            showFeedback(isCorrect) {
+                this.feedbackBox.classList.remove('opacity-0', 'translate-y-2', 'bg-emerald-500/20', 'border-emerald-400', 'bg-amber-500/20', 'border-amber-400');
+                this.feedbackBox.classList.add('opacity-100', 'translate-y-0');
+
+                if (isCorrect) {
+                    const randomPraise = PRAISE_MESSAGES[Math.floor(Math.random() * PRAISE_MESSAGES.length)];
+                    this.feedbackText.innerText = randomPraise;
+                    this.feedbackBox.classList.add('bg-emerald-500/20', 'border-2', 'border-emerald-400', 'text-emerald-300');
+                } else {
+                    const randomEncourage = ENCOURAGE_MESSAGES[Math.floor(Math.random() * ENCOURAGE_MESSAGES.length)];
+                    this.feedbackText.innerText = randomEncourage;
+                    this.feedbackBox.classList.add('bg-amber-500/20', 'border-2', 'border-amber-400', 'text-amber-300');
+                }
+            }
+
+            resetFeedback() {
+                this.feedbackBox.classList.add('opacity-0', 'translate-y-2');
+                this.feedbackBox.classList.remove('opacity-100', 'translate-y-0');
+            }
+
+            nextQuestion() {
+                this.currentQuestionIdx++;
+
+                if (this.currentQuestionIdx >= 3) {
+                    // Completed 3 questions for this level!
+                    this.showLevelCompletedIntermission();
+                } else {
+                    this.showQuestion();
+                }
+            }
+
+            showLevelCompletedIntermission() {
+                this.hideAllScreens();
+                this.levelCompleteModal.classList.remove('hidden');
+                this.levelCompleteModal.classList.add('flex');
+
+                const modalTitle = document.getElementById('modalTitle');
+                const modalDesc = document.getElementById('modalDesc');
+
+                modalTitle.innerText = `Level ${this.currentLevel + 1} Cleared! 🎉`;
+                modalDesc.innerText = `Awesome job! Get ready to catch falling stars with Your Super Car!`;
+            }
+
+            startRewardMiniGame() {
+                sound.playPop();
+                this.hideAllScreens();
+                this.rewardScreen.classList.remove('hidden');
+                this.rewardScreen.classList.add('flex');
+                
+                this.miniGame.start();
+            }
+
+            onRewardMiniGameFinished() {
+                this.currentLevel++;
+                this.currentQuestionIdx = 0;
+
+                if (this.currentLevel >= 5) {
+                    // Completed All 5 Levels! Victory!
+                    this.showGrandVictory();
+                } else {
+                    // Proceed to next level questions
+                    this.showQuestion();
+                }
+            }
+
+            showGrandVictory() {
+                this.hideAllScreens();
+                this.victoryScreen.classList.remove('hidden');
+                this.victoryScreen.classList.add('flex');
+
+                document.getElementById('finalScore').innerText = this.score;
+                sound.playCorrect();
+                triggerFireworks();
+            }
+
+            restartGame() {
+                sound.playPop();
+                this.startQuiz();
+            }
+        }
+
+        // --- CATCH THE FALLING STARS REWARD MINI-GAME ---
+        class CatchStarsMiniGame {
+            constructor(gameController) {
+                this.gameController = gameController;
+                this.canvas = document.getElementById('gameCanvas');
+                this.ctx = this.canvas.getContext('2d');
+                this.timerElem = document.getElementById('rewardTimer');
+
+                this.car = {
+                    x: 0,
+                    y: 0,
+                    width: 70,
+                    height: 35,
+                    speed: 8
+                };
+
+                this.stars = [];
+                this.particles = [];
+                this.timer = 15;
+                this.timerInterval = null;
+                this.animFrame = null;
+                this.isGameRunning = false;
+
+                this.keys = { left: false, right: false };
+
+                this.setupControls();
+            }
+
+            setupControls() {
+                // Keyboard
+                window.addEventListener('keydown', (e) => {
+                    if (e.key === 'ArrowLeft') this.keys.left = true;
+                    if (e.key === 'ArrowRight') this.keys.right = true;
+                });
+
+                window.addEventListener('keyup', (e) => {
+                    if (e.key === 'ArrowLeft') this.keys.left = false;
+                    if (e.key === 'ArrowRight') this.keys.right = false;
+                });
+
+                // Pointer / Touch / Mouse Dragging on Canvas
+                const handlePointerMove = (e) => {
+                    if (!this.isGameRunning) return;
+                    const rect = this.canvas.getBoundingClientRect();
+                    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                    const canvasX = clientX - rect.left;
+                    this.car.x = canvasX - this.car.width / 2;
+                };
+
+                this.canvas.addEventListener('mousemove', handlePointerMove);
+                this.canvas.addEventListener('touchmove', handlePointerMove);
+
+                // Onscreen Buttons for Mobile
+                const btnLeft = document.getElementById('btnMoveLeft');
+                const btnRight = document.getElementById('btnMoveRight');
+
+                const bindBtn = (btn, dir) => {
+                    btn.addEventListener('touchstart', (e) => { e.preventDefault(); this.keys[dir] = true; });
+                    btn.addEventListener('touchend', (e) => { e.preventDefault(); this.keys[dir] = false; });
+                    btn.addEventListener('mousedown', () => { this.keys[dir] = true; });
+                    btn.addEventListener('mouseup', () => { this.keys[dir] = false; });
+                };
+
+                bindBtn(btnLeft, 'left');
+                bindBtn(btnRight, 'right');
+            }
+
+            resizeCanvas() {
+                const rect = this.canvas.parentElement.getBoundingClientRect();
+                this.canvas.width = rect.width;
+                this.canvas.height = rect.height;
+
+                this.car.y = this.canvas.height - this.car.height - 10;
+                if (this.car.x === 0) {
+                    this.car.x = this.canvas.width / 2 - this.car.width / 2;
+                }
+            }
+
+            start() {
+                this.resizeCanvas();
+                this.stars = [];
+                this.particles = [];
+                this.timer = 15;
+                this.timerElem.innerText = this.timer;
+                this.isGameRunning = true;
+
+                // Start Countdown Timer
+                clearInterval(this.timerInterval);
+                this.timerInterval = setInterval(() => {
+                    this.timer--;
+                    this.timerElem.innerText = this.timer;
+                    if (this.timer <= 0) {
+                        this.stop();
+                    }
+                }, 1000);
+
+                this.loop();
+            }
+
+            stop() {
+                this.isGameRunning = false;
+                clearInterval(this.timerInterval);
+                if (this.animFrame) cancelAnimationFrame(this.animFrame);
+
+                setTimeout(() => {
+                    this.gameController.onRewardMiniGameFinished();
+                }, 500);
+            }
+
+            spawnStar() {
+                if (Math.random() < 0.08) {
+                    this.stars.push({
+                        x: Math.random() * (this.canvas.width - 25),
+                        y: -20,
+                        size: 20 + Math.random() * 10,
+                        speed: 2.5 + Math.random() * 3,
+                        rotation: Math.random() * Math.PI * 2,
+                        rotSpeed: (Math.random() - 0.5) * 0.1
+                    });
+                }
+            }
+
+            createParticles(x, y) {
+                for (let i = 0; i < 12; i++) {
+                    this.particles.push({
+                        x: x,
+                        y: y,
+                        vx: (Math.random() - 0.5) * 6,
+                        vy: (Math.random() - 0.5) * 6,
+                        radius: Math.random() * 4 + 2,
+                        alpha: 1,
+                        color: ['#f59e0b', '#38bdf8', '#fef08a', '#ffffff'][Math.floor(Math.random() * 4)]
+                    });
+                }
+            }
+
+            update() {
+                // Keyboard Movement
+                if (this.keys.left) this.car.x -= this.car.speed;
+                if (this.keys.right) this.car.x += this.car.speed;
+
+                // Keep Car Inside Canvas Bounds
+                if (this.car.x < 0) this.car.x = 0;
+                if (this.car.x + this.car.width > this.canvas.width) {
+                    this.car.x = this.canvas.width - this.car.width;
+                }
+
+                // Spawn and Update Stars
+                this.spawnStar();
+
+                for (let i = this.stars.length - 1; i >= 0; i--) {
+                    const s = this.stars[i];
+                    s.y += s.speed;
+                    s.rotation += s.rotSpeed;
+
+                    // Collision Check with Hero Super Car
+                    if (
+                        s.x + s.size > this.car.x &&
+                        s.x < this.car.x + this.car.width &&
+                        s.y + s.size > this.car.y &&
+                        s.y < this.car.y + this.car.height
+                    ) {
+                        // Caught Star!
+                        sound.playCatch();
+                        this.gameController.updateScore(10);
+                        this.createParticles(s.x + s.size / 2, s.y + s.size / 2);
+                        this.stars.splice(i, 1);
+                        continue;
+                    }
+
+                    // Remove offscreen stars
+                    if (s.y > this.canvas.height + 30) {
+                        this.stars.splice(i, 1);
+                    }
+                }
+
+                // Update Explosion Particles
+                for (let i = this.particles.length - 1; i >= 0; i--) {
+                    const p = this.particles[i];
+                    p.x += p.vx;
+                    p.y += p.vy;
+                    p.alpha -= 0.03;
+                    if (p.alpha <= 0) {
+                        this.particles.splice(i, 1);
+                    }
+                }
+            }
+
+            drawStar(x, y, radius, points, inset) {
+                this.ctx.save();
+                this.ctx.beginPath();
+                this.ctx.translate(x, y);
+                this.ctx.moveTo(0, 0 - radius);
+                for (let i = 0; i < points; i++) {
+                    this.ctx.rotate(Math.PI / points);
+                    this.ctx.lineTo(0, 0 - (radius * inset));
+                    this.ctx.rotate(Math.PI / points);
+                    this.ctx.lineTo(0, 0 - radius);
+                }
+                this.ctx.closePath();
+                this.ctx.fillStyle = "#f59e0b";
+                this.ctx.shadowColor = "#fef08a";
+                this.ctx.shadowBlur = 10;
+                this.ctx.fill();
+                this.ctx.restore();
+            }
+
+            drawCar() {
+                const { x, y, width, height } = this.car;
+
+                this.ctx.save();
+                // Car Body Glow
+                this.ctx.shadowColor = '#38bdf8';
+                this.ctx.shadowBlur = 12;
+
+                // Main Sleek Rocket Car Hull
+                this.ctx.fillStyle = '#0284c7';
+                this.ctx.beginPath();
+                this.ctx.roundRect(x, y + 10, width, height - 10, 10);
+                this.ctx.fill();
+
+                // Cockpit Glass
+                this.ctx.fillStyle = '#7dd3fc';
+                this.ctx.beginPath();
+                this.ctx.arc(x + width / 2, y + 12, 14, Math.PI, 0);
+                this.ctx.fill();
+
+                // Thruster Flames
+                this.ctx.fillStyle = '#ef4444';
+                this.ctx.beginPath();
+                this.ctx.arc(x + width / 2, y + height, 8, 0, Math.PI);
+                this.ctx.fill();
+
+                // Front Racing Light
+                this.ctx.fillStyle = '#fef08a';
+                this.ctx.fillRect(x + 5, y + 18, 6, 6);
+                this.ctx.fillRect(x + width - 11, y + 18, 6, 6);
+
+                this.ctx.restore();
+            }
+
+            render() {
+                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
+                // Draw Stars
+                this.stars.forEach(s => {
+                    this.drawStar(s.x + s.size / 2, s.y + s.size / 2, s.size / 2, 5, 0.5);
+                });
+
+                // Draw Particles
+                this.particles.forEach(p => {
+                    this.ctx.save();
+                    this.ctx.globalAlpha = p.alpha;
+                    this.ctx.fillStyle = p.color;
+                    this.ctx.beginPath();
+                    this.ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+                    this.ctx.fill();
+                    this.ctx.restore();
+                });
+
+                // Draw Player Car
+                this.drawCar();
+            }
+
+            loop() {
+                if (!this.isGameRunning) return;
+                this.update();
+                this.render();
+                this.animFrame = requestAnimationFrame(() => this.loop());
+            }
+        }
+
+        // --- BACKGROUND STARFIELD CANVAS ANIMATION ---
+        const bgCanvas = document.getElementById('starfieldCanvas');
+        const bgCtx = bgCanvas.getContext('2d');
+        let bgStars = [];
+
+        function resizeBgCanvas() {
+            bgCanvas.width = window.innerWidth;
+            bgCanvas.height = window.innerHeight;
+            bgStars = [];
+            for (let i = 0; i < 80; i++) {
+                bgStars.push({
+                    x: Math.random() * bgCanvas.width,
+                    y: Math.random() * bgCanvas.height,
+                    radius: Math.random() * 1.8 + 0.5,
+                    alpha: Math.random(),
+                    speed: Math.random() * 0.02 + 0.005
+                });
+            }
+        }
+
+        function renderStarfield() {
+            bgCtx.clearRect(0, 0, bgCanvas.width, bgCanvas.height);
+            bgStars.forEach(s => {
+                s.alpha += s.speed;
+                if (s.alpha > 1 || s.alpha < 0) s.speed = -s.speed;
+
+                bgCtx.save();
+                bgCtx.globalAlpha = Math.max(0, Math.min(1, s.alpha));
+                bgCtx.fillStyle = "#e0f2fe";
+                bgCtx.beginPath();
+                bgCtx.arc(s.x, s.y, s.radius, 0, Math.PI * 2);
+                bgCtx.fill();
+                bgCtx.restore();
+            });
+            requestAnimationFrame(renderStarfield);
+        }
+
+        window.addEventListener('resize', () => {
+            resizeBgCanvas();
+            if (game && game.miniGame) game.miniGame.resizeCanvas();
+        });
+
+        // --- SIMPLE CELEBRATORY FIREWORKS FOR GRAND VICTORY ---
+        function triggerFireworks() {
+            for (let i = 0; i < 50; i++) {
+                setTimeout(() => {
+                    const x = Math.random() * bgCanvas.width;
+                    const y = Math.random() * (bgCanvas.height / 2);
+                    sound.playCatch();
+                }, i * 120);
+            }
+        }
+
+        // --- BOOTSTRAP GAME ---
+        let game;
+        window.onload = () => {
+            resizeBgCanvas();
+            renderStarfield();
+            game = new GameEngine();
+        };
+    </script>
+</body>
+</html>

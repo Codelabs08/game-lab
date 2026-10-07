@@ -1,0 +1,895 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Stone Age Boy &amp; Spelling</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts: Fredoka & Quicksand -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Quicksand:wght@500;700&display=swap" rel="stylesheet">
+  <!-- Canvas Confetti Library -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            skyBlue: '#0284c7',
+            deepBlue: '#0f172a',
+            pinkPrimary: '#ec4899',
+            pinkHover: '#db2777',
+            pinkLight: '#fbcfe8',
+            softBlue: '#38bdf8',
+            cardBg: '#1e293b'
+          },
+          fontFamily: {
+            sans: ['Fredoka', 'Quicksand', 'sans-serif'],
+          },
+          animation: {
+            bounceSlow: 'bounce 2s infinite',
+            pulseGlow: 'pulseGlow 1.5s infinite alternate',
+            float: 'float 3s ease-in-out infinite',
+          },
+          keyframes: {
+            pulseGlow: {
+              '0%': { boxShadow: '0 0 15px rgba(236, 72, 153, 0.4)' },
+              '100%': { boxShadow: '0 0 30px rgba(236, 72, 153, 0.8)' },
+            },
+            float: {
+              '0%, 100%': { transform: 'translateY(0px)' },
+              '50%': { transform: 'translateY(-10px)' },
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body {
+      font-family: 'Fredoka', 'Quicksand', sans-serif;
+      user-select: none;
+      -webkit-user-select: none;
+      background: linear-gradient(135deg, #0284c7 0%, #0369a1 40%, #0f172a 100%);
+      min-height: 100vh;
+      color: #ffffff;
+      overflow-x: hidden;
+    }
+
+    .pink-glow {
+      box-shadow: 0 8px 25px -5px rgba(236, 72, 153, 0.5), 0 8px 10px -6px rgba(236, 72, 153, 0.3);
+    }
+
+    .pink-button-gradient {
+      background: linear-gradient(135deg, #f472b6 0%, #ec4899 50%, #db2777 100%);
+    }
+
+    .pink-button-gradient:hover {
+      background: linear-gradient(135deg, #f472b6 0%, #f43f5e 50%, #e11d48 100%);
+    }
+
+    .glass-card {
+      background: rgba(15, 23, 42, 0.75);
+      backdrop-filter: blur(12px);
+      border: 3px solid rgba(244, 114, 182, 0.4);
+    }
+
+    /* Game canvas styles */
+    #gameCanvas {
+      background: linear-gradient(180deg, #0284c7 0%, #0f172a 100%);
+      touch-action: none;
+    }
+  </style>
+</head>
+<body class="flex flex-col items-center justify-between min-h-screen p-3 sm:p-6">
+
+  <!-- Top Navigation / Title Header -->
+  <header class="w-full max-w-3xl flex flex-col sm:flex-row items-center justify-between p-4 mb-4 glass-card rounded-3xl shadow-2xl border-pink-400">
+    <div class="flex items-center space-x-3 mb-2 sm:mb-0">
+      <div class="w-12 h-12 bg-pink-500 rounded-2xl flex items-center justify-center text-2xl shadow-lg animate-bounceSlow">
+        🦴
+      </div>
+      <div>
+        <h1 class="text-3xl font-extrabold tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-pink-300 via-pink-400 to-sky-300">Stone Age Boy &amp; Spelling</h1>
+        <p class="text-xs text-pink-200 font-medium">Stone Age Boy & Year 3 Spelling Quest</p>
+      </div>
+    </div>
+    
+    <!-- Sound Toggle & Level Status -->
+    <div class="flex items-center space-x-3">
+      <button id="soundToggleBtn" onclick="toggleAudio()" class="bg-sky-600 hover:bg-sky-500 text-white p-2.5 rounded-2xl flex items-center justify-center border-2 border-pink-300 transition-all transform active:scale-95" title="Toggle Sound">
+        <span id="soundIcon" class="text-xl">🔊</span>
+      </button>
+      <div id="headerLevelBadge" class="hidden bg-pink-500/30 text-pink-200 border-2 border-pink-400 px-4 py-1.5 rounded-2xl font-bold text-sm">
+        Level <span id="currentLevelNum">1</span> / 5
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Interactive Area -->
+  <main class="w-full max-w-3xl flex-1 flex flex-col items-center justify-center relative">
+
+    <!-- SCREEN 1: WELCOME SCREEN -->
+    <section id="welcomeScreen" class="w-full glass-card p-6 sm:p-10 rounded-3xl text-center shadow-2xl flex flex-col items-center animate-float">
+      <div class="text-6xl sm:text-7xl mb-4">🦣 ⛺ 🪨</div>
+      <h2 class="text-3xl sm:text-4xl font-extrabold text-pink-300 mb-3">Welcome, Explorer!</h2>
+      <p class="text-base sm:text-lg text-sky-100 mb-6 max-w-md leading-relaxed">
+        Travel back in time with <strong class="text-pink-300">Stone Age Boy</strong>! Test your spelling and story skills across 5 fun levels to unlock the <strong class="text-pink-300">Catch the Falling Stars</strong> game!
+      </p>
+
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 w-full max-w-md mb-8 text-sm">
+        <div class="bg-sky-900/60 p-3 rounded-2xl border border-pink-400/40">
+          <div class="text-2xl mb-1">📚</div>
+          <div class="font-bold text-pink-200">15 Questions</div>
+        </div>
+        <div class="bg-sky-900/60 p-3 rounded-2xl border border-pink-400/40">
+          <div class="text-2xl mb-1">🏆</div>
+          <div class="font-bold text-pink-200">5 Levels</div>
+        </div>
+        <div class="bg-sky-900/60 p-3 rounded-2xl border border-pink-400/40">
+          <div class="text-2xl mb-1">⭐</div>
+          <div class="font-bold text-pink-200">Star Reward</div>
+        </div>
+      </div>
+
+      <button onclick="startGame()" class="w-full sm:w-auto px-10 py-4 text-2xl font-extrabold text-white pink-button-gradient rounded-3xl pink-glow transition-all transform hover:scale-105 active:scale-95 border-2 border-pink-200 flex items-center justify-center space-x-3">
+        <span>PLAY NOW!</span>
+        <span class="text-3xl">🚀</span>
+      </button>
+    </section>
+
+
+    <!-- SCREEN 2: QUIZ SCREEN -->
+    <section id="quizScreen" class="hidden w-full glass-card p-5 sm:p-8 rounded-3xl shadow-2xl flex flex-col">
+      <!-- Progress Bar & Level Indicator -->
+      <div class="mb-6">
+        <div class="flex justify-between items-center mb-2">
+          <span class="text-pink-300 font-bold text-sm sm:text-base flex items-center gap-2">
+            <span id="levelTitle" class="bg-pink-500 text-white px-2.5 py-0.5 rounded-lg text-xs">Level 1</span>
+            <span id="levelThemeName">Basic Story Details</span>
+          </span>
+          <span class="text-sky-200 font-bold text-sm">Question <span id="qNumber">1</span>/3</span>
+        </div>
+        <div class="w-full bg-slate-800 rounded-full h-4 p-1 border border-pink-400/30">
+          <div id="progressBar" class="bg-gradient-to-r from-pink-400 to-pink-500 h-full rounded-full transition-all duration-500" style="width: 20%"></div>
+        </div>
+      </div>
+
+      <!-- Question Box -->
+      <div class="bg-slate-900/80 p-5 sm:p-7 rounded-2xl border-2 border-pink-500/50 mb-6 text-center shadow-inner">
+        <h3 id="questionText" class="text-xl sm:text-2xl font-bold text-white leading-relaxed">
+          Question text will appear here...
+        </h3>
+      </div>
+
+      <!-- Answer Options Grid -->
+      <div id="optionsContainer" class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+        <!-- Buttons injected dynamically -->
+      </div>
+
+      <!-- Instant Feedback Box -->
+      <div id="feedbackBox" class="hidden p-4 rounded-2xl text-center font-extrabold text-xl sm:text-2xl transition-all duration-300 shadow-lg">
+        <span id="feedbackIcon" class="text-3xl mr-2"></span>
+        <span id="feedbackText">Well done!</span>
+      </div>
+
+      <!-- Next Question / Continue Button -->
+      <button id="nextBtn" onclick="nextQuestion()" class="hidden w-full mt-4 py-3.5 text-xl font-bold text-white pink-button-gradient rounded-2xl pink-glow transition-all transform hover:scale-102 active:scale-95 border border-pink-300">
+        Next Question ➔
+      </button>
+    </section>
+
+
+    <!-- SCREEN 3: LEVEL SCORE SUMMARY SCREEN -->
+    <section id="levelScoreScreen" class="hidden w-full glass-card p-8 rounded-3xl text-center shadow-2xl flex flex-col items-center">
+      <div class="text-6xl mb-3 animate-bounce">🎉</div>
+      <h2 class="text-3xl font-extrabold text-pink-300 mb-2">Level <span id="summaryLevelNum">1</span> Complete!</h2>
+      <p id="summaryMessage" class="text-sky-100 text-lg mb-6">Awesome work! You are becoming a Stone Age expert!</p>
+
+      <div class="bg-slate-900/80 border-2 border-pink-400 p-6 rounded-2xl w-full max-w-sm mb-6 shadow-inner">
+        <div class="text-sky-200 text-sm font-bold uppercase tracking-wider mb-1">Level Score</div>
+        <div class="text-4xl font-extrabold text-pink-400 mb-2"><span id="levelScore">3</span> / 3</div>
+        <div class="text-xs text-sky-300">Total Score: <span id="totalScoreSoFar">3</span> / 15</div>
+      </div>
+
+      <button id="continueLevelBtn" onclick="startNextLevel()" class="w-full sm:w-auto px-8 py-3.5 text-xl font-extrabold text-white pink-button-gradient rounded-2xl pink-glow transition-all transform hover:scale-105 active:scale-95 border border-pink-300">
+        Continue to Level <span id="nextLevelNum">2</span> ➔
+      </button>
+    </section>
+
+
+    <!-- SCREEN 4: REWARD MINI-GAME ("Catch the Falling Stars") -->
+    <section id="miniGameScreen" class="hidden w-full glass-card p-4 sm:p-6 rounded-3xl shadow-2xl flex flex-col items-center">
+      <!-- Mini-Game Header -->
+      <div class="w-full flex justify-between items-center mb-3 px-2">
+        <div>
+          <h2 class="text-xl sm:text-2xl font-extrabold text-pink-300 flex items-center gap-2">
+            ⭐ Catch the Falling Stars!
+          </h2>
+          <p class="text-xs text-sky-200">Catch pink stars with your cute basket!</p>
+        </div>
+        <div class="flex items-center space-x-4 bg-slate-900/80 px-4 py-2 rounded-xl border border-pink-400">
+          <div>
+            <div class="text-xs text-pink-300 font-bold">STARS</div>
+            <div id="starsCaughtCount" class="text-2xl font-black text-pink-400">0</div>
+          </div>
+          <div class="h-8 w-px bg-slate-700"></div>
+          <div>
+            <div class="text-xs text-sky-300 font-bold">TIME</div>
+            <div id="gameTimer" class="text-2xl font-black text-sky-300">30s</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Canvas Box -->
+      <div class="relative w-full overflow-hidden rounded-2xl border-4 border-pink-400/80 shadow-2xl">
+        <canvas id="gameCanvas" width="600" height="400" class="w-full h-[320px] sm:h-[380px] block"></canvas>
+        
+        <!-- Touch Control Overlay for Mobile -->
+        <div class="absolute bottom-3 left-0 right-0 flex justify-between px-6 pointer-events-none sm:hidden">
+          <button id="btnMoveLeft" class="pointer-events-auto bg-pink-500/80 active:bg-pink-600 text-white font-extrabold w-16 h-16 rounded-full text-3xl shadow-lg border-2 border-white flex items-center justify-center">
+            ◀
+          </button>
+          <button id="btnMoveRight" class="pointer-events-auto bg-pink-500/80 active:bg-pink-600 text-white font-extrabold w-16 h-16 rounded-full text-3xl shadow-lg border-2 border-white flex items-center justify-center">
+            ▶
+          </button>
+        </div>
+      </div>
+
+      <!-- Game Controls Instruction -->
+      <div class="text-xs text-sky-200 mt-2 text-center hidden sm:block">
+        💡 Use <strong>Left</strong> & <strong>Right Arrow Keys</strong> on your keyboard to move!
+      </div>
+
+      <!-- Mini Game GameOver Modal -->
+      <div id="miniGameGameOver" class="hidden absolute inset-0 bg-slate-950/90 rounded-3xl flex flex-col items-center justify-center p-6 text-center backdrop-blur-md">
+        <div class="text-6xl mb-2">🌟</div>
+        <h3 class="text-3xl font-extrabold text-pink-300 mb-2">Time's Up! Wonderful Job!</h3>
+        <p class="text-sky-100 text-lg mb-4">You caught <strong id="finalStarScore" class="text-pink-400 text-2xl">0</strong> pink stars!</p>
+        <p class="text-xs text-pink-200 mb-6 max-w-xs">You have completed all 5 levels of Hero 67 Game like a true Stone Age Master!</p>
+        <button onclick="restartFullGame()" class="px-8 py-3.5 text-xl font-extrabold text-white pink-button-gradient rounded-2xl pink-glow border border-pink-300">
+          Play Hero 67 Game Again 🔄
+        </button>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Safe Kid-Friendly Footer -->
+  <footer class="w-full max-w-3xl text-center text-xs text-sky-200 mt-6 py-2">
+    <p>Hero 67 Game • Safe, Fun & Educational • Year 3 English & Spelling</p>
+  </footer>
+
+  <script>
+    /* =========================================================================
+       1. GAME DATA: 15 QUESTIONS ACROSS 5 INCREASING DIFFICULTY LEVELS
+       ========================================================================= */
+    const quizLevels = [
+      {
+        level: 1,
+        theme: "Basic Story Details & Early Words",
+        questions: [
+          {
+            q: "In the story 'Stone Age Boy', what did the boy fall into?",
+            options: ["A deep cave", "A river", "A big tree"],
+            answer: 0,
+            hint: "He tripped and stumbled down into a dark underground hole."
+          },
+          {
+            q: "Which word is spelled correctly for the hard rock used in the Stone Age?",
+            options: ["stoan", "stone", "stonn"],
+            answer: 1,
+            hint: "Look for the magic 'e' at the end!"
+          },
+          {
+            q: "What sharp tool made of stone was used for hunting?",
+            options: ["Spear", "Spoon", "Spade"],
+            answer: 0,
+            hint: "It is a long wooden stick with a pointy stone tip."
+          }
+        ]
+      },
+      {
+        level: 2,
+        theme: "Characters, Actions & Phonics",
+        questions: [
+          {
+            q: "What was the name of the girl who found the boy?",
+            options: ["Mia", "Om", "Lily"],
+            answer: 1,
+            hint: "Her name is very short and has only 2 letters!"
+          },
+          {
+            q: "Choose the correct spelling for a huge hairy prehistoric elephant:",
+            options: ["mamoth", "mammoth", "mamothh"],
+            answer: 1,
+            hint: "It has a double 'm' in the middle!"
+          },
+          {
+            q: "What did Om and her family build to keep warm and safe?",
+            options: ["Shelter", "Skyscraper", "Shopping mall"],
+            answer: 0,
+            hint: "They made tent-like structures using animal skins and wood."
+          }
+        ]
+      },
+      {
+        level: 3,
+        theme: "Life Skills & Prefixes/Suffixes",
+        questions: [
+          {
+            q: "Stone Age people collected wild berries and nuts. What is this called?",
+            options: ["Gathering", "Gardening", "Groceries"],
+            answer: 0,
+            hint: "It starts with 'Gath-' and means picking wild food."
+          },
+          {
+            q: "Choose the correct suffix to make the word 'care' mean full of care:",
+            options: ["carefull", "careful", "carefully"],
+            answer: 1,
+            hint: "The suffix -ful ends with only one 'l'."
+          },
+          {
+            q: "Which prefix added to 'historic' means before recorded history?",
+            options: ["pre-", "un-", "re-"],
+            answer: 0,
+            hint: "'Pre' means before!"
+          }
+        ]
+      },
+      {
+        level: 4,
+        theme: "Comprehension & Spelling Rules",
+        questions: [
+          {
+            q: "Where did Om take the boy to see amazing paintings on the walls?",
+            options: ["Deep inside a dark cave", "On top of a snowy mountain", "Inside a wooden house"],
+            answer: 0,
+            hint: "They carried burning torches into the dark cave."
+          },
+          {
+            q: "Which word has a double consonant and is spelled correctly?",
+            options: ["disapear", "disappear", "disapeer"],
+            answer: 1,
+            hint: "It has double 'p'!"
+          },
+          {
+            q: "Choose the correct homophone: Stone Age people went out to _____ animals.",
+            options: ["hunt", "haunt", "hut"],
+            answer: 0,
+            hint: "To track and catch wild animals for food."
+          }
+        ]
+      },
+      {
+        level: 5,
+        theme: "Stone Age Master Challenge",
+        questions: [
+          {
+            q: "What animal attacked Om and the boy near the end of the story?",
+            options: ["A cave bear", "A saber-toothed cat", "A giant eagle"],
+            answer: 0,
+            hint: "It was a massive bear inside a dark cave!"
+          },
+          {
+            q: "Which word is spelled correctly and means 'full of exciting adventures'?",
+            options: ["adventurus", "adventurous", "adventros"],
+            answer: 1,
+            hint: "It ends with the suffix -ous!"
+          },
+          {
+            q: "What artwork did the boy draw on the cave wall before returning home?",
+            options: ["A picture of himself and Om", "A picture of a spaceship", "A picture of a castle"],
+            answer: 0,
+            hint: "He painted a memory of his dear friend Om!"
+          }
+        ]
+      }
+    ];
+
+    /* =========================================================================
+       2. STATE VARIABLES
+       ========================================================================= */
+    let currentLevelIndex = 0;
+    let currentQuestionIndex = 0;
+    let scoreInCurrentLevel = 0;
+    let totalScore = 0;
+    let soundEnabled = true;
+
+    /* =========================================================================
+       3. WEB AUDIO SYNTHESIZER (NO EXTERNAL SOUND FILES NEEDED)
+       ========================================================================= */
+    let audioCtx = null;
+
+    function initAudio() {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+    }
+
+    function toggleAudio() {
+      soundEnabled = !soundEnabled;
+      document.getElementById('soundIcon').innerText = soundEnabled ? "🔊" : "🔇";
+    }
+
+    // Friendly chime for correct answers
+    function playCorrectSound() {
+      if (!soundEnabled) return;
+      initAudio();
+      const now = audioCtx.currentTime;
+      
+      const osc1 = audioCtx.createOscillator();
+      const osc2 = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+
+      osc1.type = 'sine';
+      osc2.type = 'triangle';
+
+      osc1.frequency.setValueAtTime(523.25, now); // C5
+      osc1.frequency.exponentialRampToValueAtTime(659.25, now + 0.1); // E5
+      osc1.frequency.exponentialRampToValueAtTime(783.99, now + 0.25); // G5
+
+      osc2.frequency.setValueAtTime(1046.50, now + 0.25); // C6
+
+      gain.gain.setValueAtTime(0.2, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
+
+      osc1.connect(gain);
+      osc2.connect(gain);
+      gain.connect(audioCtx.destination);
+
+      osc1.start(now);
+      osc2.start(now + 0.25);
+      osc1.stop(now + 0.5);
+      osc2.stop(now + 0.5);
+    }
+
+    // Kind, gentle boing sound for try again
+    function playTryAgainSound() {
+      if (!soundEnabled) return;
+      initAudio();
+      const now = audioCtx.currentTime;
+
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(280, now);
+      osc.frequency.exponentialRampToValueAtTime(180, now + 0.25);
+
+      gain.gain.setValueAtTime(0.25, now);
+      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+
+      osc.start(now);
+      osc.stop(now + 0.3);
+    }
+
+    // Pop sound for catching stars
+    function playStarCatchSound() {
+      if (!soundEnabled) return;
+      initAudio();
+      const now = audioCtx.currentTime;
+
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(800, now);
+      osc.frequency.exponentialRampToValueAtTime(1200, now + 0.08);
+
+      gain.gain.setValueAtTime(0.15, now);
+      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.08);
+
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+
+      osc.start(now);
+      osc.stop(now + 0.08);
+    }
+
+    /* =========================================================================
+       4. QUIZ LOGIC & SCREEN TRANSITIONS
+       ========================================================================= */
+    function startGame() {
+      initAudio();
+      currentLevelIndex = 0;
+      currentQuestionIndex = 0;
+      scoreInCurrentLevel = 0;
+      totalScore = 0;
+
+      document.getElementById('welcomeScreen').classList.add('hidden');
+      document.getElementById('headerLevelBadge').classList.remove('hidden');
+      document.getElementById('quizScreen').classList.remove('hidden');
+
+      loadQuestion();
+    }
+
+    function loadQuestion() {
+      const levelData = quizLevels[currentLevelIndex];
+      const qData = levelData.questions[currentQuestionIndex];
+
+      // Update Header & Progress UI
+      document.getElementById('currentLevelNum').innerText = levelData.level;
+      document.getElementById('levelTitle').innerText = `Level ${levelData.level}`;
+      document.getElementById('levelThemeName').innerText = levelData.theme;
+      document.getElementById('qNumber').innerText = currentQuestionIndex + 1;
+
+      const progressPercent = ((currentQuestionIndex) / 3) * 100;
+      document.getElementById('progressBar').style.width = `${progressPercent}%`;
+
+      // Set Question Text
+      document.getElementById('questionText').innerText = qData.q;
+
+      // Reset Feedback & Next Button
+      const feedbackBox = document.getElementById('feedbackBox');
+      feedbackBox.classList.add('hidden');
+      feedbackBox.className = "hidden p-4 rounded-2xl text-center font-extrabold text-xl sm:text-2xl transition-all duration-300 shadow-lg";
+      document.getElementById('nextBtn').classList.add('hidden');
+
+      // Populate Options Buttons
+      const optionsContainer = document.getElementById('optionsContainer');
+      optionsContainer.innerHTML = '';
+
+      qData.options.forEach((optText, index) => {
+        const btn = document.createElement('button');
+        btn.className = "option-btn w-full p-4 text-lg font-bold text-white bg-slate-800/90 hover:bg-slate-700/90 border-2 border-pink-400/50 rounded-2xl shadow-md transition-all transform hover:scale-102 active:scale-95 text-left flex items-center justify-between";
+        btn.innerHTML = `
+          <span>${optText}</span>
+          <span class="w-8 h-8 rounded-full bg-pink-500/20 flex items-center justify-center text-xs text-pink-300 font-extrabold border border-pink-400/30">
+            ${String.fromCharCode(65 + index)}
+          </span>
+        `;
+        btn.onclick = () => checkAnswer(index, btn);
+        optionsContainer.appendChild(btn);
+      });
+    }
+
+    function checkAnswer(selectedIndex, clickedBtn) {
+      const levelData = quizLevels[currentLevelIndex];
+      const qData = levelData.questions[currentQuestionIndex];
+      const allOptionBtns = document.querySelectorAll('.option-btn');
+
+      // Disable all option buttons after answer selection
+      allOptionBtns.forEach(btn => btn.disabled = true);
+
+      const feedbackBox = document.getElementById('feedbackBox');
+      const feedbackIcon = document.getElementById('feedbackIcon');
+      const feedbackText = document.getElementById('feedbackText');
+      feedbackBox.classList.remove('hidden');
+
+      if (selectedIndex === qData.answer) {
+        // Correct Answer!
+        scoreInCurrentLevel++;
+        totalScore++;
+        playCorrectSound();
+
+        clickedBtn.classList.remove('bg-slate-800/90', 'border-pink-400/50');
+        clickedBtn.classList.add('bg-emerald-600', 'border-emerald-300', 'ring-4', 'ring-emerald-400/40');
+
+        feedbackBox.classList.add('bg-emerald-500/20', 'border-2', 'border-emerald-400', 'text-emerald-300');
+        feedbackIcon.innerText = "🌟";
+        feedbackText.innerText = "Well done! You got it right!";
+
+        // Small confetti splash for correct answer
+        if (typeof confetti === 'function') {
+          confetti({
+            particleCount: 25,
+            spread: 50,
+            origin: { y: 0.7 }
+          });
+        }
+      } else {
+        // Wrong Answer
+        playTryAgainSound();
+
+        clickedBtn.classList.remove('bg-slate-800/90', 'border-pink-400/50');
+        clickedBtn.classList.add('bg-rose-600/80', 'border-rose-300');
+
+        // Highlight correct one softly
+        allOptionBtns[qData.answer].classList.add('bg-emerald-700/60', 'border-emerald-400');
+
+        feedbackBox.classList.add('bg-rose-500/20', 'border-2', 'border-rose-400', 'text-rose-200');
+        feedbackIcon.innerText = "💪";
+        feedbackText.innerText = "Try again next time! Keep going!";
+      }
+
+      // Update progress bar to 100% for this question
+      const progressPercent = ((currentQuestionIndex + 1) / 3) * 100;
+      document.getElementById('progressBar').style.width = `${progressPercent}%`;
+
+      // Show Next button
+      const nextBtn = document.getElementById('nextBtn');
+      nextBtn.classList.remove('hidden');
+      if (currentQuestionIndex === 2) {
+        nextBtn.innerText = "View Level Results 🏆";
+      } else {
+        nextBtn.innerText = "Next Question ➔";
+      }
+    }
+
+    function nextQuestion() {
+      currentQuestionIndex++;
+      if (currentQuestionIndex < 3) {
+        loadQuestion();
+      } else {
+        showLevelSummary();
+      }
+    }
+
+    function showLevelSummary() {
+      document.getElementById('quizScreen').classList.add('hidden');
+      document.getElementById('levelScoreScreen').classList.remove('hidden');
+
+      document.getElementById('summaryLevelNum').innerText = currentLevelIndex + 1;
+      document.getElementById('levelScore').innerText = scoreInCurrentLevel;
+      document.getElementById('totalScoreSoFar').innerText = totalScore;
+
+      const continueBtn = document.getElementById('continueLevelBtn');
+
+      if (currentLevelIndex < 4) {
+        continueBtn.innerText = `Continue to Level ${currentLevelIndex + 2} ➔`;
+        document.getElementById('summaryMessage').innerText = "Super star! You completed this level!";
+      } else {
+        continueBtn.innerText = "UNLOCK STAR MINI-GAME! ⭐";
+        document.getElementById('summaryMessage').innerText = "AMAZING! You completed ALL 5 LEVELS! You unlocked the reward game!";
+      }
+
+      // Confetti burst on level complete
+      if (typeof confetti === 'function') {
+        confetti({
+          particleCount: 80,
+          spread: 70,
+          origin: { y: 0.6 }
+        });
+      }
+    }
+
+    function startNextLevel() {
+      if (currentLevelIndex < 4) {
+        currentLevelIndex++;
+        currentQuestionIndex = 0;
+        scoreInCurrentLevel = 0;
+        document.getElementById('levelScoreScreen').classList.add('hidden');
+        document.getElementById('quizScreen').classList.remove('hidden');
+        loadQuestion();
+      } else {
+        // Unlock Mini-Game after Level 5
+        document.getElementById('levelScoreScreen').classList.add('hidden');
+        document.getElementById('headerLevelBadge').classList.add('hidden');
+        document.getElementById('miniGameScreen').classList.remove('hidden');
+        initMiniGame();
+      }
+    }
+
+    function restartFullGame() {
+      document.getElementById('miniGameScreen').classList.add('hidden');
+      document.getElementById('welcomeScreen').classList.remove('hidden');
+    }
+
+    /* =========================================================================
+       5. REWARD MINI-GAME ("CATCH THE FALLING STARS")
+       ========================================================================= */
+    let canvas, ctx;
+    let starsCaught = 0;
+    let gameTimeLeft = 30;
+    let miniGameLoopReq;
+    let timerInterval;
+
+    let player = {
+      x: 270,
+      y: 330,
+      width: 70,
+      height: 45,
+      speed: 8,
+      dx: 0
+    };
+
+    let stars = [];
+
+    function initMiniGame() {
+      canvas = document.getElementById('gameCanvas');
+      ctx = canvas.getContext('2d');
+
+      starsCaught = 0;
+      gameTimeLeft = 30;
+      stars = [];
+      player.x = canvas.width / 2 - player.width / 2;
+
+      document.getElementById('starsCaughtCount').innerText = "0";
+      document.getElementById('gameTimer').innerText = "30s";
+      document.getElementById('miniGameGameOver').classList.add('hidden');
+
+      // Controls setup
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keyup', handleKeyUp);
+      window.addEventListener('keydown', handleKeyDown);
+      window.addEventListener('keyup', handleKeyUp);
+
+      // Touch controls for mobile
+      const btnLeft = document.getElementById('btnMoveLeft');
+      const btnRight = document.getElementById('btnMoveRight');
+
+      btnLeft.ontouchstart = (e) => { e.preventDefault(); player.dx = -player.speed; };
+      btnLeft.ontouchend = (e) => { e.preventDefault(); player.dx = 0; };
+      btnRight.ontouchstart = (e) => { e.preventDefault(); player.dx = player.speed; };
+      btnRight.ontouchend = (e) => { e.preventDefault(); player.dx = 0; };
+
+      btnLeft.onmousedown = () => { player.dx = -player.speed; };
+      btnLeft.onmouseup = () => { player.dx = 0; };
+      btnRight.onmousedown = () => { player.dx = player.speed; };
+      btnRight.onmouseup = () => { player.dx = 0; };
+
+      // Start timer
+      clearInterval(timerInterval);
+      timerInterval = setInterval(() => {
+        gameTimeLeft--;
+        document.getElementById('gameTimer').innerText = `${gameTimeLeft}s`;
+        if (gameTimeLeft <= 0) {
+          endMiniGame();
+        }
+      }, 1000);
+
+      cancelAnimationFrame(miniGameLoopReq);
+      miniGameLoop();
+    }
+
+    function handleKeyDown(e) {
+      if (e.key === 'ArrowLeft' || e.key === 'a') player.dx = -player.speed;
+      if (e.key === 'ArrowRight' || e.key === 'd') player.dx = player.speed;
+    }
+
+    function handleKeyUp(e) {
+      if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'ArrowRight' || e.key === 'd') {
+        player.dx = 0;
+      }
+    }
+
+    function spawnStar() {
+      if (Math.random() < 0.05) { // Spawn rate
+        stars.push({
+          x: Math.random() * (canvas.width - 30) + 15,
+          y: -20,
+          size: 16 + Math.random() * 10,
+          speed: 2 + Math.random() * 3,
+          rotation: Math.random() * Math.PI,
+          rotSpeed: (Math.random() - 0.5) * 0.08
+        });
+      }
+    }
+
+    function drawStar(cx, cy, spikes, outerRadius, innerRadius, rotation) {
+      ctx.save();
+      ctx.beginPath();
+      ctx.translate(cx, cy);
+      ctx.rotate(rotation);
+      let rot = (Math.PI / 2) * 3;
+      let x = cx;
+      let y = cy;
+      let step = Math.PI / spikes;
+
+      ctx.moveTo(0, -outerRadius);
+      for (let i = 0; i < spikes; i++) {
+        x = Math.cos(rot) * outerRadius;
+        y = Math.sin(rot) * outerRadius;
+        ctx.lineTo(x, y);
+        rot += step;
+
+        x = Math.cos(rot) * innerRadius;
+        y = Math.sin(rot) * innerRadius;
+        ctx.lineTo(x, y);
+        rot += step;
+      }
+      ctx.lineTo(0, -outerRadius);
+      ctx.closePath();
+      ctx.fillStyle = "#f472b6"; // Glowing Pink Star
+      ctx.shadowColor = "#ec4899";
+      ctx.shadowBlur = 12;
+      ctx.fill();
+      ctx.restore();
+    }
+
+    function drawPlayerBasket(p) {
+      ctx.save();
+      // Draw cute basket/catcher
+      ctx.fillStyle = "#ec4899";
+      ctx.shadowColor = "#f472b6";
+      ctx.shadowBlur = 10;
+
+      // Catcher base
+      ctx.beginPath();
+      ctx.roundRect(p.x, p.y + 10, p.width, p.height - 10, 12);
+      ctx.fill();
+
+      // Golden rim
+      ctx.fillStyle = "#38bdf8";
+      ctx.beginPath();
+      ctx.roundRect(p.x - 4, p.y, p.width + 8, 12, 6);
+      ctx.fill();
+
+      // Cute face on basket
+      ctx.fillStyle = "#ffffff";
+      ctx.beginPath();
+      ctx.arc(p.x + 22, p.y + 24, 4, 0, Math.PI * 2);
+      ctx.arc(p.x + p.width - 22, p.y + 24, 4, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Smile
+      ctx.beginPath();
+      ctx.arc(p.x + p.width / 2, p.y + 26, 7, 0, Math.PI);
+      ctx.strokeStyle = "#ffffff";
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      ctx.restore();
+    }
+
+    function miniGameLoop() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Move player within boundaries
+      player.x += player.dx;
+      if (player.x < 0) player.x = 0;
+      if (player.x + player.width > canvas.width) player.x = canvas.width - player.width;
+
+      drawPlayerBasket(player);
+
+      // Spawn and update stars
+      spawnStar();
+
+      for (let i = stars.length - 1; i >= 0; i--) {
+        let s = stars[i];
+        s.y += s.speed;
+        s.rotation += s.rotSpeed;
+
+        drawStar(s.x, s.y, 5, s.size, s.size / 2, s.rotation);
+
+        // Catch collision detection
+        if (
+          s.y + s.size >= player.y &&
+          s.y - s.size <= player.y + player.height &&
+          s.x >= player.x - 10 &&
+          s.x <= player.x + player.width + 10
+        ) {
+          starsCaught++;
+          playStarCatchSound();
+          document.getElementById('starsCaughtCount').innerText = starsCaught;
+          stars.splice(i, 1);
+          continue;
+        }
+
+        // Remove off-screen stars
+        if (s.y > canvas.height + 30) {
+          stars.splice(i, 1);
+        }
+      }
+
+      if (gameTimeLeft > 0) {
+        miniGameLoopReq = requestAnimationFrame(miniGameLoop);
+      }
+    }
+
+    function endMiniGame() {
+      clearInterval(timerInterval);
+      cancelAnimationFrame(miniGameLoopReq);
+
+      document.getElementById('finalStarScore').innerText = starsCaught;
+      document.getElementById('miniGameGameOver').classList.remove('hidden');
+
+      if (typeof confetti === 'function') {
+        confetti({
+          particleCount: 120,
+          spread: 90,
+          origin: { y: 0.5 }
+        });
+      }
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Fun Maths Game</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Canvas Confetti Library -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Quicksand:wght@600;700&display=swap');
+
+        body {
+            font-family: 'Quicksand', sans-serif;
+            background-color: #121212;
+            color: #FFFFFF;
+            touch-action: manipulation;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        .font-game {
+            font-family: 'Fredoka One', cursive, sans-serif;
+        }
+
+        @keyframes bounce-slow {
+            0%, 100% { transform: translateY(-5%); }
+            50% { transform: translateY(5%); }
+        }
+
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 15px rgba(255, 215, 0, 0.6); }
+            50% { box-shadow: 0 0 30px rgba(255, 215, 0, 1); }
+        }
+
+        .animate-bounce-slow {
+            animation: bounce-slow 2s infinite ease-in-out;
+        }
+
+        .animate-glow {
+            animation: pulse-glow 1.5s infinite;
+        }
+
+        .btn-yellow {
+            background-color: #FFD700;
+            color: #121212;
+            border-bottom: 6px solid #C7A000;
+            transition: all 0.1s ease;
+        }
+
+        .btn-yellow:active {
+            transform: translateY(4px);
+            border-bottom-width: 2px;
+        }
+
+        .btn-orange {
+            background-color: #FF8C00;
+            color: #FFFFFF;
+            border-bottom: 6px solid #B36200;
+            transition: all 0.1s ease;
+        }
+
+        .btn-orange:active {
+            transform: translateY(4px);
+            border-bottom-width: 2px;
+        }
+
+        .card-dark {
+            background-color: #1E1E1E;
+            border: 4px solid #FFD700;
+        }
+
+        /* Canvas styling */
+        #gameCanvas {
+            background-color: #262626;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-between p-3 sm:p-6 bg-neutral-900 text-white overflow-x-hidden">
+
+    <!-- Top Header / Controls -->
+    <header class="w-full max-w-2xl flex justify-between items-center bg-black/60 p-3 rounded-2xl border-2 border-yellow-400 mb-4 shadow-lg">
+        <div class="flex items-center space-x-2">
+            <span class="text-3xl">⭐</span>
+            <div>
+                <h1 class="font-game text-yellow-400 text-lg sm:text-xl leading-tight">Fun Maths Game</h1>
+                <p class="text-xs text-gray-300">Stars: <span id="starCounter" class="text-yellow-400 font-bold">0</span> 🌟</p>
+            </div>
+        </div>
+        
+        <div class="flex space-x-2">
+            <button id="ttsBtn" onclick="toggleTTS()" class="bg-amber-600 hover:bg-amber-500 text-white text-xs sm:text-sm font-bold py-2 px-3 rounded-xl border-b-4 border-amber-800 flex items-center gap-1 active:translate-y-1">
+                🔊 <span id="ttsStatus">Speech: ON</span>
+            </button>
+            <button id="soundBtn" onclick="toggleSound()" class="bg-amber-600 hover:bg-amber-500 text-white text-xs sm:text-sm font-bold py-2 px-3 rounded-xl border-b-4 border-amber-800 flex items-center gap-1 active:translate-y-1">
+                🎵 <span id="soundStatus">Sound: ON</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Container Area -->
+    <main class="w-full max-w-2xl flex-1 flex flex-col items-center justify-center relative">
+
+        <!-- SCREEN 1: Welcome Screen -->
+        <section id="welcomeScreen" class="w-full card-dark rounded-3xl p-6 sm:p-8 text-center flex flex-col items-center shadow-2xl">
+            <div class="text-6xl sm:text-7xl mb-3 animate-bounce-slow">🚗💨🔢</div>
+            <h2 class="font-game text-3xl sm:text-5xl text-yellow-400 mb-2 drop-shadow-md">Welcome, Hero!</h2>
+            <p class="text-lg sm:text-xl text-gray-200 mb-6 font-semibold">Ready to master your Times Tables and earn the <span class="text-orange-400 font-bold">Car Dodger</span> mini-game?</p>
+            
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full max-w-md mb-6 text-left">
+                <div class="bg-neutral-800 p-3 rounded-xl border border-yellow-500/30 flex items-center gap-3">
+                    <span class="text-2xl">🏆</span>
+                    <span class="text-sm font-bold text-gray-200">5 Fun Times-Table Levels</span>
+                </div>
+                <div class="bg-neutral-800 p-3 rounded-xl border border-yellow-500/30 flex items-center gap-3">
+                    <span class="text-2xl">🏎️</span>
+                    <span class="text-sm font-bold text-gray-200">Unlock Car Dodger Fun</span>
+                </div>
+            </div>
+
+            <button onclick="startQuiz()" class="w-full max-w-md btn-yellow font-game text-2xl py-4 rounded-2xl animate-glow shadow-xl hover:brightness-105 active:scale-98 transition">
+                🚀 START MATHS ADVENTURE!
+            </button>
+        </section>
+
+        <!-- SCREEN 2: Quiz Screen -->
+        <section id="quizScreen" class="w-full card-dark rounded-3xl p-5 sm:p-7 text-center flex-col items-center hidden shadow-2xl">
+            <!-- Progress Header -->
+            <div class="w-full flex justify-between items-center mb-2">
+                <span id="levelBadge" class="bg-orange-500 text-white font-game text-xs sm:text-sm py-1 px-3 rounded-full uppercase tracking-wider">Level 1</span>
+                <span id="questionNum" class="font-bold text-yellow-400 text-sm sm:text-base">Question 1 of 15</span>
+            </div>
+
+            <!-- Progress Bar -->
+            <div class="w-full bg-neutral-800 h-4 rounded-full overflow-hidden border border-neutral-700 mb-6">
+                <div id="progressBar" class="bg-gradient-to-r from-yellow-400 to-orange-500 h-full w-0 transition-all duration-300"></div>
+            </div>
+
+            <!-- Level Title / Times Tables Info -->
+            <h3 id="levelTitle" class="text-gray-300 text-sm font-bold uppercase mb-2 tracking-wide">2x & 10x Tables</h3>
+
+            <!-- Question Box -->
+            <div class="bg-neutral-800 w-full py-6 sm:py-8 px-4 rounded-2xl border-2 border-yellow-400/50 mb-6 flex flex-col items-center justify-center relative">
+                <button onclick="speakQuestion()" class="absolute top-3 right-3 text-2xl hover:scale-110 active:scale-95 transition" title="Read Aloud">🔊</button>
+                <div id="questionText" class="font-game text-4xl sm:text-6xl text-yellow-400 tracking-wider">
+                    2 x 3 = ?
+                </div>
+            </div>
+
+            <!-- Options Grid (4 Big Buttons) -->
+            <div id="optionsContainer" class="grid grid-cols-2 gap-3 sm:gap-4 w-full mb-4">
+                <!-- Buttons dynamically populated -->
+            </div>
+
+            <!-- Hint / Encouragement Message -->
+            <div id="feedbackBox" class="h-10 text-center font-bold text-base sm:text-lg text-yellow-300 flex items-center justify-center">
+                <!-- Dynamic feedback text -->
+            </div>
+        </section>
+
+        <!-- SCREEN 3: Level Complete / Reward Break Screen -->
+        <section id="levelCompleteScreen" class="w-full card-dark rounded-3xl p-6 sm:p-8 text-center flex-col items-center hidden shadow-2xl">
+            <div class="text-6xl mb-2 animate-bounce-slow">🎉</div>
+            <h2 id="levelCompleteTitle" class="font-game text-3xl sm:text-4xl text-yellow-400 mb-2">Awesome Job, Hero!</h2>
+            <p id="levelCompleteText" class="text-gray-200 text-lg mb-6">You've completed Level 1! Super Stars Earned!</p>
+
+            <div class="flex flex-col gap-3 w-full max-w-md">
+                <button onclick="startCarDodgerFromQuiz()" class="btn-orange font-game text-xl py-4 rounded-2xl shadow-lg flex items-center justify-center gap-2">
+                    🏎️ PLAY CAR DODGER REWARD!
+                </button>
+                <button onclick="nextLevel()" class="btn-yellow font-game text-xl py-4 rounded-2xl shadow-lg flex items-center justify-center gap-2">
+                    ➡️ CONTINUE MATHS QUIZ
+                </button>
+            </div>
+        </section>
+
+        <!-- SCREEN 4: Car Dodger Game Screen -->
+        <section id="carDodgerScreen" class="w-full card-dark rounded-3xl p-4 sm:p-6 text-center flex-col items-center hidden shadow-2xl">
+            <div class="w-full flex justify-between items-center mb-2">
+                <h2 class="font-game text-xl text-yellow-400">🏎️ Car Dodger</h2>
+                <div class="text-sm font-bold text-gray-200">Score: <span id="carScore" class="text-yellow-400">0</span></div>
+            </div>
+
+            <!-- Game Canvas -->
+            <div class="relative w-full flex justify-center items-center">
+                <canvas id="gameCanvas" width="320" height="420" class="max-w-full border-4 border-yellow-400"></canvas>
+                
+                <!-- Game Over Overlay -->
+                <div id="gameOverOverlay" class="absolute inset-0 bg-black/85 rounded-xl flex flex-col items-center justify-center p-4 hidden">
+                    <h3 class="font-game text-3xl text-orange-400 mb-2">Great Driving!</h3>
+                    <p class="text-lg text-white mb-1">Coins & Stars: <span id="finalCarScore" class="text-yellow-400 font-bold">0</span></p>
+                    <p class="text-sm text-gray-300 mb-4">Hero is a Driving Pro! 🏆</p>
+                    <div class="flex flex-col gap-2 w-full max-w-xs">
+                        <button onclick="restartCarDodger()" class="btn-yellow font-game text-lg py-3 rounded-xl">🔄 PLAY AGAIN</button>
+                        <button onclick="backToMathsFromGame()" class="btn-orange font-game text-lg py-3 rounded-xl">🧠 BACK TO MATHS</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Touch Controls for Mobile/Tablet -->
+            <div class="flex justify-between w-full max-w-xs mt-3 gap-4">
+                <button id="leftBtn" class="flex-1 btn-yellow font-game text-3xl py-3 rounded-xl select-none">👈 LEFT</button>
+                <button id="rightBtn" class="flex-1 btn-yellow font-game text-3xl py-3 rounded-xl select-none">RIGHT 👉</button>
+            </div>
+        </section>
+
+        <!-- SCREEN 5: Grand Final Trophy Room Screen -->
+        <section id="trophyScreen" class="w-full card-dark rounded-3xl p-6 sm:p-8 text-center flex-col items-center hidden shadow-2xl">
+            <div class="text-7xl mb-3 animate-bounce-slow">🏆🌟🎉</div>
+            <h2 class="font-game text-3xl sm:text-5xl text-yellow-400 mb-2">Maths Champion!</h2>
+            <p class="text-xl text-gray-200 mb-4">Hero finished ALL 15 Questions!</p>
+            
+            <div class="bg-neutral-800 border-2 border-yellow-400 rounded-2xl p-4 w-full max-w-md mb-6">
+                <h3 class="font-game text-lg text-orange-400 mb-2">Your Badges Earned:</h3>
+                <div id="badgeContainer" class="grid grid-cols-5 gap-2 text-2xl sm:text-3xl">
+                    <span title="Level 1 Master">🥇</span>
+                    <span title="Level 2 Master">🥈</span>
+                    <span title="Level 3 Master">🥉</span>
+                    <span title="Level 4 Master">⭐</span>
+                    <span title="Level 5 Master">👑</span>
+                </div>
+            </div>
+
+            <div class="flex flex-col gap-3 w-full max-w-md">
+                <button onclick="startCarDodgerFromTrophy()" class="btn-orange font-game text-xl py-4 rounded-2xl shadow-lg">
+                    🏎️ UNLIMITED CAR DODGER FUN!
+                </button>
+                <button onclick="restartFullGame()" class="btn-yellow font-game text-xl py-4 rounded-2xl shadow-lg">
+                    🔄 RESTART MATHS GAME
+                </button>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="mt-4 text-center text-xs text-gray-400 font-semibold">
+        Safe & Fun Learning environment for Hero | 100% Kid Friendly
+    </footer>
+
+    <script>
+        // Audio Synthesizer using Web Audio API
+        let audioCtx = null;
+        let soundEnabled = true;
+        let ttsEnabled = true;
+
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        }
+
+        function playSound(type) {
+            if (!soundEnabled) return;
+            initAudio();
+            if (!audioCtx) return;
+
+            const now = audioCtx.currentTime;
+
+            if (type === 'correct') {
+                // Cheerful two-tone chime
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(523.25, now); // C5
+                osc.frequency.exponentialRampToValueAtTime(659.25, now + 0.15); // E5
+                osc.frequency.exponentialRampToValueAtTime(783.99, now + 0.3); // G5
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start(now);
+                osc.stop(now + 0.4);
+            } else if (type === 'wrong') {
+                // Soft gentle low tone (encouraging, not scary)
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(220, now);
+                osc.frequency.exponentialRampToValueAtTime(180, now + 0.2);
+                gain.gain.setValueAtTime(0.15, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start(now);
+                osc.stop(now + 0.3);
+            } else if (type === 'coin') {
+                // Shiny star/coin pickup
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(987.77, now); // B5
+                osc.frequency.exponentialRampToValueAtTime(1318.51, now + 0.1); // E6
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start(now);
+                osc.stop(now + 0.2);
+            } else if (type === 'fanfare') {
+                // Level victory fanfare
+                const notes = [523.25, 659.25, 783.99, 1046.50];
+                notes.forEach((freq, idx) => {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(freq, now + idx * 0.12);
+                    gain.gain.setValueAtTime(0.2, now + idx * 0.12);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + idx * 0.12 + 0.25);
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.start(now + idx * 0.12);
+                    osc.stop(now + idx * 0.12 + 0.25);
+                });
+            } else if (type === 'crash') {
+                // Gentle crash sound
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(120, now);
+                osc.frequency.linearRampToValueAtTime(40, now + 0.3);
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start(now);
+                osc.stop(now + 0.3);
+            }
+        }
+
+        function toggleSound() {
+            soundEnabled = !soundEnabled;
+            document.getElementById('soundStatus').innerText = soundEnabled ? 'Sound: ON' : 'Sound: OFF';
+        }
+
+        function toggleTTS() {
+            ttsEnabled = !ttsEnabled;
+            document.getElementById('ttsStatus').innerText = ttsEnabled ? 'Speech: ON' : 'Speech: OFF';
+            if (ttsEnabled) speakText("Speech enabled!");
+        }
+
+        function speakText(text) {
+            if (!ttsEnabled || !('speechSynthesis' in window)) return;
+            window.speechSynthesis.cancel(); // Stop current speech
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.rate = 0.9; // Slightly slower for clarity
+            utterance.pitch = 1.1; // Friendly pitch
+            window.speechSynthesis.speak(utterance);
+        }
+
+        // Quiz Questions Data (5 Levels, 3 Questions each = 15 Questions total)
+        const quizData = [
+            // Level 1: 2x and 10x
+            {
+                level: 1,
+                title: "Level 1: 2x & 10x Tables",
+                questions: [
+                    { num1: 2, num2: 3, answer: 6, options: [4, 6, 8, 10] },
+                    { num1: 10, num2: 4, answer: 40, options: [30, 40, 50, 14] },
+                    { num1: 2, num2: 8, answer: 16, options: [14, 16, 18, 12] }
+                ]
+            },
+            // Level 2: 5x and 3x
+            {
+                level: 2,
+                title: "Level 2: 5x & 3x Tables",
+                questions: [
+                    { num1: 5, num2: 6, answer: 30, options: [25, 30, 35, 20] },
+                    { num1: 3, num2: 4, answer: 12, options: [9, 12, 15, 14] },
+                    { num1: 5, num2: 9, answer: 45, options: [40, 45, 50, 35] }
+                ]
+            },
+            // Level 3: 4x and 8x
+            {
+                level: 3,
+                title: "Level 3: 4x & 8x Tables",
+                questions: [
+                    { num1: 4, num2: 3, answer: 12, options: [12, 16, 8, 14] },
+                    { num1: 8, num2: 2, answer: 16, options: [14, 16, 18, 20] },
+                    { num1: 4, num2: 7, answer: 28, options: [24, 28, 32, 26] }
+                ]
+            },
+            // Level 4: 6x and 9x
+            {
+                level: 4,
+                title: "Level 4: 6x & 9x Tables",
+                questions: [
+                    { num1: 6, num2: 5, answer: 30, options: [28, 30, 36, 35] },
+                    { num1: 9, num2: 3, answer: 27, options: [24, 27, 30, 18] },
+                    { num1: 6, num2: 7, answer: 42, options: [40, 42, 48, 36] }
+                ]
+            },
+            // Level 5: 7x & Mixed Challenge
+            {
+                level: 5,
+                title: "Level 5: 7x & Mixed Challenge",
+                questions: [
+                    { num1: 7, num2: 4, answer: 28, options: [21, 28, 35, 24] },
+                    { num1: 8, num2: 6, answer: 48, options: [42, 48, 54, 46] },
+                    { num1: 9, num2: 5, answer: 45, options: [40, 45, 50, 35] }
+                ]
+            }
+        ];
+
+        // Quiz State
+        let currentLevelIdx = 0;
+        let currentQuestionIdx = 0;
+        let totalQuestionsAnswered = 0;
+        let starsEarned = 0;
+        let canAnswer = true;
+
+        function showScreen(screenId) {
+            ['welcomeScreen', 'quizScreen', 'levelCompleteScreen', 'carDodgerScreen', 'trophyScreen'].forEach(id => {
+                const el = document.getElementById(id);
+                if (id === screenId) {
+                    el.classList.remove('hidden');
+                    el.classList.add('flex');
+                } else {
+                    el.classList.add('hidden');
+                    el.classList.remove('flex');
+                }
+            });
+        }
+
+        function startQuiz() {
+            initAudio();
+            currentLevelIdx = 0;
+            currentQuestionIdx = 0;
+            totalQuestionsAnswered = 0;
+            starsEarned = 0;
+            updateStarDisplay();
+            loadQuestion();
+            showScreen('quizScreen');
+        }
+
+        function updateStarDisplay() {
+            document.getElementById('starCounter').innerText = starsEarned;
+        }
+
+        function loadQuestion() {
+            canAnswer = true;
+            const levelObj = quizData[currentLevelIdx];
+            const q = levelObj.questions[currentQuestionIdx];
+
+            document.getElementById('levelBadge').innerText = `Level ${levelObj.level}`;
+            document.getElementById('levelTitle').innerText = levelObj.title;
+            document.getElementById('questionNum').innerText = `Question ${totalQuestionsAnswered + 1} of 15`;
+            
+            // Update progress bar percentage
+            const progressPct = (totalQuestionsAnswered / 15) * 100;
+            document.getElementById('progressBar').style.width = `${progressPct}%`;
+
+            const qText = `${q.num1} × ${q.num2} = ?`;
+            document.getElementById('questionText').innerText = qText;
+            document.getElementById('feedbackBox').innerText = "";
+
+            // Populate options
+            const container = document.getElementById('optionsContainer');
+            container.innerHTML = "";
+
+            q.options.forEach(option => {
+                const btn = document.createElement('button');
+                btn.className = "btn-yellow font-game text-2xl sm:text-3xl py-4 sm:py-5 rounded-2xl shadow-md hover:brightness-105 active:scale-95 transition";
+                btn.innerText = option;
+                btn.onclick = () => checkAnswer(option, q.answer, btn);
+                container.appendChild(btn);
+            });
+
+            // TTS speak question
+            speakQuestion();
+        }
+
+        function speakQuestion() {
+            const levelObj = quizData[currentLevelIdx];
+            const q = levelObj.questions[currentQuestionIdx];
+            speakText(`What is ${q.num1} times ${q.num2}?`);
+        }
+
+        const encouragingPhrases = ["Super Star!", "Awesome Maths Wizard!", "Keep Going Hero!", "Brilliant!", "You Nailed It!"];
+
+        function checkAnswer(selected, correct, btnEl) {
+            if (!canAnswer) return;
+
+            if (selected === correct) {
+                canAnswer = false;
+                playSound('correct');
+                starsEarned += 10;
+                updateStarDisplay();
+
+                btnEl.classList.remove('btn-yellow');
+                btnEl.classList.add('bg-green-500', 'text-white', 'border-b-4', 'border-green-700');
+
+                const randomPhrase = encouragingPhrases[Math.floor(Math.random() * encouragingPhrases.length)];
+                document.getElementById('feedbackBox').innerText = `✨ ${randomPhrase} ✨`;
+                speakText(randomPhrase);
+
+                // Confetti Burst for correct answer
+                if (window.confetti) {
+                    confetti({
+                        particleCount: 40,
+                        spread: 60,
+                        origin: { y: 0.7 }
+                    });
+                }
+
+                setTimeout(() => {
+                    totalQuestionsAnswered++;
+                    currentQuestionIdx++;
+
+                    if (currentQuestionIdx >= quizData[currentLevelIdx].questions.length) {
+                        // Level Completed!
+                        finishLevel();
+                    } else {
+                        loadQuestion();
+                    }
+                }, 1300);
+
+            } else {
+                playSound('wrong');
+                btnEl.classList.add('opacity-50', 'scale-95');
+                const hints = ["Try again, Hero!", "Almost there!", "You can do it!"];
+                const hint = hints[Math.floor(Math.random() * hints.length)];
+                document.getElementById('feedbackBox').innerText = `💡 ${hint}`;
+                speakText(hint);
+            }
+        }
+
+        function finishLevel() {
+            playSound('fanfare');
+            if (window.confetti) {
+                confetti({ particleCount: 100, spread: 80, origin: { y: 0.5 } });
+            }
+
+            if (currentLevelIdx >= quizData.length - 1) {
+                // Finished all 5 levels!
+                showScreen('trophyScreen');
+                speakText("Congratulations Hero! You finished all maths levels and earned the trophy!");
+            } else {
+                // Level completion screen
+                document.getElementById('levelCompleteTitle').innerText = `Level ${currentLevelIdx + 1} Complete!`;
+                document.getElementById('levelCompleteText').innerText = `Great work Hero! You earned ${starsEarned} total stars!`;
+                showScreen('levelCompleteScreen');
+                speakText(`Great job Hero! You finished Level ${currentLevelIdx + 1}!`);
+            }
+        }
+
+        function nextLevel() {
+            currentLevelIdx++;
+            currentQuestionIdx = 0;
+            loadQuestion();
+            showScreen('quizScreen');
+        }
+
+        function restartFullGame() {
+            startQuiz();
+        }
+
+        // CAR DODGER MINI-GAME LOGIC
+        let canvas, ctx;
+        let gameAnimationId;
+        let carGameActive = false;
+        let carScore = 0;
+
+        const player = {
+            x: 140,
+            y: 330,
+            width: 40,
+            height: 70,
+            speed: 5,
+            dx: 0
+        };
+
+        let obstacles = [];
+        let coins = [];
+        let frameCount = 0;
+        let returnDestination = 'quiz'; // 'quiz' or 'trophy'
+
+        function initCarDodger() {
+            canvas = document.getElementById('gameCanvas');
+            ctx = canvas.getContext('2d');
+
+            // Setup touch listeners for controls
+            const leftBtn = document.getElementById('leftBtn');
+            const rightBtn = document.getElementById('rightBtn');
+
+            const startLeft = (e) => { e.preventDefault(); player.dx = -player.speed; };
+            const stopLeft = (e) => { e.preventDefault(); if (player.dx < 0) player.dx = 0; };
+            const startRight = (e) => { e.preventDefault(); player.dx = player.speed; };
+            const stopRight = (e) => { e.preventDefault(); if (player.dx > 0) player.dx = 0; };
+
+            leftBtn.onmousedown = startLeft;
+            leftBtn.onmouseup = stopLeft;
+            leftBtn.ontouchstart = startLeft;
+            leftBtn.ontouchend = stopLeft;
+
+            rightBtn.onmousedown = startRight;
+            rightBtn.onmouseup = stopRight;
+            rightBtn.ontouchstart = startRight;
+            rightBtn.ontouchend = stopRight;
+
+            // Keyboard listeners
+            window.addEventListener('keydown', (e) => {
+                if (!carGameActive) return;
+                if (e.key === 'ArrowLeft' || e.key === 'a') player.dx = -player.speed;
+                if (e.key === 'ArrowRight' || e.key === 'd') player.dx = player.speed;
+            });
+
+            window.addEventListener('keyup', (e) => {
+                if (!carGameActive) return;
+                if ((e.key === 'ArrowLeft' || e.key === 'a') && player.dx < 0) player.dx = 0;
+                if ((e.key === 'ArrowRight' || e.key === 'd') && player.dx > 0) player.dx = 0;
+            });
+        }
+
+        function startCarDodgerFromQuiz() {
+            returnDestination = 'quiz';
+            startCarDodger();
+        }
+
+        function startCarDodgerFromTrophy() {
+            returnDestination = 'trophy';
+            startCarDodger();
+        }
+
+        function startCarDodger() {
+            showScreen('carDodgerScreen');
+            if (!canvas) initCarDodger();
+
+            document.getElementById('gameOverOverlay').classList.add('hidden');
+            carScore = 0;
+            frameCount = 0;
+            obstacles = [];
+            coins = [];
+            player.x = canvas.width / 2 - player.width / 2;
+            player.dx = 0;
+            carGameActive = true;
+
+            document.getElementById('carScore').innerText = carScore;
+            speakText("Car Dodger! Use Left and Right buttons to dodge cars and catch stars!");
+
+            if (gameAnimationId) cancelAnimationFrame(gameAnimationId);
+            carGameLoop();
+        }
+
+        function carGameLoop() {
+            if (!carGameActive) return;
+
+            updateCarGame();
+            renderCarGame();
+
+            gameAnimationId = requestAnimationFrame(carGameLoop);
+        }
+
+        function updateCarGame() {
+            frameCount++;
+
+            // Move player
+            player.x += player.dx;
+            if (player.x < 10) player.x = 10;
+            if (player.x + player.width > canvas.width - 10) player.x = canvas.width - 10 - player.width;
+
+            // Spawn Obstacle Cars
+            if (frameCount % 60 === 0) {
+                const laneX = [20, 95, 170, 245][Math.floor(Math.random() * 4)];
+                obstacles.push({
+                    x: laneX,
+                    y: -80,
+                    width: 38,
+                    height: 65,
+                    speed: 3 + Math.min(Math.floor(frameCount / 300), 5),
+                    color: ['#FF5722', '#E91E63', '#9C27B0', '#00BCD4'][Math.floor(Math.random() * 4)]
+                });
+            }
+
+            // Spawn Shiny Stars/Coins
+            if (frameCount % 90 === 0) {
+                const laneX = [30, 105, 180, 255][Math.floor(Math.random() * 4)];
+                coins.push({
+                    x: laneX,
+                    y: -40,
+                    size: 24,
+                    speed: 3
+                });
+            }
+
+            // Update Obstacles & Collision Check
+            for (let i = obstacles.length - 1; i >= 0; i--) {
+                const obs = obstacles[i];
+                obs.y += obs.speed;
+
+                // Collision detection
+                if (
+                    player.x < obs.x + obs.width &&
+                    player.x + player.width > obs.x &&
+                    player.y < obs.y + obs.height &&
+                    player.y + player.height > obs.y
+                ) {
+                    endCarGame();
+                    return;
+                }
+
+                // Remove offscreen
+                if (obs.y > canvas.height) {
+                    obstacles.splice(i, 1);
+                    carScore += 1;
+                    document.getElementById('carScore').innerText = carScore;
+                }
+            }
+
+            // Update Coins & Collection Check
+            for (let i = coins.length - 1; i >= 0; i--) {
+                const coin = coins[i];
+                coin.y += coin.speed;
+
+                if (
+                    player.x < coin.x + coin.size &&
+                    player.x + player.width > coin.x &&
+                    player.y < coin.y + coin.size &&
+                    player.y + player.height > coin.y
+                ) {
+                    playSound('coin');
+                    carScore += 5;
+                    starsEarned += 2;
+                    updateStarDisplay();
+                    document.getElementById('carScore').innerText = carScore;
+                    coins.splice(i, 1);
+                } else if (coin.y > canvas.height) {
+                    coins.splice(i, 1);
+                }
+            }
+        }
+
+        function renderCarGame() {
+            // Clear road
+            ctx.fillStyle = '#333333';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Draw Road Markings (animated scrolling)
+            ctx.strokeStyle = '#FFD700';
+            ctx.lineWidth = 4;
+            ctx.setLineDash([20, 20]);
+            ctx.lineDashOffset = -frameCount * 3;
+
+            // Lane Dividers
+            ctx.beginPath();
+            ctx.moveTo(80, 0); ctx.lineTo(80, canvas.height);
+            ctx.moveTo(160, 0); ctx.lineTo(160, canvas.height);
+            ctx.moveTo(240, 0); ctx.lineTo(240, canvas.height);
+            ctx.stroke();
+            ctx.setLineDash([]); // Reset dash
+
+            // Draw Road grass borders
+            ctx.fillStyle = '#228B22';
+            ctx.fillRect(0, 0, 10, canvas.height);
+            ctx.fillRect(canvas.width - 10, 0, 10, canvas.height);
+
+            // Draw Player Car (Yellow/Orange Bright)
+            drawCar(player.x, player.y, player.width, player.height, '#FFD700', true);
+
+            // Draw Obstacle Cars
+            obstacles.forEach(obs => {
+                drawCar(obs.x, obs.y, obs.width, obs.height, obs.color, false);
+            });
+
+            // Draw Coins / Stars
+            coins.forEach(coin => {
+                ctx.font = '22px sans-serif';
+                ctx.fillText('🌟', coin.x, coin.y + 20);
+            });
+        }
+
+        function drawCar(x, y, w, h, color, isPlayer) {
+            // Car Body
+            ctx.fillStyle = color;
+            ctx.beginPath();
+            ctx.roundRect(x, y, w, h, 8);
+            ctx.fill();
+            ctx.strokeStyle = '#FFFFFF';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            // Wheels
+            ctx.fillStyle = '#000000';
+            ctx.fillRect(x - 3, y + 8, 5, 14);
+            ctx.fillRect(x + w - 2, y + 8, 5, 14);
+            ctx.fillRect(x - 3, y + h - 22, 5, 14);
+            ctx.fillRect(x + w - 2, y + h - 22, 5, 14);
+
+            // Windshield
+            ctx.fillStyle = '#87CEEB';
+            ctx.fillRect(x + 5, isPlayer ? y + 12 : y + h - 24, w - 10, 12);
+        }
+
+        function endCarGame() {
+            carGameActive = false;
+            playSound('crash');
+            document.getElementById('finalCarScore').innerText = carScore;
+            document.getElementById('gameOverOverlay').classList.remove('hidden');
+            speakText("Game over! Great driving Hero!");
+        }
+
+        function restartCarDodger() {
+            startCarDodger();
+        }
+
+        function backToMathsFromGame() {
+            carGameActive = false;
+            if (returnDestination === 'trophy') {
+                showScreen('trophyScreen');
+            } else {
+                if (currentLevelIdx < quizData.length - 1 && currentQuestionIdx >= quizData[currentLevelIdx].questions.length) {
+                    nextLevel();
+                } else {
+                    showScreen('quizScreen');
+                }
+            }
+        }
+
+        // Initialize on load
+        window.onload = function() {
+            showScreen('welcomeScreen');
+        };
+    </script>
+</body>
+</html>

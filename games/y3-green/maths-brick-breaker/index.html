@@ -1,0 +1,819 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Maths Brick Breaker</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Quicksand:wght@500;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brandBlue: '#1e3a8a',
+                        brightBlue: '#2563eb',
+                        skyBlue: '#38bdf8',
+                        softBlue: '#e0f2fe',
+                        brandRed: '#dc2626',
+                        brightRed: '#ef4444',
+                        softRed: '#fee2e2',
+                        accentYellow: '#fbbf24',
+                    },
+                    fontFamily: {
+                        fredoka: ['"Fredoka One"', 'cursive'],
+                        quicksand: ['"Quicksand"', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Quicksand', sans-serif;
+            background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 50%, #38bdf8 100%);
+            touch-action: manipulation;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        .font-fredoka { font-family: 'Fredoka One', cursive; }
+        
+        /* Custom Button Press Effect */
+        .btn-bounce {
+            transition: transform 0.1s ease, box-shadow 0.1s ease;
+        }
+        .btn-bounce:active {
+            transform: scale(0.95);
+        }
+
+        /* Floating Animation */
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-8px); }
+        }
+        .animate-float {
+            animation: float 3s ease-in-out infinite;
+        }
+
+        /* Pulse Stars */
+        @keyframes starPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.15) rotate(5deg); }
+        }
+        .animate-star {
+            animation: starPulse 2s ease-in-out infinite;
+        }
+
+        canvas {
+            touch-action: none;
+        }
+    </style>
+</head>
+<body class="min-h-screen text-slate-800 flex flex-col justify-between items-center p-3 sm:p-5 overflow-x-hidden">
+
+    <!-- Top Header / Bar -->
+    <header class="w-full max-w-2xl bg-white/95 backdrop-blur-md rounded-2xl p-4 shadow-xl border-4 border-blue-300 flex justify-between items-center mb-3">
+        <div class="flex items-center space-x-3">
+            <div class="w-12 h-12 bg-gradient-to-tr from-brightRed to-amber-400 rounded-2xl flex items-center justify-center text-white text-2xl font-fredoka shadow-md">
+                🚀
+            </div>
+            <div>
+                <h1 class="text-xl sm:text-2xl font-fredoka text-brandBlue tracking-wide leading-tight">Maths Brick Breaker</h1>
+                <p class="text-xs font-bold text-sky-600 uppercase tracking-wider">Year 3 Math Quest</p>
+            </div>
+        </div>
+
+        <!-- Mute Sound Toggle -->
+        <button id="soundToggleBtn" onclick="toggleSound()" class="p-2.5 bg-softBlue hover:bg-blue-200 border-2 border-brightBlue text-brandBlue rounded-xl text-xl font-bold transition flex items-center justify-center">
+            🔊
+        </button>
+    </header>
+
+    <!-- Main Interactive Container -->
+    <main class="w-full max-w-2xl bg-white rounded-3xl shadow-2xl border-4 border-brightBlue p-4 sm:p-6 flex-grow flex flex-col justify-between relative overflow-hidden min-h-[500px]">
+
+        <!-- START SCREEN -->
+        <div id="startScreen" class="flex flex-col items-center justify-center text-center my-auto py-6 space-y-6">
+            <div class="space-y-2">
+                <span class="inline-block px-4 py-1.5 bg-softRed text-brightRed font-bold rounded-full text-sm border border-red-200">
+                    Fun Math & Arcade Action! 🌟
+                </span>
+                <h2 class="text-3xl sm:text-4xl font-fredoka text-brandBlue">Ready for Your Challenge?</h2>
+                <p class="text-slate-600 max-w-md mx-auto text-base sm:text-lg">
+                    Answer math questions to unlock super powers for the <strong>Brick Breaker</strong> game! Can you conquer all 5 levels?
+                </p>
+            </div>
+
+            <!-- Visual Icon Medley -->
+            <div class="flex space-x-4 items-center justify-center py-2 animate-float">
+                <div class="w-16 h-16 bg-blue-100 rounded-2xl flex items-center justify-center text-3xl shadow">➕</div>
+                <div class="w-16 h-16 bg-red-100 rounded-2xl flex items-center justify-center text-3xl shadow">🎮</div>
+                <div class="w-16 h-16 bg-yellow-100 rounded-2xl flex items-center justify-center text-3xl shadow">➖</div>
+            </div>
+
+            <button onclick="startGame()" class="btn-bounce px-8 py-4 bg-gradient-to-r from-brightRed to-brightBlue text-white font-fredoka text-2xl rounded-2xl shadow-lg hover:brightness-110 border-b-4 border-red-800 transition w-full sm:w-auto">
+                START ADVENTURE ⚡
+            </button>
+        </div>
+
+        <!-- QUIZ CONTAINER -->
+        <div id="quizScreen" class="hidden flex-col justify-between flex-grow space-y-4">
+            
+            <!-- Quiz Progress & Level Info Header -->
+            <div>
+                <div class="flex justify-between items-center mb-2">
+                    <span id="levelBadge" class="px-3 py-1 bg-brandBlue text-white font-fredoka text-sm rounded-full shadow">
+                        Level 1: Warm Up
+                    </span>
+                    <span id="scoreBadge" class="text-brandBlue font-fredoka text-lg">
+                        Score: <span id="scoreText" class="text-brightRed">0</span>
+                    </span>
+                </div>
+                
+                <!-- Progress Bar -->
+                <div class="w-full bg-slate-200 h-3 rounded-full overflow-hidden border border-slate-300">
+                    <div id="progressBar" class="bg-gradient-to-r from-brightBlue to-brightRed h-full w-0 transition-all duration-300"></div>
+                </div>
+            </div>
+
+            <!-- Question Card -->
+            <div class="bg-gradient-to-b from-softBlue to-white p-6 rounded-2xl border-2 border-sky-300 text-center shadow-inner my-auto space-y-4">
+                <div id="questionNumber" class="text-xs font-bold text-brightBlue tracking-wider uppercase">Question 1 of 3</div>
+                <div id="questionText" class="text-3xl sm:text-4xl font-fredoka text-slate-800 min-h-[60px] flex items-center justify-center">
+                    3 + 4 = ?
+                </div>
+            </div>
+
+            <!-- Multiple Choice Answer Options -->
+            <div id="optionsContainer" class="grid grid-cols-2 gap-3 sm:gap-4">
+                <!-- Option buttons injected here dynamically -->
+            </div>
+
+            <!-- Feedback Modal Banner -->
+            <div id="feedbackBanner" class="hidden rounded-2xl p-4 text-center font-bold text-lg transition-all animate-bounce">
+                <!-- Message injected dynamically -->
+            </div>
+        </div>
+
+        <!-- BRICK BREAKER SCREEN -->
+        <div id="gameScreen" class="hidden flex-col items-center justify-between flex-grow space-y-3">
+            <div class="w-full flex justify-between items-center bg-softBlue p-3 rounded-xl border border-sky-200">
+                <div>
+                    <h3 id="arcadeLevelTitle" class="font-fredoka text-brandBlue text-sm sm:text-base">Level 1 Arcade Reward</h3>
+                    <p id="powerBonusText" class="text-xs text-slate-600 font-bold">Bonus Paddle Size Unlocked!</p>
+                </div>
+                <div class="text-right">
+                    <span class="text-xs text-slate-500 font-bold uppercase block">Arcade Points</span>
+                    <span id="arcadeScore" class="font-fredoka text-brightRed text-lg">0</span>
+                </div>
+            </div>
+
+            <!-- Game Canvas Container -->
+            <div class="relative w-full flex-grow flex items-center justify-center bg-slate-900 rounded-2xl border-4 border-brandBlue overflow-hidden shadow-inner max-h-[360px]">
+                <canvas id="brickCanvas" class="w-full h-full block"></canvas>
+                
+                <!-- Canvas Touch Overlay Controls helper -->
+                <div id="touchHelper" class="absolute bottom-2 text-center text-white/60 text-xs font-bold pointer-events-none">
+                    👈 Drag or move finger to control paddle 👉
+                </div>
+            </div>
+
+            <div class="w-full flex justify-between items-center pt-1">
+                <button onclick="skipRewardGame()" class="text-xs text-slate-500 font-bold hover:text-brandBlue underline px-2 py-1">
+                    Skip Mini-Game ⏩
+                </button>
+                <div class="text-xs font-bold text-brandBlue bg-blue-100 px-3 py-1 rounded-full">
+                    Clear Bricks to Advance! 🧱
+                </div>
+            </div>
+        </div>
+
+        <!-- CELEBRATION / END SCREEN -->
+        <div id="endScreen" class="hidden flex-col items-center justify-center text-center my-auto py-6 space-y-6">
+            <div class="relative">
+                <div class="text-6xl sm:text-7xl animate-star">🏆</div>
+                <div class="absolute -top-2 -right-2 text-3xl">✨</div>
+                <div class="absolute -bottom-2 -left-2 text-3xl">✨</div>
+            </div>
+
+            <div class="space-y-2">
+                <h2 class="text-3xl sm:text-5xl font-fredoka text-brandBlue">WELL DONE! 🎉</h2>
+                <p class="text-lg font-bold text-brightRed">You are a Math & Arcade Superstar!</p>
+                <p class="text-slate-600 text-sm max-w-sm mx-auto">You completed all 5 levels of Hero Hero with flying colors!</p>
+            </div>
+
+            <!-- Final Score Summary Card -->
+            <div class="bg-gradient-to-r from-softBlue to-softRed p-5 rounded-2xl border-2 border-blue-200 w-full max-w-sm shadow-md space-y-2">
+                <div class="flex justify-between items-center text-base font-bold text-slate-700">
+                    <span>Quiz Correct Answers:</span>
+                    <span id="finalQuizScore" class="text-brandBlue font-fredoka text-xl">15 / 15</span>
+                </div>
+                <div class="flex justify-between items-center text-base font-bold text-slate-700">
+                    <span>Arcade Bricks Smashed:</span>
+                    <span id="finalArcadeScore" class="text-brightRed font-fredoka text-xl">120</span>
+                </div>
+                <hr class="border-blue-200">
+                <div class="flex justify-between items-center text-lg font-bold text-brandBlue">
+                    <span>Total Star Rating:</span>
+                    <span class="text-accentYellow text-2xl">⭐⭐⭐⭐⭐</span>
+                </div>
+            </div>
+
+            <button onclick="startGame()" class="btn-bounce px-8 py-4 bg-gradient-to-r from-brightBlue to-brightRed text-white font-fredoka text-2xl rounded-2xl shadow-lg hover:brightness-110 border-b-4 border-blue-900 transition w-full sm:w-auto">
+                PLAY AGAIN 🔄
+            </button>
+        </div>
+
+    </main>
+
+    <!-- Safe Friendly Footer -->
+    <footer class="w-full max-w-2xl text-center py-3 text-white/90 text-xs font-bold tracking-wide">
+        Safe & Kind Learning • Year 3 Addition & Subtraction Practice
+    </footer>
+
+    <!-- Canvas Particle Confetti overlay for final celebration -->
+    <canvas id="confettiCanvas" class="fixed inset-0 pointer-events-none z-50 w-full h-full"></canvas>
+
+    <script>
+        // Web Audio API Sound Synthesizer (No external audio files required)
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        let audioCtx = null;
+        let soundEnabled = true;
+
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new AudioContext();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }
+
+        function toggleSound() {
+            soundEnabled = !soundEnabled;
+            document.getElementById('soundToggleBtn').textContent = soundEnabled ? '🔊' : '🔇';
+        }
+
+        function playSound(type) {
+            if (!soundEnabled) return;
+            initAudio();
+            if (!audioCtx) return;
+
+            const now = audioCtx.currentTime;
+
+            if (type === 'correct') {
+                // Cheerful rising two-tone chime
+                const osc1 = audioCtx.createOscillator();
+                const gain1 = audioCtx.createGain();
+                osc1.type = 'sine';
+                osc1.frequency.setValueAtTime(523.25, now); // C5
+                osc1.frequency.exponentialRampToValueAtTime(659.25, now + 0.15); // E5
+                gain1.gain.setValueAtTime(0.3, now);
+                gain1.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+                osc1.connect(gain1);
+                gain1.connect(audioCtx.destination);
+                osc1.start(now);
+                osc1.stop(now + 0.3);
+
+            } else if (type === 'wrong') {
+                // Gentle non-punishing low double pulse
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(220, now);
+                osc.frequency.setValueAtTime(180, now + 0.1);
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start(now);
+                osc.stop(now + 0.25);
+
+            } else if (type === 'bounce') {
+                // Crisp paddle hit sound
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(400, now);
+                osc.frequency.exponentialRampToValueAtTime(800, now + 0.05);
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.08);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start(now);
+                osc.stop(now + 0.08);
+
+            } else if (type === 'brick') {
+                // Satisfying pop sound
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(300, now);
+                osc.frequency.exponentialRampToValueAtTime(1200, now + 0.08);
+                gain.gain.setValueAtTime(0.25, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start(now);
+                osc.stop(now + 0.1);
+
+            } else if (type === 'fanfare') {
+                // Celebration arpeggio
+                const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+                notes.forEach((freq, idx) => {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(freq, now + idx * 0.1);
+                    gain.gain.setValueAtTime(0.3, now + idx * 0.1);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + idx * 0.1 + 0.3);
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.start(now + idx * 0.1);
+                    osc.stop(now + idx * 0.1 + 0.3);
+                });
+            }
+        }
+
+        // 5 Levels of Year 3 Addition & Subtraction Questions (3 per level = 15 total)
+        const mathLevels = [
+            {
+                level: 1,
+                name: "Warm-Up Single Digits",
+                questions: [
+                    { q: "What is 3 + 4?", options: ["5", "7", "6", "8"], answer: 1, hint: "Count 3 then add 4 more!" },
+                    { q: "What is 8 - 3?", options: ["4", "6", "5", "3"], answer: 2, hint: "Start at 8 and count down 3." },
+                    { q: "What is 5 + 2?", options: ["7", "8", "6", "9"], answer: 0, hint: "5 plus 2 gives us 7!" }
+                ]
+            },
+            {
+                level: 2,
+                name: "Tens & Units",
+                questions: [
+                    { q: "What is 12 + 5?", options: ["15", "17", "16", "18"], answer: 1, hint: "Keep 10, add 2 + 5!" },
+                    { q: "What is 17 - 4?", options: ["13", "12", "14", "11"], answer: 0, hint: "17 take away 4 is 13." },
+                    { q: "What is 10 + 8?", options: ["16", "17", "18", "19"], answer: 2, hint: "Ten and eight makes 18!" }
+                ]
+            },
+            {
+                level: 3,
+                name: "Crossing Tens",
+                questions: [
+                    { q: "What is 18 + 5?", options: ["22", "24", "23", "25"], answer: 2, hint: "18 + 2 makes 20, then add 3!" },
+                    { q: "What is 24 - 6?", options: ["18", "19", "17", "20"], answer: 0, hint: "Count back 6 from 24." },
+                    { q: "What is 20 + 15?", options: ["30", "35", "40", "25"], answer: 1, hint: "20 + 10 = 30, plus 5 = 35!" }
+                ]
+            },
+            {
+                level: 4,
+                name: "Two-Digit Challenge",
+                questions: [
+                    { q: "What is 25 + 14?", options: ["37", "38", "39", "40"], answer: 2, hint: "20 + 10 = 30, 5 + 4 = 9 -> 39!" },
+                    { q: "What is 38 - 12?", options: ["26", "24", "28", "25"], answer: 0, hint: "38 - 10 = 28, - 2 = 26." },
+                    { q: "What is 45 - 20?", options: ["20", "25", "30", "15"], answer: 1, hint: "Take away 2 tens from 45!" }
+                ]
+            },
+            {
+                level: 5,
+                name: "Mastery & Word Snippets",
+                questions: [
+                    { q: "What is 52 - 18?", options: ["32", "34", "36", "38"], answer: 1, hint: "52 - 10 = 42, 42 - 8 = 34." },
+                    { q: "What is 47 + 25?", options: ["72", "70", "68", "74"], answer: 0, hint: "47 + 20 = 67, + 5 = 72!" },
+                    { q: "Hero has 60 marbles and gives 25 away. How many are left?", options: ["30", "40", "35", "25"], answer: 2, hint: "60 - 20 = 40, - 5 = 35!" }
+                ]
+            }
+        ];
+
+        let currentLevelIdx = 0;
+        let currentQuestionIdx = 0;
+        let totalQuizScore = 0;
+        let levelCorrectCount = 0;
+        let isAnsweringBlocked = false;
+
+        function startGame() {
+            initAudio();
+            currentLevelIdx = 0;
+            currentQuestionIdx = 0;
+            totalQuizScore = 0;
+            totalArcadeScore = 0;
+
+            showScreen('quizScreen');
+            loadQuestion();
+        }
+
+        function showScreen(screenId) {
+            document.getElementById('startScreen').classList.add('hidden');
+            document.getElementById('quizScreen').classList.add('hidden');
+            document.getElementById('gameScreen').classList.add('hidden');
+            document.getElementById('endScreen').classList.add('hidden');
+
+            document.getElementById(screenId).classList.remove('hidden');
+            document.getElementById(screenId).classList.add('flex');
+        }
+
+        function loadQuestion() {
+            isAnsweringBlocked = false;
+            const feedback = document.getElementById('feedbackBanner');
+            feedback.classList.add('hidden');
+
+            const levelData = mathLevels[currentLevelIdx];
+            const qData = levelData.questions[currentQuestionIdx];
+
+            // Update Header Stats
+            document.getElementById('levelBadge').textContent = `Level ${levelData.level}: ${levelData.name}`;
+            document.getElementById('scoreText').textContent = totalQuizScore;
+            document.getElementById('questionNumber').textContent = `Question ${currentQuestionIdx + 1} of ${levelData.questions.length}`;
+            document.getElementById('questionText').textContent = qData.q;
+
+            // Calculate overall progress percentage (15 total questions)
+            const overallIndex = (currentLevelIdx * 3) + currentQuestionIdx;
+            const progressPct = (overallIndex / 15) * 100;
+            document.getElementById('progressBar').style.width = `${progressPct}%`;
+
+            // Render Options
+            const container = document.getElementById('optionsContainer');
+            container.innerHTML = '';
+
+            qData.options.forEach((optText, idx) => {
+                const btn = document.createElement('button');
+                btn.className = 'btn-bounce w-full py-4 px-3 bg-softBlue hover:bg-sky-200 border-2 border-brightBlue rounded-2xl text-xl sm:text-2xl font-fredoka text-brandBlue shadow-md transition flex items-center justify-center';
+                btn.textContent = optText;
+                btn.onclick = () => handleAnswer(idx);
+                container.appendChild(btn);
+            });
+        }
+
+        function handleAnswer(selectedIndex) {
+            if (isAnsweringBlocked) return;
+            isAnsweringBlocked = true;
+
+            const levelData = mathLevels[currentLevelIdx];
+            const qData = levelData.questions[currentQuestionIdx];
+            const feedback = document.getElementById('feedbackBanner');
+
+            const isCorrect = (selectedIndex === qData.answer);
+
+            feedback.classList.remove('hidden', 'bg-green-100', 'text-green-800', 'border-green-300', 'bg-amber-100', 'text-amber-800', 'border-amber-300');
+
+            if (isCorrect) {
+                playSound('correct');
+                totalQuizScore++;
+                levelCorrectCount++;
+                document.getElementById('scoreText').textContent = totalQuizScore;
+
+                feedback.className = 'rounded-2xl p-4 text-center font-bold text-base sm:text-lg bg-green-100 text-green-800 border-2 border-green-300 shadow';
+                feedback.innerHTML = `🌟 Super Job! That's correct!`;
+            } else {
+                playSound('wrong');
+                const correctAnswerText = qData.options[qData.answer];
+                feedback.className = 'rounded-2xl p-4 text-center font-bold text-base sm:text-lg bg-amber-100 text-amber-800 border-2 border-amber-300 shadow';
+                feedback.innerHTML = `🤗 Good try! The right answer was <strong>${correctAnswerText}</strong>. Keep going!`;
+            }
+
+            // Delay before moving to next question or arcade game
+            setTimeout(() => {
+                currentQuestionIdx++;
+                if (currentQuestionIdx < levelData.questions.length) {
+                    loadQuestion();
+                } else {
+                    // Level finished! Transition to Brick Breaker reward game
+                    startBrickBreakerReward();
+                }
+            }, 1800);
+        }
+
+        let canvas = null;
+        let ctx = null;
+        let animationFrameId = null;
+        let totalArcadeScore = 0;
+
+        // Game Entities
+        let paddle = { x: 0, y: 0, width: 80, height: 12, speed: 7 };
+        let ball = { x: 0, y: 0, dx: 3, dy: -3, radius: 7 };
+        let bricks = [];
+        let brickRows = 3;
+        let brickCols = 6;
+        let brickWidth = 0;
+        let brickHeight = 18;
+        let brickPadding = 6;
+        let brickOffsetTop = 25;
+        let brickOffsetLeft = 10;
+
+        function startBrickBreakerReward() {
+            showScreen('gameScreen');
+
+            const levelNum = currentLevelIdx + 1;
+            document.getElementById('arcadeLevelTitle').textContent = `Level ${levelNum} Arcade Reward!`;
+
+            // Adjust power-ups based on quiz performance in this level
+            // 3 correct = Max paddle size & bonus speed!
+            // 2 correct = Standard paddle size
+            // 1/0 correct = Slightly smaller paddle but still totally playable and fun!
+            let bonusText = "";
+            let paddleWidthCalc = 70;
+
+            if (levelCorrectCount === 3) {
+                paddleWidthCalc = 100;
+                bonusText = "⚡ PERFECT SCORE BONUS: Super Wide Paddle!";
+            } else if (levelCorrectCount === 2) {
+                paddleWidthCalc = 80;
+                bonusText = "⭐ GREAT SCORE BONUS: Extra Wide Paddle!";
+            } else {
+                paddleWidthCalc = 65;
+                bonusText = "👍 GOOD TRY: Quick Paddle Unlocked!";
+            }
+            document.getElementById('powerBonusText').textContent = bonusText;
+
+            canvas = document.getElementById('brickCanvas');
+            ctx = canvas.getContext('2d');
+
+            // Set responsive canvas resolution
+            const rect = canvas.parentElement.getBoundingClientRect();
+            canvas.width = rect.width || 400;
+            canvas.height = rect.height || 300;
+
+            paddle.width = Math.min(paddleWidthCalc, canvas.width * 0.35);
+            paddle.height = 12;
+            paddle.x = (canvas.width - paddle.width) / 2;
+            paddle.y = canvas.height - 25;
+
+            // Reset ball position & velocity
+            ball.x = canvas.width / 2;
+            ball.y = canvas.height - 40;
+            const speedMultiplier = 1 + (levelNum * 0.15); // Slightly faster each level
+            ball.dx = (Math.random() > 0.5 ? 2.5 : -2.5) * speedMultiplier;
+            ball.dy = -3 * speedMultiplier;
+
+            // Initialize bricks setup
+            brickRows = 3 + Math.min(levelNum, 2); // 3 to 5 rows
+            brickCols = 6;
+            const availableWidth = canvas.width - (brickOffsetLeft * 2);
+            brickWidth = (availableWidth - (brickPadding * (brickCols - 1))) / brickCols;
+
+            bricks = [];
+            const colors = ['#ef4444', '#38bdf8', '#fbbf24', '#34d399', '#a78bfa'];
+
+            for (let r = 0; r < brickRows; r++) {
+                bricks[r] = [];
+                for (let c = 0; c < brickCols; c++) {
+                    bricks[r][c] = {
+                        x: 0,
+                        y: 0,
+                        status: 1,
+                        color: colors[r % colors.length]
+                    };
+                }
+            }
+
+            // Setup Controls Event Listeners
+            setupCanvasControls();
+
+            // Reset level correct count tracker for next quiz level
+            levelCorrectCount = 0;
+
+            // Cancel any old loop
+            if (animationFrameId) cancelAnimationFrame(animationFrameId);
+            
+            // Start Arcade Loop
+            requestAnimationFrame(gameLoop);
+        }
+
+        let touchX = null;
+
+        function setupCanvasControls() {
+            // Mouse move tracking
+            canvas.onmousemove = function(e) {
+                const rect = canvas.getBoundingClientRect();
+                const relativeX = e.clientX - rect.left;
+                if (relativeX > 0 && relativeX < canvas.width) {
+                    paddle.x = relativeX - paddle.width / 2;
+                }
+            };
+
+            // Touch move tracking
+            canvas.ontouchmove = function(e) {
+                if (e.touches.length > 0) {
+                    const rect = canvas.getBoundingClientRect();
+                    const relativeX = e.touches[0].clientX - rect.left;
+                    if (relativeX > 0 && relativeX < canvas.width) {
+                        paddle.x = relativeX - paddle.width / 2;
+                    }
+                }
+            };
+        }
+
+        function gameLoop() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Draw Bricks
+            let remainingBricks = 0;
+            for (let r = 0; r < brickRows; r++) {
+                for (let c = 0; c < brickCols; c++) {
+                    const b = bricks[r][c];
+                    if (b.status === 1) {
+                        remainingBricks++;
+                        const brickX = brickOffsetLeft + c * (brickWidth + brickPadding);
+                        const brickY = brickOffsetTop + r * (brickHeight + brickPadding);
+                        b.x = brickX;
+                        b.y = brickY;
+
+                        ctx.beginPath();
+                        ctx.roundRect ? ctx.roundRect(brickX, brickY, brickWidth, brickHeight, 4) : ctx.rect(brickX, brickY, brickWidth, brickHeight);
+                        ctx.fillStyle = b.color;
+                        ctx.fill();
+                        ctx.strokeStyle = '#ffffff';
+                        ctx.lineWidth = 1;
+                        ctx.stroke();
+                        ctx.closePath();
+                    }
+                }
+            }
+
+            // Draw Paddle
+            ctx.beginPath();
+            if (ctx.roundRect) {
+                ctx.roundRect(paddle.x, paddle.y, paddle.width, paddle.height, 6);
+            } else {
+                ctx.rect(paddle.x, paddle.y, paddle.width, paddle.height);
+            }
+            ctx.fillStyle = '#2563eb';
+            ctx.fill();
+            ctx.strokeStyle = '#93c5fd';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            ctx.closePath();
+
+            // Draw Ball
+            ctx.beginPath();
+            ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
+            ctx.fillStyle = '#ef4444';
+            ctx.fill();
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            ctx.closePath();
+
+            // Collision Detection with Bricks
+            for (let r = 0; r < brickRows; r++) {
+                for (let c = 0; c < brickCols; c++) {
+                    const b = bricks[r][c];
+                    if (b.status === 1) {
+                        if (
+                            ball.x + ball.radius > b.x &&
+                            ball.x - ball.radius < b.x + brickWidth &&
+                            ball.y + ball.radius > b.y &&
+                            ball.y - ball.radius < b.y + brickHeight
+                        ) {
+                            ball.dy = -ball.dy;
+                            b.status = 0;
+                            totalArcadeScore += 10;
+                            document.getElementById('arcadeScore').textContent = totalArcadeScore;
+                            playSound('brick');
+                        }
+                    }
+                }
+            }
+
+            // Wall Collisions
+            if (ball.x + ball.dx > canvas.width - ball.radius || ball.x + ball.dx < ball.radius) {
+                ball.dx = -ball.dx;
+            }
+            if (ball.y + ball.dy < ball.radius) {
+                ball.dy = -ball.dy;
+            } else if (ball.y + ball.dy > canvas.height - ball.radius) {
+                // Ball hits bottom
+                if (ball.x > paddle.x && ball.x < paddle.x + paddle.width) {
+                    // Bounce off paddle with angle variation depending on hit spot
+                    const hitPoint = (ball.x - (paddle.x + paddle.width / 2)) / (paddle.width / 2);
+                    ball.dx = hitPoint * 4;
+                    ball.dy = -Math.abs(ball.dy);
+                    playSound('bounce');
+                } else {
+                    // Missed ball - friendly restart ball without losing
+                    ball.x = canvas.width / 2;
+                    ball.y = canvas.height - 40;
+                    ball.dy = -3;
+                }
+            }
+
+            // Keep paddle within screen borders
+            if (paddle.x < 0) paddle.x = 0;
+            if (paddle.x + paddle.width > canvas.width) paddle.x = canvas.width - paddle.width;
+
+            // Move ball
+            ball.x += ball.dx;
+            ball.y += ball.dy;
+
+            // Check Win Condition for Mini-Game
+            if (remainingBricks === 0) {
+                playSound('fanfare');
+                setTimeout(() => {
+                    nextLevel();
+                }, 500);
+                return;
+            }
+
+            animationFrameId = requestAnimationFrame(gameLoop);
+        }
+
+        function skipRewardGame() {
+            if (animationFrameId) cancelAnimationFrame(animationFrameId);
+            nextLevel();
+        }
+
+        function nextLevel() {
+            if (animationFrameId) cancelAnimationFrame(animationFrameId);
+
+            currentLevelIdx++;
+            currentQuestionIdx = 0;
+
+            if (currentLevelIdx < mathLevels.length) {
+                showScreen('quizScreen');
+                loadQuestion();
+            } else {
+                // ALL 5 LEVELS COMPLETED! SHOW CELEBRATION
+                finishGameCelebration();
+            }
+        }
+
+        function finishGameCelebration() {
+            showScreen('endScreen');
+            playSound('fanfare');
+
+            document.getElementById('finalQuizScore').textContent = `${totalQuizScore} / 15`;
+            document.getElementById('finalArcadeScore').textContent = totalArcadeScore;
+
+            // Trigger visual confetti
+            startConfetti();
+        }
+
+        // Particle Confetti Generator
+        let confettiParticles = [];
+        let confettiCtx = null;
+        let confettiAnimId = null;
+
+        function startConfetti() {
+            const c = document.getElementById('confettiCanvas');
+            c.width = window.innerWidth;
+            c.height = window.innerHeight;
+            confettiCtx = c.getContext('2d');
+
+            confettiParticles = [];
+            const colors = ['#2563eb', '#ef4444', '#fbbf24', '#34d399', '#a78bfa', '#f472b6'];
+
+            for (let i = 0; i < 120; i++) {
+                confettiParticles.push({
+                    x: Math.random() * c.width,
+                    y: Math.random() * c.height - c.height,
+                    size: Math.random() * 8 + 4,
+                    color: colors[Math.floor(Math.random() * colors.length)],
+                    vy: Math.random() * 3 + 2,
+                    vx: Math.random() * 2 - 1,
+                    rot: Math.random() * 360
+                });
+            }
+
+            function renderConfetti() {
+                confettiCtx.clearRect(0, 0, c.width, c.height);
+                confettiParticles.forEach(p => {
+                    p.y += p.vy;
+                    p.x += p.vx;
+                    p.rot += 2;
+
+                    confettiCtx.save();
+                    confettiCtx.translate(p.x, p.y);
+                    confettiCtx.rotate((p.rot * Math.PI) / 180);
+                    confettiCtx.fillStyle = p.color;
+                    confettiCtx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size);
+                    confettiCtx.restore();
+
+                    if (p.y > c.height) {
+                        p.y = -20;
+                        p.x = Math.random() * c.width;
+                    }
+                });
+
+                confettiAnimId = requestAnimationFrame(renderConfetti);
+            }
+
+            if (confettiAnimId) cancelAnimationFrame(confettiAnimId);
+            renderConfetti();
+
+            // Stop confetti after 7 seconds to conserve memory
+            setTimeout(() => {
+                if (confettiAnimId) cancelAnimationFrame(confettiAnimId);
+                if (confettiCtx) confettiCtx.clearRect(0, 0, c.width, c.height);
+            }, 7000);
+        }
+
+        // Handle Window Resize for Canvas
+        window.onresize = function() {
+            if (canvas && !document.getElementById('gameScreen').classList.contains('hidden')) {
+                const rect = canvas.parentElement.getBoundingClientRect();
+                canvas.width = rect.width;
+                canvas.height = rect.height;
+            }
+        };
+    </script>
+</body>
+</html>

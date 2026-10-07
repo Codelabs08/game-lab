@@ -1,0 +1,927 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pancake Quiz</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Quicksand:wght@500;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'pancake-pink': '#FFB6C1',
+                        'pancake-light-pink': '#FFF0F5',
+                        'pancake-purple': '#9370DB',
+                        'pancake-dark-purple': '#4B0082',
+                        'pancake-yellow': '#FFE4B5',
+                        'pancake-accent': '#FF69B4',
+                    },
+                    fontFamily: {
+                        'fredoka': ['"Fredoka One"', 'cursive'],
+                        'quicksand': ['Quicksand', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Quicksand', sans-serif;
+            background-color: #FAF0E6;
+            background-image: radial-gradient(#FFB6C1 1.5px, transparent 1.5px), radial-gradient(#9370DB 1.5px, #FAF0E6 1.5px);
+            background-size: 60px 60px;
+            background-position: 0 0, 30px 30px;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        .font-title {
+            font-family: 'Fredoka One', cursive;
+        }
+
+        .game-card {
+            box-shadow: 0 12px 0 0 #9370DB, 0 16px 25px rgba(0,0,0,0.15);
+            transition: all 0.2s ease;
+        }
+
+        .btn-game {
+            box-shadow: 0 6px 0 0 #7B68EE;
+            transition: all 0.1s ease;
+        }
+        .btn-game:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 0 0 #7B68EE;
+        }
+        .btn-game:active {
+            transform: translateY(4px);
+            box-shadow: 0 2px 0 0 #7B68EE;
+        }
+
+        .btn-pink {
+            background-color: #FF69B4;
+            color: white;
+            box-shadow: 0 6px 0 0 #C71585;
+        }
+        .btn-pink:hover {
+            box-shadow: 0 8px 0 0 #C71585;
+        }
+        .btn-pink:active {
+            box-shadow: 0 2px 0 0 #C71585;
+        }
+
+        .btn-answer {
+            background-color: #FFFFFF;
+            border: 4px solid #E6E6FA;
+            box-shadow: 0 6px 0 0 #9370DB;
+            transition: all 0.15s ease;
+        }
+        .btn-answer:hover {
+            background-color: #FFF0F5;
+            border-color: #FF69B4;
+            transform: translateY(-3px);
+            box-shadow: 0 9px 0 0 #9370DB;
+        }
+        .btn-answer:active {
+            transform: translateY(3px);
+            box-shadow: 0 3px 0 0 #9370DB;
+        }
+
+        /* Pulse animation for highlights */
+        @keyframes bounce-slow {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
+        }
+        .animate-bounce-slow {
+            animation: bounce-slow 2.5s infinite ease-in-out;
+        }
+
+        /* Confetti Canvas */
+        #confetti-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            z-index: 100;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between items-center p-3 sm:p-6 text-gray-800">
+
+    <canvas id="confetti-canvas"></canvas>
+
+    <!-- Header / Title -->
+    <header class="w-full max-w-3xl flex justify-between items-center mb-4 bg-white/90 backdrop-blur-md rounded-3xl p-4 border-4 border-pancake-pink shadow-lg">
+        <div class="flex items-center space-x-3">
+            <span class="text-3xl sm:text-4xl">🥞</span>
+            <div>
+                <h1 class="font-title text-2xl sm:text-3xl text-pancake-dark-purple tracking-wide leading-none">Pancake Quiz</h1>
+                <p class="text-xs sm:text-sm text-pancake-purple font-bold">Year 3 Science Adventure 🐾</p>
+            </div>
+        </div>
+        <button id="sound-toggle" onclick="toggleSound()" class="bg-pancake-light-pink border-2 border-pancake-pink p-2.5 rounded-full text-xl hover:scale-110 transition-transform cursor-pointer" title="Toggle Sound">
+            🔊
+        </button>
+    </header>
+
+    <main class="w-full max-w-3xl flex-1 flex flex-col justify-center items-center my-2">
+
+        <!-- SCREEN 1: WELCOME SCREEN -->
+        <div id="screen-welcome" class="game-card w-full bg-white rounded-3xl p-6 sm:p-8 border-4 border-pancake-purple text-center flex flex-col items-center">
+            <div class="relative mb-4 animate-bounce-slow">
+                <!-- SVG Cute Puppy Host Avatar -->
+                <div class="w-40 h-40 sm:w-48 sm:h-48 relative flex items-center justify-center">
+                    <svg id="welcome-puppy-svg" viewBox="0 0 200 200" class="w-full h-full">
+                        <!-- Ears -->
+                        <path d="M 35 60 C 10 70 10 130 40 120 C 45 100 45 80 35 60 Z" fill="#8B4513" />
+                        <path d="M 165 60 C 190 70 190 130 160 120 C 155 100 155 80 165 60 Z" fill="#8B4513" />
+                        <!-- Head -->
+                        <ellipse cx="100" cy="100" rx="65" ry="55" fill="#D2B48C" />
+                        <!-- Snout -->
+                        <ellipse cx="100" cy="115" rx="30" ry="22" fill="#FFF8DC" />
+                        <ellipse cx="100" cy="105" rx="12" ry="9" fill="#3E2723" />
+                        <!-- Eyes -->
+                        <circle cx="75" cy="85" r="8" fill="#3E2723" />
+                        <circle cx="125" cy="85" r="8" fill="#3E2723" />
+                        <circle cx="77" cy="83" r="3" fill="#FFFFFF" />
+                        <circle cx="127" cy="83" r="3" fill="#FFFFFF" />
+                        <!-- Cheeks -->
+                        <circle cx="60" cy="102" r="8" fill="#FFB6C1" opacity="0.6" />
+                        <circle cx="140" cy="102" r="8" fill="#FFB6C1" opacity="0.6" />
+                        <!-- Mouth -->
+                        <path d="M 90 118 Q 100 126 100 118 Q 100 126 110 118" fill="none" stroke="#3E2723" stroke-width="3" stroke-linecap="round" />
+                        <!-- Tongue -->
+                        <path d="M 96 122 Q 100 132 104 122 Z" fill="#FF69B4" />
+                        <!-- Pancake Stack on Head -->
+                        <g id="welcome-pancake-hat">
+                            <ellipse cx="100" cy="48" rx="28" ry="8" fill="#DEB887" stroke="#D2691E" stroke-width="2" />
+                            <ellipse cx="100" cy="44" rx="26" ry="7" fill="#F4A460" stroke="#D2691E" stroke-width="2" />
+                            <ellipse cx="100" cy="40" rx="24" ry="7" fill="#FFE4B5" stroke="#D2691E" stroke-width="2" />
+                            <path d="M 95 38 Q 100 42 105 38 Q 102 44 98 44 Z" fill="#FFD700" /> <!-- Butter -->
+                        </g>
+                    </svg>
+                </div>
+            </div>
+
+            <h2 class="font-title text-3xl sm:text-4xl text-pancake-dark-purple mb-2">Woof! Welcome!</h2>
+            <p class="text-base sm:text-lg text-gray-700 font-semibold max-w-md mb-6">
+                Help Hero the Puppy answer fun Science questions about bodies, animals, and health to earn yummy pancakes and cool outfits! 🥞🐾
+            </p>
+
+            <div class="bg-pancake-light-pink rounded-2xl p-4 border-2 border-pancake-pink w-full max-w-sm mb-6 text-left space-y-2">
+                <div class="flex items-center space-x-2 text-sm font-bold text-pancake-dark-purple">
+                    <span>🌟 5 Fun Levels</span>
+                    <span>•</span>
+                    <span>🦴 15 Quiz Questions</span>
+                </div>
+                <div class="flex items-center space-x-2 text-sm font-bold text-pancake-dark-purple">
+                    <span>👑 Dress My Quizmaster Rewards!</span>
+                </div>
+            </div>
+
+            <button onclick="startGame()" class="btn-game btn-pink font-title text-2xl px-8 py-4 rounded-3xl w-full max-w-xs flex items-center justify-center space-x-2 cursor-pointer">
+                <span>START QUIZ!</span>
+                <span class="text-3xl">🐾</span>
+            </button>
+        </div>
+
+        <!-- SCREEN 2: QUIZ GAME SCREEN -->
+        <div id="screen-quiz" class="game-card w-full bg-white rounded-3xl p-5 sm:p-7 border-4 border-pancake-purple hidden flex-col">
+            <!-- Level & Progress Header -->
+            <div class="flex flex-col sm:flex-row justify-between items-center pb-4 mb-4 border-b-2 border-pancake-light-pink gap-3">
+                <div class="flex items-center space-x-2">
+                    <span id="level-badge" class="bg-pancake-purple text-white font-title text-sm sm:text-base px-3 py-1 rounded-full">
+                        Level 1
+                    </span>
+                    <span id="topic-title" class="text-xs sm:text-sm font-bold text-pancake-dark-purple bg-pancake-yellow px-3 py-1 rounded-full">
+                        Survival
+                    </span>
+                </div>
+                
+                <!-- Pancakes Earned Counter -->
+                <div class="flex items-center space-x-1 bg-amber-100 border-2 border-amber-300 px-3 py-1 rounded-full">
+                    <span class="text-lg">🥞</span>
+                    <span id="score-count" class="font-title text-amber-800 text-base sm:text-lg">0 Pancakes</span>
+                </div>
+            </div>
+
+            <!-- Quizmaster Host Banner -->
+            <div class="flex items-center bg-pancake-light-pink p-3 rounded-2xl border-2 border-pancake-pink mb-4">
+                <div class="w-16 h-16 sm:w-20 sm:h-20 flex-shrink-0 relative">
+                    <svg id="quiz-puppy-svg" viewBox="0 0 200 200" class="w-full h-full">
+                        <!-- Dynamic rendering via JS -->
+                    </svg>
+                </div>
+                <div class="ml-3 flex-1">
+                    <div class="text-xs font-bold text-pancake-purple uppercase tracking-wider">Hero says:</div>
+                    <div id="speech-bubble" class="text-xs sm:text-sm font-bold text-pancake-dark-purple italic">
+                        "You can do it! Let's explore science together!"
+                    </div>
+                </div>
+            </div>
+
+            <!-- Question Box -->
+            <div class="mb-5 text-center">
+                <div class="text-xs font-bold text-gray-400 mb-1" id="question-number-text">Question 1 of 3</div>
+                <h3 id="question-text" class="font-title text-xl sm:text-2xl text-pancake-dark-purple leading-snug">
+                    Loading question...
+                </h3>
+            </div>
+
+            <!-- Answer Options Grid -->
+            <div id="answers-container" class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+                <!-- Buttons injected via JS -->
+            </div>
+
+            <!-- Encouraging Feedback Banner -->
+            <div id="feedback-banner" class="hidden text-center p-3 rounded-2xl font-bold text-sm sm:text-base transition-all">
+                <!-- Feedback text -->
+            </div>
+        </div>
+
+        <!-- SCREEN 3: DRESS MY QUIZMASTER SCREEN (LEVEL REWARD) -->
+        <div id="screen-dressup" class="game-card w-full bg-white rounded-3xl p-6 border-4 border-pancake-purple hidden flex-col items-center text-center">
+            <div class="bg-pancake-yellow text-amber-900 font-title px-4 py-1.5 rounded-full text-sm mb-2">
+                🎉 LEVEL COMPLETE! 🎉
+            </div>
+            <h2 class="font-title text-2xl sm:text-3xl text-pancake-dark-purple mb-1">Dress My Quizmaster!</h2>
+            <p class="text-xs sm:text-sm text-pancake-purple font-bold mb-4">
+                You unlocked a new outfit piece! Tap items to dress Hero! 🐶✨
+            </p>
+
+            <!-- Character Display Box -->
+            <div class="bg-gradient-to-b from-pancake-light-pink to-purple-100 rounded-3xl p-4 border-4 border-pancake-pink w-full max-w-sm flex justify-center items-center relative mb-4 shadow-inner">
+                <div class="w-48 h-48 sm:w-56 sm:h-56 relative">
+                    <svg id="dressup-puppy-svg" viewBox="0 0 200 200" class="w-full h-full">
+                        <!-- Dynamic puppy with outfits -->
+                    </svg>
+                </div>
+            </div>
+
+            <!-- Outfit Wardrobe Toggle Buttons -->
+            <div class="w-full max-w-md mb-6">
+                <div class="text-xs font-bold text-pancake-dark-purple mb-2">Your Unlocked Wardrobe:</div>
+                <div id="wardrobe-container" class="flex flex-wrap justify-center gap-2">
+                    <!-- Wardrobe item buttons generated via JS -->
+                </div>
+            </div>
+
+            <button onclick="nextLevelFromDressup()" class="btn-game btn-pink font-title text-xl px-8 py-3 rounded-2xl w-full max-w-xs cursor-pointer">
+                CONTINUE QUIZ 🐾
+            </button>
+        </div>
+
+        <!-- SCREEN 4: FINAL VICTORY SCREEN -->
+        <div id="screen-victory" class="game-card w-full bg-white rounded-3xl p-6 sm:p-8 border-4 border-pancake-purple hidden flex-col items-center text-center">
+            <div class="text-4xl mb-2 animate-bounce">🏆🥞🏆</div>
+            <h2 class="font-title text-3xl sm:text-4xl text-pancake-dark-purple mb-1">SUPER SCIENCE CHAMPION!</h2>
+            <p class="text-sm sm:text-base text-pancake-purple font-bold mb-4">
+                You completed all 5 levels of Your Pancake Quiz!
+            </p>
+
+            <!-- Final Dressed Up Character Display -->
+            <div class="bg-pancake-light-pink rounded-3xl p-4 border-4 border-pancake-pink w-full max-w-xs flex flex-col justify-center items-center mb-4">
+                <div class="w-44 h-44 relative">
+                    <svg id="victory-puppy-svg" viewBox="0 0 200 200" class="w-full h-full">
+                        <!-- Dynamic puppy rendered here -->
+                    </svg>
+                </div>
+                <div id="final-score-badge" class="mt-2 bg-pancake-purple text-white font-title text-lg px-4 py-1 rounded-full">
+                    Total Pancakes: 15 / 15 🥞
+                </div>
+            </div>
+
+            <p class="text-xs sm:text-sm text-gray-600 font-semibold mb-6 max-w-md">
+                Hero is super proud of you! You know all about survival, animal groups, bones, healthy eating, and staying fit!
+            </p>
+
+            <button onclick="restartGame()" class="btn-game btn-pink font-title text-2xl px-8 py-4 rounded-3xl w-full max-w-xs flex items-center justify-center space-x-2 cursor-pointer">
+                <span>PLAY AGAIN!</span>
+                <span class="text-2xl">🔄</span>
+            </button>
+        </div>
+
+    </main>
+
+    <footer class="text-center text-xs text-pancake-purple font-bold mt-4">
+        YOUR PANCAKE QUIZ • Safe & Safe Learning for Kids • Year 3 Science 🐾
+    </footer>
+
+    <script>
+        /* ---------------------------------------------------
+           AUDIO SYSTEM (Web Audio API - Synthesized Sounds)
+        --------------------------------------------------- */
+        let audioCtx = null;
+        let soundEnabled = true;
+
+        function initAudio() {
+            if (!audioCtx) {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                if (AudioContext) {
+                    audioCtx = new AudioContext();
+                }
+            }
+        }
+
+        function toggleSound() {
+            soundEnabled = !soundEnabled;
+            const btn = document.getElementById('sound-toggle');
+            btn.innerText = soundEnabled ? '🔊' : '🔇';
+        }
+
+        function playSound(type) {
+            if (!soundEnabled) return;
+            initAudio();
+            if (!audioCtx) return;
+
+            const now = audioCtx.currentTime;
+
+            if (type === 'correct') {
+                // Happy chime (C5 to G5)
+                const osc1 = audioCtx.createOscillator();
+                const gain1 = audioCtx.createGain();
+                osc1.type = 'sine';
+                osc1.frequency.setValueAtTime(523.25, now); // C5
+                osc1.frequency.exponentialRampToValueAtTime(783.99, now + 0.15); // G5
+                gain1.gain.setValueAtTime(0.3, now);
+                gain1.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+                osc1.connect(gain1);
+                gain1.connect(audioCtx.destination);
+                osc1.start(now);
+                osc1.stop(now + 0.3);
+
+            } else if (type === 'wrong') {
+                // Gentle low boop
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(220, now); // A3
+                osc.frequency.setValueAtTime(180, now + 0.1);
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start(now);
+                osc.stop(now + 0.25);
+
+            } else if (type === 'fanfare') {
+                // Level victory flourish
+                const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+                notes.forEach((freq, idx) => {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.value = freq;
+                    gain.gain.setValueAtTime(0.25, now + idx * 0.1);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + idx * 0.1 + 0.25);
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.start(now + idx * 0.1);
+                    osc.stop(now + idx * 0.1 + 0.25);
+                });
+            } else if (type === 'click') {
+                // Soft click sound
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(400, now);
+                gain.gain.setValueAtTime(0.1, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.05);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start(now);
+                osc.stop(now + 0.05);
+            }
+        }
+
+        /* ---------------------------------------------------
+           QUIZ DATA (Year 3 Science Curriculum)
+        --------------------------------------------------- */
+        const quizData = [
+            // LEVEL 1: Survival & Basic Needs
+            {
+                level: 1,
+                topic: "Basic Needs",
+                rewardName: "Chef Hat 👨‍🍳",
+                rewardId: "chefHat",
+                questions: [
+                    {
+                        q: "What do all animals and humans need to drink to stay alive?",
+                        options: ["🥛 Water", "🥤 Fizzy Soda", "☕ Hot Tea", "🧃 Fruit Juice"],
+                        correct: 0,
+                        explanation: "Spot on! Clean water is essential for all living creatures!"
+                    },
+                    {
+                        q: "What do we breathe from the air to keep our bodies working?",
+                        options: ["🎈 Nitrogen", "💨 Oxygen", "💭 Smoke", "☁️ Steam"],
+                        correct: 1,
+                        explanation: "Awesome! Our lungs take in oxygen from the air!"
+                    },
+                    {
+                        q: "Why do animals need shelter (like a house or a burrow)?",
+                        options: ["To watch TV", "To stay safe and warm", "To play games", "To hide toys"],
+                        correct: 1,
+                        explanation: "Great job! Shelter keeps animals safe from bad weather and predators!"
+                    }
+                ]
+            },
+            // LEVEL 2: Animal Groups
+            {
+                level: 2,
+                topic: "Animal Groups",
+                rewardName: "Silly Glasses 👓",
+                rewardId: "sillyGlasses",
+                questions: [
+                    {
+                        q: "Which group of animals has fur or hair and feeds milk to their babies?",
+                        options: ["🐍 Reptiles", "🦅 Birds", "🐶 Mammals", "🐟 Fish"],
+                        correct: 2,
+                        explanation: "Correct! Dogs, cats, and humans are all mammals!"
+                    },
+                    {
+                        q: "Fish use special organs to breathe underwater. What are they called?",
+                        options: ["🫁 Lungs", "🐟 Gills", "🦘 Fins", "🐾 Paws"],
+                        correct: 1,
+                        explanation: "Brilliant! Gills help fish take oxygen straight from the water!"
+                    },
+                    {
+                        q: "Animals without a backbone (like worms and spiders) are called...",
+                        options: ["🦴 Vertebrates", "🐛 Invertebrates", "🦕 Dinosaurs", "🐸 Amphibians"],
+                        correct: 1,
+                        explanation: "Super work! Invertebrates don't have bones inside!"
+                    }
+                ]
+            },
+            // LEVEL 3: Skeletons & Muscles
+            {
+                level: 3,
+                topic: "Bones & Muscles",
+                rewardName: "Sparkly Cape 🦸‍♂️",
+                rewardId: "sparklyCape",
+                questions: [
+                    {
+                        q: "What protects our brain inside our head?",
+                        options: ["🦴 Ribcage", "💀 Skull", "🦴 Spine", "🦴 Pelvis"],
+                        correct: 1,
+                        explanation: "Top job! The skull is a hard bone helmet protecting our brain!"
+                    },
+                    {
+                        q: "What works with our bones to help our body move around?",
+                        options: ["💪 Muscles", "🩸 Blood", "🦷 Teeth", "💅 Nails"],
+                        correct: 0,
+                        explanation: "Fantastic! Muscles pull on bones to help us run, jump, and dance!"
+                    },
+                    {
+                        q: "Which bones protect our heart and lungs inside our chest?",
+                        options: ["Leg bones", "Ribcage", "Arm bones", "Toes"],
+                        correct: 1,
+                        explanation: "Spot on! The ribcage forms a safe cage around our heart and lungs!"
+                    }
+                ]
+            },
+            // LEVEL 4: Nutrition & Balanced Diet
+            {
+                level: 4,
+                topic: "Healthy Food",
+                rewardName: "Pancake Apron 🥞",
+                rewardId: "pancakeApron",
+                questions: [
+                    {
+                        q: "Which food group helps build strong muscles and helps us grow?",
+                        options: ["🍭 Sweets", "🥩 Protein (like beans, fish, eggs)", "🧈 Butter", "🍿 Chips"],
+                        correct: 1,
+                        explanation: "Yum and correct! Protein helps repair and grow our muscles!"
+                    },
+                    {
+                        q: "Why is it important to eat fruits and vegetables every day?",
+                        options: ["They give us vitamins & health", "They make us jump over houses", "They change our hair color", "They taste like ice cream"],
+                        correct: 0,
+                        explanation: "Wonderful! Fruits and veggies give us essential vitamins to prevent illness!"
+                    },
+                    {
+                        q: "What type of food should we eat only as an occasional treat?",
+                        options: ["🥕 Carrots", "🍎 Apples", "🍬 Sugary Sweets", "🥛 Milk"],
+                        correct: 2,
+                        explanation: "Correct! Sweets are tasty treats, but too much sugar is bad for teeth!"
+                    }
+                ]
+            },
+            // LEVEL 5: Exercise & Staying Healthy
+            {
+                level: 5,
+                topic: "Staying Fit",
+                rewardName: "Golden Trophy 🏆",
+                rewardId: "goldenTrophy",
+                questions: [
+                    {
+                        q: "What happens to our heart rate when we run and exercise?",
+                        options: ["It stops", "It beats faster", "It beats slower", "Nothing happens"],
+                        correct: 1,
+                        explanation: "Excellent! Your heart beats faster to pump fresh oxygen to your muscles!"
+                    },
+                    {
+                        q: "Why is washing our hands with soap important before eating?",
+                        options: ["To make hands smell like flowers", "To wash away germs", "To keep hands cold", "To turn hands purple"],
+                        correct: 1,
+                        explanation: "Spot on! Soap washes away tiny germs so we don't get tummy bugs!"
+                    },
+                    {
+                        q: "How many hours of good sleep do children need each night to rest?",
+                        options: ["2 hours", "5 hours", "9-11 hours", "20 hours"],
+                        correct: 2,
+                        explanation: "You did it! 9-11 hours of sleep keeps your body energized and smart!"
+                    }
+                ]
+            }
+        ];
+
+        /* ---------------------------------------------------
+           GAME STATE VARIABLES
+        --------------------------------------------------- */
+        let currentLevelIdx = 0;
+        let currentQuestionIdx = 0;
+        let score = 0;
+        let unlockedOutfits = []; // Array of rewardIds
+        let activeOutfits = [];   // Array of currently toggled-on rewardIds
+
+        /* ---------------------------------------------------
+           CHARACTER / PUPPY SVG BUILDER
+        --------------------------------------------------- */
+        function renderPuppySVG(svgElementId, activeItems = []) {
+            const container = document.getElementById(svgElementId);
+            if (!container) return;
+
+            // Check what items are active
+            const hasHat = activeItems.includes('chefHat');
+            const hasGlasses = activeItems.includes('sillyGlasses');
+            const hasCape = activeItems.includes('sparklyCape');
+            const hasApron = activeItems.includes('pancakeApron');
+            const hasTrophy = activeItems.includes('goldenTrophy');
+
+            let html = `
+                <!-- Cape Background (behind puppy) -->
+                ${hasCape ? `
+                    <path d="M 60 120 L 20 180 Q 100 200 180 180 L 140 120 Z" fill="#9370DB" stroke="#8A2BE2" stroke-width="3" />
+                    <circle cx="40" cy="160" r="3" fill="#FFF" />
+                    <circle cx="160" cy="160" r="3" fill="#FFF" />
+                    <circle cx="100" cy="180" r="4" fill="#FFD700" />
+                ` : ''}
+
+                <!-- Puppy Ears -->
+                <path d="M 35 60 C 10 70 10 130 40 120 C 45 100 45 80 35 60 Z" fill="#8B4513" />
+                <path d="M 165 60 C 190 70 190 130 160 120 C 155 100 155 80 165 60 Z" fill="#8B4513" />
+
+                <!-- Puppy Body -->
+                <ellipse cx="100" cy="150" rx="45" ry="35" fill="#D2B48C" />
+
+                <!-- Apron Outfit -->
+                ${hasApron ? `
+                    <path d="M 75 125 L 125 125 L 130 175 L 70 175 Z" fill="#FFB6C1" stroke="#FF69B4" stroke-width="2" />
+                    <ellipse cx="100" cy="150" rx="12" ry="7" fill="#FFE4B5" />
+                    <path d="M 75 125 L 65 115 M 125 125 L 135 115" stroke="#FF69B4" stroke-width="3" />
+                ` : ''}
+
+                <!-- Puppy Head -->
+                <ellipse cx="100" cy="95" rx="55" ry="48" fill="#D2B48C" />
+                <!-- Snout -->
+                <ellipse cx="100" cy="108" rx="26" ry="18" fill="#FFF8DC" />
+                <ellipse cx="100" cy="100" rx="10" ry="7" fill="#3E2723" />
+                <!-- Eyes -->
+                <circle cx="78" cy="82" r="7" fill="#3E2723" />
+                <circle cx="122" cy="82" r="7" fill="#3E2723" />
+                <circle cx="80" cy="80" r="2.5" fill="#FFFFFF" />
+                <circle cx="124" cy="80" r="2.5" fill="#FFFFFF" />
+                <!-- Cheeks -->
+                <circle cx="65" cy="96" r="7" fill="#FFB6C1" opacity="0.6" />
+                <circle cx="135" cy="96" r="7" fill="#FFB6C1" opacity="0.6" />
+                <!-- Mouth -->
+                <path d="M 92 110 Q 100 116 100 110 Q 100 116 108 110" fill="none" stroke="#3E2723" stroke-width="2.5" stroke-linecap="round" />
+                <!-- Tongue -->
+                <path d="M 97 113 Q 100 120 103 113 Z" fill="#FF69B4" />
+
+                <!-- Silly Glasses Overlay -->
+                ${hasGlasses ? `
+                    <circle cx="75" cy="82" r="16" fill="none" stroke="#FF1493" stroke-width="4" />
+                    <circle cx="125" cy="82" r="16" fill="none" stroke="#FF1493" stroke-width="4" />
+                    <line x1="91" y1="82" x2="109" y2="82" stroke="#FF1493" stroke-width="4" />
+                    <path d="M 59 82 L 45 78 M 141 82 L 155 78" stroke="#FF1493" stroke-width="3" />
+                ` : ''}
+
+                <!-- Chef Hat / Pancake Crown -->
+                ${hasHat ? `
+                    <g>
+                        <!-- Chef Hat Base -->
+                        <rect x="75" y="38" width="50" height="15" fill="#FFFFFF" stroke="#D3D3D3" stroke-width="2" rx="3" />
+                        <path d="M 70 38 Q 65 15 85 15 Q 100 5 115 15 Q 135 15 130 38 Z" fill="#FFFFFF" stroke="#D3D3D3" stroke-width="2" />
+                        <!-- Red ribbon on hat -->
+                        <rect x="75" y="46" width="50" height="5" fill="#FF69B4" />
+                    </g>
+                ` : ''}
+
+                <!-- Golden Trophy Side Accessory -->
+                ${hasTrophy ? `
+                    <g transform="translate(135, 110) scale(0.6)">
+                        <path d="M 10 20 L 30 20 L 25 45 L 15 45 Z" fill="#FFD700" stroke="#DAA520" stroke-width="2" />
+                        <path d="M 5 20 C -5 20 -5 35 10 35" fill="none" stroke="#FFD700" stroke-width="3" />
+                        <path d="M 35 20 C 45 20 45 35 30 35" fill="none" stroke="#FFD700" stroke-width="3" />
+                        <rect x="12" y="45" width="16" height="10" fill="#B8860B" />
+                        <polygon points="20,5 24,15 34,15 26,21 29,31 20,25 11,31 14,21 6,15 16,15" fill="#FFD700" transform="translate(0, -10) scale(0.5)" />
+                    </g>
+                ` : ''}
+            `;
+
+            container.innerHTML = html;
+        }
+
+        /* ---------------------------------------------------
+           SCREEN NAVIGATION & GAME FLOW
+        --------------------------------------------------- */
+        function showScreen(screenId) {
+            ['screen-welcome', 'screen-quiz', 'screen-dressup', 'screen-victory'].forEach(id => {
+                const el = document.getElementById(id);
+                if (id === screenId) {
+                    el.classList.remove('hidden');
+                    el.classList.add('flex');
+                } else {
+                    el.classList.add('hidden');
+                    el.classList.remove('flex');
+                }
+            });
+        }
+
+        function startGame() {
+            playSound('click');
+            currentLevelIdx = 0;
+            currentQuestionIdx = 0;
+            score = 0;
+            unlockedOutfits = [];
+            activeOutfits = [];
+
+            updateScoreDisplay();
+            loadQuestion();
+            showScreen('screen-quiz');
+        }
+
+        function updateScoreDisplay() {
+            document.getElementById('score-count').innerText = `${score} Pancakes`;
+        }
+
+        function loadQuestion() {
+            const levelData = quizData[currentLevelIdx];
+            const qData = levelData.questions[currentQuestionIdx];
+
+            // Render level info
+            document.getElementById('level-badge').innerText = `Level ${levelData.level} / 5`;
+            document.getElementById('topic-title').innerText = levelData.topic;
+            document.getElementById('question-number-text').innerText = `Question ${currentQuestionIdx + 1} of 3`;
+
+            // Render speech bubble
+            const prompts = [
+                "You've got this! Pick the best answer!",
+                "Think carefully! What does science tell us?",
+                "Super smart cookie! Which one is right?",
+                "Hero believes in you! 🐾"
+            ];
+            document.getElementById('speech-bubble').innerText = prompts[Math.floor(Math.random() * prompts.length)];
+
+            // Render SVG Quizmaster
+            renderPuppySVG('quiz-puppy-svg', activeOutfits);
+
+            // Render Question & Feedback
+            document.getElementById('question-text').innerText = qData.q;
+            const feedbackEl = document.getElementById('feedback-banner');
+            feedbackEl.classList.add('hidden');
+
+            // Render Answers
+            const container = document.getElementById('answers-container');
+            container.innerHTML = '';
+
+            qData.options.forEach((optText, idx) => {
+                const btn = document.createElement('button');
+                btn.className = "btn-answer p-4 rounded-2xl font-bold text-base sm:text-lg text-pancake-dark-purple flex items-center justify-center text-center cursor-pointer";
+                btn.innerText = optText;
+                btn.onclick = () => checkAnswer(idx, btn);
+                container.appendChild(btn);
+            });
+        }
+
+        function checkAnswer(selectedIdx, clickedBtn) {
+            const levelData = quizData[currentLevelIdx];
+            const qData = levelData.questions[currentQuestionIdx];
+            const feedbackEl = document.getElementById('feedback-banner');
+
+            // Disable all answer buttons temporarily
+            const allBtns = document.querySelectorAll('.btn-answer');
+            allBtns.forEach(b => b.disabled = true);
+
+            if (selectedIdx === qData.correct) {
+                // CORRECT
+                playSound('correct');
+                score++;
+                updateScoreDisplay();
+
+                clickedBtn.classList.remove('btn-answer');
+                clickedBtn.classList.add('bg-green-400', 'text-white', 'border-4', 'border-green-600', 'scale-105');
+
+                feedbackEl.className = "text-center p-3 rounded-2xl font-bold text-sm sm:text-base bg-green-100 text-green-800 border-2 border-green-400 mb-4";
+                feedbackEl.innerText = `✨ Correct! ${qData.explanation}`;
+                feedbackEl.classList.remove('hidden');
+
+                triggerMiniConfetti();
+
+                setTimeout(() => {
+                    advanceQuiz();
+                }, 2200);
+
+            } else {
+                // TRY AGAIN
+                playSound('wrong');
+
+                clickedBtn.classList.remove('btn-answer');
+                clickedBtn.classList.add('bg-red-200', 'text-red-700', 'border-4', 'border-red-400');
+
+                feedbackEl.className = "text-center p-3 rounded-2xl font-bold text-sm sm:text-base bg-amber-100 text-amber-800 border-2 border-amber-400 mb-4";
+                feedbackEl.innerText = `💡 Almost! ${qData.explanation}`;
+                feedbackEl.classList.remove('hidden');
+
+                // Highlight correct button
+                allBtns[qData.correct].classList.add('bg-green-200', 'border-green-500');
+
+                setTimeout(() => {
+                    advanceQuiz();
+                }, 2800);
+            }
+        }
+
+        function advanceQuiz() {
+            currentQuestionIdx++;
+
+            if (currentQuestionIdx >= 3) {
+                // Completed Level!
+                const currentLevel = quizData[currentLevelIdx];
+                
+                // Unlock outfit for this level if not already
+                if (!unlockedOutfits.includes(currentLevel.rewardId)) {
+                    unlockedOutfits.push(currentLevel.rewardId);
+                    activeOutfits.push(currentLevel.rewardId); // Auto-equip newly unlocked
+                }
+
+                playSound('fanfare');
+                triggerFullConfetti();
+                openDressupScreen();
+            } else {
+                loadQuestion();
+            }
+        }
+
+        /* ---------------------------------------------------
+           DRESS MY QUIZMASTER SCREEN
+        --------------------------------------------------- */
+        function openDressupScreen() {
+            renderPuppySVG('dressup-puppy-svg', activeOutfits);
+            renderWardrobe();
+            showScreen('screen-dressup');
+        }
+
+        function renderWardrobe() {
+            const container = document.getElementById('wardrobe-container');
+            container.innerHTML = '';
+
+            quizData.forEach((lvl, idx) => {
+                const isUnlocked = unlockedOutfits.includes(lvl.rewardId);
+                const isActive = activeOutfits.includes(lvl.rewardId);
+
+                const itemBtn = document.createElement('button');
+                
+                if (isUnlocked) {
+                    itemBtn.className = `px-3 py-2 rounded-xl font-bold text-xs sm:text-sm border-2 cursor-pointer transition-transform ${
+                        isActive 
+                        ? 'bg-pancake-purple text-white border-pancake-dark-purple shadow-md scale-105' 
+                        : 'bg-white text-pancake-dark-purple border-pancake-purple hover:bg-pancake-light-pink'
+                    }`;
+                    itemBtn.innerText = `${lvl.rewardName} ${isActive ? '✓' : ''}`;
+                    itemBtn.onclick = () => toggleOutfitItem(lvl.rewardId);
+                } else {
+                    itemBtn.className = "px-3 py-2 rounded-xl font-bold text-xs sm:text-sm bg-gray-100 text-gray-400 border-2 border-gray-200 cursor-not-allowed";
+                    itemBtn.innerText = `🔒 Lvl ${idx + 1} Reward`;
+                }
+
+                container.appendChild(itemBtn);
+            });
+        }
+
+        function toggleOutfitItem(rewardId) {
+            playSound('click');
+            if (activeOutfits.includes(rewardId)) {
+                activeOutfits = activeOutfits.filter(id => id !== rewardId);
+            } else {
+                activeOutfits.push(rewardId);
+            }
+            renderPuppySVG('dressup-puppy-svg', activeOutfits);
+            renderWardrobe();
+        }
+
+        function nextLevelFromDressup() {
+            playSound('click');
+            currentLevelIdx++;
+            currentQuestionIdx = 0;
+
+            if (currentLevelIdx >= quizData.length) {
+                // Game Finished! Victory Screen
+                showVictoryScreen();
+            } else {
+                loadQuestion();
+                showScreen('screen-quiz');
+            }
+        }
+
+        function showVictoryScreen() {
+            playSound('fanfare');
+            triggerFullConfetti();
+
+            document.getElementById('final-score-badge').innerText = `Total Pancakes: ${score} / 15 🥞`;
+            renderPuppySVG('victory-puppy-svg', activeOutfits);
+
+            showScreen('screen-victory');
+        }
+
+        function restartGame() {
+            startGame();
+        }
+
+        /* ---------------------------------------------------
+           CONFETTI ANIMATION SYSTEM
+        --------------------------------------------------- */
+        const canvas = document.getElementById('confetti-canvas');
+        const ctx = canvas.getContext('2d');
+        let confettiParticles = [];
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        function triggerMiniConfetti() {
+            createConfetti(25);
+        }
+
+        function triggerFullConfetti() {
+            createConfetti(100);
+        }
+
+        function createConfetti(count) {
+            const colors = ['#FF69B4', '#9370DB', '#FFD700', '#00BFFF', '#FFB6C1'];
+            for (let i = 0; i < count; i++) {
+                confettiParticles.push({
+                    x: canvas.width / 2 + (Math.random() * 200 - 100),
+                    y: canvas.height / 3,
+                    vx: (Math.random() - 0.5) * 12,
+                    vy: Math.random() * -10 - 4,
+                    size: Math.random() * 8 + 6,
+                    color: colors[Math.floor(Math.random() * colors.length)],
+                    rotation: Math.random() * 360,
+                    rSpeed: (Math.random() - 0.5) * 10,
+                    opacity: 1
+                });
+            }
+        }
+
+        function updateConfetti() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            confettiParticles.forEach((p, idx) => {
+                p.x += p.vx;
+                p.y += p.vy;
+                p.vy += 0.3; // Gravity
+                p.rotation += p.rSpeed;
+                p.opacity -= 0.008;
+
+                ctx.save();
+                ctx.translate(p.x, p.y);
+                ctx.rotate((p.rotation * Math.PI) / 180);
+                ctx.globalAlpha = Math.max(0, p.opacity);
+                ctx.fillStyle = p.color;
+                ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size);
+                ctx.restore();
+
+                if (p.opacity <= 0 || p.y > canvas.height) {
+                    confettiParticles.splice(idx, 1);
+                }
+            });
+
+            requestAnimationFrame(updateConfetti);
+        }
+
+        window.onload = function() {
+            // Render initial welcome SVG
+            renderPuppySVG('welcome-puppy-svg', ['chefHat']);
+            updateConfetti();
+        };
+    </script>
+</body>
+</html>

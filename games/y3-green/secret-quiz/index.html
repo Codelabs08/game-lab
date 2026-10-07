@@ -1,0 +1,957 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Secret Quiz</title>
+    
+    <!-- Google Fonts for child-friendly, rounded typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Nunito:wght@600;800;900&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        pastelPink: '#FFD1DC',
+                        pastelTeal: '#4ECDC4',
+                        pastelBlue: '#A8DADC',
+                        pastelLavender: '#E6E6FA',
+                        pastelYellow: '#FFF9A6',
+                        pastelPurple: '#C7CEEA',
+                        pastelMint: '#B5EAD7',
+                        softDark: '#4A4E69'
+                    },
+                    fontFamily: {
+                        fredoka: ['Fredoka', 'sans-serif'],
+                        nunito: ['Nunito', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- Canvas Confetti -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+    <style>
+        body {
+            font-family: 'Fredoka', 'Nunito', sans-serif;
+            background-color: #E6E6FA;
+            background-image: radial-gradient(#FFD1DC 1.5px, transparent 1.5px), radial-gradient(#A8DADC 1.5px, #E6E6FA 1.5px);
+            background-size: 60px 60px;
+            background-position: 0 0, 30px 30px;
+            color: #4A4E69;
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: manipulation;
+        }
+
+        .bouncy {
+            animation: bounce 2s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
+        }
+
+        .pulse-subtle {
+            animation: pulseSoft 3s infinite ease-in-out;
+        }
+
+        @keyframes pulseSoft {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.03); }
+        }
+
+        .card-shadow {
+            box-shadow: 0 10px 25px -5px rgba(74, 78, 105, 0.12), 0 8px 10px -6px rgba(74, 78, 105, 0.08);
+        }
+
+        .btn-pop {
+            transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .btn-pop:active {
+            transform: scale(0.95);
+        }
+
+        /* Custom Scrollbar for accessories panel */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #F1F1F1;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #4ECDC4;
+            border-radius: 10px;
+        }
+
+        .star-shine {
+            animation: rotateStar 10s linear infinite;
+        }
+
+        @keyframes rotateStar {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between items-center p-3 sm:p-6 overflow-x-hidden">
+
+    <!-- Top Header -->
+    <header class="w-full max-w-3xl flex justify-between items-center mb-3 bg-white/90 backdrop-blur-md px-4 py-3 rounded-3xl card-shadow border-2 border-pastelPink">
+        <div class="flex items-center space-x-2 cursor-pointer" onclick="goHome()">
+            <span class="text-3xl">✨</span>
+            <h1 class="text-xl sm:text-2xl font-bold text-softDark tracking-wide">Secret Quiz</h1>
+        </div>
+        
+        <div class="flex items-center space-x-3">
+            <!-- Audio Toggle Button -->
+            <button id="soundToggle" onclick="toggleAudio()" class="p-2 rounded-full bg-pastelYellow border-2 border-amber-200 text-xl btn-pop shadow-sm" title="Toggle Sound">
+                🔊
+            </button>
+            
+            <!-- Star Count Badge -->
+            <div class="flex items-center space-x-1.5 bg-yellow-100 px-3 py-1.5 rounded-full border-2 border-yellow-300 shadow-sm">
+                <span class="text-2xl star-shine">⭐</span>
+                <span id="starCounter" class="font-bold text-yellow-800 text-lg">0</span>
+            </div>
+        </div>
+    </header>
+
+    <main class="w-full max-w-3xl flex-grow flex flex-col justify-center items-center">
+
+        <!-- 1. START SCREEN -->
+        <section id="startScreen" class="w-full bg-white/95 rounded-3xl p-6 sm:p-10 text-center card-shadow border-4 border-pastelTeal space-y-6 pulse-subtle">
+            <div class="inline-block p-4 bg-pastelPink/30 rounded-full mb-2">
+                <div class="text-7xl bouncy">🐰</div>
+            </div>
+            
+            <h2 class="text-3xl sm:text-4xl font-extrabold text-softDark">Welcome, Little Champion!</h2>
+            <p class="text-lg text-gray-600 max-w-md mx-auto leading-relaxed">
+                Join Barnaby the Bunny on a fun Maths Adventure! Solve 15 friendly questions to unlock the <span class="font-bold text-teal-600">Dress My Quizmaster</span> reward game!
+            </p>
+
+            <div class="grid grid-cols-2 sm:grid-cols-5 gap-2 pt-2 max-w-lg mx-auto">
+                <div class="bg-pastelPink/40 p-2 rounded-2xl text-xs font-bold text-pink-700">Lvl 1: Warm-up</div>
+                <div class="bg-pastelTeal/30 p-2 rounded-2xl text-xs font-bold text-teal-800">Lvl 2: Tens Fun</div>
+                <div class="bg-pastelBlue/40 p-2 rounded-2xl text-xs font-bold text-blue-800">Lvl 3: Regrouping</div>
+                <div class="bg-pastelLavender/60 p-2 rounded-2xl text-xs font-bold text-purple-800">Lvl 4: 3-Digits</div>
+                <div class="bg-pastelYellow/70 col-span-2 sm:col-span-1 p-2 rounded-2xl text-xs font-bold text-amber-800">Lvl 5: Champion</div>
+            </div>
+
+            <div class="pt-4">
+                <button onclick="startQuiz()" class="w-full sm:w-auto px-10 py-4 bg-pastelTeal hover:bg-teal-400 text-white text-2xl font-bold rounded-3xl shadow-lg border-b-4 border-teal-600 btn-pop">
+                    Start Magic Quiz ✨
+                </button>
+            </div>
+        </section>
+
+        <!-- 2. QUIZ SCREEN -->
+        <section id="quizScreen" class="hidden w-full bg-white/95 rounded-3xl p-5 sm:p-8 card-shadow border-4 border-pastelBlue space-y-6">
+            <!-- Progress Bar & Level Indicator -->
+            <div>
+                <div class="flex justify-between items-center mb-2 px-1">
+                    <span id="levelBadge" class="px-3 py-1 bg-pastelPink text-pink-800 font-bold text-sm sm:text-base rounded-full border border-pink-300">
+                        Level 1: Warm-up
+                    </span>
+                    <span id="questionCounter" class="font-bold text-gray-500 text-sm sm:text-base">
+                        Question 1 of 15
+                    </span>
+                </div>
+                <!-- Progress bar track -->
+                <div class="w-full bg-gray-200 h-4 rounded-full overflow-hidden p-0.5 border border-gray-300">
+                    <div id="progressBar" class="bg-pastelTeal h-full rounded-full transition-all duration-500" style="width: 6.66%;"></div>
+                </div>
+            </div>
+
+            <!-- Question Card -->
+            <div class="bg-pastelLavender/30 border-2 border-pastelLavender p-6 sm:p-8 rounded-3xl text-center space-y-3 relative">
+                <div id="questionNumber" class="text-xs font-bold text-indigo-400 uppercase tracking-widest">Question 1</div>
+                <div id="questionText" class="text-3xl sm:text-5xl font-black text-softDark py-2">
+                    24 + 15 = ?
+                </div>
+                <p id="questionHint" class="text-sm text-gray-500 italic">Think carefully and take your time!</p>
+            </div>
+
+            <!-- Answer Options (4 Multiple Choice Buttons) -->
+            <div id="answersGrid" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <!-- Dynamically Populated Buttons -->
+            </div>
+
+            <!-- Feedback Box (Hidden by default) -->
+            <div id="feedbackBox" class="hidden p-4 rounded-2xl text-center font-bold text-lg border-2 transition-all duration-300">
+                <div id="feedbackEmoji" class="text-3xl mb-1">🎉</div>
+                <div id="feedbackText">Super Job!</div>
+                <button id="nextBtn" onclick="nextQuestion()" class="mt-3 px-6 py-2 bg-pastelTeal hover:bg-teal-400 text-white rounded-2xl font-bold shadow btn-pop border-b-2 border-teal-600">
+                    Next Question ➔
+                </button>
+            </div>
+        </section>
+
+        <!-- 3. LEVEL CELEBRATION MODAL -->
+        <div id="levelModal" class="hidden fixed inset-0 bg-black/40 backdrop-blur-sm flex justify-center items-center p-4 z-50">
+            <div class="bg-white rounded-3xl p-8 max-w-sm w-full text-center card-shadow border-4 border-pastelYellow space-y-4 bouncy">
+                <div class="text-6xl">🏆</div>
+                <h3 id="levelModalTitle" class="text-2xl font-black text-softDark">Level 1 Cleared!</h3>
+                <p id="levelModalDesc" class="text-gray-600 font-medium">You collected 3 Stars! You're doing amazing!</p>
+                <button onclick="closeLevelModal()" class="w-full py-3 bg-pastelTeal text-white font-bold rounded-2xl shadow border-b-4 border-teal-600 btn-pop text-lg">
+                    Keep Going! 🚀
+                </button>
+            </div>
+        </div>
+
+        <!-- 4. DRESS MY QUIZMASTER SCREEN -->
+        <section id="dressUpScreen" class="hidden w-full bg-white/95 rounded-3xl p-4 sm:p-6 card-shadow border-4 border-pastelPink space-y-4">
+            <div class="flex flex-col sm:flex-row justify-between items-center bg-pastelPink/30 p-3 rounded-2xl border border-pink-200">
+                <div>
+                    <h2 class="text-xl sm:text-2xl font-black text-softDark flex items-center gap-2">
+                        <span>👑</span> Dress My Quizmaster!
+                    </h2>
+                    <p class="text-xs sm:text-sm text-gray-600">Congratulations! You unlocked Barnaby's Magic Wardrobe!</p>
+                </div>
+                <button onclick="showDiploma()" class="mt-2 sm:mt-0 px-4 py-2 bg-pastelYellow text-amber-900 font-bold text-sm rounded-xl border-2 border-amber-300 shadow btn-pop flex items-center gap-1">
+                    🎓 Get My Diploma
+                </button>
+            </div>
+
+            <!-- Studio Area: Preview Canvas + Dress-up Toolbar -->
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-4 items-start">
+                
+                <!-- Character Display Canvas Card -->
+                <div class="md:col-span-6 bg-pastelBlue/20 border-2 border-pastelBlue p-4 rounded-3xl flex flex-col items-center justify-center relative min-h-[320px]">
+                    <div id="characterStage" class="relative w-64 h-64 flex items-center justify-center">
+                        <!-- SVG Character Engine -->
+                        <svg id="characterSvg" viewBox="0 0 200 220" class="w-full h-full">
+                            <!-- Background Aura -->
+                            <circle cx="100" cy="110" r="90" fill="#FFF9A6" opacity="0.5" />
+
+                            <!-- Bunny Body Base -->
+                            <g id="baseCharacter">
+                                <!-- Ears Base -->
+                                <ellipse id="earLeft" cx="70" cy="50" rx="14" ry="40" fill="#FFFFFF" stroke="#4A4E69" stroke-width="3" />
+                                <ellipse cx="70" cy="50" rx="8" ry="28" fill="#FFD1DC" />
+                                
+                                <ellipse id="earRight" cx="130" cy="50" rx="14" ry="40" fill="#FFFFFF" stroke="#4A4E69" stroke-width="3" />
+                                <ellipse cx="130" cy="50" rx="8" ry="28" fill="#FFD1DC" />
+
+                                <!-- Body -->
+                                <ellipse cx="100" cy="155" rx="45" ry="45" fill="#FFFFFF" stroke="#4A4E69" stroke-width="3" />
+                                <!-- Paws -->
+                                <ellipse cx="70" cy="185" rx="12" ry="8" fill="#FFFFFF" stroke="#4A4E69" stroke-width="2" />
+                                <ellipse cx="130" cy="185" rx="12" ry="8" fill="#FFFFFF" stroke="#4A4E69" stroke-width="2" />
+
+                                <!-- Head -->
+                                <circle cx="100" cy="100" r="45" fill="#FFFFFF" stroke="#4A4E69" stroke-width="3" />
+                                
+                                <!-- Cheeks -->
+                                <circle cx="75" cy="110" r="7" fill="#FFD1DC" opacity="0.8" />
+                                <circle cx="125" cy="110" r="7" fill="#FFD1DC" opacity="0.8" />
+
+                                <!-- Eyes -->
+                                <ellipse cx="82" cy="95" rx="5" ry="7" fill="#4A4E69" />
+                                <ellipse cx="118" cy="95" rx="5" ry="7" fill="#4A4E69" />
+                                <circle cx="80" cy="93" r="2" fill="#FFFFFF" />
+                                <circle cx="116" cy="93" r="2" fill="#FFFFFF" />
+
+                                <!-- Nose & Mouth -->
+                                <polygon points="97,103 103,103 100,107" fill="#FFD1DC" stroke="#4A4E69" stroke-width="1" />
+                                <path d="M 95 110 Q 100 114 105 110" fill="transparent" stroke="#4A4E69" stroke-width="2" stroke-linecap="round" />
+                            </g>
+
+                            <!-- Outfit Layer -->
+                            <g id="layerOutfit"></g>
+
+                            <!-- Glasses / Face Layer -->
+                            <g id="layerGlasses"></g>
+
+                            <!-- Hat / Headwear Layer -->
+                            <g id="layerHat"></g>
+
+                            <!-- Hand Accessory Layer -->
+                            <g id="layerAccessory"></g>
+                        </svg>
+                    </div>
+
+                    <!-- Reset & Randomize Controls -->
+                    <div class="flex gap-2 mt-2 w-full justify-center">
+                        <button onclick="randomizeOutfit()" class="px-3 py-1.5 bg-pastelLavender text-indigo-900 font-bold text-xs rounded-xl border border-indigo-200 btn-pop flex items-center gap-1">
+                            🎲 Surprise Outfit!
+                        </button>
+                        <button onclick="resetOutfit()" class="px-3 py-1.5 bg-gray-100 text-gray-600 font-bold text-xs rounded-xl border border-gray-300 btn-pop">
+                            🔄 Reset
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Customization Controls Panel -->
+                <div class="md:col-span-6 space-y-3">
+                    <!-- Category Tabs -->
+                    <div class="flex space-x-1 bg-gray-100 p-1 rounded-2xl text-xs font-bold">
+                        <button id="tabHats" onclick="switchWardrobeTab('hats')" class="flex-1 py-2 rounded-xl bg-white text-softDark shadow">Hats</button>
+                        <button id="tabOutfits" onclick="switchWardrobeTab('outfits')" class="flex-1 py-2 rounded-xl text-gray-500">Outfits</button>
+                        <button id="tabGlasses" onclick="switchWardrobeTab('glasses')" class="flex-1 py-2 rounded-xl text-gray-500">Glasses</button>
+                        <button id="tabProps" onclick="switchWardrobeTab('props')" class="flex-1 py-2 rounded-xl text-gray-500">Items</button>
+                    </div>
+
+                    <!-- Options Grid -->
+                    <div id="wardrobeItems" class="grid grid-cols-3 gap-2 max-h-56 overflow-y-auto p-1">
+                        <!-- Populated via Javascript -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 5. DIPLOMA MODAL -->
+        <div id="diplomaModal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-md flex justify-center items-center p-4 z-50">
+            <div class="bg-amber-50 rounded-3xl p-6 sm:p-8 max-w-lg w-full text-center border-8 border-amber-200 card-shadow relative space-y-4">
+                <button onclick="closeDiploma()" class="absolute top-3 right-3 text-gray-400 hover:text-gray-700 font-bold text-xl p-2">✕</button>
+                
+                <div class="border-2 border-dashed border-amber-300 p-6 rounded-2xl bg-white space-y-3">
+                    <div class="text-4xl">🎓</div>
+                    <h2 class="text-2xl sm:text-3xl font-black text-amber-900 tracking-wide font-fredoka">Maths Champion Diploma</h2>
+                    <p class="text-xs text-amber-700 uppercase font-bold tracking-widest">Your Secret Quiz Certificate</p>
+                    
+                    <div class="py-2">
+                        <p class="text-sm text-gray-600">This certifies that our superstar:</p>
+                        <div class="text-2xl font-black text-pastelTeal my-1">Little Genius</div>
+                        <p class="text-xs text-gray-500">Has successfully completed 15 Maths Questions & dressed Barnaby the Quizmaster!</p>
+                    </div>
+
+                    <div class="flex justify-center items-center space-x-6 pt-2">
+                        <div class="text-center">
+                            <div class="text-xl font-black text-amber-600">15 / 15</div>
+                            <div class="text-[10px] text-gray-400 uppercase font-bold">Questions</div>
+                        </div>
+                        <div class="text-3xl">⭐</div>
+                        <div class="text-center">
+                            <div id="diplomaStars" class="text-xl font-black text-amber-600">15</div>
+                            <div class="text-[10px] text-gray-400 uppercase font-bold">Stars Earned</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex gap-2">
+                    <button onclick="window.print()" class="flex-1 py-3 bg-pastelTeal text-white font-bold rounded-2xl shadow border-b-4 border-teal-600 btn-pop text-sm">
+                        🖨️ Print Diploma
+                    </button>
+                    <button onclick="goHome()" class="flex-1 py-3 bg-pastelPink text-pink-900 font-bold rounded-2xl shadow border-b-4 border-pink-300 btn-pop text-sm">
+                        🏠 Play Again
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="mt-4 text-center text-xs font-semibold text-gray-500">
+        Created with ❤️ for Hero • Safe, Friendly & Encouraging Maths Fun
+    </footer>
+
+    <script>
+        /* --- QUESTION DATABASE (15 Year 3 Math Questions in 5 Levels) --- */
+        const quizData = [
+            // LEVEL 1: Warm-up additions and subtractions within 50
+            {
+                level: 1,
+                levelName: "Level 1: Warm-up",
+                question: "24 + 15 = ?",
+                answers: [39, 38, 29, 40],
+                correct: 0,
+                hint: "Add the units (4+5=9) and tens (20+10=30)!"
+            },
+            {
+                level: 1,
+                levelName: "Level 1: Warm-up",
+                question: "48 - 12 = ?",
+                answers: [34, 36, 35, 26],
+                correct: 1,
+                hint: "Take away 10 first, then take away 2!"
+            },
+            {
+                level: 1,
+                levelName: "Level 1: Warm-up",
+                question: "35 + 20 = ?",
+                answers: [45, 50, 55, 65],
+                correct: 2,
+                hint: "Just count up by 2 tens: 35... 45... 55!"
+            },
+
+            // LEVEL 2: Crossing tens and adding/subtracting 10s
+            {
+                level: 2,
+                levelName: "Level 2: Tens Fun",
+                question: "57 + 8 = ?",
+                answers: [63, 65, 64, 66],
+                correct: 1,
+                hint: "Add 3 to reach 60, then add 5 more!"
+            },
+            {
+                level: 2,
+                levelName: "Level 2: Tens Fun",
+                question: "83 - 15 = ?",
+                answers: [72, 68, 65, 78],
+                correct: 1,
+                hint: "Take away 10 to get 73, then take away 5 more!"
+            },
+            {
+                level: 2,
+                levelName: "Level 2: Tens Fun",
+                question: "140 + 30 = ?",
+                answers: [160, 180, 170, 150],
+                correct: 2,
+                hint: "4 tens + 3 tens = 7 tens!"
+            },
+
+            // LEVEL 3: Regrouping 2-digit numbers
+            {
+                level: 3,
+                levelName: "Level 3: Regrouping",
+                question: "46 + 37 = ?",
+                answers: [83, 73, 81, 85],
+                correct: 0,
+                hint: "40 + 30 = 70, and 6 + 7 = 13. Put them together!"
+            },
+            {
+                level: 3,
+                levelName: "Level 3: Regrouping",
+                question: "92 - 45 = ?",
+                answers: [53, 47, 43, 57],
+                correct: 1,
+                hint: "92 - 40 = 52, then 52 - 5 = 47!"
+            },
+            {
+                level: 3,
+                levelName: "Level 3: Regrouping",
+                question: "68 + 25 = ?",
+                answers: [91, 83, 93, 95],
+                correct: 2,
+                hint: "68 + 20 = 88, then 88 + 5 = 93!"
+            },
+
+            // LEVEL 4: 3-Digit Fun
+            {
+                level: 4,
+                levelName: "Level 4: 3-Digits",
+                question: "120 + 45 = ?",
+                answers: [165, 175, 155, 160],
+                correct: 0,
+                hint: "Keep the 100, add 20 + 45 = 65!"
+            },
+            {
+                level: 4,
+                levelName: "Level 4: 3-Digits",
+                question: "250 - 60 = ?",
+                answers: [210, 190, 180, 200],
+                correct: 1,
+                hint: "Count back 50 to 200, then 10 more to 190!"
+            },
+            {
+                level: 4,
+                levelName: "Level 4: 3-Digits",
+                question: "315 + 80 = ?",
+                answers: [385, 395, 405, 375],
+                correct: 1,
+                hint: "10 + 80 = 90, so 315 + 80 = 395!"
+            },
+
+            // LEVEL 5: Secret Champion Level
+            {
+                level: 5,
+                levelName: "Level 5: Secret Champion",
+                question: "145 + 55 = ?",
+                answers: [190, 205, 200, 210],
+                correct: 2,
+                hint: "45 + 55 = 100! So 100 + 100 = 200!"
+            },
+            {
+                level: 5,
+                levelName: "Level 5: Secret Champion",
+                question: "300 - 125 = ?",
+                answers: [175, 185, 165, 225],
+                correct: 0,
+                hint: "300 - 100 = 200, then 200 - 25 = 175!"
+            },
+            {
+                level: 5,
+                levelName: "Level 5: Secret Champion",
+                question: "220 + 190 = ?",
+                answers: [400, 410, 390, 420],
+                correct: 1,
+                hint: "220 + 200 = 420, then subtract 10 = 410!"
+            }
+        ];
+
+        /* --- GLOBAL STATE --- */
+        let currentQuestionIdx = 0;
+        let starsCollected = 0;
+        let soundEnabled = true;
+        let audioCtx = null;
+
+        /* Current Dress-Up Selection State */
+        let equipped = {
+            hat: null,
+            outfit: null,
+            glasses: null,
+            prop: null
+        };
+
+        /* Web Audio API Synthesizer (Gentle, peaceful chime effects) */
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        }
+
+        function playSound(type) {
+            if (!soundEnabled) return;
+            initAudio();
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+
+            const now = audioCtx.currentTime;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            if (type === 'correct') {
+                // Happy high chime (C5 to G5)
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(523.25, now); // C5
+                osc.frequency.exponentialRampToValueAtTime(783.99, now + 0.15); // G5
+                gain.gain.setValueAtTime(0.15, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+                osc.start(now);
+                osc.stop(now + 0.3);
+            } else if (type === 'levelUp') {
+                // Arpeggio sparkle
+                const notes = [523.25, 659.25, 783.99, 1046.50];
+                notes.forEach((freq, idx) => {
+                    const o = audioCtx.createOscillator();
+                    const g = audioCtx.createGain();
+                    o.connect(g);
+                    g.connect(audioCtx.destination);
+                    o.type = 'triangle';
+                    o.frequency.setValueAtTime(freq, now + idx * 0.08);
+                    g.gain.setValueAtTime(0.12, now + idx * 0.08);
+                    g.gain.exponentialRampToValueAtTime(0.01, now + idx * 0.08 + 0.2);
+                    o.start(now + idx * 0.08);
+                    o.stop(now + idx * 0.08 + 0.25);
+                });
+            } else if (type === 'gentleTry') {
+                // Soft warm note
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(329.63, now); // E4
+                gain.gain.setValueAtTime(0.1, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
+                osc.start(now);
+                osc.stop(now + 0.25);
+            } else if (type === 'click') {
+                // Short subtle pop
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(400, now);
+                gain.gain.setValueAtTime(0.05, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.05);
+                osc.start(now);
+                osc.stop(now + 0.05);
+            }
+        }
+
+        function toggleAudio() {
+            soundEnabled = !soundEnabled;
+            document.getElementById('soundToggle').innerText = soundEnabled ? '🔊' : '🔇';
+        }
+
+        function goHome() {
+            playSound('click');
+            document.getElementById('startScreen').classList.remove('hidden');
+            document.getElementById('quizScreen').classList.add('hidden');
+            document.getElementById('dressUpScreen').classList.add('hidden');
+            document.getElementById('diplomaModal').classList.add('hidden');
+        }
+
+        function startQuiz() {
+            playSound('click');
+            currentQuestionIdx = 0;
+            starsCollected = 0;
+            updateStarDisplay();
+            
+            document.getElementById('startScreen').classList.add('hidden');
+            document.getElementById('dressUpScreen').classList.add('hidden');
+            document.getElementById('quizScreen').classList.remove('hidden');
+            
+            loadQuestion();
+        }
+
+        function updateStarDisplay() {
+            document.getElementById('starCounter').innerText = starsCollected;
+        }
+
+        function loadQuestion() {
+            const q = quizData[currentQuestionIdx];
+            
+            // Hide feedback
+            document.getElementById('feedbackBox').classList.add('hidden');
+
+            // Header indicators
+            document.getElementById('levelBadge').innerText = q.levelName;
+            document.getElementById('questionCounter').innerText = `Question ${currentQuestionIdx + 1} of ${quizData.length}`;
+            document.getElementById('questionNumber').innerText = `Question ${currentQuestionIdx + 1}`;
+            document.getElementById('questionText').innerText = q.question;
+            document.getElementById('questionHint').innerText = q.hint;
+
+            // Progress bar
+            const pct = ((currentQuestionIdx + 1) / quizData.length) * 100;
+            document.getElementById('progressBar').style.width = `${pct}%`;
+
+            // Populate Multiple Choice Buttons
+            const answersGrid = document.getElementById('answersGrid');
+            answersGrid.innerHTML = '';
+
+            const bgColors = [
+                'bg-pink-100 hover:bg-pink-200 border-pink-300 text-pink-900',
+                'bg-teal-100 hover:bg-teal-200 border-teal-300 text-teal-900',
+                'bg-blue-100 hover:bg-blue-200 border-blue-300 text-blue-900',
+                'bg-yellow-100 hover:bg-yellow-200 border-yellow-300 text-yellow-900'
+            ];
+
+            q.answers.forEach((ans, idx) => {
+                const btn = document.createElement('button');
+                btn.className = `w-full py-4 text-2xl font-bold rounded-2xl border-2 ${bgColors[idx % bgColors.length]} shadow-md btn-pop transition-all text-center`;
+                btn.innerText = ans;
+                btn.onclick = () => checkAnswer(idx, btn);
+                answersGrid.appendChild(btn);
+            });
+        }
+
+        function checkAnswer(selectedIdx, btnElement) {
+            const q = quizData[currentQuestionIdx];
+            const feedbackBox = document.getElementById('feedbackBox');
+            const feedbackEmoji = document.getElementById('feedbackEmoji');
+            const feedbackText = document.getElementById('feedbackText');
+            
+            // Disable all answer buttons temporarily
+            const allBtns = document.getElementById('answersGrid').querySelectorAll('button');
+            allBtns.forEach(b => b.disabled = true);
+
+            if (selectedIdx === q.correct) {
+                // Correct Answer!
+                playSound('correct');
+                starsCollected++;
+                updateStarDisplay();
+
+                // Trigger confetti burst
+                confetti({
+                    particleCount: 40,
+                    spread: 60,
+                    origin: { y: 0.7 }
+                });
+
+                btnElement.classList.add('bg-green-300', 'border-green-500', 'scale-105');
+                feedbackBox.className = 'p-4 rounded-2xl text-center font-bold text-lg border-2 bg-emerald-50 border-emerald-300 text-emerald-800 transition-all duration-300';
+                feedbackEmoji.innerText = '🌟 Fantastic!';
+                feedbackText.innerText = `Super job! ${q.question.replace('?', '')} is indeed ${q.answers[q.correct]}!`;
+            } else {
+                // Incorrect Answer - Gentle encouraging explanation
+                playSound('gentleTry');
+                btnElement.classList.add('bg-amber-200', 'border-amber-400', 'opacity-70');
+                
+                feedbackBox.className = 'p-4 rounded-2xl text-center font-bold text-lg border-2 bg-amber-50 border-amber-300 text-amber-900 transition-all duration-300';
+                feedbackEmoji.innerText = '🌱 Almost there!';
+                feedbackText.innerText = `Good try! The right answer is ${q.answers[q.correct]}. ${q.hint}`;
+            }
+
+            feedbackBox.classList.remove('hidden');
+        }
+
+        function nextQuestion() {
+            playSound('click');
+            currentQuestionIdx++;
+
+            // Check if Level Completed (every 3 questions)
+            if (currentQuestionIdx > 0 && currentQuestionIdx % 3 === 0 && currentQuestionIdx < quizData.length) {
+                showLevelModal(currentQuestionIdx / 3);
+            } else if (currentQuestionIdx >= quizData.length) {
+                // Quiz Completed! Unlock Reward Game
+                unlockDressUp();
+            } else {
+                loadQuestion();
+            }
+        }
+
+        function showLevelModal(levelNum) {
+            playSound('levelUp');
+            confetti({ particleCount: 70, spread: 80, origin: { y: 0.5 } });
+            
+            document.getElementById('levelModalTitle').innerText = `Level ${levelNum} Cleared! 🎉`;
+            document.getElementById('levelModalDesc').innerText = `You earned ${starsCollected} Stars so far! You're super smart!`;
+            document.getElementById('levelModal').classList.remove('hidden');
+        }
+
+        function closeLevelModal() {
+            playSound('click');
+            document.getElementById('levelModal').classList.add('hidden');
+            loadQuestion();
+        }
+
+        function unlockDressUp() {
+            playSound('levelUp');
+            confetti({ particleCount: 120, spread: 100, origin: { y: 0.4 } });
+
+            document.getElementById('quizScreen').classList.add('hidden');
+            document.getElementById('dressUpScreen').classList.remove('hidden');
+            
+            initWardrobeUI();
+            switchWardrobeTab('hats');
+        }
+
+        /* --- WARDROBE ITEMS DATABASE & SVG DEFINITIONS --- */
+        const wardrobeData = {
+            hats: [
+                { id: 'none', name: 'None', icon: '❌', svg: '' },
+                { 
+                    id: 'crown', 
+                    name: 'Royal Crown', 
+                    icon: '👑', 
+                    svg: `<path d="M 75 60 L 85 40 L 100 55 L 115 40 L 125 60 Z" fill="#FFD700" stroke="#B8860B" stroke-width="2"/>
+                          <circle cx="85" cy="40" r="3" fill="#FF1493"/>
+                          <circle cx="100" cy="55" r="3" fill="#00BFFF"/>
+                          <circle cx="115" cy="40" r="3" fill="#FF1493"/>` 
+                },
+                { 
+                    id: 'party', 
+                    name: 'Party Hat', 
+                    icon: '🎉', 
+                    svg: `<polygon points="100,20 80,62 120,62" fill="#FF69B4" stroke="#4A4E69" stroke-width="2"/>
+                          <circle cx="100" cy="20" r="5" fill="#FFF9A6"/>
+                          <line x1="85" y1="45" x2="115" y2="45" stroke="#4ECDC4" stroke-width="3"/>` 
+                },
+                { 
+                    id: 'wizard', 
+                    name: 'Wizard Hat', 
+                    icon: '🧙‍♂️', 
+                    svg: `<path d="M 70 62 C 80 62 85 20 100 15 C 115 20 120 62 130 62 Z" fill="#6A5ACD" stroke="#4A4E69" stroke-width="2"/>
+                          <ellipse cx="100" cy="62" rx="35" ry="8" fill="#483D8B" stroke="#4A4E69" stroke-width="2"/>
+                          <polygon points="100,30 103,36 108,36 104,40 106,46 100,42 94,46 96,40 92,36 97,36" fill="#FFF9A6"/>` 
+                },
+                { 
+                    id: 'cap', 
+                    name: 'Cool Cap', 
+                    icon: '🧢', 
+                    svg: `<path d="M 75 60 A 25 25 0 0 1 125 60 Z" fill="#4ECDC4" stroke="#4A4E69" stroke-width="2"/>
+                          <path d="M 115 58 Q 140 58 145 64 Q 125 66 115 62 Z" fill="#FFD1DC" stroke="#4A4E69" stroke-width="2"/>` 
+                }
+            ],
+            outfits: [
+                { id: 'none', name: 'None', icon: '❌', svg: '' },
+                { 
+                    id: 'cape', 
+                    name: 'Super Cape', 
+                    icon: '🦸‍♀️', 
+                    svg: `<path d="M 70 140 Q 100 120 130 140 Q 145 190 135 195 Q 100 180 65 195 Z" fill="#FF4757" opacity="0.9" stroke="#B33939" stroke-width="2"/>` 
+                },
+                { 
+                    id: 'bow', 
+                    name: 'Fancy Bowtie', 
+                    icon: '🎀', 
+                    svg: `<polygon points="85,135 100,140 85,145" fill="#FF6B6B" stroke="#4A4E69" stroke-width="1.5"/>
+                          <polygon points="115,135 100,140 115,145" fill="#FF6B6B" stroke="#4A4E69" stroke-width="1.5"/>
+                          <circle cx="100" cy="140" r="4" fill="#FFEAA7"/>` 
+                },
+                { 
+                    id: 'sweater', 
+                    name: 'Cozy Sweater', 
+                    icon: '👕', 
+                    svg: `<path d="M 72 142 Q 100 135 128 142 L 132 175 Q 100 180 68 175 Z" fill="#74B9FF" stroke="#0984E3" stroke-width="2"/>
+                          <line x1="100" y1="140" x2="100" y2="177" stroke="#FFFFFF" stroke-width="2" stroke-dasharray="4"/>` 
+                },
+                { 
+                    id: 'robe', 
+                    name: 'Royal Robe', 
+                    icon: '🥋', 
+                    svg: `<path d="M 68 140 Q 100 135 132 140 L 138 188 Q 100 195 62 188 Z" fill="#A29BFE" stroke="#6C5CE7" stroke-width="2"/>
+                          <circle cx="100" cy="155" r="4" fill="#FFEAA7"/>
+                          <circle cx="100" cy="170" r="4" fill="#FFEAA7"/>` 
+                }
+            ],
+            glasses: [
+                { id: 'none', name: 'None', icon: '❌', svg: '' },
+                { 
+                    id: 'starglasses', 
+                    name: 'Star Glasses', 
+                    icon: '⭐', 
+                    svg: `<polygon points="82,88 84,93 89,93 85,96 87,101 82,98 77,101 79,96 75,93 80,93" fill="#FFEAA7" stroke="#D63031" stroke-width="1.5"/>
+                          <polygon points="118,88 120,93 125,93 121,96 123,101 118,98 113,101 115,96 111,93 116,93" fill="#FFEAA7" stroke="#D63031" stroke-width="1.5"/>
+                          <line x1="89" y1="95" x2="111" y2="95" stroke="#D63031" stroke-width="2"/>` 
+                },
+                { 
+                    id: 'cool', 
+                    name: 'Cool Shades', 
+                    icon: '🕶️', 
+                    svg: `<rect x="72" y="88" width="22" height="14" rx="3" fill="#2D3436"/>
+                          <rect x="106" y="88" width="22" height="14" rx="3" fill="#2D3436"/>
+                          <line x1="94" y1="93" x2="106" y2="93" stroke="#2D3436" stroke-width="3"/>` 
+                },
+                { 
+                    id: 'cute', 
+                    name: 'Pink Round', 
+                    icon: '👓', 
+                    svg: `<circle cx="82" cy="95" r="10" fill="none" stroke="#FF7675" stroke-width="3"/>
+                          <circle cx="118" cy="95" r="10" fill="none" stroke="#FF7675" stroke-width="3"/>
+                          <line x1="92" y1="95" x2="108" y2="95" stroke="#FF7675" stroke-width="3"/>` 
+                }
+            ],
+            props: [
+                { id: 'none', name: 'None', icon: '❌', svg: '' },
+                { 
+                    id: 'wand', 
+                    name: 'Magic Wand', 
+                    icon: '🪄', 
+                    svg: `<line x1="135" y1="180" x2="165" y2="135" stroke="#81ECEC" stroke-width="4" stroke-linecap="round"/>
+                          <polygon points="165,130 167,135 172,135 168,138 170,143 165,140 160,143 162,138 158,135 163,135" fill="#FDCB6E"/>` 
+                },
+                { 
+                    id: 'flower', 
+                    name: 'Flower', 
+                    icon: '🌸', 
+                    svg: `<circle cx="145" cy="175" r="6" fill="#FF7675"/>
+                          <circle cx="145" cy="165" r="6" fill="#FF7675"/>
+                          <circle cx="138" cy="170" r="6" fill="#FF7675"/>
+                          <circle cx="152" cy="170" r="6" fill="#FF7675"/>
+                          <circle cx="145" cy="170" r="5" fill="#FFEAA7"/>` 
+                },
+                { 
+                    id: 'badge', 
+                    name: 'Maths Medal', 
+                    icon: '🏅', 
+                    svg: `<circle cx="100" cy="155" r="9" fill="#FDCB6E" stroke="#D63031" stroke-width="2"/>
+                          <text x="100" y="158" font-size="8" text-anchor="middle" fill="#D63031" font-weight="bold">#1</text>` 
+                }
+            ]
+        };
+
+        let currentTab = 'hats';
+
+        function initWardrobeUI() {
+            renderWardrobeGrid();
+        }
+
+        function switchWardrobeTab(tabKey) {
+            playSound('click');
+            currentTab = tabKey;
+            
+            // Highlight Tab Button
+            ['hats', 'outfits', 'glasses', 'props'].forEach(t => {
+                const btn = document.getElementById(`tab${t.charAt(0).toUpperCase() + t.slice(1)}`);
+                if (t === tabKey) {
+                    btn.className = 'flex-1 py-2 rounded-xl bg-pastelTeal text-white shadow font-bold';
+                } else {
+                    btn.className = 'flex-1 py-2 rounded-xl text-gray-500 font-bold hover:bg-gray-200';
+                }
+            });
+
+            renderWardrobeGrid();
+        }
+
+        function renderWardrobeGrid() {
+            const container = document.getElementById('wardrobeItems');
+            container.innerHTML = '';
+
+            const items = wardrobeData[currentTab];
+            items.forEach(item => {
+                const categoryKey = currentTab === 'outfits' ? 'outfit' : currentTab.slice(0, -1);
+                const isSelected = equipped[categoryKey] === item.id || (equipped[categoryKey] === null && item.id === 'none');
+
+                const card = document.createElement('button');
+                card.className = `p-3 rounded-2xl border-2 flex flex-col items-center justify-center transition-all btn-pop ${
+                    isSelected ? 'bg-pastelYellow border-amber-400 shadow-md scale-105' : 'bg-white border-gray-200 hover:border-pastelTeal'
+                }`;
+                card.onclick = () => equipItem(categoryKey, item.id);
+
+                card.innerHTML = `
+                    <span class="text-2xl mb-1">${item.icon}</span>
+                    <span class="text-[11px] font-bold text-softDark text-center leading-tight">${item.name}</span>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function equipItem(category, itemId) {
+            playSound('click');
+            if (itemId === 'none') {
+                equipped[category] = null;
+            } else {
+                equipped[category] = itemId;
+            }
+
+            renderCharacterOutfit();
+            renderWardrobeGrid();
+        }
+
+        function renderCharacterOutfit() {
+            // Render Hat
+            const layerHat = document.getElementById('layerHat');
+            const hatObj = wardrobeData.hats.find(h => h.id === equipped.hat);
+            layerHat.innerHTML = hatObj ? hatObj.svg : '';
+
+            // Render Outfit
+            const layerOutfit = document.getElementById('layerOutfit');
+            const outfitObj = wardrobeData.outfits.find(o => o.id === equipped.outfit);
+            layerOutfit.innerHTML = outfitObj ? outfitObj.svg : '';
+
+            // Render Glasses
+            const layerGlasses = document.getElementById('layerGlasses');
+            const glassObj = wardrobeData.glasses.find(g => g.id === equipped.glasses);
+            layerGlasses.innerHTML = glassObj ? glassObj.svg : '';
+
+            // Render Accessory
+            const layerAccessory = document.getElementById('layerAccessory');
+            const propObj = wardrobeData.props.find(p => p.id === equipped.prop);
+            layerAccessory.innerHTML = propObj ? propObj.svg : '';
+        }
+
+        function randomizeOutfit() {
+            playSound('levelUp');
+            ['hat', 'outfit', 'glasses', 'prop'].forEach(cat => {
+                const keys = wardrobeData[cat === 'outfit' ? 'outfits' : cat + 's'];
+                const randomItem = keys[Math.floor(Math.random() * keys.length)];
+                equipped[cat] = randomItem.id === 'none' ? null : randomItem.id;
+            });
+
+            renderCharacterOutfit();
+            renderWardrobeGrid();
+        }
+
+        function resetOutfit() {
+            playSound('click');
+            equipped = { hat: null, outfit: null, glasses: null, prop: null };
+            renderCharacterOutfit();
+            renderWardrobeGrid();
+        }
+
+        function showDiploma() {
+            playSound('levelUp');
+            document.getElementById('diplomaStars').innerText = starsCollected;
+            document.getElementById('diplomaModal').classList.remove('hidden');
+            confetti({ particleCount: 50, spread: 70, origin: { y: 0.5 } });
+        }
+
+        function closeDiploma() {
+            playSound('click');
+            document.getElementById('diplomaModal').classList.add('hidden');
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Squishy Machine Game</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Lexend:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+    <style>
+        body {
+            font-family: 'Fredoka', cursive, sans-serif;
+            background-color: #3d2612;
+            background-image: radial-gradient(#633f1d 2px, transparent 2px), radial-gradient(#633f1d 2px, #3d2612 2px);
+            background-size: 40px 40px;
+            background-position: 0 0, 20px 20px;
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: manipulation;
+        }
+
+        .stone-card {
+            background: linear-gradient(145deg, #e6c898, #cfa86e);
+            border: 6px solid #6e4722;
+            box-shadow: inset 0 4px 0 rgba(255,255,255,0.4), inset 0 -4px 0 rgba(0,0,0,0.2), 0 10px 20px rgba(0,0,0,0.4);
+            border-radius: 28px;
+        }
+
+        .stone-btn {
+            background: linear-gradient(180deg, #f09236, #d16200);
+            border: 4px solid #5c2800;
+            box-shadow: 0 6px 0 #3d1b00, 0 8px 12px rgba(0,0,0,0.3);
+            text-shadow: 1px 2px 0 rgba(0,0,0,0.3);
+            transition: all 0.1s ease;
+        }
+
+        .stone-btn:active {
+            transform: translateY(4px);
+            box-shadow: 0 2px 0 #3d1b00, 0 4px 6px rgba(0,0,0,0.3);
+        }
+
+        .stone-btn-green {
+            background: linear-gradient(180deg, #62c433, #3f8f17);
+            border-color: #1e4a08;
+            box-shadow: 0 6px 0 #123004, 0 8px 12px rgba(0,0,0,0.3);
+        }
+        .stone-btn-green:active {
+            box-shadow: 0 2px 0 #123004;
+        }
+
+        .stone-btn-blue {
+            background: linear-gradient(180deg, #3aaed8, #187196);
+            border-color: #0b3d52;
+            box-shadow: 0 6px 0 #05212e, 0 8px 12px rgba(0,0,0,0.3);
+        }
+        .stone-btn-blue:active {
+            box-shadow: 0 2px 0 #05212e;
+        }
+
+        /* Squishy Machine Specific Animations */
+        @keyframes squishPump {
+            0%, 100% { transform: scale(1, 1); }
+            30% { transform: scale(1.15, 0.85); }
+            50% { transform: scale(0.85, 1.2); }
+            70% { transform: scale(1.05, 0.95); }
+        }
+
+        .squish-anim {
+            animation: squishPump 0.6s ease-in-out;
+        }
+
+        @keyframes floatDino {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-8px) rotate(3deg); }
+        }
+
+        .float-anim {
+            animation: floatDino 3s ease-in-out infinite;
+        }
+
+        canvas {
+            touch-action: none;
+        }
+    </style>
+</head>
+<body class="min-h-screen text-amber-950 flex flex-col justify-between p-2 sm:p-4 overflow-x-hidden">
+
+    <header class="w-full max-w-3xl mx-auto flex items-center justify-between stone-card p-3 sm:p-4 mb-3">
+        <div class="flex items-center space-x-2 sm:space-x-3">
+            <div class="text-3xl sm:text-4xl float-anim">🌋</div>
+            <div>
+                <h1 class="text-xl sm:text-2xl font-bold tracking-wide text-amber-900 leading-tight">Squishy Machine Game</h1>
+                <p class="text-xs sm:text-sm font-semibold text-amber-800">Year 3 Maths Adventure!</p>
+            </div>
+        </div>
+        <button id="audio-toggle" class="stone-btn stone-btn-blue p-2 sm:p-3 rounded-2xl text-xl flex items-center justify-center">
+            🔊
+        </button>
+    </header>
+
+    <!-- Main Container -->
+    <main class="w-full max-w-3xl mx-auto flex-1 flex flex-col justify-center items-center">
+
+        <!-- START SCREEN -->
+        <div id="screen-start" class="stone-card w-full p-6 sm:p-8 text-center space-y-6 my-auto">
+            <div class="relative inline-block">
+                <div id="machine-graphic" class="text-7xl sm:text-8xl my-2 cursor-pointer transition-transform hover:scale-105">🎰</div>
+                <div class="absolute -top-2 -right-2 bg-orange-500 text-white font-black text-sm px-3 py-1 rounded-full border-2 border-amber-900 shadow">
+                    No. 67
+                </div>
+            </div>
+            
+            <div class="space-y-2">
+                <h2 class="text-2xl sm:text-3xl font-extrabold text-amber-900">Welcome, Cave Explorer! 🦴</h2>
+                <p class="text-base sm:text-lg text-amber-800 max-w-md mx-auto">
+                    Answer 15 fun multiplication questions, squish awesome Stone Age rewards, and drive the Cave Car!
+                </p>
+            </div>
+
+            <div class="bg-amber-100/80 rounded-2xl p-4 border-2 border-amber-800/30 text-amber-900 font-semibold text-sm sm:text-base text-left space-y-2 max-w-md mx-auto">
+                <p>🎯 <b>5 Fun Levels:</b> 2, 3, 4, 5 & 10 Times Tables</p>
+                <p>🚗 <b>Mini Game:</b> Dodge boulders with your Cave Car!</p>
+                <p>💖 <b>Kind Learning:</b> Unlimited tries with happy help!</p>
+            </div>
+
+            <button id="btn-start" class="stone-btn stone-btn-green w-full max-w-xs py-4 text-2xl font-bold text-white rounded-2xl">
+                START PLAYING! 🚀
+            </button>
+        </div>
+
+        <!-- QUIZ SCREEN -->
+        <div id="screen-quiz" class="stone-card w-full p-4 sm:p-6 space-y-4 my-auto hidden">
+            <!-- Level & Progress Bar -->
+            <div class="flex flex-col space-y-2">
+                <div class="flex justify-between items-center font-bold text-amber-900 text-sm sm:text-base">
+                    <span id="quiz-level-badge" class="bg-amber-800 text-amber-100 px-3 py-1 rounded-full">Level 1 of 5</span>
+                    <span id="quiz-score-badge" class="bg-orange-600 text-white px-3 py-1 rounded-full">⭐ Gems: 0</span>
+                </div>
+                <div class="w-full bg-amber-950/20 h-4 rounded-full overflow-hidden p-0.5 border border-amber-800/30">
+                    <div id="quiz-progress" class="bg-gradient-to-r from-orange-400 to-green-500 h-full rounded-full transition-all duration-300" style="width: 20%;"></div>
+                </div>
+            </div>
+
+            <!-- Animated Squishy Machine Display Area -->
+            <div class="bg-amber-900/10 rounded-2xl p-4 border-2 border-amber-800/20 text-center flex items-center justify-around">
+                <div class="text-left">
+                    <span class="text-xs font-bold uppercase tracking-wider text-amber-800 block">Current Reward</span>
+                    <span id="reward-name" class="text-base sm:text-lg font-extrabold text-amber-900">Baby T-Rex Egg 🥚</span>
+                </div>
+                <div id="squishy-machine-mini" class="text-4xl sm:text-5xl transition-transform">
+                    🦖
+                </div>
+            </div>
+
+            <!-- Question Box -->
+            <div class="bg-amber-100 rounded-2xl p-6 border-3 border-amber-800/40 text-center shadow-inner space-y-2">
+                <div class="text-xs font-bold text-amber-700 uppercase tracking-widest" id="question-subtext">Times Table Challenge</div>
+                <div id="question-text" class="text-3xl sm:text-5xl font-black text-amber-950 tracking-wide my-2">
+                    2 × 5 = ?
+                </div>
+            </div>
+
+            <!-- Multiple Choice Answer Buttons -->
+            <div id="answers-container" class="grid grid-cols-1 gap-3 pt-2">
+                <!-- Dynamically populated buttons -->
+            </div>
+
+            <!-- Kind Feedback / Hint Overlay Modal -->
+            <div id="feedback-box" class="hidden bg-amber-200 border-4 border-amber-800 rounded-2xl p-4 text-center space-y-3">
+                <div id="feedback-icon" class="text-4xl">💡</div>
+                <p id="feedback-text" class="text-base sm:text-lg font-bold text-amber-900">Good try! Remember, 2 × 5 means 2 groups of 5.</p>
+                <button id="btn-try-again" class="stone-btn stone-btn-green px-6 py-2 text-lg font-bold text-white rounded-xl">
+                    Try Again! 🌱
+                </button>
+            </div>
+        </div>
+
+        <!-- LEVEL COMPLETE / SQUISHY MACHINE REWARD SCREEN -->
+        <div id="screen-reward" class="stone-card w-full p-6 text-center space-y-5 my-auto hidden">
+            <div class="text-5xl">🎉 🦴 🦕</div>
+            <h2 class="text-3xl font-extrabold text-amber-900" id="reward-title">Level Complete!</h2>
+            <p class="text-lg text-amber-800 font-medium">You solved all level questions! Time to activate Your 67 Squishy Machine!</p>
+
+            <div class="my-4 p-6 bg-amber-100/90 rounded-3xl border-4 border-amber-800/30 flex flex-col items-center justify-center space-y-3">
+                <div id="machine-big" class="text-8xl transform transition-all duration-300">🎰</div>
+                <div id="squished-prize" class="text-6xl hidden">💎</div>
+                <p id="squish-status" class="text-xl font-bold text-orange-800">Press the big lever to SQUISH!</p>
+            </div>
+
+            <button id="btn-squish-lever" class="stone-btn w-full py-4 text-2xl font-black text-white rounded-2xl shadow-lg">
+                PULL THE SQUISH LEVER! ⚙️
+            </button>
+            
+            <button id="btn-start-minigame" class="stone-btn stone-btn-green w-full py-4 text-2xl font-black text-white rounded-2xl hidden">
+                PLAY CAR DODGER MINI-GAME! 🚗💨
+            </button>
+        </div>
+
+        <!-- MINI-GAME SCREEN (CAR DODGER) -->
+        <div id="screen-game" class="stone-card w-full p-4 text-center space-y-3 my-auto hidden">
+            <div class="flex justify-between items-center text-amber-900 font-bold px-2">
+                <span class="text-lg">🏎️ Cave Dodge!</span>
+                <span id="game-timer" class="bg-orange-600 text-white px-3 py-1 rounded-full text-base">Time Left: 20s</span>
+                <span id="game-score" class="bg-amber-800 text-amber-100 px-3 py-1 rounded-full text-base">Score: 0</span>
+            </div>
+
+            <!-- Game Canvas Container -->
+            <div class="relative w-full overflow-hidden rounded-2xl border-4 border-amber-900 bg-stone-800">
+                <canvas id="game-canvas" class="w-full h-64 sm:h-80 block"></canvas>
+            </div>
+
+            <!-- On-Screen Touch Controls for Mobile/Tablet -->
+            <div class="grid grid-cols-2 gap-4 pt-1">
+                <button id="btn-move-left" class="stone-btn stone-btn-blue py-4 text-3xl font-black text-white rounded-2xl select-none">
+                    👈 LEFT
+                </button>
+                <button id="btn-move-right" class="stone-btn stone-btn-blue py-4 text-3xl font-black text-white rounded-2xl select-none">
+                    RIGHT 👉
+                </button>
+            </div>
+            <p class="text-xs font-semibold text-amber-800">Tip: You can also use Left & Right arrow keys on your keyboard!</p>
+        </div>
+
+        <!-- FINAL VICTORY SCREEN -->
+        <div id="screen-victory" class="stone-card w-full p-6 sm:p-8 text-center space-y-6 my-auto hidden">
+            <div class="text-7xl float-anim">🏆</div>
+            <h2 class="text-3xl sm:text-4xl font-black text-amber-900">ULTIMATE CHAMPION!</h2>
+            <p class="text-lg text-amber-800 font-medium">
+                You mastered all 15 times tables questions and squished every dinosaur prize! Your 67 Squishy Machine is super proud of you!
+            </p>
+
+            <div class="bg-amber-100 p-4 rounded-2xl border-2 border-amber-800/40 space-y-2">
+                <p class="text-amber-900 font-bold text-lg">Your Fossil Collection:</p>
+                <div id="victory-prizes" class="text-4xl flex flex-wrap justify-center gap-3 py-2">
+                    🦕 💎 🥚 🦴 🦖 ☄️
+                </div>
+            </div>
+
+            <button id="btn-restart" class="stone-btn stone-btn-green w-full py-4 text-2xl font-black text-white rounded-2xl">
+                PLAY AGAIN! 🔄
+            </button>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="w-full max-w-3xl mx-auto text-center py-2 text-xs font-bold text-amber-200/80">
+        Safe, Encouraging & Kid-Friendly • Year 3 Maths Fun
+    </footer>
+
+    <script>
+        // Built-in Web Audio API Synthesizer (No external sound files required)
+        class SoundFX {
+            constructor() {
+                this.ctx = null;
+                this.muted = false;
+            }
+
+            init() {
+                if (!this.ctx) {
+                    const AudioContext = window.AudioContext || window.webkitAudioContext;
+                    this.ctx = new AudioContext();
+                }
+                if (this.ctx.state === 'suspended') {
+                    this.ctx.resume();
+                }
+            }
+
+            playPop() {
+                if (this.muted) return;
+                this.init();
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(400, this.ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(800, this.ctx.currentTime + 0.08);
+                gain.gain.setValueAtTime(0.3, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.08);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.08);
+            }
+
+            playSquish() {
+                if (this.muted) return;
+                this.init();
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(150, this.ctx.currentTime);
+                osc.frequency.linearRampToValueAtTime(350, this.ctx.currentTime + 0.15);
+                osc.frequency.linearRampToValueAtTime(120, this.ctx.currentTime + 0.3);
+                gain.gain.setValueAtTime(0.4, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.3);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.3);
+            }
+
+            playSuccess() {
+                if (this.muted) return;
+                this.init();
+                const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+                notes.forEach((freq, index) => {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.value = freq;
+                    const startTime = this.ctx.currentTime + (index * 0.08);
+                    gain.gain.setValueAtTime(0.2, startTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.25);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start(startTime);
+                    osc.stop(startTime + 0.25);
+                });
+            }
+
+            playWrong() {
+                if (this.muted) return;
+                this.init();
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(220, this.ctx.currentTime);
+                osc.frequency.linearRampToValueAtTime(180, this.ctx.currentTime + 0.2);
+                gain.gain.setValueAtTime(0.2, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.2);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.2);
+            }
+
+            playSwoosh() {
+                if (this.muted) return;
+                this.init();
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(300, this.ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(150, this.ctx.currentTime + 0.1);
+                gain.gain.setValueAtTime(0.15, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.1);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.1);
+            }
+        }
+
+        const sound = new SoundFX();
+
+        // 15 Year 3 Maths Questions across 5 progressive levels
+        const quizData = [
+            // LEVEL 1: Easy 2x, 5x, 10x
+            { level: 1, q: "2 × 5 = ?", correct: 10, options: [8, 10, 12], explanation: "2 groups of 5 makes 10! (5 + 5 = 10)", reward: "Baby Dino Egg 🥚" },
+            { level: 1, q: "5 × 3 = ?", correct: 15, options: [15, 10, 20], explanation: "5 groups of 3 makes 15! (5, 10, 15)", reward: "Golden Amber 💎" },
+            { level: 1, q: "10 × 2 = ?", correct: 20, options: [12, 20, 25], explanation: "10 groups of 2 makes 20!", reward: "Cave Fossil 🦴" },
+
+            // LEVEL 2: 2x and 10x focus
+            { level: 2, q: "2 × 7 = ?", correct: 14, options: [12, 14, 16], explanation: "Double 7 is 14! (7 + 7 = 14)", reward: "Friendly Stegosaurus 🦕" },
+            { level: 2, q: "10 × 4 = ?", correct: 40, options: [30, 40, 50], explanation: "10 times 4 is 40!", reward: "Volcano Stone 🌋" },
+            { level: 2, q: "2 × 9 = ?", correct: 18, options: [16, 18, 20], explanation: "Double 9 is 18!", reward: "Squishy Triceratops 🦏" },
+
+            // LEVEL 3: 5x and 3x tables
+            { level: 3, q: "5 × 6 = ?", correct: 30, options: [25, 30, 35], explanation: "5 times 6 is 30! Count by 5s six times.", reward: "Sparkly Crystal 🔮" },
+            { level: 3, q: "3 × 3 = ?", correct: 9, options: [6, 9, 12], explanation: "3 groups of 3 is 9! (3 + 3 + 3 = 9)", reward: "Dino Footprint 🐾" },
+            { level: 3, q: "3 × 4 = ?", correct: 12, options: [10, 12, 15], explanation: "3 times 4 is 12!", reward: "Prehistoric Shell 🐚" },
+
+            // LEVEL 4: 3x and 4x tables
+            { level: 4, q: "4 × 4 = ?", correct: 16, options: [12, 16, 20], explanation: "4 groups of 4 equals 16!", reward: "Mammoth Tusk 🦣" },
+            { level: 4, q: "3 × 6 = ?", correct: 18, options: [15, 18, 21], explanation: "3 times 6 is 18!", reward: "Pterodactyl Wing 🦅" },
+            { level: 4, q: "4 × 5 = ?", correct: 20, options: [15, 20, 25], explanation: "4 groups of 5 makes 20!", reward: "Golden Bone 🦴" },
+
+            // LEVEL 5: Mixed 3x, 4x, 10x challenge
+            { level: 5, q: "4 × 8 = ?", correct: 32, options: [28, 32, 36], explanation: "4 times 8 equals 32!", reward: "Super Squishy T-Rex 🦖" },
+            { level: 5, q: "3 × 8 = ?", correct: 24, options: [21, 24, 27], explanation: "3 times 8 is 24!", reward: "Ancient Star Gem ⭐" },
+            { level: 5, q: "4 × 10 = ?", correct: 40, options: [30, 40, 50], explanation: "4 times 10 is 40! Great work!", reward: "Golden Crown 👑" }
+        ];
+
+        let currentQuestionIndex = 0;
+        let scoreGems = 0;
+        let currentLevel = 1;
+        let collectedPrizes = [];
+
+        // UI Screens
+        const screenStart = document.getElementById('screen-start');
+        const screenQuiz = document.getElementById('screen-quiz');
+        const screenReward = document.getElementById('screen-reward');
+        const screenGame = document.getElementById('screen-game');
+        const screenVictory = document.getElementById('screen-victory');
+
+        // Quiz UI Elements
+        const quizLevelBadge = document.getElementById('quiz-level-badge');
+        const quizScoreBadge = document.getElementById('quiz-score-badge');
+        const quizProgress = document.getElementById('quiz-progress');
+        const questionText = document.getElementById('question-text');
+        const questionSubtext = document.getElementById('question-subtext');
+        const answersContainer = document.getElementById('answers-container');
+        const rewardName = document.getElementById('reward-name');
+        const squishyMachineMini = document.getElementById('squishy-machine-mini');
+        const feedbackBox = document.getElementById('feedback-box');
+        const feedbackText = document.getElementById('feedback-text');
+        const btnTryAgain = document.getElementById('btn-try-again');
+
+        // Audio Toggle
+        const audioBtn = document.getElementById('audio-toggle');
+        audioBtn.addEventListener('click', () => {
+            sound.muted = !sound.muted;
+            audioBtn.innerText = sound.muted ? "🔇" : "🔊";
+            sound.playPop();
+        });
+
+        function showScreen(screen) {
+            [screenStart, screenQuiz, screenReward, screenGame, screenVictory].forEach(s => s.classList.add('hidden'));
+            screen.classList.remove('hidden');
+        }
+
+        document.getElementById('btn-start').addEventListener('click', () => {
+            sound.playPop();
+            currentQuestionIndex = 0;
+            scoreGems = 0;
+            collectedPrizes = [];
+            loadQuestion();
+            showScreen(screenQuiz);
+        });
+
+        function loadQuestion() {
+            feedbackBox.classList.add('hidden');
+            answersContainer.classList.remove('hidden');
+
+            const qData = quizData[currentQuestionIndex];
+            currentLevel = qData.level;
+
+            quizLevelBadge.innerText = `Level ${currentLevel} of 5`;
+            quizScoreBadge.innerText = `⭐ Gems: ${scoreGems}`;
+            quizProgress.style.width = `${((currentQuestionIndex + 1) / quizData.length) * 100}%`;
+
+            questionSubtext.innerText = `Level ${currentLevel} - Question ${(currentQuestionIndex % 3) + 1} of 3`;
+            questionText.innerText = qData.q;
+            rewardName.innerText = qData.reward;
+
+            // Animate mini machine
+            squishyMachineMini.classList.add('squish-anim');
+            setTimeout(() => squishyMachineMini.classList.remove('squish-anim'), 600);
+
+            // Populate answers
+            answersContainer.innerHTML = '';
+            // Shuffle options slightly or present in order
+            qData.options.forEach(opt => {
+                const btn = document.createElement('button');
+                btn.className = 'stone-btn py-4 text-2xl font-bold text-white rounded-2xl w-full text-center tracking-wide';
+                btn.innerText = opt;
+                btn.addEventListener('click', () => handleAnswer(opt, qData));
+                answersContainer.appendChild(btn);
+            });
+        }
+
+        function handleAnswer(selected, qData) {
+            if (selected === qData.correct) {
+                // Correct Answer!
+                sound.playSuccess();
+                scoreGems += 10;
+                collectedPrizes.push(qData.reward);
+
+                // Check if completed a level (every 3 questions)
+                if ((currentQuestionIndex + 1) % 3 === 0) {
+                    setTimeout(showLevelRewardScreen, 400);
+                } else {
+                    currentQuestionIndex++;
+                    setTimeout(loadQuestion, 400);
+                }
+            } else {
+                // Wrong Answer - Kind Retry
+                sound.playWrong();
+                answersContainer.classList.add('hidden');
+                feedbackText.innerText = `Almost! ${qData.explanation}`;
+                feedbackBox.classList.remove('hidden');
+            }
+        }
+
+        btnTryAgain.addEventListener('click', () => {
+            sound.playPop();
+            feedbackBox.classList.add('hidden');
+            answersContainer.classList.remove('hidden');
+        });
+
+        const machineBig = document.getElementById('machine-big');
+        const squishedPrize = document.getElementById('squished-prize');
+        const squishStatus = document.getElementById('squish-status');
+        const btnSquishLever = document.getElementById('btn-squish-lever');
+        const btnStartMinigame = document.getElementById('btn-start-minigame');
+
+        function showLevelRewardScreen() {
+            showScreen(screenReward);
+            document.getElementById('reward-title').innerText = `Level ${currentLevel} Complete! 🎉`;
+            machineBig.classList.remove('hidden');
+            squishedPrize.classList.add('hidden');
+            squishStatus.innerText = "Pull the lever to squish out your level reward!";
+            btnSquishLever.classList.remove('hidden');
+            btnStartMinigame.classList.add('hidden');
+        }
+
+        btnSquishLever.addEventListener('click', () => {
+            sound.playSquish();
+            btnSquishLever.classList.add('hidden');
+            machineBig.classList.add('squish-anim');
+
+            setTimeout(() => {
+                machineBig.classList.remove('squish-anim');
+                machineBig.classList.add('hidden');
+                
+                // Display prize
+                const prizes = ['🦕', '💎', '🦖', '👑', '⚡'];
+                const prize = prizes[(currentLevel - 1) % prizes.length];
+                squishedPrize.innerText = prize;
+                squishedPrize.classList.remove('hidden');
+                squishStatus.innerText = `SQUISHED! You won a Level ${currentLevel} Treasure!`;
+                
+                sound.playSuccess();
+                if (window.confetti) {
+                    confetti({ particleCount: 50, spread: 60, origin: { y: 0.6 } });
+                }
+
+                btnStartMinigame.classList.remove('hidden');
+            }, 800);
+        });
+
+        btnStartMinigame.addEventListener('click', () => {
+            sound.playPop();
+            startCarDodgerGame();
+        });
+
+        const canvas = document.getElementById('game-canvas');
+        const ctx = canvas.getContext('2d');
+        const gameTimerEl = document.getElementById('game-timer');
+        const gameScoreEl = document.getElementById('game-score');
+
+        let gameLoopId = null;
+        let gameTimeLeft = 25; // 25 seconds mini-game
+        let gameScore = 0;
+        let carX = 0;
+        let carWidth = 50;
+        let carHeight = 70;
+        let obstacles = [];
+        let keys = { left: false, right: false };
+        let timerInterval = null;
+
+        function startCarDodgerGame() {
+            showScreen(screenGame);
+            
+            // Resize canvas resolution
+            canvas.width = canvas.parentElement.clientWidth;
+            canvas.height = canvas.parentElement.clientHeight || 280;
+
+            carX = canvas.width / 2 - carWidth / 2;
+            obstacles = [];
+            gameScore = 0;
+            gameTimeLeft = 25;
+            gameScoreEl.innerText = `Score: ${gameScore}`;
+            gameTimerEl.innerText = `Time Left: ${gameTimeLeft}s`;
+
+            // Controls listeners
+            window.addEventListener('keydown', handleKeyDown);
+            window.addEventListener('keyup', handleKeyUp);
+
+            // Timer countdown
+            clearInterval(timerInterval);
+            timerInterval = setInterval(() => {
+                gameTimeLeft--;
+                gameTimerEl.innerText = `Time Left: ${gameTimeLeft}s`;
+                if (gameTimeLeft <= 0) {
+                    endCarDodgerGame();
+                }
+            }, 1000);
+
+            lastTime = performance.now();
+            requestAnimationFrame(gameLoop);
+        }
+
+        function handleKeyDown(e) {
+            if (e.key === 'ArrowLeft' || e.key === 'a') keys.left = true;
+            if (e.key === 'ArrowRight' || e.key === 'd') keys.right = true;
+        }
+
+        function handleKeyUp(e) {
+            if (e.key === 'ArrowLeft' || e.key === 'a') keys.left = false;
+            if (e.key === 'ArrowRight' || e.key === 'd') keys.right = false;
+        }
+
+        // Mobile touch controls
+        const btnLeft = document.getElementById('btn-move-left');
+        const btnRight = document.getElementById('btn-move-right');
+
+        btnLeft.addEventListener('touchstart', (e) => { e.preventDefault(); keys.left = true; sound.playSwoosh(); });
+        btnLeft.addEventListener('touchend', (e) => { e.preventDefault(); keys.left = false; });
+        btnLeft.addEventListener('mousedown', () => { keys.left = true; sound.playSwoosh(); });
+        btnLeft.addEventListener('mouseup', () => { keys.left = false; });
+
+        btnRight.addEventListener('touchstart', (e) => { e.preventDefault(); keys.right = true; sound.playSwoosh(); });
+        btnRight.addEventListener('touchend', (e) => { e.preventDefault(); keys.right = false; });
+        btnRight.addEventListener('mousedown', () => { keys.right = true; sound.playSwoosh(); });
+        btnRight.addEventListener('mouseup', () => { keys.right = false; });
+
+        let lastTime = 0;
+        let obstacleSpawnTimer = 0;
+
+        function gameLoop(now) {
+            const dt = (now - lastTime) / 1000;
+            lastTime = now;
+
+            // Clear Canvas
+            ctx.fillStyle = '#2d1e10';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Draw Road Markings (Stone Age Dirt Track)
+            ctx.strokeStyle = '#523820';
+            ctx.lineWidth = 6;
+            ctx.setLineDash([20, 20]);
+            ctx.beginPath();
+            ctx.moveTo(canvas.width / 2, 0);
+            ctx.lineTo(canvas.width / 2, canvas.height);
+            ctx.stroke();
+            ctx.setLineDash([]);
+
+            // Move Car
+            const carSpeed = 320;
+            if (keys.left && carX > 10) carX -= carSpeed * dt;
+            if (keys.right && carX < canvas.width - carWidth - 10) carX += carSpeed * dt;
+
+            // Draw Prehistoric Car (Emoji / Vector Style)
+            ctx.font = '45px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText('🏎️', carX + carWidth / 2, canvas.height - 15);
+
+            // Spawn Obstacles (Boulders / Dinosaurs)
+            obstacleSpawnTimer += dt;
+            if (obstacleSpawnTimer > 0.7) {
+                obstacleSpawnTimer = 0;
+                const types = ['🪨', '☄️', '🦴', '🦖'];
+                const randomType = types[Math.floor(Math.random() * types.length)];
+                const randomX = Math.random() * (canvas.width - 50) + 25;
+                obstacles.push({ x: randomX, y: -30, speed: 180 + Math.random() * 100, type: randomType });
+            }
+
+            // Update & Draw Obstacles
+            for (let i = obstacles.length - 1; i >= 0; i--) {
+                let obs = obstacles[i];
+                obs.y += obs.speed * dt;
+
+                // Draw obstacle
+                ctx.fillText(obs.type, obs.x, obs.y);
+
+                // Check simple collision
+                const carY = canvas.height - 50;
+                const dist = Math.hypot(carX + carWidth / 2 - obs.x, carY - obs.y);
+                if (dist < 35) {
+                    // Dodged closely or hit gently
+                    sound.playWrong();
+                    obs.y = canvas.height + 100; // Remove obstacle
+                    gameScore = Math.max(0, gameScore - 5);
+                    gameScoreEl.innerText = `Score: ${gameScore}`;
+                } else if (obs.y > canvas.height + 20) {
+                    // Successfully Dodged!
+                    gameScore += 10;
+                    gameScoreEl.innerText = `Score: ${gameScore}`;
+                    obstacles.splice(i, 1);
+                }
+            }
+
+            if (gameTimeLeft > 0) {
+                gameLoopId = requestAnimationFrame(gameLoop);
+            }
+        }
+
+        function endCarDodgerGame() {
+            clearInterval(timerInterval);
+            window.removeEventListener('keydown', handleKeyDown);
+            window.removeEventListener('keyup', handleKeyUp);
+
+            sound.playSuccess();
+
+            // Advance Quiz
+            currentQuestionIndex++;
+
+            if (currentQuestionIndex >= quizData.length) {
+                // Game Finished Entirely!
+                showVictoryScreen();
+            } else {
+                // Return to Next Quiz Level
+                loadQuestion();
+                showScreen(screenQuiz);
+            }
+        }
+
+        function showVictoryScreen() {
+            showScreen(screenVictory);
+            if (window.confetti) {
+                confetti({ particleCount: 120, spread: 100, origin: { y: 0.5 } });
+            }
+
+            const victoryPrizes = document.getElementById('victory-prizes');
+            victoryPrizes.innerHTML = collectedPrizes.map(p => `<span>${p.split(' ').pop()}</span>`).join(' ');
+        }
+
+        document.getElementById('btn-restart').addEventListener('click', () => {
+            sound.playPop();
+            currentQuestionIndex = 0;
+            scoreGems = 0;
+            collectedPrizes = [];
+            showScreen(screenStart);
+        });
+
+        // Interactive Machine Graphic on Home Screen
+        document.getElementById('machine-graphic').addEventListener('click', function() {
+            sound.playSquish();
+            this.classList.add('squish-anim');
+            setTimeout(() => this.classList.remove('squish-anim'), 600);
+        });
+    </script>
+</body>
+</html>

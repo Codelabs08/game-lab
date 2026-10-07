@@ -1,0 +1,853 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Quiz &amp; Brick Breaker</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Fredoka & Grandstander -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Grandstander:wght@700;900&display=swap" rel="stylesheet">
+    <!-- Canvas Confetti Library -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+    <style>
+        body {
+            font-family: 'Fredoka', system-ui, -apple-system, sans-serif;
+            background-color: #0b0d12;
+            color: #ffffff;
+            touch-action: manipulation;
+            user-select: none;
+            -webkit-user-select: none;
+            overflow-x: hidden;
+        }
+
+        .font-heading {
+            font-family: 'Grandstander', cursive, sans-serif;
+        }
+
+        /* Bright neon glows & colorful button styles */
+        .glow-pink { box-shadow: 0 0 20px rgba(255, 41, 117, 0.6); }
+        .glow-cyan { box-shadow: 0 0 20px rgba(0, 240, 255, 0.6); }
+        .glow-green { box-shadow: 0 0 20px rgba(57, 255, 20, 0.6); }
+        .glow-yellow { box-shadow: 0 0 20px rgba(255, 230, 0, 0.6); }
+
+        .btn-neon-pink { background: linear-gradient(135deg, #ff2975, #f20056); border-bottom: 5px solid #a8003a; }
+        .btn-neon-pink:active { transform: translateY(3px); border-bottom-width: 2px; }
+
+        .btn-neon-cyan { background: linear-gradient(135deg, #00f0ff, #00a8ff); border-bottom: 5px solid #0066a8; }
+        .btn-neon-cyan:active { transform: translateY(3px); border-bottom-width: 2px; }
+
+        .btn-neon-green { background: linear-gradient(135deg, #39ff14, #10b981); border-bottom: 5px solid #047857; }
+        .btn-neon-green:active { transform: translateY(3px); border-bottom-width: 2px; }
+
+        .btn-neon-yellow { background: linear-gradient(135deg, #ffe600, #f59e0b); border-bottom: 5px solid #b45309; color: #111; }
+        .btn-neon-yellow:active { transform: translateY(3px); border-bottom-width: 2px; }
+
+        .btn-neon-purple { background: linear-gradient(135deg, #ad00ff, #7e22ce); border-bottom: 5px solid #581c87; }
+        .btn-neon-purple:active { transform: translateY(3px); border-bottom-width: 2px; }
+
+        .btn-neon-orange { background: linear-gradient(135deg, #ff6b00, #ea580c); border-bottom: 5px solid #9a3412; }
+        .btn-neon-orange:active { transform: translateY(3px); border-bottom-width: 2px; }
+
+        /* Bouncy animations */
+        @keyframes bounce-slow {
+            0%, 100% { transform: translateY(0) scale(1); }
+            50% { transform: translateY(-8px) scale(1.02); }
+        }
+        .animate-bounce-slow { animation: bounce-slow 2.5s infinite ease-in-out; }
+
+        @keyframes pulse-glow {
+            0%, 100% { filter: drop-shadow(0 0 10px rgba(255,230,0,0.8)); }
+            50% { filter: drop-shadow(0 0 25px rgba(255,0,128,0.9)); }
+        }
+        .animate-pulse-glow { animation: pulse-glow 2s infinite ease-in-out; }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #1a1d24; }
+        ::-webkit-scrollbar-thumb { background: #ff2975; border-radius: 4px; }
+
+        canvas {
+            touch-action: none;
+            background: #0f1117;
+            border-radius: 1rem;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between items-center p-3 md:p-6 bg-gradient-to-b from-gray-950 via-gray-900 to-black text-white selection:bg-pink-500 selection:text-white">
+
+    <header class="w-full max-w-3xl flex justify-between items-center bg-gray-900/80 backdrop-blur border-2 border-pink-500/40 p-3 md:p-4 rounded-2xl shadow-lg mb-4">
+        <div class="flex items-center space-x-2">
+            <span class="text-3xl md:text-4xl animate-bounce-slow">🦴</span>
+            <div>
+                <h1 class="text-xl md:text-3xl font-heading font-black tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-pink-400 via-yellow-300 to-cyan-400 drop-shadow">
+                    ИГРА HERO
+                </h1>
+                <p class="text-xs md:text-sm text-cyan-300 font-bold">Приключение в Каменном Веке</p>
+            </div>
+        </div>
+
+        <div class="flex items-center space-x-3">
+            <div class="bg-gray-800/90 border border-yellow-400/50 px-3 py-1.5 rounded-xl text-center shadow">
+                <span class="text-xs text-yellow-400 block font-bold leading-none">ОЧКИ</span>
+                <span id="score-display" class="text-lg md:text-2xl font-black text-yellow-300 leading-none">0</span>
+            </div>
+            <button id="sound-btn" onclick="toggleSound()" class="bg-gray-800 border border-cyan-400/50 p-2.5 rounded-xl hover:bg-gray-700 transition text-xl" title="Включить / Выключить звук">
+                🔊
+            </button>
+        </div>
+    </header>
+
+    <main class="w-full max-w-3xl flex-1 flex flex-col justify-center items-center relative my-2">
+
+        <!-- ЭКРАН 1: ПРИВЕТСТВИЕ -->
+        <section id="screen-welcome" class="w-full bg-gray-900/90 border-2 border-cyan-500/40 p-6 md:p-8 rounded-3xl text-center shadow-2xl flex flex-col items-center">
+            <div class="text-6xl md:text-7xl mb-3 animate-pulse-glow">🦣</div>
+            <h2 class="text-2xl md:text-4xl font-heading font-black text-yellow-300 mb-2">Привет, Исследователь!</h2>
+            <p class="text-gray-300 text-sm md:text-base max-w-md mb-6 leading-relaxed">
+                Отправляйся в путешествие во времени вместе с героем книги <span class="text-pink-400 font-bold">«Stone Age Boy»</span>! Пройди все 5 уровней викторины по английскому языку и разблокируй супер-игру: <span class="text-cyan-300 font-bold">«РАЗБЕЙ КИРПИЧИКИ»</span>! 🌟
+            </p>
+
+            <div class="grid grid-cols-2 gap-3 w-full max-w-xs mb-6 text-xs md:text-sm font-bold text-gray-300">
+                <div class="bg-gray-800/80 p-3 rounded-xl border border-pink-500/30 flex items-center justify-center gap-2">
+                    <span>🎯</span> 15 вопросов
+                </div>
+                <div class="bg-gray-800/80 p-3 rounded-xl border border-yellow-500/30 flex items-center justify-center gap-2">
+                    <span>⭐</span> 5 уровней
+                </div>
+                <div class="bg-gray-800/80 p-3 rounded-xl border border-green-500/30 flex items-center justify-center gap-2">
+                    <span>💡</span> Умные подсказки
+                </div>
+                <div class="bg-gray-800/80 p-3 rounded-xl border border-cyan-500/30 flex items-center justify-center gap-2">
+                    <span>🎮</span> Приз Арканоид
+                </div>
+            </div>
+
+            <button onclick="startQuiz()" class="w-full max-w-xs btn-neon-pink text-white font-heading font-black text-xl md:text-2xl py-4 rounded-2xl shadow-xl transition hover:scale-105 active:scale-95 flex items-center justify-center gap-3">
+                <span>НАЧАТЬ ИГРУ</span> 🚀
+            </button>
+        </section>
+
+        <!-- ЭКРАН 2: ВИКТОРИНА -->
+        <section id="screen-quiz" class="w-full bg-gray-900/90 border-2 border-pink-500/40 p-4 md:p-6 rounded-3xl shadow-2xl hidden flex-col">
+            <!-- Заголовок уровня и прогресс -->
+            <div class="flex justify-between items-center mb-3">
+                <div>
+                    <span id="level-badge" class="bg-gradient-to-r from-pink-500 to-purple-600 text-white text-xs md:text-sm font-black px-3 py-1 rounded-full uppercase tracking-wider">
+                        Уровень 1
+                    </span>
+                    <span id="level-title" class="text-xs md:text-sm text-cyan-300 font-bold ml-2">Слова Каменного Века</span>
+                </div>
+                <span id="question-tracker" class="text-xs md:text-sm text-yellow-300 font-bold bg-gray-800 px-3 py-1 rounded-full border border-yellow-500/30">
+                    Вопрос 1 / 15
+                </span>
+            </div>
+
+            <!-- Шкала прогресса -->
+            <div class="w-full bg-gray-800 h-3 rounded-full overflow-hidden mb-5 border border-gray-700">
+                <div id="progress-bar" class="h-full bg-gradient-to-r from-cyan-400 via-pink-500 to-yellow-400 transition-all duration-500 rounded-full" style="width: 6.66%;"></div>
+            </div>
+
+            <!-- Карточка вопроса -->
+            <div class="bg-gray-800/90 border-2 border-cyan-400/30 p-5 md:p-6 rounded-2xl mb-5 shadow-inner text-center">
+                <div id="question-icon" class="text-4xl md:text-5xl mb-2">🏔️</div>
+                <h3 id="question-text" class="text-lg md:text-2xl font-bold text-white leading-snug">
+                    Загрузка вопроса...
+                </h3>
+            </div>
+
+            <!-- Варианты ответов -->
+            <div id="options-container" class="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4 mb-4">
+                <!-- Кнопки вставляются через JS -->
+            </div>
+
+            <!-- Окно с подсказкой -->
+            <div id="feedback-box" class="hidden p-3 md:p-4 rounded-xl text-center text-sm md:text-base font-bold animate-bounce-slow">
+                <!-- Подсказка -->
+            </div>
+        </section>
+
+        <!-- ЭКРАН 3: ПОЗДРАВЛЕНИЕ С УРОВНЕМ -->
+        <section id="screen-level-complete" class="w-full bg-gray-900/95 border-2 border-yellow-400 p-6 md:p-8 rounded-3xl text-center shadow-2xl hidden flex-col items-center">
+            <div class="text-6xl md:text-7xl mb-2">🎉</div>
+            <h2 class="text-2xl md:text-4xl font-heading font-black text-yellow-300 mb-1">
+                ОТЛИЧНО, ВЕРОНИКА!
+            </h2>
+            <p id="level-clear-subtitle" class="text-lg md:text-xl font-bold text-pink-400 mb-4">
+                Уровень 1 пройден!
+            </p>
+
+            <div class="flex justify-center items-center space-x-2 my-4">
+                <span class="text-4xl md:text-5xl animate-bounce" style="animation-delay: 0s;">⭐</span>
+                <span class="text-5xl md:text-6xl animate-bounce" style="animation-delay: 0.2s;">🌟</span>
+                <span class="text-4xl md:text-5xl animate-bounce" style="animation-delay: 0.4s;">⭐</span>
+            </div>
+
+            <div class="bg-gray-800/80 p-4 rounded-2xl border border-yellow-400/30 w-full max-w-xs my-4">
+                <p class="text-xs text-gray-400 font-bold uppercase">Текущие очки</p>
+                <p id="modal-score" class="text-3xl font-black text-yellow-300">30 Очков</p>
+            </div>
+
+            <button id="next-level-btn" onclick="nextLevel()" class="w-full max-w-xs btn-neon-green text-white font-heading font-black text-xl py-4 rounded-2xl shadow-lg transition hover:scale-105 active:scale-95 flex items-center justify-center gap-2">
+                <span>ПРОДОЛЖИТЬ</span> ➡️
+            </button>
+        </section>
+
+        <!-- ЭКРАН 4: ПРИЗОВАЯ ИГРА (BRICK BREAKER) -->
+        <section id="screen-brick-breaker" class="w-full bg-gray-900/90 border-2 border-yellow-400/50 p-4 rounded-3xl shadow-2xl hidden flex-col items-center">
+            <div class="w-full flex justify-between items-center mb-3 px-2">
+                <div>
+                    <h2 class="text-lg md:text-2xl font-heading font-black text-yellow-300 flex items-center gap-2">
+                        <span>🏆</span> ПРИЗ: РАЗБЕЙ КИРПИЧИКИ
+                    </h2>
+                    <p class="text-xs text-cyan-300 font-bold">Разбивай древние камни платформой и шариком!</p>
+                </div>
+                <div class="text-right">
+                    <span class="text-xs text-gray-400 font-bold block">СЧЕТ АРКАДЫ</span>
+                    <span id="bb-score" class="text-lg md:text-xl font-black text-green-400">0</span>
+                </div>
+            </div>
+
+            <!-- Холст Canvas -->
+            <div class="relative w-full flex justify-center items-center">
+                <canvas id="bb-canvas" class="w-full max-w-lg h-80 sm:h-96 border-2 border-cyan-500/40 rounded-2xl shadow-inner"></canvas>
+                
+                <!-- Оверлей победы/проигрыша -->
+                <div id="bb-overlay" class="absolute inset-0 bg-black/80 rounded-2xl backdrop-blur-sm flex flex-col justify-center items-center p-6 text-center hidden">
+                    <h3 id="bb-overlay-title" class="text-2xl md:text-4xl font-heading font-black text-yellow-300 mb-2">ПОБЕДА! 🎉</h3>
+                    <p id="bb-overlay-desc" class="text-sm md:text-base text-gray-200 mb-6 font-bold">Ты разбила все кирпичики Каменного Века!</p>
+                    <button onclick="resetBrickBreaker()" class="btn-neon-yellow text-black font-heading font-black text-lg px-6 py-3 rounded-xl shadow-lg hover:scale-105 active:scale-95">
+                        СГРАТЬ ЕЩЁ РАЗ 🔄
+                    </button>
+                </div>
+            </div>
+
+            <!-- Инструкции управления -->
+            <div class="mt-3 w-full max-w-lg flex justify-between items-center bg-gray-800/80 px-4 py-2 rounded-xl text-xs text-gray-300 border border-gray-700">
+                <span>👈 Двигай мышкой, пальцем или стрелочками 👉</span>
+                <button onclick="returnToQuizMenu()" class="text-xs font-bold text-pink-400 hover:underline">В меню 🔄</button>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="w-full max-w-3xl text-center py-2 text-xs text-gray-500 font-bold flex justify-between items-center px-2">
+        <span>Безопасно для детей 🛡️</span>
+        <span>Английский язык • 3 Класс 📚</span>
+    </footer>
+
+    <script>
+        let soundEnabled = true;
+        let audioCtx = null;
+
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        }
+
+        function toggleSound() {
+            soundEnabled = !soundEnabled;
+            document.getElementById('sound-btn').innerText = soundEnabled ? '🔊' : '🔇';
+        }
+
+        function playSound(type) {
+            if (!soundEnabled) return;
+            try {
+                initAudio();
+                if (audioCtx.state === 'suspended') audioCtx.resume();
+
+                const now = audioCtx.currentTime;
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+
+                if (type === 'correct') {
+                    // Веселый победный звук
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(523.25, now);
+                    osc.frequency.setValueAtTime(659.25, now + 0.1);
+                    osc.frequency.setValueAtTime(783.99, now + 0.2);
+                    osc.frequency.setValueAtTime(1046.50, now + 0.3);
+                    gain.gain.setValueAtTime(0.2, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.6);
+                    osc.start(now);
+                    osc.stop(now + 0.6);
+                } else if (type === 'wrong') {
+                    // Мягкий звук при ошибке
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(300, now);
+                    osc.frequency.exponentialRampToValueAtTime(180, now + 0.3);
+                    gain.gain.setValueAtTime(0.2, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+                    osc.start(now);
+                    osc.stop(now + 0.3);
+                } else if (type === 'fanfare') {
+                    // Праздничная мелодия
+                    const notes = [440, 554.37, 659.25, 880];
+                    notes.forEach((freq, idx) => {
+                        const noteOsc = audioCtx.createOscillator();
+                        const noteGain = audioCtx.createGain();
+                        noteOsc.type = 'triangle';
+                        noteOsc.frequency.setValueAtTime(freq, now + idx * 0.12);
+                        noteGain.gain.setValueAtTime(0.2, now + idx * 0.12);
+                        noteGain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.12 + 0.3);
+                        noteOsc.connect(noteGain);
+                        noteGain.connect(audioCtx.destination);
+                        noteOsc.start(now + idx * 0.12);
+                        noteOsc.stop(now + idx * 0.12 + 0.3);
+                    });
+                } else if (type === 'bounce') {
+                    // Отскок мяча
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(400, now);
+                    osc.frequency.exponentialRampToValueAtTime(800, now + 0.08);
+                    gain.gain.setValueAtTime(0.15, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
+                    osc.start(now);
+                    osc.stop(now + 0.08);
+                } else if (type === 'pop') {
+                    // Разбивание кирпичика
+                    osc.type = 'square';
+                    osc.frequency.setValueAtTime(600, now);
+                    osc.frequency.exponentialRampToValueAtTime(1200, now + 0.06);
+                    gain.gain.setValueAtTime(0.1, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.06);
+                    osc.start(now);
+                    osc.stop(now + 0.06);
+                }
+            } catch (e) {
+                console.log('Ошибка аудио:', e);
+            }
+        }
+
+        const QUIZ_DATA = [
+            // УРОВЕНЬ 1: Простые слова (Stone Age Vocabulary)
+            {
+                level: 1,
+                levelTitle: "Простые слова",
+                question: "Как переводится на русский язык название книги «Stone Age Boy»?",
+                icon: "⌛",
+                options: ["Мальчик из будущего", "Мальчик Каменного Века", "Космический Мальчик", "Лесной Мальчик"],
+                answer: 1,
+                hint: "«Stone Age» означает Каменный Век! 🪨"
+            },
+            {
+                level: 1,
+                levelTitle: "Простые слова",
+                question: "Переведи на английский язык слово «Пещера»:",
+                icon: "⛰️",
+                options: ["Cave", "House", "Forest", "River"],
+                answer: 0,
+                hint: "Пещера по-английски пишется C-A-V-E! ⛰️"
+            },
+            {
+                level: 1,
+                levelTitle: "Простые слова",
+                question: "Какое из этих животных жил в Каменном Веке? Переведи «Bear»:",
+                icon: "🐻",
+                options: ["Заяц", "Медведь", "Волк", "Тигр"],
+                answer: 1,
+                hint: "«Bear» — это большой косолапый медведь! 🐻"
+            },
+
+            // УРОВЕНЬ 2: Вставь пропущенную букву (Fill in the blanks)
+            {
+                level: 2,
+                levelTitle: "Вставь букву",
+                question: "Какая буква пропущена в слове «Камень»? — ST _ NE",
+                icon: "🪨",
+                options: ["a", "o", "u", "e"],
+                answer: 1,
+                hint: "Правильное слово: STONE (буква O)! 🪨"
+            },
+            {
+                level: 2,
+                levelTitle: "Вставь букву",
+                question: "Какая буква пропущена в слове «Копьё»? — SP _ AR",
+                icon: "🗡️",
+                options: ["e", "i", "o", "u"],
+                answer: 0,
+                hint: "Копьё по-английски — SPEAR (пропущена буква E)! 📍"
+            },
+            {
+                level: 2,
+                levelTitle: "Вставь букву",
+                question: "Какая буква пропущена в слове «Огонь»? — F _ RE",
+                icon: "🔥",
+                options: ["a", "i", "e", "y"],
+                answer: 1,
+                hint: "Огонь по-английски — FIRE (пропущена буква I)! 🔥"
+            },
+
+            // УРОВЕНЬ 3: Сюжет книги и факты (Stone Age Life)
+            {
+                level: 3,
+                levelTitle: "Факты и Сюжет",
+                question: "Как звали девочку из Каменного Века, с которой познакомился мальчик?",
+                icon: "👧",
+                options: ["Om (Ом)", "Mia (Миа)", "Kate (Кейт)", "Ann (Энн)"],
+                answer: 0,
+                hint: "Её имя короткое и состоит из 2 букв: O-M (Ом)! 👧"
+            },
+            {
+                level: 3,
+                levelTitle: "Факты и Сюжет",
+                question: "Чем люди Каменного Века рисовали картинок на стенах пещеры?",
+                icon: "🎨",
+                options: ["Акварелью", "Углем и природными красками", "Фломастерами", "Мелками"],
+                answer: 1,
+                hint: "Они использовали уголь (charcoal) и естественные минералы! 🎨"
+            },
+            {
+                level: 3,
+                levelTitle: "Факты и Сюжет",
+                question: "Переведи слово «Mammoth»:",
+                icon: "🦣",
+                options: ["Слон", "Динзавр", "Мамонт", "Олень"],
+                answer: 2,
+                hint: "Mammoth — это огромный мохнатый Мамонт! 🦣"
+            },
+
+            // УРОВЕНЬ 4: Правописание (Spelling Check)
+            {
+                level: 4,
+                levelTitle: "Правописание (Spelling)",
+                question: "Выбери ПРАВИЛЬНО написанное слово «Друг»:",
+                icon: "🤝",
+                options: ["frend", "friend", "freind", "fryend"],
+                answer: 1,
+                hint: "Запомни: F - R - I - E - N - D (сначала I, потом E)! 🤝"
+            },
+            {
+                level: 4,
+                levelTitle: "Правописание (Spelling)",
+                question: "Выбери ПРАВИЛЬНО написанное слово «Пещера»:",
+                icon: "🏔️",
+                options: ["cave", "kave", "caev", "cayve"],
+                answer: 0,
+                hint: "Пишется через букву C: C - A - V - E! ⛰️"
+            },
+            {
+                level: 4,
+                levelTitle: "Правописание (Spelling)",
+                question: "Выбери ПРАВИЛЬНО написанное слово «Охотиться»:",
+                icon: "🏹",
+                options: ["hant", "hunte", "hunt", "huntt"],
+                answer: 2,
+                hint: "H - U - N - T (Hunt)! 🏹"
+            },
+
+            // УРОВЕНЬ 5: Простые предложения (English Grammar)
+            {
+                level: 5,
+                levelTitle: "Простые предложения",
+                question: "Вставь верное слово: He _____ in a cave. (Он живет в пещере)",
+                icon: "🏠",
+                options: ["live", "lives", "living", "liveded"],
+                answer: 1,
+                hint: "Для He / She мы добавляем окончание -S: LIVES! 🏠"
+            },
+            {
+                level: 5,
+                levelTitle: "Простые предложения",
+                question: "Переведи предложение: «They made fire.»",
+                icon: "🔥",
+                options: ["Они ели рыбу", "Они сделали огонь", "Они пошли спать", "Они нашли копье"],
+                answer: 1,
+                hint: "Made = сделали, Fire = огонь! 🔥"
+            },
+            {
+                level: 5,
+                levelTitle: "Простые предложения",
+                question: "Кем хотел стать мальчик, когда вырастет?",
+                icon: "🔍",
+                options: ["Archaeologist (Археологом)", "Pilot (Летчиком)", "Chef (Поваром)", "Driver (Водителем)"],
+                answer: 0,
+                hint: "Человек, который раскапывает древностям: Archaeologist! 🦴"
+            }
+        ];
+
+        let currentQuestionIdx = 0;
+        let score = 0;
+        const colorClasses = ['btn-neon-pink', 'btn-neon-cyan', 'btn-neon-yellow', 'btn-neon-purple', 'btn-neon-orange', 'btn-neon-green'];
+
+        function startQuiz() {
+            initAudio();
+            currentQuestionIdx = 0;
+            score = 0;
+            updateScoreDisplay();
+            
+            document.getElementById('screen-welcome').classList.add('hidden');
+            document.getElementById('screen-quiz').classList.remove('hidden');
+            document.getElementById('screen-quiz').classList.add('flex');
+            
+            renderQuestion();
+        }
+
+        function updateScoreDisplay() {
+            document.getElementById('score-display').innerText = score;
+        }
+
+        function renderQuestion() {
+            const q = QUIZ_DATA[currentQuestionIdx];
+            const currentLevel = q.level;
+
+            // Обновляем шапку уровня
+            document.getElementById('level-badge').innerText = `Уровень ${currentLevel}`;
+            document.getElementById('level-title').innerText = q.levelTitle;
+            document.getElementById('question-tracker').innerText = `Вопрос ${currentQuestionIdx + 1} / 15`;
+            
+            const progressPercent = ((currentQuestionIdx + 1) / 15) * 100;
+            document.getElementById('progress-bar').style.width = `${progressPercent}%`;
+
+            // Иконка и текст вопроса
+            document.getElementById('question-icon').innerText = q.icon;
+            document.getElementById('question-text').innerText = q.question;
+
+            // Прячем подсказку
+            const feedbackBox = document.getElementById('feedback-box');
+            feedbackBox.classList.add('hidden');
+            feedbackBox.className = 'hidden p-3 md:p-4 rounded-xl text-center text-sm md:text-base font-bold animate-bounce-slow';
+
+            // Генерация кнопок с ответами
+            const optionsContainer = document.getElementById('options-container');
+            optionsContainer.innerHTML = '';
+
+            q.options.forEach((optText, idx) => {
+                const btn = document.createElement('button');
+                const btnColor = colorClasses[idx % colorClasses.length];
+                btn.className = `${btnColor} text-white text-base md:text-lg font-bold p-4 rounded-2xl shadow-md transition hover:scale-102 active:scale-95 text-center flex items-center justify-center space-x-2`;
+                
+                btn.innerHTML = `<span>${optText}</span>`;
+                btn.onclick = () => handleAnswer(idx, btn);
+                optionsContainer.appendChild(btn);
+            });
+        }
+
+        function handleAnswer(selectedIdx, btnElement) {
+            const q = QUIZ_DATA[currentQuestionIdx];
+            const feedbackBox = document.getElementById('feedback-box');
+
+            if (selectedIdx === q.answer) {
+                // Правильный ответ!
+                playSound('correct');
+                score += 10;
+                updateScoreDisplay();
+
+                // Эффект конфетти
+                if (window.confetti) {
+                    confetti({
+                        particleCount: 30,
+                        spread: 60,
+                        origin: { y: 0.7 }
+                    });
+                }
+
+                feedbackBox.className = 'p-3 rounded-xl text-center font-black bg-green-500/20 border-2 border-green-400 text-green-300 block mb-4';
+                feedbackBox.innerHTML = '🌟 СУПЕР! Абсолютно верно! (+10 очков) 🎉';
+
+                const buttons = document.querySelectorAll('#options-container button');
+                buttons.forEach(b => b.disabled = true);
+
+                setTimeout(() => {
+                    currentQuestionIdx++;
+                    if (currentQuestionIdx % 3 === 0 && currentQuestionIdx > 0) {
+                        showLevelCompleteModal();
+                    } else if (currentQuestionIdx < QUIZ_DATA.length) {
+                        renderQuestion();
+                    }
+                }, 1100);
+
+            } else {
+                // Неправильный ответ — мягкая подсказка
+                playSound('wrong');
+                feedbackBox.className = 'p-3 rounded-xl text-center font-bold bg-yellow-500/20 border-2 border-yellow-400 text-yellow-300 block mb-4';
+                feedbackBox.innerHTML = `💡 <b>Подсказка:</b> ${q.hint} Попробуй ещё раз!`;
+                
+                btnElement.classList.add('opacity-50');
+            }
+        }
+
+        function showLevelCompleteModal() {
+            playSound('fanfare');
+            const completedLevel = Math.floor(currentQuestionIdx / 3);
+            
+            document.getElementById('screen-quiz').classList.add('hidden');
+            document.getElementById('screen-quiz').classList.remove('flex');
+            
+            const modal = document.getElementById('screen-level-complete');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+
+            document.getElementById('level-clear-subtitle').innerText = `Уровень ${completedLevel} Пройден!`;
+            document.getElementById('modal-score').innerText = `${score} Очков`;
+
+            if (window.confetti) {
+                confetti({
+                    particleCount: 100,
+                    spread: 80,
+                    origin: { y: 0.5 }
+                });
+            }
+
+            const nextBtn = document.getElementById('next-level-btn');
+            if (currentQuestionIdx >= QUIZ_DATA.length) {
+                nextBtn.innerHTML = `<span>ОТКРЫТЬ ИГРУ «АРКАНОИД»!</span> 🎮`;
+            } else {
+                nextBtn.innerHTML = `<span>ПЕРЕЙТИ НА УРОВЕНЬ ${completedLevel + 1}</span> ➡️️`;
+            }
+        }
+
+        function nextLevel() {
+            document.getElementById('screen-level-complete').classList.add('hidden');
+            document.getElementById('screen-level-complete').classList.remove('flex');
+
+            if (currentQuestionIdx >= QUIZ_DATA.length) {
+                startBrickBreaker();
+            } else {
+                document.getElementById('screen-quiz').classList.remove('hidden');
+                document.getElementById('screen-quiz').classList.add('flex');
+                renderQuestion();
+            }
+        }
+
+        function returnToQuizMenu() {
+            stopBrickBreaker();
+            document.getElementById('screen-brick-breaker').classList.add('hidden');
+            document.getElementById('screen-brick-breaker').classList.remove('flex');
+            document.getElementById('screen-welcome').classList.remove('hidden');
+        }
+
+        let canvas, ctx;
+        let bbAnimationId = null;
+        let bbScore = 0;
+
+        let paddle = { x: 0, y: 0, w: 90, h: 14, dx: 0, speed: 7 };
+        let ball = { x: 0, y: 0, radius: 8, dx: 4, dy: -4, speed: 4.5 };
+        let bricks = [];
+        const brickRowCount = 5;
+        const brickColumnCount = 6;
+        const brickColors = ['#ff2975', '#00f0ff', '#ffe600', '#39ff14', '#ad00ff'];
+
+        function startBrickBreaker() {
+            document.getElementById('screen-brick-breaker').classList.remove('hidden');
+            document.getElementById('screen-brick-breaker').classList.add('flex');
+
+            canvas = document.getElementById('bb-canvas');
+            ctx = canvas.getContext('2d');
+
+            const rect = canvas.getBoundingClientRect();
+            canvas.width = rect.width || 480;
+            canvas.height = rect.height || 360;
+
+            initBrickBreaker();
+            setupBBControls();
+
+            if (window.confetti) {
+                confetti({
+                    particleCount: 150,
+                    spread: 100,
+                    origin: { y: 0.4 }
+                });
+            }
+        }
+
+        function initBrickBreaker() {
+            bbScore = 0;
+            document.getElementById('bb-score').innerText = bbScore;
+            document.getElementById('bb-overlay').classList.add('hidden');
+
+            paddle.w = Math.max(70, canvas.width * 0.22);
+            paddle.h = 14;
+            paddle.x = (canvas.width - paddle.w) / 2;
+            paddle.y = canvas.height - 30;
+
+            ball.x = canvas.width / 2;
+            ball.y = paddle.y - 12;
+            ball.speed = 4.5;
+            ball.dx = (Math.random() > 0.5 ? 1 : -1) * ball.speed;
+            ball.dy = -ball.speed;
+
+            bricks = [];
+            const padding = 8;
+            const offsetTop = 35;
+            const offsetLeft = 15;
+            const brickWidth = (canvas.width - (offsetLeft * 2) - (padding * (brickColumnCount - 1))) / brickColumnCount;
+            const brickHeight = 20;
+
+            for (let r = 0; r < brickRowCount; r++) {
+                bricks[r] = [];
+                for (let c = 0; c < brickColumnCount; c++) {
+                    bricks[r][c] = {
+                        x: offsetLeft + c * (brickWidth + padding),
+                        y: offsetTop + r * (brickHeight + padding),
+                        w: brickWidth,
+                        h: brickHeight,
+                        status: 1,
+                        color: brickColors[r % brickColors.length]
+                    };
+                }
+            }
+
+            if (bbAnimationId) cancelAnimationFrame(bbAnimationId);
+            bbLoop();
+        }
+
+        function setupBBControls() {
+            const updatePaddlePos = (clientX) => {
+                const rect = canvas.getBoundingClientRect();
+                const relativeX = clientX - rect.left;
+                if (relativeX > 0 && relativeX < canvas.width) {
+                    paddle.x = Math.max(0, Math.min(canvas.width - paddle.w, relativeX - paddle.w / 2));
+                }
+            };
+
+            canvas.onmousemove = (e) => updatePaddlePos(e.clientX);
+            canvas.ontouchmove = (e) => {
+                if (e.touches.length > 0) {
+                    updatePaddlePos(e.touches[0].clientX);
+                }
+            };
+
+            window.onkeydown = (e) => {
+                if (e.key === 'ArrowRight' || e.key === 'Right') paddle.dx = paddle.speed;
+                else if (e.key === 'ArrowLeft' || e.key === 'Left') paddle.dx = -paddle.speed;
+            };
+            window.onkeyup = (e) => {
+                if (['ArrowRight', 'Right', 'ArrowLeft', 'Left'].includes(e.key)) paddle.dx = 0;
+            };
+        }
+
+        function bbLoop() {
+            paddle.x += paddle.dx;
+            if (paddle.x < 0) paddle.x = 0;
+            if (paddle.x + paddle.w > canvas.width) paddle.x = canvas.width - paddle.w;
+
+            ball.x += ball.dx;
+            ball.y += ball.dy;
+
+            if (ball.x - ball.radius < 0 || ball.x + ball.radius > canvas.width) {
+                ball.dx = -ball.dx;
+                playSound('bounce');
+            }
+
+            if (ball.y - ball.radius < 0) {
+                ball.dy = -ball.dy;
+                playSound('bounce');
+            }
+
+            if (
+                ball.y + ball.radius >= paddle.y &&
+                ball.y - ball.radius <= paddle.y + paddle.h &&
+                ball.x >= paddle.x &&
+                ball.x <= paddle.x + paddle.w
+            ) {
+                playSound('bounce');
+                const hitPoint = (ball.x - (paddle.x + paddle.w / 2)) / (paddle.w / 2);
+                ball.dx = hitPoint * ball.speed * 1.2;
+                ball.dy = -Math.abs(ball.dy);
+            }
+
+            if (ball.y + ball.radius > canvas.height) {
+                playSound('wrong');
+                showBBOverlay(false);
+                return;
+            }
+
+            let remainingBricks = 0;
+            for (let r = 0; r < brickRowCount; r++) {
+                for (let c = 0; c < brickColumnCount; c++) {
+                    const b = bricks[r][c];
+                    if (b.status === 1) {
+                        remainingBricks++;
+                        if (
+                            ball.x > b.x &&
+                            ball.x < b.x + b.w &&
+                            ball.y - ball.radius < b.y + b.h &&
+                            ball.y + ball.radius > b.y
+                        ) {
+                            ball.dy = -ball.dy;
+                            b.status = 0;
+                            playSound('pop');
+                            bbScore += 10;
+                            document.getElementById('bb-score').innerText = bbScore;
+                        }
+                    }
+                }
+            }
+
+            if (remainingBricks === 0) {
+                playSound('fanfare');
+                showBBOverlay(true);
+                return;
+            }
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            for (let r = 0; r < brickRowCount; r++) {
+                for (let c = 0; c < brickColumnCount; c++) {
+                    const b = bricks[r][c];
+                    if (b.status === 1) {
+                        ctx.fillStyle = b.color;
+                        ctx.shadowBlur = 8;
+                        ctx.shadowColor = b.color;
+                        ctx.beginPath();
+                        ctx.roundRect(b.x, b.y, b.w, b.h, 5);
+                        ctx.fill();
+                        ctx.shadowBlur = 0;
+                    }
+                }
+            }
+
+            ctx.fillStyle = '#00f0ff';
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = '#00f0ff';
+            ctx.beginPath();
+            ctx.roundRect(paddle.x, paddle.y, paddle.w, paddle.h, 7);
+            ctx.fill();
+
+            ctx.fillStyle = '#ffe600';
+            ctx.shadowColor = '#ffe600';
+            ctx.beginPath();
+            ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.shadowBlur = 0;
+
+            bbAnimationId = requestAnimationFrame(bbLoop);
+        }
+
+        function showBBOverlay(isWin) {
+            const overlay = document.getElementById('bb-overlay');
+            const title = document.getElementById('bb-overlay-title');
+            const desc = document.getElementById('bb-overlay-desc');
+
+            overlay.classList.remove('hidden');
+            if (isWin) {
+                title.innerText = 'ПОБЕДА! 🎉';
+                title.className = 'text-2xl md:text-4xl font-heading font-black text-yellow-300 mb-2';
+                desc.innerText = `Ура, Вероника! Ты разбила все кирпичики и набрала ${bbScore} очков!`;
+                if (window.confetti) confetti({ particleCount: 100, spread: 70 });
+            } else {
+                title.innerText = 'ПОЧТИ ПОЛУЧИЛОСЬ! 💥';
+                title.className = 'text-2xl md:text-4xl font-heading font-black text-pink-400 mb-2';
+                desc.innerText = `Ты набрала ${bbScore} очков в Арканоиде! Давай попробуем еще раз!`;
+            }
+        }
+
+        function resetBrickBreaker() {
+            initBrickBreaker();
+        }
+
+        function stopBrickBreaker() {
+            if (bbAnimationId) {
+                cancelAnimationFrame(bbAnimationId);
+            }
+        }
+    </script>
+</body>
+</html>

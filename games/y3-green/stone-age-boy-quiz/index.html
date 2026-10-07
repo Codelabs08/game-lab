@@ -1,0 +1,1001 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stone Age Boy Quiz</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@600;800;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Nunito', sans-serif;
+            background-color: #2c1d11;
+            background-image: radial-gradient(#4a321e 15%, transparent 16%), radial-gradient(#3d2716 15%, transparent 16%);
+            background-size: 60px 60px;
+            background-position: 0 0, 30px 30px;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        .font-display {
+            font-family: 'Fredoka One', cursive;
+        }
+
+        .rainbow-glow {
+            box-shadow: 0 0 20px rgba(255, 105, 180, 0.6), 0 0 30px rgba(255, 215, 0, 0.4);
+        }
+
+        .rainbow-border {
+            border: 5px solid transparent;
+            background-image: linear-gradient(#23140a, #23140a), linear-gradient(135deg, #ff4b4b, #ff8c00, #ffd700, #4caf50, #1e90ff, #9400d3);
+            background-origin: border-box;
+            background-clip: padding-box, border-box;
+        }
+
+        .rainbow-btn {
+            background: linear-gradient(135deg, #ff5964, #ffad1f, #38ef7d, #11998e, #6a11cb);
+            background-size: 300% 300%;
+            animation: rainbowShift 6s ease infinite;
+        }
+
+        @keyframes rainbowShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .stone-card {
+            background: #fffdf9;
+            border: 6px solid #8c5a3c;
+            box-shadow: 0 10px 0 #5c3821, 0 15px 30px rgba(0,0,0,0.6);
+            border-radius: 2rem;
+        }
+
+        .stone-btn {
+            background: #ffffff;
+            border: 4px solid #e2b170;
+            box-shadow: 0 6px 0 #c48b48;
+            transition: all 0.15s ease;
+        }
+
+        .stone-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 9px 0 #c48b48;
+            background: #fffbf0;
+        }
+
+        .stone-btn:active {
+            transform: translateY(3px);
+            box-shadow: 0 3px 0 #c48b48;
+        }
+
+        .badge-locked {
+            filter: grayscale(1) opacity(0.35);
+        }
+
+        /* Floating Rainbow Star Keyframes */
+        @keyframes floatUpStar {
+            0% { transform: translateY(0) scale(0.6) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(-140px) scale(1.4) rotate(360deg); opacity: 0; }
+        }
+
+        .floating-star {
+            position: absolute;
+            pointer-events: none;
+            animation: floatUpStar 1.3s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+        }
+
+        /* Confetti Effect */
+        @keyframes confettiFall {
+            0% { transform: translateY(-10px) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(400px) rotate(720deg); opacity: 0; }
+        }
+
+        .confetti-piece {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            pointer-events: none;
+            animation: confettiFall 2.5s ease-out forwards;
+        }
+
+        /* Animation classes for SVG avatar */
+        @keyframes bounceGentle {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-12px); }
+        }
+
+        .avatar-bounce {
+            animation: bounceGentle 2.2s ease-in-out infinite;
+        }
+
+        @keyframes danceSpin {
+            0% { transform: rotate(0deg) scale(1); }
+            25% { transform: rotate(-15deg) scale(1.1); }
+            50% { transform: rotate(15deg) scale(1.1); }
+            75% { transform: rotate(-10deg) scale(1.05); }
+            100% { transform: rotate(0deg) scale(1); }
+        }
+
+        .avatar-dance {
+            animation: danceSpin 0.8s ease-in-out infinite;
+        }
+    </style>
+</head>
+<body class="min-h-screen text-slate-800 flex flex-col justify-between p-3 sm:p-6 overflow-x-hidden">
+
+    <header class="max-w-4xl mx-auto w-full flex justify-between items-center bg-amber-950/90 p-4 rounded-2xl border-4 border-amber-700 shadow-2xl text-white mb-4 rainbow-glow">
+        <div class="flex items-center space-x-3">
+            <span class="text-3xl sm:text-4xl">🦣</span>
+            <div>
+                <h1 class="font-display text-2xl sm:text-3xl text-amber-300 tracking-wide drop-shadow-md">YOUR SCHOOL GAME</h1>
+                <p class="text-xs sm:text-sm text-amber-200 font-bold flex items-center gap-1">
+                    <span>✨</span> Stone Age Boy Story Quiz <span>✨</span>
+                </p>
+            </div>
+        </div>
+
+        <button id="soundToggleBtn" onclick="toggleSound()" class="bg-amber-800 hover:bg-amber-700 text-amber-100 font-bold py-2 px-3 sm:px-4 rounded-xl border-2 border-amber-500 shadow flex items-center space-x-2 transition">
+            <span id="soundIcon" class="text-xl">🔊</span>
+            <span id="soundText" class="hidden sm:inline text-sm">Sound ON</span>
+        </button>
+    </header>
+
+    <main class="max-w-4xl mx-auto w-full flex-1 flex flex-col justify-center items-center relative">
+
+        <!-- Progress and Level Badge Bar -->
+        <div id="progressContainer" class="w-full bg-amber-950/90 border-4 border-amber-700 p-3 sm:p-4 rounded-2xl shadow-xl mb-6 text-white">
+            <div class="flex justify-between items-center mb-2">
+                <span id="levelLabel" class="font-display text-amber-300 text-base sm:text-lg">LEVEL 1: Pebble Progress</span>
+                <span id="questionCounter" class="text-xs sm:text-sm bg-amber-900 px-3 py-1 rounded-full font-bold border border-amber-500">Question 1 of 3</span>
+            </div>
+
+            <!-- Level Badges Grid -->
+            <div class="grid grid-cols-5 gap-2 my-2 text-center">
+                <div id="badge-1" class="bg-amber-900/80 p-2 rounded-xl border-2 border-amber-400 transition-all duration-300">
+                    <span class="text-2xl block">🪨</span>
+                    <span class="text-[10px] sm:text-xs font-bold block text-amber-200">Pebble</span>
+                </div>
+                <div id="badge-2" class="bg-amber-900/80 p-2 rounded-xl border-2 border-amber-400 badge-locked transition-all duration-300">
+                    <span class="text-2xl block">🦴</span>
+                    <span class="text-[10px] sm:text-xs font-bold block text-amber-200">Flint</span>
+                </div>
+                <div id="badge-3" class="bg-amber-900/80 p-2 rounded-xl border-2 border-amber-400 badge-locked transition-all duration-300">
+                    <span class="text-2xl block">🔥</span>
+                    <span class="text-[10px] sm:text-xs font-bold block text-amber-200">Campfire</span>
+                </div>
+                <div id="badge-4" class="bg-amber-900/80 p-2 rounded-xl border-2 border-amber-400 badge-locked transition-all duration-300">
+                    <span class="text-2xl block">🎨</span>
+                    <span class="text-[10px] sm:text-xs font-bold block text-amber-200">Mammoth</span>
+                </div>
+                <div id="badge-5" class="bg-amber-900/80 p-2 rounded-xl border-2 border-amber-400 badge-locked transition-all duration-300">
+                    <span class="text-2xl block">🗡️</span>
+                    <span class="text-[10px] sm:text-xs font-bold block text-amber-200">Spear</span>
+                </div>
+            </div>
+
+            <!-- Visual Progress Meter -->
+            <div class="w-full bg-amber-950 h-3.5 rounded-full overflow-hidden border border-amber-700 mt-2">
+                <div id="progressBar" class="h-full bg-gradient-to-r from-red-500 via-yellow-400 to-green-400 w-0 transition-all duration-500"></div>
+            </div>
+        </div>
+
+        <div id="quizBox" class="stone-card w-full p-5 sm:p-8 relative">
+            <div id="effectContainer" class="absolute inset-0 pointer-events-none overflow-hidden rounded-2xl"></div>
+
+            <!-- Question Avatar Header -->
+            <div class="flex items-center space-x-4 mb-6 bg-amber-100/90 p-4 rounded-2xl border-2 border-amber-300">
+                <div id="miniAvatar" class="w-14 h-14 bg-amber-300 rounded-2xl flex items-center justify-center border-2 border-amber-600 text-3xl shadow">
+                    👦
+                </div>
+                <div class="flex-1">
+                    <span class="text-xs font-extrabold text-amber-800 uppercase tracking-wider block">Question Time for Hero</span>
+                    <h2 id="questionText" class="font-display text-lg sm:text-2xl text-amber-950 leading-snug">
+                        Loading question...
+                    </h2>
+                </div>
+            </div>
+
+            <!-- Answer Options Grid -->
+            <div id="optionsContainer" class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 my-4">
+                <!-- Dynamically generated buttons -->
+            </div>
+
+            <!-- Feedback Display Box -->
+            <div id="feedbackBox" class="hidden mt-4 p-4 rounded-2xl text-center font-bold text-base sm:text-lg border-2 transition-all duration-300 transform scale-95">
+                <span id="feedbackText"></span>
+            </div>
+        </div>
+
+        <div id="rewardGameBox" class="hidden stone-card w-full p-4 sm:p-8 text-center relative">
+            
+            <div class="rainbow-btn text-white font-display text-xl sm:text-3xl py-4 px-6 rounded-2xl shadow-xl mb-6 tracking-wide animate-pulse">
+                🌟 YOU DID IT, HERO! YOU'RE A STONE AGE CHAMPION! 🌟
+            </div>
+
+            <p class="text-amber-950 font-bold text-sm sm:text-lg mb-4">
+                You completed all 15 questions! Now dress up your Stone Age Quizmaster below!
+            </p>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
+                
+                <!-- Character Preview Window -->
+                <div class="lg:col-span-6 bg-amber-100/90 p-4 rounded-3xl border-4 border-amber-600 shadow-inner flex flex-col items-center justify-center relative min-h-[350px]">
+                    
+                    <div id="avatarStage" class="w-full h-80 rounded-2xl flex items-center justify-center relative overflow-hidden transition-all duration-500 bg-amber-200">
+                        
+                        <!-- SVG Custom Quizmaster Character -->
+                        <svg id="quizmasterSvg" viewBox="0 0 200 240" class="w-60 h-72 avatar-bounce filter drop-shadow-lg">
+                            <ellipse cx="100" cy="225" rx="55" ry="10" fill="#000" opacity="0.25" />
+
+                            <!-- Body Base -->
+                            <g id="svgBody">
+                                <rect x="80" y="155" width="12" height="45" rx="6" fill="#f0b888" />
+                                <rect x="108" y="155" width="12" height="45" rx="6" fill="#f0b888" />
+                                <ellipse cx="84" cy="200" rx="10" ry="6" fill="#6d4223" />
+                                <ellipse cx="116" cy="200" rx="10" ry="6" fill="#6d4223" />
+                                
+                                <!-- Customizable Outfit Tunic -->
+                                <path id="svgOutfit" d="M 65 105 Q 100 90 135 105 L 142 168 Q 100 178 58 168 Z" fill="#d97736" stroke="#4a250a" stroke-width="3"/>
+                                <path id="svgPattern" d="M 75 115 L 85 125 M 120 120 L 110 130 M 80 145 L 95 150 M 125 145 L 115 155" stroke="#3d1d07" stroke-width="3" stroke-linecap="round" opacity="0.6"/>
+
+                                <!-- Arms -->
+                                <rect id="leftArm" x="50" y="108" width="14" height="48" rx="7" fill="#f0b888" transform="rotate(15 50 108)" />
+                                <rect id="rightArm" x="136" y="108" width="14" height="48" rx="7" fill="#f0b888" transform="rotate(-15 136 108)" />
+                            </g>
+
+                            <!-- Head & Eyes -->
+                            <g id="svgHead">
+                                <circle cx="100" cy="72" r="38" fill="#f0b888" />
+                                <circle cx="62" cy="72" r="7" fill="#f0b888" />
+                                <circle cx="138" cy="72" r="7" fill="#f0b888" />
+                                
+                                <circle id="eyeLeft" cx="88" cy="68" r="5" fill="#222" />
+                                <circle id="eyeRight" cx="112" cy="68" r="5" fill="#222" />
+                                <circle cx="86" cy="66" r="1.5" fill="#fff" />
+                                <circle cx="110" cy="66" r="1.5" fill="#fff" />
+                                
+                                <path id="svgSmile" d="M 88 84 Q 100 96 112 84" fill="transparent" stroke="#222" stroke-width="3.5" stroke-linecap="round" />
+                                <circle cx="78" cy="78" r="4" fill="#ff7b7b" opacity="0.6" />
+                                <circle cx="122" cy="78" r="4" fill="#ff7b7b" opacity="0.6" />
+                            </g>
+
+                            <!-- Dynamic Custom Headwear -->
+                            <g id="svgHatGroup">
+                                <path id="defaultHair" d="M 62 68 Q 60 32 100 32 Q 140 32 138 68 Q 120 42 100 45 Q 80 42 62 68 Z" fill="#4a2e18" />
+                            </g>
+
+                            <!-- Dynamic Custom Held Accessory -->
+                            <g id="svgAccessoryGroup"></g>
+                        </svg>
+                    </div>
+
+                    <!-- Interactive Action Buttons -->
+                    <div class="flex space-x-2 sm:space-x-3 mt-4">
+                        <button onclick="triggerAction('dance')" class="bg-purple-600 hover:bg-purple-500 text-white font-bold px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm border-2 border-purple-800 shadow">
+                            💃 Dance
+                        </button>
+                        <button onclick="triggerAction('wave')" class="bg-amber-600 hover:bg-amber-500 text-white font-bold px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm border-2 border-amber-800 shadow">
+                            👋 Wave
+                        </button>
+                        <button onclick="triggerAction('wink')" class="bg-amber-600 hover:bg-amber-500 text-white font-bold px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm border-2 border-amber-800 shadow">
+                            😉 Wink
+                        </button>
+                        <button onclick="triggerAction('cheer')" class="bg-green-600 hover:bg-green-500 text-white font-bold px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm border-2 border-green-800 shadow">
+                            🎉 Cheer
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Customization Controls Grid -->
+                <div class="lg:col-span-6 flex flex-col space-y-3 text-left">
+                    
+                    <!-- Headwear Customizer -->
+                    <div class="bg-white/90 p-3 rounded-2xl border-2 border-amber-300">
+                        <label class="font-display text-amber-950 text-xs sm:text-sm block mb-1">🎩 Hats & Headwear</label>
+                        <div class="grid grid-cols-3 gap-1.5">
+                            <button onclick="setHat('hair')" class="bg-amber-100 hover:bg-amber-200 p-2 rounded-xl text-xs font-bold border border-amber-400">Messy Hair</button>
+                            <button onclick="setHat('mammoth')" class="bg-amber-100 hover:bg-amber-200 p-2 rounded-xl text-xs font-bold border border-amber-400">🦣 Mammoth Cap</button>
+                            <button onclick="setHat('garland')" class="bg-amber-100 hover:bg-amber-200 p-2 rounded-xl text-xs font-bold border border-amber-400">🌸 Flower Crown</button>
+                            <button onclick="setHat('bear')" class="bg-amber-100 hover:bg-amber-200 p-2 rounded-xl text-xs font-bold border border-amber-400">🐻 Bear Hood</button>
+                            <button onclick="setHat('rainbow')" class="bg-amber-100 hover:bg-amber-200 p-2 rounded-xl text-xs font-bold border border-amber-400">👑 Party Crown</button>
+                            <button onclick="setHat('bone')" class="bg-amber-100 hover:bg-amber-200 p-2 rounded-xl text-xs font-bold border border-amber-400">🦴 Bone Band</button>
+                        </div>
+                    </div>
+
+                    <!-- Outfit Style Customizer -->
+                    <div class="bg-white/90 p-3 rounded-2xl border-2 border-amber-300">
+                        <label class="font-display text-amber-950 text-xs sm:text-sm block mb-1">👗 Clothes & Outfits</label>
+                        <div class="grid grid-cols-3 gap-1.5">
+                            <button onclick="setOutfit('tiger')" class="bg-amber-100 hover:bg-amber-200 p-2 rounded-xl text-xs font-bold border border-amber-400">🐯 Tiger Wrap</button>
+                            <button onclick="setOutfit('leaf')" class="bg-amber-100 hover:bg-amber-200 p-2 rounded-xl text-xs font-bold border border-amber-400">🍃 Leaf Dress</button>
+                            <button onclick="setOutfit('rainbow')" class="bg-amber-100 hover:bg-amber-200 p-2 rounded-xl text-xs font-bold border border-amber-400">🌈 Rainbow Robe</button>
+                            <button onclick="setOutfit('vest')" class="bg-amber-100 hover:bg-amber-200 p-2 rounded-xl text-xs font-bold border border-amber-400">🦺 Explorer Vest</button>
+                            <button onclick="setOutfit('cozy')" class="bg-amber-100 hover:bg-amber-200 p-2 rounded-xl text-xs font-bold border border-amber-400">🐻 Fur Tunic</button>
+                        </div>
+                    </div>
+
+                    <!-- Accessories Customizer -->
+                    <div class="bg-white/90 p-3 rounded-2xl border-2 border-amber-300">
+                        <label class="font-display text-amber-950 text-xs sm:text-sm block mb-1">🗡️️ Held Accessories</label>
+                        <div class="grid grid-cols-3 gap-1.5">
+                            <button onclick="setAccessory('none')" class="bg-amber-100 hover:bg-amber-200 p-2 rounded-xl text-xs font-bold border border-amber-400">None</button>
+                            <button onclick="setAccessory('spear')" class="bg-amber-100 hover:bg-amber-200 p-2 rounded-xl text-xs font-bold border border-amber-400">🗡️ Flint Spear</button>
+                            <button onclick="setAccessory('torch')" class="bg-amber-100 hover:bg-amber-200 p-2 rounded-xl text-xs font-bold border border-amber-400">🔥 Camp Fire Torch</button>
+                            <button onclick="setAccessory('brush')" class="bg-amber-100 hover:bg-amber-200 p-2 rounded-xl text-xs font-bold border border-amber-400">🎨 Cave Paint Brush</button>
+                            <button onclick="setAccessory('flowers')" class="bg-amber-100 hover:bg-amber-200 p-2 rounded-xl text-xs font-bold border border-amber-400">💐 Bouquet</button>
+                        </div>
+                    </div>
+
+                    <!-- Background Setting Customizer -->
+                    <div class="bg-white/90 p-3 rounded-2xl border-2 border-amber-300">
+                        <label class="font-display text-amber-950 text-xs sm:text-sm block mb-1">🏞️ Stage Background</label>
+                        <div class="grid grid-cols-4 gap-1.5">
+                            <button onclick="setBackground('bg-amber-200')" class="bg-amber-200 hover:opacity-80 p-1.5 rounded-xl text-[10px] font-bold border border-amber-500">Cave</button>
+                            <button onclick="setBackground('bg-gradient-to-b from-sky-300 to-emerald-200')" class="bg-sky-200 hover:opacity-80 p-1.5 rounded-xl text-[10px] font-bold border border-sky-500">Meadow</button>
+                            <button onclick="setBackground('bg-gradient-to-b from-orange-300 to-amber-700')" class="bg-orange-300 hover:opacity-80 p-1.5 rounded-xl text-[10px] font-bold border border-orange-500">Campfire</button>
+                            <button onclick="setBackground('bg-gradient-to-r from-pink-300 via-purple-300 to-indigo-300')" class="bg-pink-200 hover:opacity-80 p-1.5 rounded-xl text-[10px] font-bold border border-pink-500">Rainbow</button>
+                        </div>
+                    </div>
+
+                    <!-- Tunic Color Palette -->
+                    <div class="bg-white/90 p-3 rounded-2xl border-2 border-amber-300">
+                        <label class="font-display text-amber-950 text-xs sm:text-sm block mb-1">🎨 Outfit Color</label>
+                        <div class="flex space-x-2">
+                            <button onclick="setTunicColor('#d97736')" class="w-7 h-7 rounded-full border-2 border-slate-700 bg-[#d97736] shadow"></button>
+                            <button onclick="setTunicColor('#ef4444')" class="w-7 h-7 rounded-full border-2 border-slate-700 bg-[#ef4444] shadow"></button>
+                            <button onclick="setTunicColor('#10b981')" class="w-7 h-7 rounded-full border-2 border-slate-700 bg-[#10b981] shadow"></button>
+                            <button onclick="setTunicColor('#06b6d4')" class="w-7 h-7 rounded-full border-2 border-slate-700 bg-[#06b6d4] shadow"></button>
+                            <button onclick="setTunicColor('#8b5cf6')" class="w-7 h-7 rounded-full border-2 border-slate-700 bg-[#8b5cf6] shadow"></button>
+                            <button onclick="setTunicColor('#ec4899')" class="w-7 h-7 rounded-full border-2 border-slate-700 bg-[#ec4899] shadow"></button>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Play Again Button -->
+            <button onclick="restartGame()" class="rainbow-btn text-white font-display text-lg py-3 px-8 rounded-2xl border-4 border-white shadow-xl mt-6 hover:scale-105 transition transform">
+                🔄 Play Your Quiz Again!
+            </button>
+        </div>
+
+    </main>
+
+    <footer class="max-w-4xl mx-auto w-full text-center text-amber-200/70 text-xs py-3 font-bold">
+        Your School Game • Safe & Fun Stone Age Learning for Year 3
+    </footer>
+
+    <script>
+        // 15 Year 3 Stone Age Boy Questions split strictly across 5 progressive levels
+        const quizData = [
+            // LEVEL 1 (Easy) - Basic character & setting
+            {
+                level: 1,
+                levelTitle: "LEVEL 1: Pebble Progress 🪨",
+                question: "How does the boy fall into the Stone Age world?",
+                options: [
+                    "He trips and falls down a deep hole in a cave",
+                    "He gets into a magic spaceship",
+                    "He goes to sleep in his bedroom",
+                    "He steps onto a fast train"
+                ],
+                correct: 0,
+                hint: "Remember! He tripped over a stone and tumbled down, down, down!"
+            },
+            {
+                level: 1,
+                levelTitle: "LEVEL 1: Pebble Progress 🪨",
+                question: "Who is the friendly Stone Age girl he meets first?",
+                options: [
+                    "Mia",
+                    "Om",
+                    "Lily",
+                    "Chloe"
+                ],
+                correct: 1,
+                hint: "Her name is very short and starts with the letter O!"
+            },
+            {
+                level: 1,
+                levelTitle: "LEVEL 1: Pebble Progress 🪨",
+                question: "What are Om's clothes made from?",
+                options: [
+                    "Soft cotton t-shirts",
+                    "Animal skins and furs",
+                    "Plastic raincoats",
+                    "Denim jeans"
+                ],
+                correct: 1,
+                hint: "Stone Age people made warm clothes out of animal fur!"
+            },
+
+            // LEVEL 2 (Easy-Medium) - Activities & Tools
+            {
+                level: 2,
+                levelTitle: "LEVEL 2: Flint Tools 🦴",
+                question: "What special stone does Om show the boy how to shape into tools?",
+                options: [
+                    "Flint",
+                    "Chalk",
+                    "Marble",
+                    "Brick"
+                ],
+                correct: 0,
+                hint: "It is a dark hard rock that flakes into sharp edges when hit!"
+            },
+            {
+                level: 2,
+                levelTitle: "LEVEL 2: Flint Tools 🦴",
+                question: "How do Om and her family start a campfire?",
+                options: [
+                    "By striking flint stones to make bright sparks",
+                    "By turning a knob on a heater",
+                    "By using electric matches",
+                    "By waiting for lightning"
+                ],
+                correct: 0,
+                hint: "They strike flint against iron pyrite to make glowing sparks!"
+            },
+            {
+                level: 2,
+                levelTitle: "LEVEL 2: Flint Tools 🦴",
+                question: "What do Om and the boy catch when they go to the river?",
+                options: [
+                    "Fresh fish using a wooden spear",
+                    "Rubber ducks",
+                    "Tinned tuna",
+                    "Plastic bottles"
+                ],
+                correct: 0,
+                hint: "They stood in the cold water with sharp spears!"
+            },
+
+            // LEVEL 3 (Medium) - Camp Life & Shelter
+            {
+                level: 3,
+                levelTitle: "LEVEL 3: Campfire Life 🔥",
+                question: "What are the Stone Age camp shelters and tents made of?",
+                options: [
+                    "Wooden poles covered with animal skins",
+                    "Red building bricks",
+                    "Glass and metal",
+                    "Cardboard boxes"
+                ],
+                correct: 0,
+                hint: "They stretched warm animal hides over strong wooden frames!"
+            },
+            {
+                level: 3,
+                levelTitle: "LEVEL 3: Campfire Life 🔥",
+                question: "What natural wild food do they gather together in the woods?",
+                options: [
+                    "Berries, nuts, and edible roots",
+                    "Crisps and sweets",
+                    "Pizza slices",
+                    "Ice cream"
+                ],
+                correct: 0,
+                hint: "They collected wild fruits and plants growing on bushes!"
+            },
+            {
+                level: 3,
+                levelTitle: "LEVEL 3: Campfire Life 🔥",
+                question: "Why do they scrape the inside of animal skins with flint?",
+                options: [
+                    "To clean them so they can be made into warm clothes",
+                    "To turn them into paper",
+                    "To make them change colour",
+                    "To wash them with soap"
+                ],
+                correct: 0,
+                hint: "Scraping removes fat and meat to make the skin soft and clean!"
+            },
+
+            // LEVEL 4 (Medium-Hard) - Cave Painting & Hunting
+            {
+                level: 4,
+                levelTitle: "LEVEL 4: Mammoth Trail 🎨",
+                question: "What giant hairy animal with big curved tusks do the hunters track?",
+                options: [
+                    "A Woolly Mammoth",
+                    "A Tyrannosaurus Rex",
+                    "A Blue Whale",
+                    "A Polar Bear"
+                ],
+                correct: 0,
+                hint: "It looks like a giant hairy elephant with huge curved tusks!"
+            },
+            {
+                level: 4,
+                levelTitle: "LEVEL 4: Mammoth Trail 🎨",
+                question: "What do Om and the boy use to make paint for cave walls?",
+                options: [
+                    "Crushed rocks, charcoal, ochre, and animal fat",
+                    "Felt-tip pens",
+                    "Watercolour pots from school",
+                    "Food colouring"
+                ],
+                correct: 0,
+                hint: "They mixed natural earthy minerals and charcoal powder with fat!"
+            },
+            {
+                level: 4,
+                levelTitle: "LEVEL 4: Mammoth Trail 🎨",
+                question: "Where do they paint pictures of the animals?",
+                options: [
+                    "Deep inside the dark cave walls",
+                    "On paper notebooks",
+                    "On glass windows",
+                    "On wooden fences"
+                ],
+                correct: 0,
+                hint: "They painted deep inside dark caves using flickering firelight!"
+            },
+
+            // LEVEL 5 (Hardest) - Climax & Return
+            {
+                level: 5,
+                levelTitle: "LEVEL 5: Golden Spear 🗡️",
+                question: "What big wild creature surprises the boy and Om inside the cave?",
+                options: [
+                    "A giant Cave Bear",
+                    "A crocodile",
+                    "A shark",
+                    "A lion"
+                ],
+                correct: 0,
+                hint: "It was a massive furry bear resting in the dark!"
+            },
+            {
+                level: 5,
+                levelTitle: "LEVEL 5: Golden Spear 🗡️",
+                question: "How does the boy get back to his own modern time?",
+                options: [
+                    "He falls back through the hole while running from the bear",
+                    "He flies on a helicopter",
+                    "Om drives him in a car",
+                    "He builds a rocket ship"
+                ],
+                correct: 0,
+                hint: "He tumbled back through the dark hole and woke up back home!"
+            },
+            {
+                level: 5,
+                levelTitle: "LEVEL 5: Golden Spear 🗡️",
+                question: "When the boy grows up, what job does he do because of his trip?",
+                options: [
+                    "An Archaeologist (studying ancient history)",
+                    "An Astronaut in space",
+                    "A Bus Driver",
+                    "A Chef in a restaurant"
+                ],
+                correct: 0,
+                hint: "He grew up to dig up and study real Stone Age treasures!"
+            }
+        ];
+
+        let currentQuestionIndex = 0;
+        let isAudioMuted = false;
+        let audioCtx = null;
+
+        // Initialize Web Audio API
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        }
+
+        // Web Audio API Synthesizer (No external audio assets needed)
+        function playSound(type) {
+            if (isAudioMuted) return;
+            try {
+                initAudio();
+                const now = audioCtx.currentTime;
+
+                if (type === 'correct') {
+                    // Ascending major chime sequence
+                    const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+                    notes.forEach((freq, idx) => {
+                        const osc = audioCtx.createOscillator();
+                        const gain = audioCtx.createGain();
+                        osc.type = 'sine';
+                        osc.frequency.value = freq;
+                        gain.gain.setValueAtTime(0.12, now + idx * 0.08);
+                        gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.08 + 0.35);
+                        osc.connect(gain);
+                        gain.connect(audioCtx.destination);
+                        osc.start(now + idx * 0.08);
+                        osc.stop(now + idx * 0.08 + 0.35);
+                    });
+                } else if (type === 'wrong') {
+                    // Soft low gentle retry boop
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(260, now);
+                    osc.frequency.exponentialRampToValueAtTime(180, now + 0.22);
+                    gain.gain.setValueAtTime(0.1, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.22);
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.start(now);
+                    osc.stop(now + 0.22);
+                } else if (type === 'victory') {
+                    // Cheerful celebratory fanfare
+                    const notes = [440, 554.37, 659.25, 880, 1108.73];
+                    notes.forEach((freq, idx) => {
+                        const osc = audioCtx.createOscillator();
+                        const gain = audioCtx.createGain();
+                        osc.type = 'triangle';
+                        osc.frequency.value = freq;
+                        gain.gain.setValueAtTime(0.18, now + idx * 0.1);
+                        gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.1 + 0.5);
+                        osc.connect(gain);
+                        gain.connect(audioCtx.destination);
+                        osc.start(now + idx * 0.1);
+                        osc.stop(now + idx * 0.1 + 0.5);
+                    });
+                } else if (type === 'click') {
+                    // Soft UI button click
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(450, now);
+                    gain.gain.setValueAtTime(0.06, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.start(now);
+                    osc.stop(now + 0.05);
+                }
+            } catch (e) {
+                console.log("Audio play deferred or unsupported");
+            }
+        }
+
+        function toggleSound() {
+            isAudioMuted = !isAudioMuted;
+            const soundIcon = document.getElementById('soundIcon');
+            const soundText = document.getElementById('soundText');
+            if (isAudioMuted) {
+                soundIcon.textContent = '🔇';
+                soundText.textContent = 'Sound OFF';
+            } else {
+                soundIcon.textContent = '🔊';
+                soundText.textContent = 'Sound ON';
+                playSound('click');
+            }
+        }
+
+        // Render current question
+        function renderQuestion() {
+            const currentQ = quizData[currentQuestionIndex];
+            
+            // Level title & count
+            document.getElementById('levelLabel').textContent = currentQ.levelTitle;
+            const levelQNum = (currentQuestionIndex % 3) + 1;
+            document.getElementById('questionCounter').textContent = `Question ${levelQNum} of 3`;
+            
+            // Question text
+            document.getElementById('questionText').textContent = currentQ.question;
+
+            // Reset feedback
+            const feedbackBox = document.getElementById('feedbackBox');
+            feedbackBox.classList.add('hidden');
+
+            // Update Progress Bar
+            const percent = (currentQuestionIndex / quizData.length) * 100;
+            document.getElementById('progressBar').style.width = `${percent}%`;
+
+            // Level Badges status
+            const currentLevelNum = currentQ.level;
+            for (let i = 1; i <= 5; i++) {
+                const badge = document.getElementById(`badge-${i}`);
+                if (i < currentLevelNum) {
+                    badge.classList.remove('badge-locked');
+                    badge.classList.add('border-green-400', 'bg-amber-900');
+                } else if (i === currentLevelNum) {
+                    badge.classList.remove('badge-locked');
+                    badge.classList.add('border-amber-300', 'ring-2', 'ring-amber-300');
+                } else {
+                    badge.classList.add('badge-locked');
+                    badge.classList.remove('ring-2', 'ring-amber-300');
+                }
+            }
+
+            // Render option buttons
+            const optionsContainer = document.getElementById('optionsContainer');
+            optionsContainer.innerHTML = '';
+
+            const letters = ['A', 'B', 'C', 'D'];
+            currentQ.options.forEach((optText, index) => {
+                const btn = document.createElement('button');
+                btn.className = 'stone-btn text-left p-4 rounded-2xl font-bold text-amber-950 text-base sm:text-lg flex items-center space-x-3 w-full group';
+                
+                btn.innerHTML = `
+                    <span class="w-8 h-8 rounded-xl bg-amber-200 text-amber-900 font-display flex items-center justify-center text-sm border border-amber-400 group-hover:bg-amber-400 transition">${letters[index]}</span>
+                    <span class="flex-1">${optText}</span>
+                `;
+                
+                btn.onclick = () => checkAnswer(index, btn);
+                optionsContainer.appendChild(btn);
+            });
+        }
+
+        // Check user selection
+        function checkAnswer(selectedIndex, clickedBtn) {
+            const currentQ = quizData[currentQuestionIndex];
+            const feedbackBox = document.getElementById('feedbackBox');
+            const feedbackText = document.getElementById('feedbackText');
+
+            if (selectedIndex === currentQ.correct) {
+                // Correct answer selected
+                playSound('correct');
+                spawnRainbowStars(clickedBtn);
+
+                // Highlight button green
+                clickedBtn.classList.remove('stone-btn');
+                clickedBtn.classList.add('bg-green-100', 'border-4', 'border-green-500', 'text-green-950');
+
+                // Hero-focused encouraging praise messages
+                const praises = [
+                    "⭐ Super job, Hero!",
+                    "🌟 You're a Stone Age star, Hero!",
+                    "🎉 Fantastic answer, Hero!",
+                    "🦣 Mammoth victory, Hero!",
+                    "🔥 Brilliant work, Hero!"
+                ];
+                const randomPraise = praises[Math.floor(Math.random() * praises.length)];
+                
+                feedbackBox.className = "mt-4 p-4 rounded-2xl text-center font-bold text-lg border-2 bg-green-100 border-green-500 text-green-950 block animate-bounce";
+                feedbackText.textContent = randomPraise;
+
+                // Disable options during transition
+                const buttons = document.querySelectorAll('#optionsContainer button');
+                buttons.forEach(b => b.onclick = null);
+
+                // Advance to next question
+                setTimeout(() => {
+                    currentQuestionIndex++;
+                    if (currentQuestionIndex < quizData.length) {
+                        renderQuestion();
+                    } else {
+                        finishQuiz();
+                    }
+                }, 1300);
+
+            } else {
+                // Incorrect answer selected (Kind, gentle retry)
+                playSound('wrong');
+
+                clickedBtn.classList.add('border-amber-400', 'bg-amber-50');
+
+                feedbackBox.className = "mt-4 p-4 rounded-2xl text-center font-bold text-sm sm:text-base border-2 bg-amber-100 border-amber-500 text-amber-950 block";
+                feedbackText.textContent = `Nice try, Hero! ❤️ ${currentQ.hint}`;
+            }
+        }
+
+        // Spawn rainbow star effect
+        function spawnRainbowStars(element) {
+            const container = document.getElementById('effectContainer');
+            const rect = element.getBoundingClientRect();
+            const starIcons = ['⭐', '🌟', '✨', '🌈', '💫', '💖'];
+
+            for (let i = 0; i < 9; i++) {
+                const star = document.createElement('div');
+                star.className = 'floating-star text-2xl';
+                star.textContent = starIcons[Math.floor(Math.random() * starIcons.length)];
+                
+                const offsetX = (Math.random() - 0.5) * 180;
+                star.style.left = `${rect.width / 2 + offsetX}px`;
+                star.style.top = `30px`;
+                
+                container.appendChild(star);
+                setTimeout(() => star.remove(), 1300);
+            }
+        }
+
+        // Spawn win confetti
+        function spawnConfetti() {
+            const container = document.getElementById('rewardGameBox');
+            const colors = ['#ff4b4b', '#ffd700', '#4caf50', '#1e90ff', '#9400d3', '#ff79c6'];
+            
+            for (let i = 0; i < 40; i++) {
+                const piece = document.createElement('div');
+                piece.className = 'confetti-piece rounded-sm';
+                piece.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                piece.style.left = `${Math.random() * 90 + 5}%`;
+                piece.style.top = `0px`;
+                piece.style.animationDelay = `${Math.random() * 0.8}s`;
+                
+                container.appendChild(piece);
+                setTimeout(() => piece.remove(), 3000);
+            }
+        }
+
+        // Completion of all 15 questions
+        function finishQuiz() {
+            playSound('victory');
+            document.getElementById('progressBar').style.width = `100%`;
+
+            document.getElementById('quizBox').classList.add('hidden');
+            document.getElementById('progressContainer').classList.add('hidden');
+
+            document.getElementById('rewardGameBox').classList.remove('hidden');
+            spawnConfetti();
+        }
+
+        function restartGame() {
+            playSound('click');
+            currentQuestionIndex = 0;
+            document.getElementById('rewardGameBox').classList.add('hidden');
+            document.getElementById('progressContainer').classList.remove('hidden');
+            document.getElementById('quizBox').classList.remove('hidden');
+            renderQuestion();
+        }
+
+        // "Dress My Quizmaster" Customizer Logic
+        function setHat(type) {
+            playSound('click');
+            const hatGroup = document.getElementById('svgHatGroup');
+            hatGroup.innerHTML = '';
+
+            if (type === 'hair') {
+                hatGroup.innerHTML = `<path d="M 62 68 Q 60 32 100 32 Q 140 32 138 68 Q 120 42 100 45 Q 80 42 62 68 Z" fill="#4a2e18" />`;
+            } else if (type === 'mammoth') {
+                hatGroup.innerHTML = `
+                    <path d="M 60 68 C 60 22, 140 22, 140 68 Z" fill="#8d5b40" stroke="#4a2e18" stroke-width="3"/>
+                    <circle cx="100" cy="28" r="11" fill="#fff8f0" />
+                    <path d="M 65 62 Q 50 48 45 58" fill="none" stroke="#fff8f0" stroke-width="4" stroke-linecap="round"/>
+                    <path d="M 135 62 Q 150 48 155 58" fill="none" stroke="#fff8f0" stroke-width="4" stroke-linecap="round"/>
+                `;
+            } else if (type === 'garland') {
+                hatGroup.innerHTML = `
+                    <path d="M 62 68 Q 60 32 100 32 Q 140 32 138 68 Z" fill="#4a2e18" />
+                    <circle cx="68" cy="48" r="7" fill="#ff5964" />
+                    <circle cx="84" cy="40" r="7" fill="#ffad1f" />
+                    <circle cx="100" cy="38" r="7" fill="#38ef7d" />
+                    <circle cx="116" cy="40" r="7" fill="#1e90ff" />
+                    <circle cx="132" cy="48" r="7" fill="#9c88ff" />
+                `;
+            } else if (type === 'bear') {
+                hatGroup.innerHTML = `
+                    <path d="M 58 75 C 55 25, 145 25, 142 75 Z" fill="#5c3821" stroke="#3d2110" stroke-width="3"/>
+                    <circle cx="65" cy="35" r="10" fill="#5c3821" />
+                    <circle cx="65" cy="35" r="5" fill="#f0b888" />
+                    <circle cx="135" cy="35" r="10" fill="#5c3821" />
+                    <circle cx="135" cy="35" r="5" fill="#f0b888" />
+                `;
+            } else if (type === 'rainbow') {
+                hatGroup.innerHTML = `
+                    <polygon points="70,52 75,30 85,45 100,20 115,45 125,30 130,52" fill="#ffd700" stroke="#b8860b" stroke-width="2"/>
+                    <circle cx="75" cy="30" r="4" fill="#ff4b4b" />
+                    <circle cx="100" cy="20" r="4" fill="#1e90ff" />
+                    <circle cx="125" cy="30" r="4" fill="#4caf50" />
+                `;
+            } else if (type === 'bone') {
+                hatGroup.innerHTML = `
+                    <path d="M 62 68 Q 60 32 100 32 Q 140 32 138 68 Z" fill="#4a2e18" />
+                    <rect x="75" y="30" width="50" height="10" rx="5" fill="#fff8f0" stroke="#ccc" transform="rotate(-4 100 35)" />
+                    <circle cx="73" cy="35" r="6" fill="#fff8f0"/>
+                    <circle cx="127" cy="31" r="6" fill="#fff8f0"/>
+                `;
+            }
+        }
+
+        function setOutfit(type) {
+            playSound('click');
+            const pattern = document.getElementById('svgPattern');
+
+            if (type === 'tiger') {
+                pattern.setAttribute('d', 'M 75 115 L 85 125 M 120 120 L 110 130 M 80 145 L 95 150 M 125 145 L 115 155');
+                pattern.setAttribute('stroke', '#3d1d07');
+                pattern.setAttribute('opacity', '0.6');
+            } else if (type === 'leaf') {
+                pattern.setAttribute('d', 'M 80 120 Q 90 115 100 125 M 110 140 Q 120 135 130 145 M 70 145 Q 80 155 90 150');
+                pattern.setAttribute('stroke', '#15803d');
+                pattern.setAttribute('opacity', '0.8');
+            } else if (type === 'rainbow') {
+                pattern.setAttribute('d', 'M 65 118 L 135 118 M 63 138 L 137 138 M 60 158 L 140 158');
+                pattern.setAttribute('stroke', '#ffd700');
+                pattern.setAttribute('opacity', '0.9');
+            } else if (type === 'vest') {
+                pattern.setAttribute('d', 'M 80 105 L 80 168 M 120 105 L 120 168 M 85 135 L 115 135');
+                pattern.setAttribute('stroke', '#451a03');
+                pattern.setAttribute('opacity', '0.7');
+            } else if (type === 'cozy') {
+                pattern.setAttribute('d', 'M 70 115 Q 100 120 130 115 M 70 140 Q 100 145 130 140');
+                pattern.setAttribute('stroke', '#fff8f0');
+                pattern.setAttribute('opacity', '0.7');
+            }
+        }
+
+        function setAccessory(type) {
+            playSound('click');
+            const accGroup = document.getElementById('svgAccessoryGroup');
+            accGroup.innerHTML = '';
+
+            if (type === 'spear') {
+                accGroup.innerHTML = `
+                    <rect x="144" y="65" width="6" height="135" rx="3" fill="#6d4c41" />
+                    <polygon points="147,45 138,68 156,68" fill="#b0bec5" stroke="#37474f" stroke-width="2"/>
+                `;
+            } else if (type === 'torch') {
+                accGroup.innerHTML = `
+                    <rect x="144" y="105" width="8" height="65" rx="3" fill="#5d4037" />
+                    <path d="M 148 85 Q 136 100 148 110 Q 160 100 148 85 Z" fill="#ff5722" />
+                    <path d="M 148 91 Q 141 100 148 107 Q 155 100 148 91 Z" fill="#ffeb3b" />
+                `;
+            } else if (type === 'brush') {
+                accGroup.innerHTML = `
+                    <rect x="144" y="98" width="6" height="70" rx="3" fill="#8d6e63" />
+                    <path d="M 142 86 Q 147 78 152 86 L 152 98 L 142 98 Z" fill="#ec4899" />
+                `;
+            } else if (type === 'flowers') {
+                accGroup.innerHTML = `
+                    <rect x="144" y="115" width="5" height="50" rx="2" fill="#15803d" />
+                    <circle cx="140" cy="110" r="7" fill="#ff4b4b" />
+                    <circle cx="152" cy="110" r="7" fill="#ffd700" />
+                    <circle cx="146" cy="102" r="7" fill="#ec4899" />
+                `;
+            }
+        }
+
+        function setBackground(bgClass) {
+            playSound('click');
+            const stage = document.getElementById('avatarStage');
+            stage.className = `w-full h-80 rounded-2xl flex items-center justify-center relative overflow-hidden transition-all duration-500 ${bgClass}`;
+        }
+
+        function setTunicColor(color) {
+            playSound('click');
+            document.getElementById('svgOutfit').setAttribute('fill', color);
+        }
+
+        function triggerAction(action) {
+            playSound('click');
+            const svg = document.getElementById('quizmasterSvg');
+            const eyeRight = document.getElementById('eyeRight');
+            const smile = document.getElementById('svgSmile');
+            const rightArm = document.getElementById('rightArm');
+            const leftArm = document.getElementById('leftArm');
+
+            if (action === 'dance') {
+                svg.classList.remove('avatar-bounce');
+                svg.classList.add('avatar-dance');
+                playSound('victory');
+                setTimeout(() => {
+                    svg.classList.remove('avatar-dance');
+                    svg.classList.add('avatar-bounce');
+                }, 2000);
+            } else if (action === 'wave') {
+                rightArm.setAttribute('transform', 'rotate(-75 136 108)');
+                setTimeout(() => {
+                    rightArm.setAttribute('transform', 'rotate(-15 136 108)');
+                }, 900);
+            } else if (action === 'wink') {
+                eyeRight.setAttribute('r', '1');
+                smile.setAttribute('d', 'M 88 82 Q 100 98 112 82');
+                setTimeout(() => {
+                    eyeRight.setAttribute('r', '5');
+                    smile.setAttribute('d', 'M 88 84 Q 100 96 112 84');
+                }, 900);
+            } else if (action === 'cheer') {
+                leftArm.setAttribute('transform', 'rotate(75 50 108)');
+                rightArm.setAttribute('transform', 'rotate(-75 136 108)');
+                playSound('victory');
+                setTimeout(() => {
+                    leftArm.setAttribute('transform', 'rotate(15 50 108)');
+                    rightArm.setAttribute('transform', 'rotate(-15 136 108)');
+                }, 1200);
+            }
+        }
+
+        // On window load initialization
+        window.onload = function() {
+            renderQuestion();
+        };
+    </script>
+</body>
+</html>

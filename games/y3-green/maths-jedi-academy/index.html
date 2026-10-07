@@ -1,0 +1,909 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Maths Jedi Academy</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800;900&family=Fredoka:wght@400;600;700&display=swap');
+
+        body {
+            font-family: 'Fredoka', sans-serif;
+            background-color: #030712;
+            color: #f3f4f6;
+            touch-action: manipulation;
+            overflow-x: hidden;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        .font-orbitron {
+            font-family: 'Orbitron', sans-serif;
+        }
+
+        /* Animated Starfield Canvas Overlay */
+        #starfield-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        /* Lightsaber Neon Glow Effects */
+        .glow-blue {
+            box-shadow: 0 0 15px #3b82f6, inset 0 0 10px #60a5fa;
+            border-color: #60a5fa;
+        }
+        .glow-green {
+            box-shadow: 0 0 15px #22c55e, inset 0 0 10px #4ade80;
+            border-color: #4ade80;
+        }
+        .glow-gold {
+            box-shadow: 0 0 20px #eab308, inset 0 0 12px #fde047;
+            border-color: #fde047;
+        }
+        .text-glow-gold {
+            text-shadow: 0 0 10px rgba(234, 179, 8, 0.8), 0 0 20px rgba(234, 179, 8, 0.5);
+        }
+        .text-glow-blue {
+            text-shadow: 0 0 10px rgba(59, 130, 246, 0.8), 0 0 20px rgba(59, 130, 246, 0.5);
+        }
+
+        /* Option Button Hover Animations */
+        .quiz-btn {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .quiz-btn:active {
+            transform: scale(0.96);
+        }
+
+        /* Pulsing Glow Animation */
+        @keyframes pulseGlow {
+            0%, 100% { opacity: 0.8; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.03); }
+        }
+        .animate-pulse-glow {
+            animation: pulseGlow 2s infinite;
+        }
+
+        /* Canvas styling for Brick Breaker */
+        #gameCanvas {
+            background: rgba(3, 7, 18, 0.85);
+            border: 3px solid #3b82f6;
+            border-radius: 1rem;
+            box-shadow: 0 0 25px rgba(59, 130, 246, 0.4);
+            max-width: 100%;
+            touch-action: none;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-center p-3 sm:p-6 relative">
+
+    <canvas id="starfield-canvas"></canvas>
+
+    <!-- Main Container -->
+    <main class="relative z-10 w-full max-w-2xl bg-gray-900/90 backdrop-blur-md rounded-3xl border-2 border-blue-500/40 p-4 sm:p-8 shadow-2xl my-auto">
+        
+        <!-- Header / Stats Bar -->
+        <header class="flex items-center justify-between border-b border-gray-800 pb-4 mb-6">
+            <div class="flex items-center space-x-2">
+                <span class="text-2xl sm:text-3xl">⚔️</span>
+                <div>
+                    <h1 class="font-orbitron text-lg sm:text-xl font-bold text-yellow-400 tracking-wider text-glow-gold">Maths Jedi Academy</h1>
+                    <p class="text-xs text-blue-300 font-semibold" id="jedi-rank">Jedi Youngling</p>
+                </div>
+            </div>
+            
+            <div class="flex items-center space-x-4">
+                <div class="text-center">
+                    <span class="text-xs text-gray-400 block uppercase font-bold">Level</span>
+                    <span class="text-lg sm:text-xl font-extrabold text-blue-400 font-orbitron" id="level-display">1/5</span>
+                </div>
+                <div class="text-center">
+                    <span class="text-xs text-gray-400 block uppercase font-bold">Score</span>
+                    <span class="text-lg sm:text-xl font-extrabold text-yellow-400 font-orbitron" id="score-display">0</span>
+                </div>
+                <!-- Audio Toggle Button -->
+                <button id="sound-btn" onclick="toggleAudio()" class="bg-gray-800 hover:bg-gray-700 text-yellow-400 p-2.5 rounded-full border border-yellow-500/50 transition" title="Toggle Sound">
+                    🔊
+                </button>
+            </div>
+        </header>
+
+
+        <!-- SCREEN 1: START SCREEN -->
+        <section id="screen-start" class="text-center py-6 space-y-6">
+            <div class="inline-block p-4 rounded-full bg-blue-950/60 border-2 border-blue-400/50 mb-2 animate-pulse-glow">
+                <span class="text-6xl sm:text-7xl">🚀</span>
+            </div>
+            <h2 class="text-2xl sm:text-4xl font-extrabold text-yellow-400 font-orbitron text-glow-gold">
+                THE MATHS FORCE AWAKENS
+            </h2>
+            <p class="text-gray-300 text-base sm:text-lg max-w-md mx-auto leading-relaxed">
+                Welcome, young Jedi Hero! Master times tables across 5 space missions to power up your starship and unlock the Brick Breaker reward rounds!
+            </p>
+
+            <div class="grid grid-cols-2 gap-3 max-w-sm mx-auto text-left text-xs sm:text-sm bg-gray-950/60 p-4 rounded-2xl border border-blue-900/50">
+                <div class="flex items-center space-x-2">
+                    <span class="text-yellow-400">⭐</span>
+                    <span>15 Maths Questions</span>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <span class="text-blue-400">🎮</span>
+                    <span>5 Reward Rounds</span>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <span class="text-green-400">🛡️</span>
+                    <span>Lightsaber Paddle</span>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <span class="text-purple-400">🏆</span>
+                    <span>Become Jedi Master</span>
+                </div>
+            </div>
+
+            <button onclick="startGame()" class="w-full sm:w-auto px-10 py-4 bg-gradient-to-r from-yellow-500 to-amber-600 hover:from-yellow-400 hover:to-amber-500 text-gray-950 font-black text-xl rounded-2xl font-orbitron tracking-wider shadow-lg transform transition hover:scale-105 active:scale-95 glow-gold">
+                START MISSION ⚡
+            </button>
+        </section>
+
+        <!-- SCREEN 2: MATHS QUIZ SCREEN -->
+        <section id="screen-quiz" class="hidden space-y-6">
+            <!-- Progress Bar -->
+            <div>
+                <div class="flex justify-between text-xs font-bold text-gray-400 mb-1">
+                    <span id="question-tracker">Question 1 of 3</span>
+                    <span id="level-title">Level 1: 2x, 5x, 10x Tables</span>
+                </div>
+                <div class="w-full bg-gray-800 rounded-full h-3 p-0.5 border border-gray-700">
+                    <div id="progress-bar" class="bg-gradient-to-r from-blue-500 to-cyan-400 h-2 rounded-full transition-all duration-300" style="width: 33%"></div>
+                </div>
+            </div>
+
+            <!-- Math Question Card -->
+            <div class="bg-gradient-to-b from-gray-800/90 to-gray-900/90 border-2 border-blue-500/50 rounded-2xl p-6 sm:p-8 text-center relative overflow-hidden shadow-xl">
+                <div class="absolute -top-10 -right-10 w-32 h-32 bg-blue-500/10 rounded-full blur-2xl"></div>
+                
+                <span class="inline-block px-3 py-1 bg-blue-900/60 border border-blue-400/40 text-blue-300 text-xs font-semibold rounded-full mb-3">
+                    Jedi Training Hologram
+                </span>
+                
+                <div class="text-4xl sm:text-6xl font-extrabold text-white font-orbitron my-4 tracking-wide text-glow-blue" id="question-text">
+                    2 × 5 = ?
+                </div>
+                
+                <p class="text-sm text-gray-400" id="hint-text">Select the correct holo-code below!</p>
+            </div>
+
+            <!-- Answer Options Grid -->
+            <div class="grid grid-cols-2 gap-3 sm:gap-4" id="answers-grid">
+                <!-- Buttons injected dynamically -->
+            </div>
+
+            <!-- Feedback Bar -->
+            <div id="quiz-feedback" class="h-10 flex items-center justify-center text-center font-bold text-lg rounded-xl transition-all opacity-0">
+                <!-- Feedback text injected here -->
+            </div>
+        </section>
+
+        <!-- SCREEN 3: BRICK BREAKER REWARD ROUND SCREEN -->
+        <section id="screen-reward" class="hidden space-y-4 text-center">
+            <div class="flex items-center justify-between px-2">
+                <div class="text-left">
+                    <h2 class="text-lg sm:text-xl font-bold text-yellow-400 font-orbitron text-glow-gold" id="reward-title">REWARD ROUND!</h2>
+                    <p class="text-xs text-gray-300">Smash all bricks with your lightsaber paddle!</p>
+                </div>
+                <div class="bg-blue-950 px-3 py-1.5 rounded-lg border border-blue-500/50 text-right">
+                    <span class="text-xs text-blue-300 block">Bricks Left</span>
+                    <span class="font-orbitron font-extrabold text-yellow-400 text-lg" id="bricks-count">15</span>
+                </div>
+            </div>
+
+            <!-- Game Canvas Container -->
+            <div class="relative flex justify-center items-center">
+                <canvas id="gameCanvas" width="480" height="400"></canvas>
+                
+                <!-- Start / Game Over Overlay on Canvas -->
+                <div id="canvas-overlay" class="absolute inset-0 bg-gray-950/80 backdrop-blur-sm rounded-2xl flex flex-col items-center justify-center p-4 text-center">
+                    <span class="text-5xl mb-2" id="overlay-icon">⚔️</span>
+                    <h3 class="text-2xl font-extrabold text-yellow-400 font-orbitron mb-2" id="overlay-title">Ready Jedi?</h3>
+                    <p class="text-sm text-gray-300 mb-4 max-w-xs" id="overlay-msg">Use your mouse, touch drag, or arrow keys to bounce the energy ball!</p>
+                    <button onclick="startBrickBreaker()" class="px-8 py-3 bg-green-500 hover:bg-green-400 text-gray-950 font-black rounded-xl font-orbitron shadow-lg glow-green transition transform hover:scale-105 active:scale-95">
+                        LAUNCH BALL 🚀
+                    </button>
+                </div>
+            </div>
+
+            <!-- Touch Controls for Mobile/Tablet -->
+            <div class="flex justify-between items-center gap-2 pt-2 sm:hidden">
+                <button id="btn-left" class="flex-1 py-4 bg-blue-900/60 active:bg-blue-700 border border-blue-400/40 rounded-xl text-2xl font-bold">◄ LEFT</button>
+                <button id="btn-right" class="flex-1 py-4 bg-blue-900/60 active:bg-blue-700 border border-blue-400/40 rounded-xl text-2xl font-bold">RIGHT ►</button>
+            </div>
+        </section>
+
+        <!-- SCREEN 4: LEVEL COMPLETE MODAL/TRANSITION -->
+        <section id="screen-level-complete" class="hidden text-center py-8 space-y-6">
+            <div class="text-6xl animate-bounce">🏆</div>
+            <h2 class="text-3xl font-extrabold text-yellow-400 font-orbitron text-glow-gold">MISSION ACCOMPLISHED!</h2>
+            <p class="text-lg text-gray-200 font-semibold" id="level-complete-msg">"Well done, young Jedi Hero!"</p>
+            
+            <div class="bg-gray-950/70 p-4 rounded-2xl border border-blue-500/30 max-w-xs mx-auto space-y-2 text-sm">
+                <div class="flex justify-between">
+                    <span class="text-gray-400">Level Score:</span>
+                    <span class="text-yellow-400 font-orbitron font-bold" id="lc-level-score">+300</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-gray-400">Total Points:</span>
+                    <span class="text-green-400 font-orbitron font-bold" id="lc-total-score">1200</span>
+                </div>
+            </div>
+
+            <button onclick="nextLevel()" class="px-8 py-3.5 bg-blue-600 hover:bg-blue-500 text-white font-extrabold text-lg rounded-xl font-orbitron shadow-lg glow-blue transition transform hover:scale-105 active:scale-95">
+                NEXT MISSION ►
+            </button>
+        </section>
+
+        <!-- SCREEN 5: GRAND VICTORY / GAME COMPLETE -->
+        <section id="screen-victory" class="hidden text-center py-8 space-y-6">
+            <div class="text-7xl animate-pulse">👑</div>
+            <h2 class="text-3xl sm:text-5xl font-extrabold text-yellow-400 font-orbitron text-glow-gold">
+                JEDI MASTER HERO!
+            </h2>
+            <p class="text-lg sm:text-xl text-blue-200 font-medium max-w-md mx-auto">
+                "The Force is truly strong with you! You have mastered all times tables and saved the galaxy!"
+            </p>
+
+            <div class="bg-gradient-to-r from-blue-950 via-indigo-950 to-purple-950 p-6 rounded-2xl border-2 border-yellow-400/50 max-w-sm mx-auto shadow-2xl space-y-3">
+                <div class="text-xs text-yellow-400 uppercase tracking-widest font-bold">Final Jedi Academy Report</div>
+                <div class="text-4xl font-extrabold text-white font-orbitron" id="final-score">1500</div>
+                <div class="text-xs text-green-400 font-semibold">15 / 15 Maths Questions Cleared Perfectly!</div>
+            </div>
+
+            <button onclick="resetGame()" class="px-10 py-4 bg-gradient-to-r from-yellow-500 to-amber-600 hover:from-yellow-400 hover:to-amber-500 text-gray-950 font-black text-xl rounded-2xl font-orbitron shadow-xl transform transition hover:scale-105 active:scale-95 glow-gold">
+                PLAY AGAIN 🔄
+            </button>
+        </section>
+
+    </main>
+
+    <script>
+        /* ===================================================================
+           AUDIO SYNTHESIZER ENGINE (Web Audio API - 100% Asset-Free)
+           =================================================================== */
+        let audioCtx = null;
+        let soundEnabled = true;
+
+        function initAudio() {
+            if (!audioCtx) {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                audioCtx = new AudioContext();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }
+
+        function toggleAudio() {
+            soundEnabled = !soundEnabled;
+            const btn = document.getElementById('sound-btn');
+            btn.textContent = soundEnabled ? '🔊' : '🔇';
+            if (soundEnabled) initAudio();
+        }
+
+        // Sound 1: Correct Answer Synth Chime
+        function playCorrectSound() {
+            if (!soundEnabled) return;
+            initAudio();
+            const now = audioCtx.currentTime;
+            const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+            notes.forEach((freq, idx) => {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(freq, now + idx * 0.08);
+                gain.gain.setValueAtTime(0.2, now + idx * 0.08);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.08 + 0.3);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start(now + idx * 0.08);
+                osc.stop(now + idx * 0.08 + 0.3);
+            });
+        }
+
+        // Sound 2: Encouraging Try Again Sound (Soft, low pleasant tone)
+        function playWrongSound() {
+            if (!soundEnabled) return;
+            initAudio();
+            const now = audioCtx.currentTime;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(220, now);
+            osc.frequency.exponentialRampToValueAtTime(140, now + 0.25);
+            gain.gain.setValueAtTime(0.2, now);
+            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start(now);
+            osc.stop(now + 0.25);
+        }
+
+        // Sound 3: Lightsaber Paddle Bounce
+        function playBounceSound() {
+            if (!soundEnabled) return;
+            initAudio();
+            const now = audioCtx.currentTime;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(150, now);
+            osc.frequency.exponentialRampToValueAtTime(450, now + 0.08);
+            gain.gain.setValueAtTime(0.25, now);
+            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.08);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start(now);
+            osc.stop(now + 0.08);
+        }
+
+        // Sound 4: Space Brick Laser Explosion
+        function playBrickSound() {
+            if (!soundEnabled) return;
+            initAudio();
+            const now = audioCtx.currentTime;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'square';
+            osc.frequency.setValueAtTime(600, now);
+            osc.frequency.exponentialRampToValueAtTime(80, now + 0.12);
+            gain.gain.setValueAtTime(0.15, now);
+            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.12);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start(now);
+            osc.stop(now + 0.12);
+        }
+
+        // Sound 5: Level Complete Jedi Fanfare
+        function playFanfareSound() {
+            if (!soundEnabled) return;
+            initAudio();
+            const now = audioCtx.currentTime;
+            const melody = [
+                { f: 440, d: 0.15 }, { f: 440, d: 0.15 }, { f: 440, d: 0.15 },
+                { f: 349.23, d: 0.25 }, { f: 523.25, d: 0.15 }, { f: 440, d: 0.4 }
+            ];
+            let t = now;
+            melody.forEach(note => {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(note.f, t);
+                gain.gain.setValueAtTime(0.2, t);
+                gain.gain.exponentialRampToValueAtTime(0.001, t + note.d);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start(t);
+                osc.stop(t + note.d);
+                t += note.d + 0.05;
+            });
+        }
+
+        /* ===================================================================
+           MATHS QUESTION BANK (5 Levels, 3 Questions Each = 15 Questions)
+           Year 3 Progression (Ages 7-8)
+           =================================================================== */
+        const gameLevels = [
+            {
+                level: 1,
+                title: "Level 1: 2x, 5x & 10x Tables",
+                questions: [
+                    { q: "2 × 5 = ?", ans: 10, options: [8, 10, 12, 15] },
+                    { q: "5 × 4 = ?", ans: 20, options: [15, 18, 20, 25] },
+                    { q: "10 × 7 = ?", ans: 70, options: [60, 70, 75, 80] }
+                ]
+            },
+            {
+                level: 2,
+                title: "Level 2: 3x & 4x Tables",
+                questions: [
+                    { q: "3 × 4 = ?", ans: 12, options: [9, 12, 14, 16] },
+                    { q: "4 × 6 = ?", ans: 24, options: [20, 22, 24, 28] },
+                    { q: "3 × 8 = ?", ans: 24, options: [21, 24, 27, 30] }
+                ]
+            },
+            {
+                level: 3,
+                title: "Level 3: 6x & 8x Tables",
+                questions: [
+                    { q: "6 × 3 = ?", ans: 18, options: [16, 18, 20, 24] },
+                    { q: "8 × 4 = ?", ans: 32, options: [28, 30, 32, 36] },
+                    { q: "6 × 7 = ?", ans: 42, options: [36, 40, 42, 48] }
+                ]
+            },
+            {
+                level: 4,
+                title: "Level 4: 7x & 9x Tables",
+                questions: [
+                    { q: "7 × 5 = ?", ans: 35, options: [30, 35, 40, 42] },
+                    { q: "9 × 3 = ?", ans: 27, options: [24, 27, 30, 33] },
+                    { q: "7 × 8 = ?", ans: 56, options: [49, 54, 56, 64] }
+                ]
+            },
+            {
+                level: 5,
+                title: "Level 5: Jedi Master Equations",
+                questions: [
+                    { q: "9 × 6 = ?", ans: 54, options: [45, 52, 54, 63] },
+                    { q: "? × 6 = 42", ans: 7, options: [6, 7, 8, 9] },
+                    { q: "? × 8 = 64", ans: 8, options: [6, 7, 8, 9] }
+                ]
+            }
+        ];
+
+        // Friendly Jedi Feedback Messages
+        const positiveMessages = [
+            "Well done, young Jedi Hero!",
+            "The Force is strong with you!",
+            "Brilliant maths skills!",
+            "Great job! Keep going!",
+            "Master Yoda is proud!"
+        ];
+
+        const jediRanks = [
+            "Jedi Youngling",
+            "Jedi Padawan",
+            "Jedi Knight",
+            "Jedi Commander",
+            "Jedi Master Hero"
+        ];
+
+        /* ===================================================================
+           GAME STATE MANAGEMENT
+           =================================================================== */
+        let currentLevelIdx = 0;
+        let currentQuestionIdx = 0;
+        let score = 0;
+        let isAnswering = false;
+
+        // UI Element References
+        const screenStart = document.getElementById('screen-start');
+        const screenQuiz = document.getElementById('screen-quiz');
+        const screenReward = document.getElementById('screen-reward');
+        const screenLevelComplete = document.getElementById('screen-level-complete');
+        const screenVictory = document.getElementById('screen-victory');
+
+        const scoreDisplay = document.getElementById('score-display');
+        const levelDisplay = document.getElementById('level-display');
+        const jediRankDisplay = document.getElementById('jedi-rank');
+
+        function updateHeader() {
+            scoreDisplay.textContent = score;
+            levelDisplay.textContent = `${currentLevelIdx + 1}/5`;
+            jediRankDisplay.textContent = jediRanks[currentLevelIdx];
+        }
+
+        function showScreen(screen) {
+            [screenStart, screenQuiz, screenReward, screenLevelComplete, screenVictory].forEach(s => s.classList.add('hidden'));
+            screen.classList.remove('hidden');
+        }
+
+        function startGame() {
+            initAudio();
+            currentLevelIdx = 0;
+            currentQuestionIdx = 0;
+            score = 0;
+            updateHeader();
+            loadQuestion();
+            showScreen(screenQuiz);
+        }
+
+        /* ===================================================================
+           QUIZ LOGIC
+           =================================================================== */
+        function loadQuestion() {
+            isAnswering = false;
+            const currentLevelData = gameLevels[currentLevelIdx];
+            const qData = currentLevelData.questions[currentQuestionIdx];
+
+            // Update Labels
+            document.getElementById('level-title').textContent = currentLevelData.title;
+            document.getElementById('question-tracker').textContent = `Question ${currentQuestionIdx + 1} of 3`;
+            document.getElementById('question-text').textContent = qData.q;
+            
+            // Progress Bar
+            const progPct = ((currentQuestionIdx + 1) / 3) * 100;
+            document.getElementById('progress-bar').style.width = `${progPct}%`;
+
+            // Clear feedback
+            const feedbackEl = document.getElementById('quiz-feedback');
+            feedbackEl.className = "h-10 flex items-center justify-center text-center font-bold text-lg rounded-xl transition-all opacity-0";
+
+            // Render Options
+            const answersGrid = document.getElementById('answers-grid');
+            answersGrid.innerHTML = '';
+
+            // Shuffle options slightly
+            const shuffledOptions = [...qData.options].sort(() => Math.random() - 0.5);
+
+            shuffledOptions.forEach(opt => {
+                const btn = document.createElement('button');
+                btn.className = "quiz-btn py-4 sm:py-5 px-4 bg-gray-800 hover:bg-blue-900/60 border-2 border-blue-500/40 rounded-2xl text-2xl sm:text-3xl font-extrabold text-white font-orbitron shadow-md hover:border-blue-400 focus:outline-none";
+                btn.textContent = opt;
+                btn.onclick = () => handleAnswer(opt, qData.ans, btn);
+                answersGrid.appendChild(btn);
+            });
+        }
+
+        function handleAnswer(selectedOpt, correctAns, btnElement) {
+            if (isAnswering) return;
+            isAnswering = true;
+
+            const feedbackEl = document.getElementById('quiz-feedback');
+
+            if (selectedOpt === correctAns) {
+                // Correct Answer
+                playCorrectSound();
+                score += 100;
+                updateHeader();
+
+                btnElement.classList.remove('bg-gray-800', 'border-blue-500/40');
+                btnElement.classList.add('bg-green-600', 'border-green-300', 'glow-green');
+
+                const randomMsg = positiveMessages[Math.floor(Math.random() * positiveMessages.length)];
+                feedbackEl.textContent = randomMsg;
+                feedbackEl.className = "h-10 flex items-center justify-center text-center font-bold text-lg rounded-xl transition-all opacity-100 bg-green-950/80 text-green-300 border border-green-500/50";
+
+                setTimeout(() => {
+                    currentQuestionIdx++;
+                    if (currentQuestionIdx >= 3) {
+                        // Level cleared -> Transition to Brick Breaker Reward!
+                        currentQuestionIdx = 0;
+                        setupRewardRound();
+                    } else {
+                        loadQuestion();
+                    }
+                }, 1400);
+
+            } else {
+                // Friendly Try Again
+                playWrongSound();
+                btnElement.classList.remove('bg-gray-800');
+                btnElement.classList.add('bg-amber-900/60', 'border-amber-500/60');
+
+                feedbackEl.textContent = "Almost! Try another holo-code, Hero! 💫";
+                feedbackEl.className = "h-10 flex items-center justify-center text-center font-bold text-lg rounded-xl transition-all opacity-100 bg-amber-950/80 text-amber-300 border border-amber-500/50";
+
+                setTimeout(() => {
+                    isAnswering = false;
+                }, 800);
+            }
+        }
+
+        /* ===================================================================
+           BRICK BREAKER REWARD ROUND (Canvas Engine)
+           =================================================================== */
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        let bbPaddle = { x: 200, width: 90, height: 14, speed: 7 };
+        let bbBall = { x: 240, y: 300, radius: 8, dx: 4, dy: -4, active: false };
+        let bbBricks = [];
+        let bbAnimationId = null;
+        let bbBricksLeft = 0;
+
+        const BRICK_ROWS = 4;
+        const BRICK_COLS = 6;
+        const BRICK_PADDING = 8;
+        const BRICK_OFFSET_TOP = 40;
+        const BRICK_OFFSET_LEFT = 20;
+
+        function setupRewardRound() {
+            showScreen(screenReward);
+            document.getElementById('reward-title').textContent = `REWARD ROUND: LEVEL ${currentLevelIdx + 1}`;
+            
+            // Show start overlay
+            const overlay = document.getElementById('canvas-overlay');
+            overlay.classList.remove('hidden');
+            document.getElementById('overlay-title').textContent = "Reward Round Unlocked!";
+            document.getElementById('overlay-msg').textContent = "Smash space bricks to earn extra Star Power!";
+
+            // Initialize Bricks
+            bbBricks = [];
+            const brickWidth = (canvas.width - (BRICK_OFFSET_LEFT * 2) - ((BRICK_COLS - 1) * BRICK_PADDING)) / BRICK_COLS;
+            const brickHeight = 20;
+
+            const brickColors = ['#ef4444', '#f59e0b', '#10b981', '#3b82f6'];
+
+            for (let r = 0; r < BRICK_ROWS; r++) {
+                bbBricks[r] = [];
+                for (let c = 0; c < BRICK_COLS; c++) {
+                    bbBricks[r][c] = {
+                        x: BRICK_OFFSET_LEFT + c * (brickWidth + BRICK_PADDING),
+                        y: BRICK_OFFSET_TOP + r * (brickHeight + BRICK_PADDING),
+                        w: brickWidth,
+                        h: brickHeight,
+                        color: brickColors[r % brickColors.length],
+                        status: 1
+                    };
+                }
+            }
+
+            bbBricksLeft = BRICK_ROWS * BRICK_COLS;
+            document.getElementById('bricks-count').textContent = bbBricksLeft;
+
+            // Reset paddle & ball
+            bbPaddle.x = (canvas.width - bbPaddle.width) / 2;
+            bbBall.x = canvas.width / 2;
+            bbBall.y = canvas.height - 30;
+            bbBall.active = false;
+
+            drawBrickBreakerFrame();
+        }
+
+        function startBrickBreaker() {
+            document.getElementById('canvas-overlay').classList.add('hidden');
+            bbBall.dx = (Math.random() > 0.5 ? 1 : -1) * (3.5 + currentLevelIdx * 0.5);
+            bbBall.dy = -(4 + currentLevelIdx * 0.5);
+            bbBall.active = true;
+
+            if (bbAnimationId) cancelAnimationFrame(bbAnimationId);
+            runBrickBreakerLoop();
+        }
+
+        // Controls setup for Canvas
+        let rightPressed = false;
+        let leftPressed = false;
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight' || e.key === 'Right') rightPressed = true;
+            if (e.key === 'ArrowLeft' || e.key === 'Left') leftPressed = true;
+        });
+        document.addEventListener('keyup', (e) => {
+            if (e.key === 'ArrowRight' || e.key === 'Right') rightPressed = false;
+            if (e.key === 'ArrowLeft' || e.key === 'Left') leftPressed = false;
+        });
+
+        // Mouse & Touch paddle controls
+        function movePaddleWithPointer(clientX) {
+            const rect = canvas.getBoundingClientRect();
+            const rootX = clientX - rect.left;
+            bbPaddle.x = Math.max(0, Math.min(canvas.width - bbPaddle.width, rootX - bbPaddle.width / 2));
+        }
+
+        canvas.addEventListener('mousemove', (e) => movePaddleWithPointer(e.clientX));
+        canvas.addEventListener('touchmove', (e) => {
+            if (e.touches.length > 0) {
+                movePaddleWithPointer(e.touches[0].clientX);
+            }
+        });
+
+        // Touch buttons for mobile
+        const btnLeft = document.getElementById('btn-left');
+        const btnRight = document.getElementById('btn-right');
+        
+        btnLeft.addEventListener('touchstart', (e) => { e.preventDefault(); leftPressed = true; });
+        btnLeft.addEventListener('touchend', (e) => { e.preventDefault(); leftPressed = false; });
+        btnRight.addEventListener('touchstart', (e) => { e.preventDefault(); rightPressed = true; });
+        btnRight.addEventListener('touchend', (e) => { e.preventDefault(); rightPressed = false; });
+
+        function updateBrickBreaker() {
+            if (!bbBall.active) return;
+
+            // Move Paddle
+            if (rightPressed && bbPaddle.x < canvas.width - bbPaddle.width) {
+                bbPaddle.x += bbPaddle.speed;
+            } else if (leftPressed && bbPaddle.x > 0) {
+                bbPaddle.x -= bbPaddle.speed;
+            }
+
+            // Move Ball
+            bbBall.x += bbBall.dx;
+            bbBall.y += bbBall.dy;
+
+            // Wall Collision (Left/Right)
+            if (bbBall.x + bbBall.radius > canvas.width || bbBall.x - bbBall.radius < 0) {
+                bbBall.dx = -bbBall.dx;
+                playBounceSound();
+            }
+
+            // Wall Collision (Top)
+            if (bbBall.y - bbBall.radius < 0) {
+                bbBall.dy = -bbBall.dy;
+                playBounceSound();
+            }
+
+            // Paddle Collision
+            if (bbBall.y + bbBall.radius >= canvas.height - bbPaddle.height - 10 &&
+                bbBall.y + bbBall.radius <= canvas.height - 5) {
+                if (bbBall.x >= bbPaddle.x && bbBall.x <= bbPaddle.x + bbPaddle.width) {
+                    bbBall.dy = -Math.abs(bbBall.dy);
+                    // Add spin based on where ball hits paddle
+                    const hitPoint = (bbBall.x - (bbPaddle.x + bbPaddle.width / 2)) / (bbPaddle.width / 2);
+                    bbBall.dx = hitPoint * 5;
+                    playBounceSound();
+                }
+            }
+
+            // Bottom Boundary (Missed Ball) -> Friendly Respawn
+            if (bbBall.y - bbBall.radius > canvas.height) {
+                bbBall.x = bbPaddle.x + bbPaddle.width / 2;
+                bbBall.y = canvas.height - 35;
+                bbBall.dy = -Math.abs(bbBall.dy);
+                playWrongSound();
+            }
+
+            // Brick Collisions
+            for (let r = 0; r < BRICK_ROWS; r++) {
+                for (let c = 0; c < BRICK_COLS; c++) {
+                    const b = bbBricks[r][c];
+                    if (b.status === 1) {
+                        if (bbBall.x > b.x && bbBall.x < b.x + b.w &&
+                            bbBall.y - bbBall.radius < b.y + b.h && bbBall.y + bbBall.radius > b.y) {
+                            
+                            bbBall.dy = -bbBall.dy;
+                            b.status = 0;
+                            bbBricksLeft--;
+                            score += 20;
+                            updateHeader();
+                            document.getElementById('bricks-count').textContent = bbBricksLeft;
+                            playBrickSound();
+
+                            // Cleared all bricks!
+                            if (bbBricksLeft <= 0) {
+                                bbBall.active = false;
+                                cancelAnimationFrame(bbAnimationId);
+                                endRewardRound();
+                                return;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        function drawBrickBreakerFrame() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Draw Space Grid / Background Details
+            ctx.strokeStyle = 'rgba(59, 130, 246, 0.1)';
+            ctx.lineWidth = 1;
+            for (let i = 0; i < canvas.width; i += 40) {
+                ctx.beginPath();
+                ctx.moveTo(i, 0); ctx.lineTo(i, canvas.height);
+                ctx.stroke();
+            }
+
+            // Draw Bricks with Lightsaber Glow
+            for (let r = 0; r < BRICK_ROWS; r++) {
+                for (let c = 0; c < BRICK_COLS; c++) {
+                    const b = bbBricks[r][c];
+                    if (b.status === 1) {
+                        ctx.fillStyle = b.color;
+                        ctx.shadowColor = b.color;
+                        ctx.shadowBlur = 8;
+                        ctx.beginPath();
+                        ctx.roundRect(b.x, b.y, b.w, b.h, 4);
+                        ctx.fill();
+                        ctx.shadowBlur = 0;
+                    }
+                }
+            }
+
+            // Draw Lightsaber Paddle
+            ctx.fillStyle = '#38bdf8';
+            ctx.shadowColor = '#0284c7';
+            ctx.shadowBlur = 15;
+            ctx.beginPath();
+            ctx.roundRect(bbPaddle.x, canvas.height - bbPaddle.height - 10, bbPaddle.width, bbPaddle.height, 7);
+            ctx.fill();
+            ctx.shadowBlur = 0;
+
+            // Draw Starship Energy Ball
+            if (bbBall.active || !document.getElementById('canvas-overlay').classList.contains('hidden')) {
+                ctx.fillStyle = '#fde047';
+                ctx.shadowColor = '#eab308';
+                ctx.shadowBlur = 12;
+                ctx.beginPath();
+                ctx.arc(bbBall.x, bbBall.y, bbBall.radius, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.shadowBlur = 0;
+            }
+        }
+
+        function runBrickBreakerLoop() {
+            updateBrickBreaker();
+            drawBrickBreakerFrame();
+            if (bbBall.active) {
+                bbAnimationId = requestAnimationFrame(runBrickBreakerLoop);
+            }
+        }
+
+        function endRewardRound() {
+            playFanfareSound();
+
+            if (currentLevelIdx < 4) {
+                // Show Level Complete Screen
+                document.getElementById('lc-level-score').textContent = `+${300 + (BRICK_ROWS * BRICK_COLS * 20)}`;
+                document.getElementById('lc-total-score').textContent = score;
+                document.getElementById('level-complete-msg').textContent = positiveMessages[currentLevelIdx % positiveMessages.length];
+                showScreen(screenLevelComplete);
+            } else {
+                // Final Grand Victory!
+                document.getElementById('final-score').textContent = score;
+                showScreen(screenVictory);
+            }
+        }
+
+        function nextLevel() {
+            currentLevelIdx++;
+            updateHeader();
+            loadQuestion();
+            showScreen(screenQuiz);
+        }
+
+        function resetGame() {
+            startGame();
+        }
+
+        /* ===================================================================
+           CANVAS BACKGROUND STARFIELD (Sci-Fi Animation)
+           =================================================================== */
+        const starfieldCanvas = document.getElementById('starfield-canvas');
+        const starCtx = starfieldCanvas.getContext('2d');
+        let stars = [];
+
+        function resizeStarfield() {
+            starfieldCanvas.width = window.innerWidth;
+            starfieldCanvas.height = window.innerHeight;
+            initStars();
+        }
+
+        function initStars() {
+            stars = [];
+            const numStars = Math.floor((window.innerWidth * window.innerHeight) / 3000);
+            for (let i = 0; i < numStars; i++) {
+                stars.push({
+                    x: Math.random() * starfieldCanvas.width,
+                    y: Math.random() * starfieldCanvas.height,
+                    size: Math.random() * 2 + 0.5,
+                    speed: Math.random() * 0.8 + 0.2,
+                    alpha: Math.random()
+                });
+            }
+        }
+
+        function animateStarfield() {
+            starCtx.clearRect(0, 0, starfieldCanvas.width, starfieldCanvas.height);
+            starCtx.fillStyle = '#ffffff';
+
+            stars.forEach(star => {
+                star.y += star.speed;
+                if (star.y > starfieldCanvas.height) {
+                    star.y = 0;
+                    star.x = Math.random() * starfieldCanvas.width;
+                }
+                starCtx.globalAlpha = star.alpha;
+                starCtx.beginPath();
+                starCtx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
+                starCtx.fill();
+            });
+
+            requestAnimationFrame(animateStarfield);
+        }
+
+        window.addEventListener('resize', resizeStarfield);
+
+        // Initialize background on window load
+        window.onload = function() {
+            resizeStarfield();
+            animateStarfield();
+        };
+    </script>
+</body>
+</html>

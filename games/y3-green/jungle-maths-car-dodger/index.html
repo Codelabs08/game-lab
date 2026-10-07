@@ -1,0 +1,933 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Jungle Maths Car Dodger</title>
+    <!-- Tailwind CSS for rapid styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Quicksand:wght@600;700&display=swap');
+
+        body {
+            font-family: 'Quicksand', sans-serif;
+            background-color: #1a4d2e;
+            color: #2d3748;
+            touch-action: manipulation;
+            user-select: none;
+            overflow-x: hidden;
+        }
+
+        .font-game {
+            font-family: 'Fredoka One', cursive;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #143e24;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #4ab04e;
+            border-radius: 4px;
+        }
+
+        /* Bouncy Button Effect */
+        .btn-bounce {
+            transition: transform 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.15s ease;
+        }
+        .btn-bounce:active {
+            transform: scale(0.92);
+        }
+
+        /* Jungle Card Styling */
+        .jungle-card {
+            background: rgba(255, 255, 255, 0.95);
+            border: 4px solid #48bb78;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.3);
+            border-radius: 1.5rem;
+        }
+
+        .jungle-card-dark {
+            background: #1e3a8a;
+            border: 4px solid #3b82f6;
+        }
+
+        /* Confetti Canvas Overlay */
+        #confettiCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            z-index: 100;
+        }
+
+        /* Pulse Animation */
+        @keyframes pulse-gentle {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.04); }
+        }
+        .pulse-animation {
+            animation: pulse-gentle 2s infinite ease-in-out;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between items-center relative p-2 sm:p-4 bg-emerald-950 text-slate-800">
+
+    <!-- Visual Decor Elements (Jungle Leaves & Vines in background) -->
+    <div class="fixed top-0 left-0 w-32 h-32 pointer-events-none opacity-40 z-0">
+        <svg viewBox="0 0 100 100" fill="#22c55e"><path d="M0,0 Q50,0 50,50 Q0,50 0,0 Z"/></svg>
+    </div>
+    <div class="fixed top-0 right-0 w-32 h-32 pointer-events-none opacity-40 z-0">
+        <svg viewBox="0 0 100 100" fill="#22c55e"><path d="M100,0 Q50,0 50,50 Q100,50 100,0 Z"/></svg>
+    </div>
+
+    <!-- Canvas for Victory Confetti -->
+    <canvas id="confettiCanvas"></canvas>
+
+    <!-- Top Navigation / Score Bar -->
+    <header class="w-full max-w-2xl flex justify-between items-center p-3 bg-emerald-800 text-white rounded-2xl shadow-lg z-10 border-2 border-emerald-600 mb-2">
+        <div class="flex items-center space-x-2">
+            <span class="text-2xl">🦁</span>
+            <div>
+                <h1 class="font-game text-lg sm:text-xl text-yellow-300 leading-tight">Jungle Maths Car Dodger</h1>
+                <p class="text-xs text-emerald-200" id="currentLevelLabel">Level Select</p>
+            </div>
+        </div>
+        <div class="flex items-center space-x-4 font-game text-sm sm:text-base">
+            <div class="bg-emerald-900 px-3 py-1 rounded-xl flex items-center space-x-1 border border-emerald-700">
+                <span>⭐ Stars:</span>
+                <span id="totalStars" class="text-yellow-300 font-bold">0</span>
+            </div>
+            <div class="bg-emerald-900 px-3 py-1 rounded-xl flex items-center space-x-1 border border-emerald-700">
+                <span>🏆 Score:</span>
+                <span id="totalScore" class="text-yellow-300 font-bold">0</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="w-full max-w-2xl flex-grow flex flex-col justify-center items-center z-10 relative my-auto">
+
+        <!-- SCREEN 1: WELCOME / START SCREEN -->
+        <section id="screenWelcome" class="w-full jungle-card p-6 text-center space-y-6">
+            <div class="space-y-2">
+                <div class="text-5xl my-2 pulse-animation">🚙🌴🦜</div>
+                <h2 class="font-game text-3xl sm:text-4xl text-emerald-800">Your Car Dodger Game!</h2>
+                <p class="text-emerald-700 font-semibold text-base sm:text-lg">Jungle Math & Safari Adventure</p>
+            </div>
+
+            <div class="bg-emerald-50 p-4 rounded-xl border border-emerald-200 text-left space-y-2 text-sm sm:text-base">
+                <p class="font-bold text-emerald-900 flex items-center gap-1">🎮 How to play:</p>
+                <ul class="list-disc list-inside text-emerald-800 space-y-1">
+                    <li>Solve <strong>3 times-table questions</strong> per level.</li>
+                    <li>Unlock the <strong>Car Dodger Safari Game</strong>!</li>
+                    <li>Dodge mud & logs, collect stars for huge points!</li>
+                    <li>Complete all 5 levels to win the Safari Trophy!</li>
+                </ul>
+            </div>
+
+            <button id="btnStartGame" class="w-full py-4 bg-yellow-400 hover:bg-yellow-300 text-amber-950 font-game text-2xl rounded-2xl shadow-lg border-b-4 border-yellow-600 btn-bounce cursor-pointer flex items-center justify-center space-x-2">
+                <span>Start Adventure!</span>
+                <span>🚀</span>
+            </button>
+        </section>
+
+        <!-- SCREEN 2: LEVEL SELECT -->
+        <section id="screenLevelSelect" class="w-full jungle-card p-6 text-center space-y-5 hidden">
+            <h2 class="font-game text-2xl sm:text-3xl text-emerald-800">Select Your Level</h2>
+            <p class="text-sm text-emerald-600">Earn up to 3 stars per level!</p>
+
+            <div id="levelGrid" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <!-- Level Cards will be generated dynamically -->
+            </div>
+        </section>
+
+        <!-- SCREEN 3: MATH QUIZ -->
+        <section id="screenQuiz" class="w-full jungle-card p-6 text-center space-y-5 hidden">
+            <!-- Quiz Progress -->
+            <div class="flex justify-between items-center text-sm font-bold text-emerald-700">
+                <span id="quizProgressText">Question 1 of 3</span>
+                <div class="flex space-x-1" id="quizStarTracker">
+                    <!-- Stars indicator -->
+                </div>
+            </div>
+
+            <!-- Progress Bar -->
+            <div class="w-full bg-emerald-100 rounded-full h-3 border border-emerald-300">
+                <div id="quizProgressBar" class="bg-emerald-500 h-2.5 rounded-full transition-all duration-300" style="width: 33%"></div>
+            </div>
+
+            <!-- Mascot Banner -->
+            <div class="flex items-center justify-center space-x-3 bg-amber-50 p-3 rounded-2xl border border-amber-200">
+                <span id="quizMascot" class="text-4xl">🐵</span>
+                <p id="quizEncouragement" class="text-sm font-bold text-amber-900">You can do it, Hero!</p>
+            </div>
+
+            <!-- Question Box -->
+            <div class="bg-emerald-700 text-white rounded-2xl p-6 shadow-inner border-2 border-emerald-900 space-y-2">
+                <span class="text-xs uppercase tracking-wider text-emerald-200">Times Table Challenge</span>
+                <div id="questionText" class="font-game text-4xl sm:text-5xl text-yellow-300">
+                    2 × 4 = ?
+                </div>
+            </div>
+
+            <!-- Answer Buttons Grid -->
+            <div id="optionsGrid" class="grid grid-cols-2 gap-3 sm:gap-4">
+                <!-- 4 Options rendered dynamically -->
+            </div>
+
+            <!-- Feedback Modal Banner -->
+            <div id="quizFeedback" class="hidden p-3 rounded-xl text-center font-bold font-game text-lg animate-bounce">
+            </div>
+        </section>
+
+        <!-- SCREEN 4: REWARD MINI-GAME (CAR DODGER) -->
+        <section id="screenGame" class="w-full jungle-card p-4 sm:p-6 text-center space-y-3 hidden flex flex-col items-center">
+            <div class="w-full flex justify-between items-center px-2">
+                <div class="font-game text-lg text-emerald-800 flex items-center gap-2">
+                    <span>🚙</span> <span>Level Reward: Car Dodger</span>
+                </div>
+                <div class="font-game text-lg text-amber-600 bg-amber-100 px-3 py-1 rounded-xl border border-amber-300">
+                    ⏱️ Time: <span id="gameTimer">25</span>s
+                </div>
+            </div>
+
+            <!-- Canvas Wrapper for responsive rendering -->
+            <div class="relative w-full max-w-md bg-slate-900 rounded-2xl overflow-hidden border-4 border-emerald-800 shadow-2xl aspect-[3/4]">
+                <canvas id="gameCanvas" class="w-full h-full block"></canvas>
+                
+                <!-- Game Over/Start Overlay inside canvas -->
+                <div id="gameOverlay" class="absolute inset-0 bg-black/70 flex flex-col justify-center items-center p-4 text-white hidden">
+                    <h3 id="overlayTitle" class="font-game text-3xl text-yellow-400 mb-2">Great Driving!</h3>
+                    <p id="overlayMessage" class="text-lg mb-4 text-center">You collected lots of bananas and stars!</p>
+                    <button id="btnContinueFromGame" class="py-3 px-8 bg-emerald-500 hover:bg-emerald-400 text-white font-game text-xl rounded-2xl shadow-lg border-b-4 border-emerald-700 btn-bounce">
+                        Continue Adventure! ➡️
+                    </button>
+                </div>
+            </div>
+
+            <!-- Mobile & Touch Controls -->
+            <div class="w-full max-w-md flex justify-between gap-4 pt-1">
+                <button id="btnMoveLeft" class="flex-1 py-4 bg-emerald-600 active:bg-emerald-700 text-white font-game text-2xl rounded-2xl border-b-4 border-emerald-900 shadow-lg active:scale-95 transition-all flex justify-center items-center gap-1">
+                    ◀️ LEFT
+                </button>
+                <button id="btnMoveRight" class="flex-1 py-4 bg-emerald-600 active:bg-emerald-700 text-white font-game text-2xl rounded-2xl border-b-4 border-emerald-900 shadow-lg active:scale-95 transition-all flex justify-center items-center gap-1">
+                    RIGHT ▶️
+                </button>
+            </div>
+            <p class="text-xs text-emerald-700 font-semibold">Tip: Use Left/Right Arrow keys or A/D keys on keyboard!</p>
+        </section>
+
+        <!-- SCREEN 5: GAME VICTORY SCREEN -->
+        <section id="screenVictory" class="w-full jungle-card p-6 text-center space-y-6 hidden">
+            <div class="text-6xl animate-bounce">🏆</div>
+            <h2 class="font-game text-3xl sm:text-4xl text-emerald-800">SUPER SAFARI CHAMPION!</h2>
+            <p class="text-emerald-700 font-bold text-lg">Incredible job, Hero! You mastered all 5 Jungle Levels!</p>
+
+            <div class="bg-amber-50 border-2 border-amber-300 rounded-2xl p-4 space-y-3">
+                <div class="flex justify-around items-center font-game text-xl">
+                    <div>
+                        <p class="text-xs text-amber-700 font-sans">Total Score</p>
+                        <p id="finalScore" class="text-3xl text-amber-900">0</p>
+                    </div>
+                    <div class="h-10 border-r border-amber-300"></div>
+                    <div>
+                        <p class="text-xs text-amber-700 font-sans">Stars Earned</p>
+                        <p id="finalStars" class="text-3xl text-yellow-600">0 / 15 ⭐</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="text-4xl">🐯 🦜 🐘 🐵 🦁</div>
+
+            <button id="btnRestart" class="w-full py-4 bg-yellow-400 hover:bg-yellow-300 text-amber-950 font-game text-2xl rounded-2xl shadow-lg border-b-4 border-yellow-600 btn-bounce cursor-pointer">
+                Play Again! 🔄
+            </button>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="w-full max-w-2xl text-center py-2 text-xs text-emerald-300 z-10">
+        Created for Hero • Safe Year 3 Educational Game • 100% Offline Ready
+    </footer>
+
+    <script>
+        // Sound Synthesizer via Web Audio API
+        const SoundFX = {
+            ctx: null,
+            init() {
+                if (!this.ctx) {
+                    this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+                }
+            },
+            playCorrect() {
+                this.init();
+                if (!this.ctx) return;
+                const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(523.25, now); // C5
+                osc.frequency.exponentialRampToValueAtTime(659.25, now + 0.1); // E5
+                osc.frequency.exponentialRampToValueAtTime(783.99, now + 0.2); // G5
+                osc.frequency.exponentialRampToValueAtTime(1046.50, now + 0.3); // C6
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(now);
+                osc.stop(now + 0.5);
+            },
+            playWrong() {
+                this.init();
+                if (!this.ctx) return;
+                const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(220, now);
+                osc.frequency.linearRampToValueAtTime(160, now + 0.25);
+                gain.gain.setValueAtTime(0.15, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(now);
+                osc.stop(now + 0.3);
+            },
+            playPickup() {
+                this.init();
+                if (!this.ctx) return;
+                const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(587.33, now); // D5
+                osc.frequency.exponentialRampToValueAtTime(880, now + 0.15); // A5
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(now);
+                osc.stop(now + 0.2);
+            },
+            playBump() {
+                this.init();
+                if (!this.ctx) return;
+                const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(120, now);
+                osc.frequency.linearRampToValueAtTime(40, now + 0.15);
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(now);
+                osc.stop(now + 0.2);
+            }
+        };
+
+        // Questions Data for 5 Levels (Year 3 curriculum standard: 2x, 3x, 4x, 5x, 6x, 8x, 10x)
+        const LEVEL_DATA = [
+            {
+                level: 1,
+                title: "Level 1: Friendly 2x & 10x Tables",
+                tables: "2× and 10×",
+                mascot: "🐵",
+                questions: [
+                    { num1: 2, num2: 4, answer: 8, options: [6, 8, 10, 12] },
+                    { num1: 10, num2: 3, answer: 30, options: [20, 25, 30, 35] },
+                    { num1: 2, num2: 7, answer: 14, options: [12, 14, 16, 18] }
+                ]
+            },
+            {
+                level: 2,
+                title: "Level 2: Speed 5x Tables",
+                tables: "5×",
+                mascot: "🦜",
+                questions: [
+                    { num1: 5, num2: 3, answer: 15, options: [10, 15, 20, 25] },
+                    { num1: 5, num2: 6, answer: 30, options: [25, 30, 35, 40] },
+                    { num1: 5, num2: 8, answer: 40, options: [35, 40, 45, 50] }
+                ]
+            },
+            {
+                level: 3,
+                title: "Level 3: Jungle 3x & 4x Tables",
+                tables: "3× and 4×",
+                mascot: "🦁",
+                questions: [
+                    { num1: 3, num2: 4, answer: 12, options: [9, 12, 15, 16] },
+                    { num1: 4, num2: 4, answer: 16, options: [12, 14, 16, 18] },
+                    { num1: 3, num2: 9, answer: 27, options: [21, 24, 27, 30] }
+                ]
+            },
+            {
+                level: 4,
+                title: "Level 4: Clever 6x Tables",
+                tables: "6×",
+                mascot: "🐯",
+                questions: [
+                    { num1: 6, num2: 2, answer: 12, options: [10, 12, 14, 16] },
+                    { num1: 6, num2: 5, answer: 30, options: [24, 30, 36, 40] },
+                    { num1: 6, num2: 7, answer: 42, options: [36, 40, 42, 48] }
+                ]
+            },
+            {
+                level: 5,
+                title: "Level 5: Safari Master 8x Tables",
+                tables: "8×",
+                mascot: "🐘",
+                questions: [
+                    { num1: 8, num2: 3, answer: 24, options: [20, 24, 28, 32] },
+                    { num1: 8, num2: 5, answer: 40, options: [35, 40, 45, 48] },
+                    { num1: 8, num2: 8, answer: 64, options: [56, 60, 64, 72] }
+                ]
+            }
+        ];
+
+        // Supportive messages for Hero
+        const ENCOURAGEMENTS = [
+            "Great job, Hero!",
+            "Super Star!",
+            "Fantastic work!",
+            "You are a Math Genius!",
+            "Keep going, Champion!",
+            "Brilliant thinking!"
+        ];
+
+        // Global State
+        let gameState = {
+            currentLevelIndex: 0,
+            currentQuestionIndex: 0,
+            score: 0,
+            totalStars: 0,
+            levelProgress: [
+                { unlocked: true, stars: 0 },
+                { unlocked: false, stars: 0 },
+                { unlocked: false, stars: 0 },
+                { unlocked: false, stars: 0 },
+                { unlocked: false, stars: 0 }
+            ],
+            currentQuizStars: 0
+        };
+
+        // UI Navigation
+        function showScreen(screenId) {
+            ['screenWelcome', 'screenLevelSelect', 'screenQuiz', 'screenGame', 'screenVictory'].forEach(id => {
+                document.getElementById(id).classList.add('hidden');
+            });
+            document.getElementById(screenId).classList.remove('hidden');
+        }
+
+        function updateHeaderUI() {
+            document.getElementById('totalScore').textContent = gameState.score;
+            document.getElementById('totalStars').textContent = gameState.totalStars;
+        }
+
+        // Render Level Selection Grid
+        function renderLevelGrid() {
+            const grid = document.getElementById('levelGrid');
+            grid.innerHTML = '';
+
+            LEVEL_DATA.forEach((lvl, idx) => {
+                const prog = gameState.levelProgress[idx];
+                const card = document.createElement('div');
+                card.className = `p-4 rounded-2xl border-2 flex flex-col justify-between items-center text-center space-y-2 transition-all ${
+                    prog.unlocked 
+                        ? 'bg-emerald-50 border-emerald-400 shadow-md cursor-pointer hover:bg-emerald-100 hover:scale-105' 
+                        : 'bg-gray-100 border-gray-300 opacity-60 cursor-not-allowed'
+                }`;
+
+                let starsHtml = '';
+                for (let s = 1; s <= 3; s++) {
+                    starsHtml += `<span class="${s <= prog.stars ? 'text-yellow-400' : 'text-gray-300'} text-xl">★</span>`;
+                }
+
+                card.innerHTML = `
+                    <div class="flex justify-between w-full items-center">
+                        <span class="text-3xl">${lvl.mascot}</span>
+                        <div class="flex">${starsHtml}</div>
+                    </div>
+                    <h3 class="font-game text-emerald-900 text-lg">${lvl.title}</h3>
+                    <p class="text-xs text-emerald-700 font-semibold">${lvl.tables} Times Tables</p>
+                    <button class="w-full py-2 ${prog.unlocked ? 'bg-emerald-600 text-white' : 'bg-gray-400 text-gray-200'} font-game rounded-xl text-sm">
+                        ${prog.unlocked ? (prog.stars > 0 ? 'Play Again' : 'Start Level') : '🔒 Locked'}
+                    </button>
+                `;
+
+                if (prog.unlocked) {
+                    card.onclick = () => startQuiz(idx);
+                }
+
+                grid.appendChild(card);
+            });
+        }
+
+        // Quiz Engine
+        function startQuiz(levelIndex) {
+            gameState.currentLevelIndex = levelIndex;
+            gameState.currentQuestionIndex = 0;
+            gameState.currentQuizStars = 3; // Start with 3 potential stars
+            
+            document.getElementById('currentLevelLabel').textContent = `Level ${levelIndex + 1}`;
+            showScreen('screenQuiz');
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            const level = LEVEL_DATA[gameState.currentLevelIndex];
+            const q = level.questions[gameState.currentQuestionIndex];
+
+            document.getElementById('quizProgressText').textContent = `Question ${gameState.currentQuestionIndex + 1} of 3`;
+            document.getElementById('quizProgressBar').style.width = `${((gameState.currentQuestionIndex + 1) / 3) * 100}%`;
+            document.getElementById('quizMascot').textContent = level.mascot;
+            document.getElementById('quizEncouragement').textContent = ENCOURAGEMENTS[Math.floor(Math.random() * ENCOURAGEMENTS.length)];
+
+            // Render Star Tracker for Current Quiz
+            const tracker = document.getElementById('quizStarTracker');
+            tracker.innerHTML = '';
+            for (let i = 0; i < 3; i++) {
+                tracker.innerHTML += `<span class="${i < gameState.currentQuizStars ? 'text-yellow-400' : 'text-gray-300'} text-lg">★</span>`;
+            }
+
+            document.getElementById('questionText').textContent = `${q.num1} × ${q.num2} = ?`;
+
+            const optionsGrid = document.getElementById('optionsGrid');
+            optionsGrid.innerHTML = '';
+
+            // Shuffle options visually
+            const options = [...q.options].sort(() => Math.random() - 0.5);
+
+            options.forEach(opt => {
+                const btn = document.createElement('button');
+                btn.className = 'py-4 bg-yellow-400 hover:bg-yellow-300 text-amber-950 font-game text-2xl sm:text-3xl rounded-2xl shadow-md border-b-4 border-yellow-600 btn-bounce cursor-pointer';
+                btn.textContent = opt;
+                btn.onclick = () => handleAnswer(opt, q.answer, btn);
+                optionsGrid.appendChild(btn);
+            });
+
+            document.getElementById('quizFeedback').classList.add('hidden');
+        }
+
+        function handleAnswer(selected, correct, buttonElem) {
+            const feedbackElem = document.getElementById('quizFeedback');
+            feedbackElem.classList.remove('hidden');
+
+            if (selected === correct) {
+                // Correct Answer
+                SoundFX.playCorrect();
+                buttonElem.classList.remove('bg-yellow-400', 'border-yellow-600');
+                buttonElem.classList.add('bg-green-500', 'border-green-700', 'text-white');
+
+                feedbackElem.className = 'p-3 rounded-xl text-center font-bold font-game text-lg bg-green-100 text-green-800 border border-green-300';
+                feedbackElem.textContent = "🌟 Correct! Wonderful job, Hero!";
+
+                gameState.score += 100;
+                updateHeaderUI();
+
+                setTimeout(() => {
+                    gameState.currentQuestionIndex++;
+                    if (gameState.currentQuestionIndex < 3) {
+                        loadQuestion();
+                    } else {
+                        // Quiz completed -> Save stars and launch reward Car Dodger game
+                        completeQuizLevel();
+                    }
+                }, 1200);
+
+            } else {
+                // Incorrect Answer
+                SoundFX.playWrong();
+                buttonElem.classList.remove('bg-yellow-400', 'border-yellow-600');
+                buttonElem.classList.add('bg-red-400', 'border-red-600', 'text-white');
+
+                if (gameState.currentQuizStars > 1) {
+                    gameState.currentQuizStars--; // Deduct 1 star for attempt
+                }
+
+                feedbackElem.className = 'p-3 rounded-xl text-center font-bold font-game text-lg bg-amber-100 text-amber-800 border border-amber-300';
+                feedbackElem.textContent = "Almost! Give it another try! 💪";
+            }
+        }
+
+        function completeQuizLevel() {
+            const lvlIdx = gameState.currentLevelIndex;
+            gameState.levelProgress[lvlIdx].stars = Math.max(gameState.levelProgress[lvlIdx].stars, gameState.currentQuizStars);
+            gameState.totalStars += gameState.levelProgress[lvlIdx].stars;
+
+            // Unlock next level if available
+            if (lvlIdx + 1 < gameState.levelProgress.length) {
+                gameState.levelProgress[lvlIdx + 1].unlocked = true;
+            }
+
+            updateHeaderUI();
+            
+            // Launch Reward Mini-Game!
+            startCarDodgerGame();
+        }
+
+        // Car Dodger HTML5 Canvas Game Engine
+        let canvas, ctx;
+        let carGameLoop;
+        let carState = {
+            x: 0,
+            y: 0,
+            width: 44,
+            height: 70,
+            speed: 6,
+            score: 0,
+            timer: 25,
+            timerInterval: null,
+            obstacles: [],
+            pickups: [],
+            keys: { left: false, right: false }
+        };
+
+        function startCarDodgerGame() {
+            showScreen('screenGame');
+            canvas = document.getElementById('gameCanvas');
+            ctx = canvas.getContext('2d');
+
+            // Responsive Canvas Internal Sizing
+            canvas.width = 320;
+            canvas.height = 420;
+
+            // Reset Car State
+            carState.x = canvas.width / 2 - carState.width / 2;
+            carState.y = canvas.height - carState.height - 20;
+            carState.obstacles = [];
+            carState.pickups = [];
+            carState.timer = 25;
+            carState.score = 0;
+
+            document.getElementById('gameTimer').textContent = carState.timer;
+            document.getElementById('gameOverlay').classList.add('hidden');
+
+            // Timer Countdown
+            clearInterval(carState.timerInterval);
+            carState.timerInterval = setInterval(() => {
+                carState.timer--;
+                document.getElementById('gameTimer').textContent = carState.timer;
+                if (carState.timer <= 0) {
+                    endCarDodgerGame();
+                }
+            }, 1000);
+
+            // Game Animation Loop
+            cancelAnimationFrame(carGameLoop);
+            function animate() {
+                updateCarGame();
+                renderCarGame();
+                if (carState.timer > 0) {
+                    carGameLoop = requestAnimationFrame(animate);
+                }
+            }
+            animate();
+        }
+
+        function updateCarGame() {
+            // Movement Controls
+            if (carState.keys.left && carState.x > 50) {
+                carState.x -= carState.speed;
+            }
+            if (carState.keys.right && carState.x < canvas.width - 50 - carState.width) {
+                carState.x += carState.speed;
+            }
+
+            // Spawn Obstacles (Logs & Puddles)
+            if (Math.random() < 0.03) {
+                carState.obstacles.push({
+                    x: 60 + Math.random() * (canvas.width - 120 - 30),
+                    y: -40,
+                    width: 34,
+                    height: 34,
+                    speed: 3 + Math.random() * 2,
+                    type: Math.random() > 0.5 ? 'puddle' : 'log'
+                });
+            }
+
+            // Spawn Pickups (Stars & Bananas)
+            if (Math.random() < 0.025) {
+                carState.pickups.push({
+                    x: 60 + Math.random() * (canvas.width - 120 - 25),
+                    y: -30,
+                    width: 26,
+                    height: 26,
+                    speed: 3,
+                    type: Math.random() > 0.4 ? 'star' : 'banana'
+                });
+            }
+
+            // Move & Collide Obstacles
+            for (let i = carState.obstacles.length - 1; i >= 0; i--) {
+                let obs = carState.obstacles[i];
+                obs.y += obs.speed;
+
+                // Collision Detection with Car
+                if (checkCollision(carState, obs)) {
+                    SoundFX.playBump();
+                    carState.score = Math.max(0, carState.score - 20);
+                    carState.obstacles.splice(i, 1);
+                    continue;
+                }
+
+                if (obs.y > canvas.height) {
+                    carState.obstacles.splice(i, 1);
+                }
+            }
+
+            // Move & Collect Pickups
+            for (let i = carState.pickups.length - 1; i >= 0; i--) {
+                let pick = carState.pickups[i];
+                pick.y += pick.speed;
+
+                // Collision Detection
+                if (checkCollision(carState, pick)) {
+                    SoundFX.playPickup();
+                    const bonus = pick.type === 'star' ? 50 : 30;
+                    carState.score += bonus;
+                    gameState.score += bonus;
+                    updateHeaderUI();
+                    carState.pickups.splice(i, 1);
+                    continue;
+                }
+
+                if (pick.y > canvas.height) {
+                    carState.pickups.splice(i, 1);
+                }
+            }
+        }
+
+        function checkCollision(rect1, rect2) {
+            return (
+                rect1.x < rect2.x + rect2.width &&
+                rect1.x + rect1.width > rect2.x &&
+                rect1.y < rect2.y + rect2.height &&
+                rect1.y + rect1.height > rect2.y
+            );
+        }
+
+        function renderCarGame() {
+            // Draw Jungle Track / Background
+            ctx.fillStyle = '#15803d'; // Green Jungle border
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Dirt Track
+            ctx.fillStyle = '#a16207';
+            ctx.fillRect(45, 0, canvas.width - 90, canvas.height);
+
+            // Track Edges (Grass / Vines)
+            ctx.fillStyle = '#166534';
+            ctx.fillRect(40, 0, 8, canvas.height);
+            ctx.fillRect(canvas.width - 48, 0, 8, canvas.height);
+
+            // Animated Road Lines
+            ctx.strokeStyle = '#fef08a';
+            ctx.lineWidth = 4;
+            ctx.setLineDash([15, 15]);
+            ctx.lineDashOffset = -Date.now() / 20;
+            ctx.beginPath();
+            ctx.moveTo(canvas.width / 2, 0);
+            ctx.lineTo(canvas.width / 2, canvas.height);
+            ctx.stroke();
+            ctx.setLineDash([]); // Reset line dash
+
+            // Draw Obstacles
+            carState.obstacles.forEach(obs => {
+                if (obs.type === 'puddle') {
+                    // Mud Puddle
+                    ctx.fillStyle = '#78350f';
+                    ctx.beginPath();
+                    ctx.ellipse(obs.x + 17, obs.y + 17, 16, 12, 0, 0, Math.PI * 2);
+                    ctx.fill();
+                } else {
+                    // Fallen Log
+                    ctx.fillStyle = '#451a03';
+                    ctx.fillRect(obs.x, obs.y + 6, obs.width, 18);
+                    ctx.fillStyle = '#a16207';
+                    ctx.fillRect(obs.x + 2, obs.y + 8, obs.width - 4, 14);
+                }
+            });
+
+            // Draw Pickups
+            carState.pickups.forEach(pick => {
+                if (pick.type === 'star') {
+                    // Golden Star
+                    ctx.fillStyle = '#facc15';
+                    ctx.font = '22px sans-serif';
+                    ctx.fillText('⭐', pick.x, pick.y + 20);
+                } else {
+                    // Banana
+                    ctx.font = '22px sans-serif';
+                    ctx.fillText('🍌', pick.x, pick.y + 20);
+                }
+            });
+
+            // Draw Safari Jeep Car (Canvas SVG-style graphic)
+            const car = carState;
+            // Car Shadow
+            ctx.fillStyle = 'rgba(0,0,0,0.25)';
+            ctx.fillRect(car.x + 4, car.y + car.height - 6, car.width - 8, 8);
+
+            // Main Car Body (Yellow Safari Jeep)
+            ctx.fillStyle = '#f59e0b';
+            ctx.beginPath();
+            ctx.roundRect(car.x, car.y, car.width, car.height, 8);
+            ctx.fill();
+
+            // Roof Stripes
+            ctx.fillStyle = '#b45309';
+            ctx.fillRect(car.x + 6, car.y + 20, car.width - 12, 28);
+
+            // Windshield
+            ctx.fillStyle = '#38bdf8';
+            ctx.fillRect(car.x + 6, car.y + 10, car.width - 12, 12);
+
+            // Headlights
+            ctx.fillStyle = '#fef08a';
+            ctx.fillRect(car.x + 4, car.y + 2, 8, 6);
+            ctx.fillRect(car.x + car.width - 12, car.y + 2, 8, 6);
+        }
+
+        function endCarDodgerGame() {
+            clearInterval(carState.timerInterval);
+            
+            const overlay = document.getElementById('gameOverlay');
+            const title = document.getElementById('overlayTitle');
+            const msg = document.getElementById('overlayMessage');
+
+            title.textContent = "Awesome Driving!";
+            msg.textContent = `You earned +${carState.score} extra points in the Jungle Drive!`;
+            overlay.classList.remove('hidden');
+        }
+
+        // Confetti Fireworks Engine for Victory
+        function triggerVictoryConfetti() {
+            const confCanvas = document.getElementById('confettiCanvas');
+            const cCtx = confCanvas.getContext('2d');
+            confCanvas.width = window.innerWidth;
+            confCanvas.height = window.innerHeight;
+
+            const particles = [];
+            const colors = ['#facc15', '#22c55e', '#3b82f6', '#ec4899', '#a855f7'];
+
+            for (let i = 0; i < 120; i++) {
+                particles.push({
+                    x: confCanvas.width / 2,
+                    y: confCanvas.height / 2,
+                    vx: (Math.random() - 0.5) * 12,
+                    vy: (Math.random() - 0.5) * 12 - 4,
+                    color: colors[Math.floor(Math.random() * colors.length)],
+                    size: Math.random() * 8 + 4,
+                    life: 100
+                });
+            }
+
+            function renderConfetti() {
+                cCtx.clearRect(0, 0, confCanvas.width, confCanvas.height);
+                let alive = false;
+                particles.forEach(p => {
+                    if (p.life > 0) {
+                        alive = true;
+                        p.x += p.vx;
+                        p.y += p.vy;
+                        p.vy += 0.15; // Gravity
+                        p.life--;
+                        cCtx.fillStyle = p.color;
+                        cCtx.fillRect(p.x, p.y, p.size, p.size);
+                    }
+                });
+                if (alive) {
+                    requestAnimationFrame(renderConfetti);
+                }
+            }
+            renderConfetti();
+        }
+
+        // Event Listeners Setup
+        document.addEventListener('DOMContentLoaded', () => {
+            // Screen Switches
+            document.getElementById('btnStartGame').onclick = () => {
+                renderLevelGrid();
+                showScreen('screenLevelSelect');
+            };
+
+            document.getElementById('btnContinueFromGame').onclick = () => {
+                // Check if all levels completed
+                if (gameState.currentLevelIndex >= 4) {
+                    // Show Victory Screen
+                    document.getElementById('finalScore').textContent = gameState.score;
+                    document.getElementById('finalStars').textContent = `${gameState.totalStars} / 15 ⭐`;
+                    showScreen('screenVictory');
+                    triggerVictoryConfetti();
+                } else {
+                    // Return to level select
+                    renderLevelGrid();
+                    showScreen('screenLevelSelect');
+                }
+            };
+
+            document.getElementById('btnRestart').onclick = () => {
+                gameState.score = 0;
+                gameState.totalStars = 0;
+                gameState.levelProgress = [
+                    { unlocked: true, stars: 0 },
+                    { unlocked: false, stars: 0 },
+                    { unlocked: false, stars: 0 },
+                    { unlocked: false, stars: 0 },
+                    { unlocked: false, stars: 0 }
+                ];
+                updateHeaderUI();
+                renderLevelGrid();
+                showScreen('screenLevelSelect');
+            };
+
+            // Keyboard Controls for Car Dodger
+            window.addEventListener('keydown', (e) => {
+                if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') {
+                    carState.keys.left = true;
+                }
+                if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') {
+                    carState.keys.right = true;
+                }
+            });
+
+            window.addEventListener('keyup', (e) => {
+                if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') {
+                    carState.keys.left = false;
+                }
+                if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') {
+                    carState.keys.right = false;
+                }
+            });
+
+            // Touch / On-screen Controls for Car Dodger
+            const btnLeft = document.getElementById('btnMoveLeft');
+            const btnRight = document.getElementById('btnMoveRight');
+
+            const startLeft = (e) => { e.preventDefault(); carState.keys.left = true; };
+            const stopLeft = (e) => { e.preventDefault(); carState.keys.left = false; };
+            const startRight = (e) => { e.preventDefault(); carState.keys.right = true; };
+            const stopRight = (e) => { e.preventDefault(); carState.keys.right = false; };
+
+            btnLeft.addEventListener('touchstart', startLeft);
+            btnLeft.addEventListener('touchend', stopLeft);
+            btnLeft.addEventListener('mousedown', startLeft);
+            btnLeft.addEventListener('mouseup', stopLeft);
+
+            btnRight.addEventListener('touchstart', startRight);
+            btnRight.addEventListener('touchend', stopRight);
+            btnRight.addEventListener('mousedown', startRight);
+            btnRight.addEventListener('mouseup', stopRight);
+        });
+    </script>
+</body>
+</html>

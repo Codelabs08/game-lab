@@ -1,0 +1,982 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cars Times Tables Race</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@700;800;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Nunito', sans-serif;
+            background-color: #0b1329;
+            user-select: none;
+            touch-action: manipulation;
+        }
+        .font-game {
+            font-family: 'Fredoka One', cursive;
+        }
+        .checkered-bg {
+            background-color: #1e293b;
+            background-image: 
+                linear-gradient(45deg, #0f172a 25%, transparent 25%), 
+                linear-gradient(-45deg, #0f172a 25%, transparent 25%), 
+                linear-gradient(45deg, transparent 75%, #0f172a 75%), 
+                linear-gradient(-45deg, transparent 75%, #0f172a 75%);
+            background-size: 28px 28px;
+            background-position: 0 0, 0 14px, 14px -14px, -14px 0px;
+        }
+        .car-card {
+            transition: all 0.2s ease-in-out;
+        }
+        .car-card:hover, .car-card.selected {
+            transform: translateY(-6px) scale(1.05);
+        }
+        .btn-press {
+            transition: transform 0.1s active, filter 0.1s;
+        }
+        .btn-press:active {
+            transform: scale(0.94);
+            filter: brightness(0.9);
+        }
+        .bounce-slow {
+            animation: bounce 2s infinite;
+        }
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
+        }
+    </style>
+</head>
+<body class="text-white min-h-screen flex flex-col items-center justify-center p-2 sm:p-4 checkered-bg overflow-x-hidden">
+
+    <div id="game-app" class="w-full max-w-4xl bg-slate-900 rounded-3xl border-4 border-yellow-400 shadow-2xl overflow-hidden relative min-h-[640px] flex flex-col justify-between">
+        
+        <!-- Header / Stats Bar -->
+        <header class="bg-slate-800 p-3 border-b-4 border-yellow-500 flex justify-between items-center px-4 sm:px-6">
+            <div class="flex items-center space-x-3">
+                <div class="bg-gradient-to-r from-yellow-400 to-amber-500 text-slate-900 px-4 py-1.5 rounded-full font-game text-xl sm:text-2xl tracking-wider flex items-center shadow-lg">
+                    🏎️ Your Cars
+                </div>
+            </div>
+            
+            <div id="header-stats" class="hidden flex items-center space-x-3 sm:space-x-5">
+                <div class="bg-slate-900/80 px-3 py-1 sm:px-4 sm:py-1.5 rounded-2xl border-2 border-yellow-400 flex items-center space-x-2">
+                    <span class="text-xl">⭐</span>
+                    <span class="text-yellow-400 font-game text-lg sm:text-2xl" id="total-stars">0</span>
+                </div>
+                <div class="bg-slate-900/80 px-3 py-1 sm:px-4 sm:py-1.5 rounded-2xl border-2 border-cyan-400 flex items-center space-x-2">
+                    <span class="text-xl">🏆</span>
+                    <span class="text-cyan-300 font-game text-lg sm:text-2xl" id="total-score">0</span>
+                    <span class="text-xs text-slate-400 font-bold hidden sm:inline">PTS</span>
+                </div>
+                <button id="sound-toggle" onclick="toggleMute()" class="bg-slate-700 p-2 rounded-xl border border-slate-500 text-xl hover:bg-slate-600 transition">
+                    🔊
+                </button>
+            </div>
+        </header>
+
+        <!-- Main Viewport Screen -->
+        <main class="flex-1 flex flex-col items-center justify-center p-4 text-center relative">
+
+            <!-- 1. START / TITLE SCREEN -->
+            <section id="screen-start" class="w-full max-w-2xl flex flex-col items-center py-4 space-y-5">
+                <div>
+                    <h1 class="font-game text-4xl sm:text-6xl text-yellow-400 drop-shadow-[0_5px_5px_rgba(0,0,0,0.8)] tracking-wide uppercase">Cars Times Tables Race</h1>
+                    <p class="text-lg sm:text-2xl font-bold text-cyan-300 mt-1">Year 3 Times Tables Championship 🏁</p>
+                </div>
+
+                <div class="bg-slate-800/90 p-5 rounded-2xl border-2 border-slate-700 w-full shadow-lg">
+                    <h2 class="text-base sm:text-lg font-bold text-yellow-400 mb-3 uppercase tracking-wider">Choose Your Super Racing Car:</h2>
+                    <div class="grid grid-cols-3 gap-3" id="car-selector">
+                        <!-- Red Lightning -->
+                        <div onclick="selectCar('red')" id="car-red" class="car-card selected bg-slate-700 border-4 border-yellow-400 rounded-2xl p-3 cursor-pointer flex flex-col items-center">
+                            <div class="w-16 h-16 sm:w-20 sm:h-20 flex items-center justify-center">
+                                <svg viewBox="0 0 100 60" class="w-full h-full drop-shadow">
+                                    <path d="M10,40 Q20,15 50,15 Q80,15 90,40 Z" fill="#ef4444"/>
+                                    <rect x="25" y="20" width="50" height="15" rx="5" fill="#38bdf8"/>
+                                    <circle cx="25" cy="42" r="10" fill="#1e293b"/>
+                                    <circle cx="25" cy="42" r="5" fill="#94a3b8"/>
+                                    <circle cx="75" cy="42" r="10" fill="#1e293b"/>
+                                    <circle cx="75" cy="42" r="5" fill="#94a3b8"/>
+                                </svg>
+                            </div>
+                            <span class="font-game text-xs sm:text-sm text-red-400 mt-1">Red Comet</span>
+                        </div>
+                        <!-- Blue Thunder -->
+                        <div onclick="selectCar('blue')" id="car-blue" class="car-card bg-slate-700 border-2 border-slate-600 rounded-2xl p-3 cursor-pointer flex flex-col items-center">
+                            <div class="w-16 h-16 sm:w-20 sm:h-20 flex items-center justify-center">
+                                <svg viewBox="0 0 100 60" class="w-full h-full drop-shadow">
+                                    <path d="M10,40 Q20,15 50,15 Q80,15 90,40 Z" fill="#3b82f6"/>
+                                    <rect x="25" y="20" width="50" height="15" rx="5" fill="#7dd3fc"/>
+                                    <circle cx="25" cy="42" r="10" fill="#1e293b"/>
+                                    <circle cx="25" cy="42" r="5" fill="#94a3b8"/>
+                                    <circle cx="75" cy="42" r="10" fill="#1e293b"/>
+                                    <circle cx="75" cy="42" r="5" fill="#94a3b8"/>
+                                </svg>
+                            </div>
+                            <span class="font-game text-xs sm:text-sm text-blue-400 mt-1">Blue Bolt</span>
+                        </div>
+                        <!-- Green Nitro -->
+                        <div onclick="selectCar('green')" id="car-green" class="car-card bg-slate-700 border-2 border-slate-600 rounded-2xl p-3 cursor-pointer flex flex-col items-center">
+                            <div class="w-16 h-16 sm:w-20 sm:h-20 flex items-center justify-center">
+                                <svg viewBox="0 0 100 60" class="w-full h-full drop-shadow">
+                                    <path d="M10,40 Q20,15 50,15 Q80,15 90,40 Z" fill="#22c55e"/>
+                                    <rect x="25" y="20" width="50" height="15" rx="5" fill="#a7f3d0"/>
+                                    <circle cx="25" cy="42" r="10" fill="#1e293b"/>
+                                    <circle cx="25" cy="42" r="5" fill="#94a3b8"/>
+                                    <circle cx="75" cy="42" r="10" fill="#1e293b"/>
+                                    <circle cx="75" cy="42" r="5" fill="#94a3b8"/>
+                                </svg>
+                            </div>
+                            <span class="font-game text-xs sm:text-sm text-green-400 mt-1">Green Nitro</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-slate-800/80 p-4 rounded-2xl border border-slate-700 text-slate-300 text-xs sm:text-sm max-w-lg">
+                    💡 Master the <strong class="text-yellow-400">2, 5, and 10 times tables</strong> across 5 progressive levels. Unlock <strong class="text-cyan-400">Car Dodger mini-games</strong> to earn bonus points and gold stars!
+                </div>
+
+                <button onclick="startGame()" class="btn-press bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-400 hover:to-emerald-500 text-white font-game text-2xl sm:text-3xl px-10 py-4 rounded-full border-b-4 border-emerald-800 shadow-xl tracking-wider uppercase flex items-center space-x-3 bounce-slow">
+                    <span>START RACE!</span>
+                    <span>🏎️</span>
+                </button>
+            </section>
+
+            <!-- 2. QUIZ SCREEN -->
+            <section id="screen-quiz" class="hidden w-full max-w-2xl flex flex-col items-center space-y-3">
+                
+                <!-- Level Info Bar -->
+                <div class="w-full flex justify-between items-center bg-slate-800 p-3 rounded-2xl border-2 border-slate-700">
+                    <div class="text-left">
+                        <span id="quiz-level-badge" class="bg-yellow-500 text-slate-900 font-game text-xs px-2.5 py-0.5 rounded-md uppercase">
+                            Level 1
+                        </span>
+                        <h3 id="quiz-level-title" class="text-base sm:text-lg font-bold text-white mt-0.5">Pit Stop Warmup</h3>
+                    </div>
+                    
+                    <!-- Questions Counter Pills -->
+                    <div class="flex items-center space-x-2">
+                        <span class="text-xs sm:text-sm font-bold text-slate-400">Lap:</span>
+                        <div id="question-pills" class="flex space-x-1.5">
+                            <!-- Populated dynamically -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Visual Race Track Progress Bar -->
+                <div class="relative w-full h-20 bg-slate-800 rounded-2xl border-2 border-slate-700 overflow-hidden flex items-center px-6">
+                    <!-- Checkered Finish Line Flag -->
+                    <div class="absolute right-4 top-0 bottom-0 w-8 checkered-bg opacity-80 border-l-2 border-white"></div>
+                    
+                    <!-- Track Line -->
+                    <div class="w-full h-3 bg-slate-700 rounded-full relative">
+                        <!-- Animated Player Car -->
+                        <div id="quiz-car-anim" class="absolute -top-5 transition-all duration-500 ease-out" style="left: 0%;">
+                            <div class="w-12 h-12 flex items-center justify-center">
+                                <svg id="active-car-svg" viewBox="0 0 100 60" class="w-full h-full drop-shadow">
+                                    <path d="M10,40 Q20,15 50,15 Q80,15 90,40 Z" fill="#ef4444"/>
+                                    <rect x="25" y="20" width="50" height="15" rx="5" fill="#38bdf8"/>
+                                    <circle cx="25" cy="42" r="10" fill="#1e293b"/>
+                                    <circle cx="75" cy="42" r="10" fill="#1e293b"/>
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Math Question Card -->
+                <div class="bg-slate-800/90 border-2 border-yellow-400 rounded-3xl p-5 sm:p-6 w-full shadow-xl flex flex-col items-center">
+                    <span id="question-context" class="text-cyan-300 text-xs sm:text-sm font-semibold mb-1">Solve the math problem:</span>
+                    <h2 id="question-text" class="font-game text-3xl sm:text-4xl text-white my-2 tracking-wide">
+                        2 × 3 = ?
+                    </h2>
+
+                    <!-- 4 Large Answer Buttons -->
+                    <div id="answers-grid" class="grid grid-cols-2 gap-3 w-full mt-4">
+                        <!-- Populated dynamically -->
+                    </div>
+                </div>
+
+                <!-- Encouraging Feedback Banner -->
+                <div id="feedback-banner" class="min-h-[52px] w-full flex items-center justify-center px-4 rounded-2xl text-center font-bold text-base sm:text-lg hidden transition-all duration-300">
+                    <!-- Dynamic text -->
+                </div>
+
+            </section>
+
+            <!-- 3. LEVEL COMPLETE / REWARD UNLOCK SCREEN -->
+            <section id="screen-level-complete" class="hidden w-full max-w-lg flex flex-col items-center py-6 space-y-5">
+                <div class="bg-slate-800 p-6 rounded-3xl border-4 border-yellow-400 w-full shadow-2xl flex flex-col items-center space-y-4">
+                    <div class="text-5xl animate-bounce">🏁</div>
+                    <h2 class="font-game text-3xl text-yellow-400 uppercase">LEVEL COMPLETE!</h2>
+                    <p id="level-complete-msg" class="text-slate-200 text-base font-semibold">Great driving, Hero! You unlocked the Car Dodger reward mini-game!</p>
+
+                    <div class="bg-slate-900/90 p-4 rounded-2xl border border-slate-700 w-full flex justify-around">
+                        <div class="text-center">
+                            <span class="text-xs text-slate-400 block">LEVEL SCORE</span>
+                            <span id="level-score-display" class="font-game text-2xl text-green-400">3 / 3</span>
+                        </div>
+                        <div class="text-center">
+                            <span class="text-xs text-slate-400 block">REWARD</span>
+                            <span class="font-game text-2xl text-cyan-300">Car Dodger 🏎️</span>
+                        </div>
+                    </div>
+
+                    <button onclick="goToCarDodger()" class="btn-press bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-900 font-game text-2xl px-8 py-3.5 rounded-full border-b-4 border-blue-800 shadow-xl uppercase w-full">
+                        PLAY CAR DODGER! 🚀
+                    </button>
+                </div>
+            </section>
+
+            <!-- 4. CAR DODGER MINI GAME SCREEN -->
+            <section id="screen-minigame" class="hidden w-full max-w-2xl flex flex-col items-center space-y-2">
+                <div class="w-full flex justify-between items-center bg-slate-800 p-3 rounded-2xl border border-slate-700">
+                    <div class="text-left">
+                        <span class="bg-cyan-500 text-slate-900 font-game text-xs px-2.5 py-0.5 rounded-md uppercase">REWARD MINI-GAME</span>
+                        <h3 class="text-base font-bold text-white">🏎️ Car Dodger!</h3>
+                    </div>
+                    <div class="flex space-x-4">
+                        <div class="text-right">
+                            <span class="text-xs text-slate-400 block">TIME</span>
+                            <span id="minigame-timer" class="font-game text-xl text-yellow-400">30s</span>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-xs text-slate-400 block">BONUS</span>
+                            <span id="minigame-score" class="font-game text-xl text-green-400">+0</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Canvas Game Frame -->
+                <div class="relative w-full rounded-2xl overflow-hidden border-4 border-yellow-400 shadow-2xl bg-slate-950 flex justify-center items-center">
+                    <canvas id="gameCanvas" class="w-full h-[300px] sm:h-[350px] bg-slate-800 block"></canvas>
+                    
+                    <!-- Overlay Start Modal -->
+                    <div id="minigame-overlay" class="absolute inset-0 bg-slate-900/95 flex flex-col items-center justify-center p-6 text-center">
+                        <h2 class="font-game text-3xl text-yellow-400 mb-2">Ready to Dodge?</h2>
+                        <p class="text-slate-300 text-sm mb-4 max-w-sm">Steer left and right! Dodge traffic and oil slicks, and collect golden stars and trophies!</p>
+                        <button onclick="startCarDodgerGame()" class="btn-press bg-green-500 hover:bg-green-400 text-slate-900 font-game text-2xl px-8 py-3 rounded-full shadow-lg">
+                            GO! 🚀
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Touch / Mobile On-Screen Controls -->
+                <div class="flex justify-between items-center w-full px-2 gap-3">
+                    <button id="btn-left" class="btn-press flex-1 bg-slate-800 border-2 border-cyan-400 active:bg-cyan-600 text-cyan-300 font-game text-2xl py-3 rounded-2xl shadow-lg flex justify-center items-center">
+                        ⬅️ LEFT
+                    </button>
+                    <button id="btn-right" class="btn-press flex-1 bg-slate-800 border-2 border-cyan-400 active:bg-cyan-600 text-cyan-300 font-game text-2xl py-3 rounded-2xl shadow-lg flex justify-center items-center">
+                        RIGHT ➡️
+                    </button>
+                </div>
+            </section>
+
+            <!-- 5. FINAL GRAND VICTORY PODIUM -->
+            <section id="screen-victory" class="hidden w-full max-w-xl flex flex-col items-center py-4 space-y-5">
+                <div class="text-center">
+                    <div class="inline-block text-6xl mb-1 animate-bounce">🏆</div>
+                    <h1 class="font-game text-4xl sm:text-5xl text-yellow-400 tracking-wide">GRAND CHAMPION!</h1>
+                    <p class="text-slate-300 font-semibold text-base sm:text-lg">Outstanding driving and math skills, Hero!</p>
+                </div>
+
+                <!-- Final Score Breakdown Card -->
+                <div class="bg-slate-800 p-6 rounded-3xl border-2 border-yellow-400 w-full shadow-xl space-y-3.5">
+                    <div class="flex justify-between items-center border-b border-slate-700 pb-2.5">
+                        <span class="text-slate-300 font-bold">Quiz Correct Answers:</span>
+                        <span id="final-quiz-score" class="font-game text-xl text-yellow-400">15 / 15</span>
+                    </div>
+                    <div class="flex justify-between items-center border-b border-slate-700 pb-2.5">
+                        <span class="text-slate-300 font-bold">Stars Collected:</span>
+                        <span id="final-stars-score" class="font-game text-xl text-amber-300">⭐ 0</span>
+                    </div>
+                    <div class="flex justify-between items-center border-b border-slate-700 pb-2.5">
+                        <span class="text-slate-300 font-bold">Car Dodger Bonus Points:</span>
+                        <span id="final-bonus-score" class="font-game text-xl text-green-400">+0</span>
+                    </div>
+                    <div class="flex justify-between items-center pt-1">
+                        <span class="text-lg sm:text-xl font-bold text-white">TOTAL RACE SCORE:</span>
+                        <span id="final-total-score" class="font-game text-3xl text-cyan-400">0</span>
+                    </div>
+                </div>
+
+                <!-- Trophy Award Badge -->
+                <div id="trophy-badge" class="p-4 rounded-2xl text-slate-900 font-game text-xl w-full flex items-center justify-center space-x-3 shadow-lg">
+                    <span>🥇 GOLD CUP WINNER!</span>
+                </div>
+
+                <button onclick="resetGame()" class="btn-press bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-400 hover:to-indigo-500 text-white font-game text-2xl px-10 py-4 rounded-full border-b-4 border-indigo-800 shadow-xl uppercase">
+                    PLAY AGAIN 🔄
+                </button>
+            </section>
+
+        </main>
+
+        <!-- Footer Bar -->
+        <footer class="bg-slate-950 p-2 text-center text-xs text-slate-500 border-t border-slate-800">
+            Your Cars • Year 3 Times Tables Championship (2s, 5s, 10s)
+        </footer>
+    </div>
+
+    <script>
+        /* --- Web Audio API Sound Synthesizer --- */
+        class SoundFX {
+            constructor() {
+                this.ctx = null;
+                this.muted = false;
+            }
+
+            init() {
+                if (!this.ctx) {
+                    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                    this.ctx = new AudioCtx();
+                }
+            }
+
+            playCorrect() {
+                if (this.muted) return;
+                this.init();
+                const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(523.25, now); // C5
+                osc.frequency.exponentialRampToValueAtTime(659.25, now + 0.1); // E5
+                osc.frequency.exponentialRampToValueAtTime(783.99, now + 0.2); // G5
+                osc.frequency.exponentialRampToValueAtTime(1046.50, now + 0.35); // C6
+
+                gain.gain.setValueAtTime(0.15, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+
+                osc.start(now);
+                osc.stop(now + 0.4);
+            }
+
+            playWrong() {
+                if (this.muted) return;
+                this.init();
+                const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(200, now);
+                osc.frequency.linearRampToValueAtTime(120, now + 0.25);
+
+                gain.gain.setValueAtTime(0.12, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+
+                osc.start(now);
+                osc.stop(now + 0.3);
+            }
+
+            playStar() {
+                if (this.muted) return;
+                this.init();
+                const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(880, now);
+                osc.frequency.exponentialRampToValueAtTime(1760, now + 0.15);
+
+                gain.gain.setValueAtTime(0.18, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+
+                osc.start(now);
+                osc.stop(now + 0.2);
+            }
+
+            playVroom() {
+                if (this.muted) return;
+                this.init();
+                const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(80, now);
+                osc.frequency.linearRampToValueAtTime(240, now + 0.3);
+                osc.frequency.linearRampToValueAtTime(110, now + 0.6);
+
+                gain.gain.setValueAtTime(0.1, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.6);
+
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+
+                osc.start(now);
+                osc.stop(now + 0.6);
+            }
+        }
+
+        const sound = new SoundFX();
+
+        function toggleMute() {
+            sound.muted = !sound.muted;
+            document.getElementById('sound-toggle').innerText = sound.muted ? '🔇' : '🔊';
+        }
+
+        /* --- Year 3 Curriculum Times Tables Data --- */
+        const QUIZ_LEVELS = [
+            {
+                level: 1,
+                title: "Pit Stop Warmup",
+                badge: "Level 1",
+                questions: [
+                    { q: "2 × 3 = ?", options: [5, 6, 8, 10], answer: 6, context: "Multiply by 2:" },
+                    { q: "5 × 2 = ?", options: [7, 10, 12, 15], answer: 10, context: "Multiply by 5:" },
+                    { q: "10 × 1 = ?", options: [1, 10, 100, 11], answer: 10, context: "Multiply by 10:" }
+                ]
+            },
+            {
+                level: 2,
+                title: "Turbo Track",
+                badge: "Level 2",
+                questions: [
+                    { q: "5 × 6 = ?", options: [25, 30, 35, 20], answer: 30, context: "Fast 5s Table!" },
+                    { q: "2 × 8 = ?", options: [16, 14, 18, 10], answer: 16, context: "Double 8!" },
+                    { q: "10 × 4 = ?", options: [14, 40, 44, 400], answer: 40, context: "Power up with 10s!" }
+                ]
+            },
+            {
+                level: 3,
+                title: "Super Highway",
+                badge: "Level 3",
+                questions: [
+                    { q: "10 × 7 = ?", options: [17, 70, 77, 60], answer: 70, context: "10s Table Challenge:" },
+                    { q: "5 × 8 = ?", options: [35, 40, 45, 30], answer: 40, context: "High 5s Multiplication:" },
+                    { q: "2 × 12 = ?", options: [22, 24, 26, 20], answer: 24, context: "Double 12:" }
+                ]
+            },
+            {
+                level: 4,
+                title: "Missing Number Grand Prix",
+                badge: "Level 4",
+                questions: [
+                    { q: "? × 5 = 20", options: [3, 4, 5, 6], answer: 4, context: "Find the missing number:" },
+                    { q: "2 × ? = 18", options: [8, 9, 10, 7], answer: 9, context: "Fill in the blank:" },
+                    { q: "10 × ? = 50", options: [4, 5, 6, 10], answer: 5, context: "Missing multiplier:" }
+                ]
+            },
+            {
+                level: 5,
+                title: "Ultimate Speed Champion",
+                badge: "Level 5",
+                questions: [
+                    { q: "Hero has 5 toy cars with 4 wheels each. How many wheels altogether?", options: [9, 15, 20, 25], answer: 20, context: "Word Problem!" },
+                    { q: "2 × 11 = ?", options: [22, 21, 13, 24], answer: 22, context: "Double 11:" },
+                    { q: "10 × 12 = ?", options: [120, 102, 122, 110], answer: 120, context: "Final Champion Question!" }
+                ]
+            }
+        ];
+
+        /* Kind Encouraging Feedback Messages */
+        const KIND_CORRECT = [
+            "Vroom! Outstanding, Hero! 🏎️💨",
+            "Super Fast! Well done! ⭐",
+            "Awesome driving! 🏁",
+            "Bingo! Perfect answer! 🏆",
+            "Keep going, champion! 🚀"
+        ];
+
+        const KIND_WRONG = [
+            "Almost there! Try again — you can do it! 💪",
+            "Keep pushing! You've got this! 🚗",
+            "Good try! Give it another go! ⭐",
+            "Close one! Let me try again! 🏎️️"
+        ];
+
+        /* --- Game State --- */
+        let state = {
+            selectedCarColor: 'red',
+            currentLevelIdx: 0,
+            currentQuestionIdx: 0,
+            quizScore: 0,
+            bonusScore: 0,
+            totalStars: 0,
+            levelCorrectCount: 0,
+            isAnsweringLocked: false
+        };
+
+        const CAR_COLORS = {
+            red: '#ef4444',
+            blue: '#3b82f6',
+            green: '#22c55e'
+        };
+
+        function selectCar(color) {
+            state.selectedCarColor = color;
+            document.querySelectorAll('.car-card').forEach(card => {
+                card.classList.remove('selected', 'border-yellow-400');
+                card.classList.add('border-slate-600');
+            });
+            const selectedCard = document.getElementById(`car-${color}`);
+            selectedCard.classList.add('selected', 'border-yellow-400');
+            selectedCard.classList.remove('border-slate-600');
+            
+            document.querySelectorAll('#active-car-svg path').forEach(p => p.setAttribute('fill', CAR_COLORS[color]));
+        }
+
+        function showScreen(screenId) {
+            ['screen-start', 'screen-quiz', 'screen-level-complete', 'screen-minigame', 'screen-victory'].forEach(id => {
+                document.getElementById(id).classList.add('hidden');
+            });
+            document.getElementById(screenId).classList.remove('hidden');
+
+            if (screenId !== 'screen-start') {
+                document.getElementById('header-stats').classList.remove('hidden');
+            } else {
+                document.getElementById('header-stats').classList.add('hidden');
+            }
+        }
+
+        function startGame() {
+            sound.playVroom();
+            state.currentLevelIdx = 0;
+            state.currentQuestionIdx = 0;
+            state.quizScore = 0;
+            state.bonusScore = 0;
+            state.totalStars = 0;
+            updateHeaderStats();
+            showScreen('screen-quiz');
+            loadLevelQuestion();
+        }
+
+        function updateHeaderStats() {
+            const total = state.quizScore * 100 + state.bonusScore;
+            document.getElementById('total-score').innerText = total;
+            document.getElementById('total-stars').innerText = state.totalStars;
+        }
+
+        function loadLevelQuestion() {
+            state.isAnsweringLocked = false;
+            const currentLevel = QUIZ_LEVELS[state.currentLevelIdx];
+            const q = currentLevel.questions[state.currentQuestionIdx];
+
+            const banner = document.getElementById('feedback-banner');
+            banner.classList.add('hidden');
+
+            document.getElementById('quiz-level-badge').innerText = currentLevel.badge;
+            document.getElementById('quiz-level-title').innerText = currentLevel.title;
+
+            // Render Question Counter Pills
+            const pillsContainer = document.getElementById('question-pills');
+            pillsContainer.innerHTML = '';
+            for (let i = 0; i < 3; i++) {
+                const pill = document.createElement('div');
+                pill.className = `w-7 h-7 rounded-full font-bold flex items-center justify-center text-xs ${
+                    i === state.currentQuestionIdx 
+                        ? 'bg-yellow-400 text-slate-900 border-2 border-white scale-110 shadow-md' 
+                        : (i < state.currentQuestionIdx ? 'bg-green-500 text-white' : 'bg-slate-700 text-slate-400')
+                }`;
+                pill.innerText = i + 1;
+                pillsContainer.appendChild(pill);
+            }
+
+            // Animate Car Position on Race Track Progress Bar
+            const posPercent = (state.currentQuestionIdx / 3) * 85;
+            document.getElementById('quiz-car-anim').style.left = `${posPercent}%`;
+
+            document.getElementById('question-context').innerText = q.context;
+            document.getElementById('question-text').innerText = q.q;
+
+            // Generate Answer Buttons
+            const answersGrid = document.getElementById('answers-grid');
+            answersGrid.innerHTML = '';
+
+            q.options.forEach(opt => {
+                const btn = document.createElement('button');
+                btn.className = "btn-press bg-slate-700 hover:bg-slate-600 border-2 border-slate-500 hover:border-yellow-400 rounded-2xl py-3.5 font-game text-2xl text-white shadow-lg transition-all flex justify-center items-center";
+                btn.innerText = opt;
+                btn.onclick = () => handleAnswer(opt, q.answer, btn);
+                answersGrid.appendChild(btn);
+            });
+        }
+
+        function handleAnswer(selectedOpt, correctOpt, btnElement) {
+            if (state.isAnsweringLocked) return;
+
+            const banner = document.getElementById('feedback-banner');
+            banner.classList.remove('hidden', 'bg-green-600/90', 'bg-amber-600/90');
+
+            if (selectedOpt === correctOpt) {
+                // Correct Answer
+                state.isAnsweringLocked = true;
+                sound.playCorrect();
+                btnElement.classList.remove('bg-slate-700', 'border-slate-500');
+                btnElement.classList.add('bg-green-500', 'border-green-300', 'text-slate-900', 'scale-105');
+
+                banner.classList.add('bg-green-600/90', 'text-white');
+                const randomMsg = KIND_CORRECT[Math.floor(Math.random() * KIND_CORRECT.length)];
+                banner.innerText = randomMsg;
+
+                state.quizScore++;
+                state.levelCorrectCount++;
+                updateHeaderStats();
+
+                setTimeout(() => {
+                    advanceQuiz();
+                }, 1300);
+            } else {
+                // Wrong Answer
+                sound.playWrong();
+                btnElement.classList.remove('bg-slate-700');
+                btnElement.classList.add('bg-rose-600', 'border-rose-400');
+
+                banner.classList.add('bg-amber-600/90', 'text-white');
+                const randomMsg = KIND_WRONG[Math.floor(Math.random() * KIND_WRONG.length)];
+                banner.innerText = randomMsg;
+            }
+        }
+
+        function advanceQuiz() {
+            state.currentQuestionIdx++;
+
+            if (state.currentQuestionIdx < 3) {
+                loadLevelQuestion();
+            } else {
+                // Level Complete Screen
+                showLevelCompleteScreen();
+            }
+        }
+
+        function showLevelCompleteScreen() {
+            showScreen('screen-level-complete');
+            sound.playCorrect();
+            document.getElementById('level-score-display').innerText = `${state.levelCorrectCount} / 3`;
+            state.levelCorrectCount = 0; // Reset for next level
+        }
+
+        function goToCarDodger() {
+            showScreen('screen-minigame');
+            document.getElementById('minigame-overlay').classList.remove('hidden');
+            document.getElementById('minigame-score').innerText = "+0";
+            document.getElementById('minigame-timer').innerText = "30s";
+        }
+
+        /* --- CAR DODGER MINI GAME CANVAS LOGIC --- */
+        let canvas, ctx;
+        let gameLoopId = null;
+        let gameTimerId = null;
+        let gameTimeLeft = 30;
+        let playerCar = { lane: 1, x: 0, y: 0, width: 42, height: 68, speed: 8 };
+        let obstacles = [];
+        let collectibles = [];
+        let keys = { left: false, right: false };
+        let miniGameBonusScore = 0;
+        let miniGameStarsCollected = 0;
+
+        function initCanvas() {
+            canvas = document.getElementById('gameCanvas');
+            ctx = canvas.getContext('2d');
+            
+            canvas.width = 400;
+            canvas.height = 350;
+
+            // Touch / Mobile controls
+            const btnLeft = document.getElementById('btn-left');
+            const btnRight = document.getElementById('btn-right');
+
+            const startLeft = (e) => { e.preventDefault(); keys.left = true; };
+            const stopLeft = (e) => { e.preventDefault(); keys.left = false; };
+            const startRight = (e) => { e.preventDefault(); keys.right = true; };
+            const stopRight = (e) => { e.preventDefault(); keys.right = false; };
+
+            btnLeft.addEventListener('touchstart', startLeft);
+            btnLeft.addEventListener('touchend', stopLeft);
+            btnLeft.addEventListener('mousedown', startLeft);
+            btnLeft.addEventListener('mouseup', stopLeft);
+
+            btnRight.addEventListener('touchstart', startRight);
+            btnRight.addEventListener('touchend', stopRight);
+            btnRight.addEventListener('mousedown', startRight);
+            btnRight.addEventListener('mouseup', stopRight);
+
+            // Keyboard listeners
+            window.addEventListener('keydown', (e) => {
+                if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') keys.left = true;
+                if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') keys.right = true;
+            });
+            window.addEventListener('keyup', (e) => {
+                if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') keys.left = false;
+                if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') keys.right = false;
+            });
+        }
+
+        function startCarDodgerGame() {
+            document.getElementById('minigame-overlay').classList.add('hidden');
+            miniGameBonusScore = 0;
+            miniGameStarsCollected = 0;
+            gameTimeLeft = 30;
+            obstacles = [];
+            collectibles = [];
+            playerCar.lane = 1;
+
+            if (gameLoopId) cancelAnimationFrame(gameLoopId);
+            if (gameTimerId) clearInterval(gameTimerId);
+
+            gameTimerId = setInterval(() => {
+                gameTimeLeft--;
+                document.getElementById('minigame-timer').innerText = `${gameTimeLeft}s`;
+
+                if (gameTimeLeft <= 0) {
+                    endCarDodgerGame();
+                }
+            }, 1000);
+
+            sound.playVroom();
+            updateCarDodger();
+        }
+
+        function getLaneX(lane) {
+            // 3 Lanes: 0 (Left), 1 (Middle), 2 (Right)
+            const laneCenters = [95, 200, 305];
+            return laneCenters[lane] - playerCar.width / 2;
+        }
+
+        let canSwitchLane = true;
+
+        function updateCarDodger() {
+            // Smooth lane switching logic
+            if (keys.left && canSwitchLane && playerCar.lane > 0) {
+                playerCar.lane--;
+                canSwitchLane = false;
+            } else if (keys.right && canSwitchLane && playerCar.lane < 2) {
+                playerCar.lane++;
+                canSwitchLane = false;
+            } else if (!keys.left && !keys.right) {
+                canSwitchLane = true;
+            }
+
+            // Lerp car position to lane
+            const targetX = getLaneX(playerCar.lane);
+            playerCar.x += (targetX - playerCar.x) * 0.25;
+            playerCar.y = canvas.height - playerCar.height - 20;
+
+            // Spawn obstacles (Cars or Oil Slicks)
+            if (Math.random() < 0.045) {
+                const lane = Math.floor(Math.random() * 3);
+                const isOil = Math.random() < 0.25;
+                obstacles.push({
+                    lane: lane,
+                    x: getLaneX(lane),
+                    y: -70,
+                    width: isOil ? 36 : 38,
+                    height: isOil ? 36 : 64,
+                    speed: 3.5 + Math.random() * 2,
+                    isOil: isOil,
+                    color: isOil ? '#020617' : (Math.random() > 0.5 ? '#3b82f6' : '#a855f7')
+                });
+            }
+
+            // Spawn Collectibles (Stars or Trophies)
+            if (Math.random() < 0.04) {
+                const lane = Math.floor(Math.random() * 3);
+                const isTrophy = Math.random() < 0.2;
+                collectibles.push({
+                    lane: lane,
+                    x: getLaneX(lane) + playerCar.width / 2,
+                    y: -30,
+                    radius: 14,
+                    speed: 3,
+                    isTrophy: isTrophy
+                });
+            }
+
+            // Update Obstacles & Collision
+            for (let i = obstacles.length - 1; i >= 0; i--) {
+                let obs = obstacles[i];
+                obs.y += obs.speed;
+
+                // Check Bounding Collision
+                if (
+                    playerCar.x < obs.x + obs.width &&
+                    playerCar.x + playerCar.width > obs.x &&
+                    playerCar.y < obs.y + obs.height &&
+                    playerCar.y + playerCar.height > obs.y
+                ) {
+                    sound.playWrong();
+                    obstacles.splice(i, 1);
+                    miniGameBonusScore = Math.max(0, miniGameBonusScore - 25);
+                    document.getElementById('minigame-score').innerText = `+${miniGameBonusScore}`;
+                    continue;
+                }
+
+                if (obs.y > canvas.height) {
+                    obstacles.splice(i, 1);
+                }
+            }
+
+            // Update Collectibles & Collection
+            for (let i = collectibles.length - 1; i >= 0; i--) {
+                let col = collectibles[i];
+                col.y += col.speed;
+
+                let dist = Math.hypot((playerCar.x + playerCar.width/2) - col.x, (playerCar.y + playerCar.height/2) - col.y);
+                if (dist < col.radius + 20) {
+                    sound.playStar();
+                    collectibles.splice(i, 1);
+                    if (col.isTrophy) {
+                        miniGameBonusScore += 100;
+                    } else {
+                        miniGameBonusScore += 50;
+                        miniGameStarsCollected++;
+                    }
+                    document.getElementById('minigame-score').innerText = `+${miniGameBonusScore}`;
+                    continue;
+                }
+
+                if (col.y > canvas.height) {
+                    collectibles.splice(i, 1);
+                }
+            }
+
+            drawCarDodgerScene();
+            gameLoopId = requestAnimationFrame(updateCarDodger);
+        }
+
+        function drawCarDodgerScene() {
+            // Asphalt Track
+            ctx.fillStyle = '#1e293b';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Red/White Curbs
+            ctx.fillStyle = '#ef4444';
+            ctx.fillRect(0, 0, 20, canvas.height);
+            ctx.fillRect(canvas.width - 20, 0, 20, canvas.height);
+
+            // Lane Dividers
+            ctx.strokeStyle = '#f59e0b';
+            ctx.lineWidth = 4;
+            ctx.setLineDash([20, 20]);
+            ctx.lineDashOffset = -Date.now() / 15;
+
+            [145, 255].forEach(laneX => {
+                ctx.beginPath();
+                ctx.moveTo(laneX, 0);
+                ctx.lineTo(laneX, canvas.height);
+                ctx.stroke();
+            });
+            ctx.setLineDash([]); // Reset dash
+
+            // Draw Player Car
+            const pColor = CAR_COLORS[state.selectedCarColor] || '#ef4444';
+            drawCarShape(playerCar.x, playerCar.y, playerCar.width, playerCar.height, pColor, true);
+
+            // Draw Obstacles
+            obstacles.forEach(obs => {
+                if (obs.isOil) {
+                    ctx.fillStyle = '#020617';
+                    ctx.beginPath();
+                    ctx.ellipse(obs.x + obs.width/2, obs.y + obs.height/2, obs.width/2, obs.height/2, 0, 0, Math.PI * 2);
+                    ctx.fill();
+                } else {
+                    drawCarShape(obs.x, obs.y, obs.width, obs.height, obs.color, false);
+                }
+            });
+
+            // Draw Collectibles
+            collectibles.forEach(col => {
+                ctx.font = '22px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText(col.isTrophy ? '🏆' : '⭐', col.x, col.y);
+            });
+        }
+
+        function drawCarShape(x, y, w, h, color, isPlayer) {
+            ctx.save();
+            ctx.fillStyle = color;
+            ctx.beginPath();
+            ctx.roundRect(x, y, w, h, 8);
+            ctx.fill();
+
+            // Windshield
+            ctx.fillStyle = '#38bdf8';
+            ctx.fillRect(x + 5, isPlayer ? y + 15 : y + h - 25, w - 10, 12);
+
+            // Tires
+            ctx.fillStyle = '#0f172a';
+            ctx.fillRect(x - 3, y + 8, 4, 12);
+            ctx.fillRect(x + w - 1, y + 8, 4, 12);
+            ctx.fillRect(x - 3, y + h - 20, 4, 12);
+            ctx.fillRect(x + w - 1, y + h - 20, 4, 12);
+
+            ctx.restore();
+        }
+
+        function endCarDodgerGame() {
+            clearInterval(gameTimerId);
+            cancelAnimationFrame(gameLoopId);
+
+            state.bonusScore += miniGameBonusScore;
+            state.totalStars += miniGameStarsCollected;
+            updateHeaderStats();
+
+            // Check if all levels completed
+            state.currentLevelIdx++;
+            if (state.currentLevelIdx < QUIZ_LEVELS.length) {
+                state.currentQuestionIdx = 0;
+                showScreen('screen-quiz');
+                loadLevelQuestion();
+            } else {
+                showVictoryScreen();
+            }
+        }
+
+        function showVictoryScreen() {
+            showScreen('screen-victory');
+            sound.playCorrect();
+
+            document.getElementById('final-quiz-score').innerText = `${state.quizScore} / 15`;
+            document.getElementById('final-stars-score').innerText = `⭐ ${state.totalStars}`;
+            document.getElementById('final-bonus-score').innerText = `+${state.bonusScore}`;
+            
+            const totalScore = state.quizScore * 100 + state.bonusScore;
+            document.getElementById('final-total-score').innerText = totalScore;
+
+            const trophyBadge = document.getElementById('trophy-badge');
+            if (state.quizScore >= 13) {
+                trophyBadge.className = "bg-gradient-to-r from-yellow-400 to-amber-500 text-slate-900 font-game text-xl w-full flex items-center justify-center space-x-2 p-4 rounded-2xl shadow-lg";
+                trophyBadge.innerHTML = "<span>🥇 GOLD CUP WINNER!</span>";
+            } else if (state.quizScore >= 10) {
+                trophyBadge.className = "bg-gradient-to-r from-slate-300 to-slate-400 text-slate-900 font-game text-xl w-full flex items-center justify-center space-x-2 p-4 rounded-2xl shadow-lg";
+                trophyBadge.innerHTML = "<span>🥈 SILVER CUP FINISHER!</span>";
+            } else {
+                trophyBadge.className = "bg-gradient-to-r from-amber-700 to-amber-600 text-white font-game text-xl w-full flex items-center justify-center space-x-2 p-4 rounded-2xl shadow-lg";
+                trophyBadge.innerHTML = "<span>🥉 BRONZE CUP RACER!</span>";
+            }
+
+            if (typeof confetti === 'function') {
+                confetti({
+                    particleCount: 120,
+                    spread: 80,
+                    origin: { y: 0.6 }
+                });
+            }
+        }
+
+        function resetGame() {
+            showScreen('screen-start');
+        }
+
+        window.onload = () => {
+            initCanvas();
+        };
+    </script>
+</body>
+</html>

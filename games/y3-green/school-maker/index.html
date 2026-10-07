@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>School Maker Rocks &amp; Soil Quiz</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Quicksand:wght@500;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            font-family: 'Fredoka', 'Quicksand', sans-serif;
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: manipulation;
+        }
+
+        @keyframes rainbowGlow {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .rainbow-bg {
+            background: linear-gradient(-45deg, #ff9a9e, #fecfef, #a1c4fd, #c2e9fb, #e0c3fc, #8ec5fc);
+            background-size: 400% 400%;
+            animation: rainbowGlow 12s ease infinite;
+        }
+
+        .rainbow-btn {
+            background: linear-gradient(135deg, #ff6b6b, #feca57, #48dbfb, #ff9ff3);
+            background-size: 300% 300%;
+            transition: all 0.2s ease-in-out;
+            box-shadow: 0 6px 0 #b2bec3, 0 10px 15px rgba(0,0,0,0.15);
+        }
+
+        .rainbow-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 0 #b2bec3, 0 12px 20px rgba(0,0,0,0.2);
+            filter: brightness(1.08);
+        }
+
+        .rainbow-btn:active {
+            transform: translateY(4px);
+            box-shadow: 0 2px 0 #b2bec3, 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .option-btn {
+            transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 5px 0 #cbd5e1;
+        }
+
+        .option-btn:hover {
+            transform: scale(1.02) translateY(-2px);
+        }
+
+        .option-btn:active {
+            transform: scale(0.98) translateY(3px);
+            box-shadow: 0 2px 0 #cbd5e1;
+        }
+
+        @keyframes floatAnim {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-10px) rotate(3deg); }
+        }
+
+        .floating {
+            animation: floatAnim 3s ease-in-out infinite;
+        }
+
+        @keyframes popIn {
+            0% { transform: scale(0.5); opacity: 0; }
+            80% { transform: scale(1.05); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .pop-in {
+            animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        /* Canvas game canvas responsive styling */
+        #gameCanvas {
+            background: linear-gradient(180deg, #718093 0%, #2f3640 100%);
+            touch-action: none;
+        }
+
+        .confetti-piece {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            pointer-events: none;
+            animation: fall 3s linear forwards;
+        }
+
+        @keyframes fall {
+            0% { transform: translateY(-50px) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+        }
+    </style>
+</head>
+<body class="rainbow-bg min-h-screen flex items-center justify-center p-3 sm:p-6 overflow-x-hidden text-slate-800">
+
+    <div id="confettiContainer" class="fixed inset-0 pointer-events-none z-50"></div>
+
+    <!-- MAIN APP CONTAINER -->
+    <main class="w-full max-w-2xl bg-white/90 backdrop-blur-md rounded-3xl p-4 sm:p-8 shadow-2xl border-4 border-white relative overflow-hidden">
+        
+        <!-- 1. TITLE SCREEN -->
+        <section id="titleScreen" class="text-center py-4 flex flex-col items-center justify-center space-y-6 pop-in">
+            <div class="relative">
+                <span class="text-6xl sm:text-7xl floating inline-block">🌈</span>
+                <span class="text-5xl sm:text-6xl floating inline-block" style="animation-delay: 0.5s;">🪨</span>
+                <span class="text-5xl sm:text-6xl floating inline-block" style="animation-delay: 1s;">🌱</span>
+            </div>
+
+            <h1 class="text-4xl sm:text-6xl font-black tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-600 drop-shadow-sm">School Maker Rocks &amp; Soil Quiz</h1>
+
+            <div class="bg-amber-100/80 border-2 border-amber-300 rounded-2xl p-4 sm:p-5 max-w-md text-amber-900 shadow-inner">
+                <p class="text-lg sm:text-xl font-semibold mb-2">⭐ Rocks & Soil Adventure! ⭐</p>
+                <p class="text-base sm:text-lg">Answer fun questions to earn levels! Drive the lucky car in the mini-game after every level! 🚗💨</p>
+            </div>
+
+            <button id="startBtn" onclick="startGame()" class="rainbow-btn text-white text-2xl sm:text-3xl font-bold py-4 px-10 rounded-full border-4 border-white cursor-pointer transform transition">
+                PLAY NOW! 🚀
+            </button>
+            
+            <p class="text-xs sm:text-sm text-slate-500 font-semibold">UK Year 3 Science • Safe & Fun • 100% Kid Friendly</p>
+        </section>
+
+        <!-- 2. QUIZ SCREEN -->
+        <section id="quizScreen" class="hidden space-y-5">
+            <!-- Header Progress Info -->
+            <div class="bg-white/80 rounded-2xl p-4 shadow-sm border border-slate-200 flex flex-wrap items-center justify-between gap-2">
+                <div class="flex items-center space-x-2">
+                    <span id="levelBadge" class="bg-purple-500 text-white font-bold px-3 py-1 rounded-full text-sm sm:text-base">
+                        Level 1 / 5 🌟
+                    </span>
+                    <span id="questionNum" class="text-slate-600 font-bold text-sm sm:text-base">
+                        Q 1 of 3
+                    </span>
+                </div>
+                <div class="flex items-center space-x-2 bg-yellow-100 border border-yellow-300 px-3 py-1 rounded-full">
+                    <span class="text-xl">⭐</span>
+                    <span id="scoreText" class="font-bold text-yellow-800 text-lg">Score: 0</span>
+                </div>
+            </div>
+
+            <!-- Progress Bar -->
+            <div class="w-full bg-slate-200 rounded-full h-4 overflow-hidden border border-slate-300 shadow-inner">
+                <div id="progressBar" class="bg-gradient-to-r from-pink-400 via-purple-400 to-indigo-500 h-full w-0 transition-all duration-300"></div>
+            </div>
+
+            <!-- Question Card -->
+            <div class="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-2xl p-5 sm:p-7 border-2 border-indigo-200 shadow-md text-center space-y-4">
+                <div id="qEmoji" class="text-5xl sm:text-6xl floating my-2">🪨</div>
+                <h2 id="questionText" class="text-xl sm:text-2xl font-bold text-slate-800 leading-snug">
+                    Question text goes here?
+                </h2>
+            </div>
+
+            <!-- Answer Options -->
+            <div id="optionsContainer" class="grid grid-cols-1 gap-3 pt-2">
+                <!-- Option buttons dynamically inserted -->
+            </div>
+        </section>
+
+        <!-- 3. CAR DODGER MINI-GAME SCREEN -->
+        <section id="gameScreen" class="hidden text-center space-y-4">
+            <div class="flex items-center justify-between bg-purple-100 p-3 rounded-2xl border border-purple-300">
+                <div class="text-left">
+                    <p class="font-bold text-purple-900 text-base sm:text-lg">🚗 CAR DODGER REWARD!</p>
+                    <p class="text-xs sm:text-sm text-purple-700">Dodge rocks and mud holes!</p>
+                </div>
+                <div class="bg-white px-4 py-2 rounded-xl shadow-sm border border-purple-200">
+                    <span class="text-xs text-slate-500 block font-bold">TIME LEFT</span>
+                    <span id="gameTimer" class="text-2xl font-black text-pink-600">15s</span>
+                </div>
+            </div>
+
+            <div class="relative w-full max-w-md mx-auto aspect-[4/5] rounded-2xl overflow-hidden border-4 border-slate-700 shadow-xl">
+                <canvas id="gameCanvas" class="w-full h-full block"></canvas>
+            </div>
+
+            <!-- Touch Controls for Mobile/Tablet -->
+            <div class="flex justify-center gap-6 pt-2">
+                <button id="leftBtn" class="bg-blue-500 active:bg-blue-600 text-white font-bold text-2xl py-3 px-8 rounded-2xl shadow-lg border-b-4 border-blue-700 active:translate-y-1">
+                    👈 LEFT
+                </button>
+                <button id="rightBtn" class="bg-blue-500 active:bg-blue-600 text-white font-bold text-2xl py-3 px-8 rounded-2xl shadow-lg border-b-4 border-blue-700 active:translate-y-1">
+                    RIGHT 👉
+                </button>
+            </div>
+            <p class="text-xs text-slate-500 hidden sm:block">Tip: You can also use Left/Right Arrow Keys or A/D on your keyboard!</p>
+        </section>
+
+        <!-- 4. VICTORY SCREEN -->
+        <section id="victoryScreen" class="hidden text-center py-4 space-y-6 pop-in">
+            <div class="text-6xl sm:text-7xl floating">🏆✨🌈</div>
+            <h1 class="text-3xl sm:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-500 via-pink-500 to-purple-600">
+                SUPER ROCK STAR!
+            </h1>
+            <p class="text-xl text-slate-700 font-bold">You completed ALL 5 Levels of Hero School!</p>
+
+            <!-- Certificate Card -->
+            <div class="bg-amber-50 border-4 border-amber-300 rounded-3xl p-6 shadow-lg max-w-md mx-auto space-y-3">
+                <p class="text-sm font-bold text-amber-700 uppercase tracking-widest">Official Certificate</p>
+                <p class="text-2xl font-bold text-slate-800">Junior Science Master 🎓</p>
+                <div class="text-3xl font-black text-pink-600 my-2" id="finalScoreText">15 / 15 Stars!</div>
+                
+                <div class="flex justify-center gap-2 pt-2">
+                    <span class="bg-amber-200 text-amber-900 px-3 py-1 rounded-full text-xs font-bold">🪨 Rock Expert</span>
+                    <span class="bg-emerald-200 text-emerald-900 px-3 py-1 rounded-full text-xs font-bold">🌱 Soil Wizard</span>
+                </div>
+            </div>
+
+            <button onclick="restartGame()" class="rainbow-btn text-white text-2xl font-bold py-4 px-10 rounded-full border-4 border-white cursor-pointer">
+                PLAY AGAIN! 🔄
+            </button>
+        </section>
+
+    </main>
+
+    <!-- FEEDBACK MODAL -->
+    <div id="feedbackModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-40 hidden">
+        <div class="bg-white rounded-3xl p-6 sm:p-8 max-w-md w-full text-center space-y-4 shadow-2xl border-4 border-white pop-in">
+            <div id="modalIcon" class="text-6xl sm:text-7xl">🎉</div>
+            <h3 id="modalTitle" class="text-2xl sm:text-3xl font-black">Awesome!</h3>
+            <p id="modalBody" class="text-slate-700 text-base sm:text-lg">That's right!</p>
+            <button id="modalBtn" onclick="closeModal()" class="rainbow-btn text-white text-xl font-bold py-3 px-8 rounded-full border-2 border-white w-full">
+                NEXT ➡️
+            </button>
+        </div>
+    </div>
+
+    <script>
+        /* ----------------------------------------------------
+           AUDIO SYNTHESIZER (Web Audio API - Kid friendly sounds)
+           ---------------------------------------------------- */
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        let audioCtx = null;
+
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new AudioContext();
+            }
+        }
+
+        function playSound(type) {
+            try {
+                initAudio();
+                if (!audioCtx) return;
+
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+
+                const now = audioCtx.currentTime;
+
+                if (type === 'correct') {
+                    // Happy cheerful chime
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(523.25, now); // C5
+                    osc.frequency.exponentialRampToValueAtTime(659.25, now + 0.1); // E5
+                    osc.frequency.exponentialRampToValueAtTime(783.99, now + 0.2); // G5
+                    osc.frequency.exponentialRampToValueAtTime(1046.50, now + 0.3); // C6
+                    gain.gain.setValueAtTime(0.3, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
+                    osc.start(now);
+                    osc.stop(now + 0.5);
+                } else if (type === 'wrong') {
+                    // Gentle boing
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(300, now);
+                    osc.frequency.exponentialRampToValueAtTime(180, now + 0.25);
+                    gain.gain.setValueAtTime(0.3, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+                    osc.start(now);
+                    osc.stop(now + 0.3);
+                } else if (type === 'click') {
+                    // Short soft click
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(400, now);
+                    gain.gain.setValueAtTime(0.15, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.05);
+                    osc.start(now);
+                    osc.stop(now + 0.05);
+                } else if (type === 'win') {
+                    // Victory fanfare
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(440, now);
+                    osc.frequency.setValueAtTime(554.37, now + 0.1);
+                    osc.frequency.setValueAtTime(659.25, now + 0.2);
+                    osc.frequency.setValueAtTime(880, now + 0.3);
+                    gain.gain.setValueAtTime(0.3, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.7);
+                    osc.start(now);
+                    osc.stop(now + 0.7);
+                }
+            } catch (e) {
+                // Audio fallback silence gracefully
+            }
+        }
+
+        const quizData = [
+            // LEVEL 1: Rocks Basics
+            {
+                level: 1,
+                emoji: "🪨",
+                question: "What are rocks made of?",
+                options: ["Plastic and wood", "Minerals mixed together", "Paper and leaves"],
+                answer: 1,
+                hint: "Rocks are natural things made from tiny minerals!"
+            },
+            {
+                level: 1,
+                emoji: "🏔️",
+                question: "Are rocks natural or man-made?",
+                options: ["Natural (made by nature)", "Man-made (made in factory)", "Made by cars"],
+                answer: 0,
+                hint: "Rocks come directly from Mother Earth!"
+            },
+            {
+                level: 1,
+                emoji: "🌱",
+                question: "What is soil made of?",
+                options: ["Only rocks", "Tiny rocks, dead leaves & water", "Only candy"],
+                answer: 1,
+                hint: "Soil has little bits of rocks mixed with old plants!"
+            },
+
+            // LEVEL 2: Types of Rocks
+            {
+                level: 2,
+                emoji: "🖍️",
+                question: "Which soft rock wears away easily and is used for writing?",
+                options: ["Granite", "Chalk", "Diamond"],
+                answer: 1,
+                hint: "Teachers often use chalk on blackboards!"
+            },
+            {
+                level: 2,
+                emoji: "🏰",
+                question: "Which rock is super hard and used to build strong walls?",
+                options: ["Chalk", "Granite", "Mud"],
+                answer: 1,
+                hint: "Granite is very tough and shiny!"
+            },
+            {
+                level: 2,
+                emoji: "🏠",
+                question: "Which rock splits easily into thin sheets for house roofs?",
+                options: ["Slate", "Pumice", "Sand"],
+                answer: 0,
+                hint: "Slate makes great waterproof roof tiles!"
+            },
+
+            // LEVEL 3: Fossils & Soil
+            {
+                level: 3,
+                emoji: "🦴",
+                question: "What is a fossil?",
+                options: ["A fresh leaf from a tree", "The remains of a plant or animal trapped in rock", "A shiny metal coin"],
+                answer: 1,
+                hint: "Fossils are ancient plant or animal prints turned into stone over millions of years!"
+            },
+            {
+                level: 3,
+                emoji: "🍂",
+                question: "What is the dark part of soil made from rotted leaves called?",
+                options: ["Humus", "Sugar", "Glass"],
+                answer: 0,
+                hint: "Humus gives soil lots of goodness for plants!"
+            },
+            {
+                level: 3,
+                emoji: "🪱",
+                question: "Which helpful creepy-crawly mixes soil and makes it healthy?",
+                options: ["Earthworms", "Spiders", "Butterflies"],
+                answer: 0,
+                hint: "Worms wiggle through soil to let air and water in!"
+            },
+
+            // LEVEL 4: Properties & Testing
+            {
+                level: 4,
+                emoji: "💧",
+                question: "If a rock lets water soak through it, it is called...",
+                options: ["Impermeable", "Permeable", "Sticky"],
+                answer: 1,
+                hint: "Permeable rocks have tiny holes that let water pass!"
+            },
+            {
+                level: 4,
+                emoji: "🛡️",
+                question: "If a rock keeps water OUT and stops rain, it is...",
+                options: ["Impermeable", "Permeable", "Soft"],
+                answer: 0,
+                hint: "Impermeable rocks are great for roof tiles!"
+            },
+            {
+                level: 4,
+                emoji: "🔍",
+                question: "How can scientists test how hard a rock is?",
+                options: ["By listening to it", "By scratching it with a coin or nail", "By smelling it"],
+                answer: 1,
+                hint: "Harder rocks are tricky to scratch!"
+            },
+
+            // LEVEL 5: Uses of Rocks & Soil
+            {
+                level: 5,
+                emoji: "🏺",
+                question: "Which soil type is sticky when wet and great for shaping pots?",
+                options: ["Sand", "Clay", "Gravel"],
+                answer: 1,
+                hint: "Clay gets squishy and holds shape when baked!"
+            },
+            {
+                level: 5,
+                emoji: "🏛️",
+                question: "Which beautiful rock can be polished smooth for fancy statues?",
+                options: ["Marble", "Chalk", "Mudstone"],
+                answer: 0,
+                hint: "Marble is shiny and sculptors love it!"
+            },
+            {
+                level: 5,
+                emoji: "🌻",
+                question: "Which top layer of soil is best for helping plants grow tall and strong?",
+                options: ["Solid rock", "Topsoil", "Deep underground lava"],
+                answer: 1,
+                hint: "Topsoil is packed with food and air for roots!"
+            }
+        ];
+
+        let currentQuestionIdx = 0;
+        let score = 0;
+        let isAnswerLocked = false;
+
+        /* DOM Elements */
+        const titleScreen = document.getElementById('titleScreen');
+        const quizScreen = document.getElementById('quizScreen');
+        const gameScreen = document.getElementById('gameScreen');
+        const victoryScreen = document.getElementById('victoryScreen');
+
+        const levelBadge = document.getElementById('levelBadge');
+        const questionNum = document.getElementById('questionNum');
+        const scoreText = document.getElementById('scoreText');
+        const progressBar = document.getElementById('progressBar');
+        const qEmoji = document.getElementById('qEmoji');
+        const questionText = document.getElementById('questionText');
+        const optionsContainer = document.getElementById('optionsContainer');
+
+        const feedbackModal = document.getElementById('feedbackModal');
+        const modalIcon = document.getElementById('modalIcon');
+        const modalTitle = document.getElementById('modalTitle');
+        const modalBody = document.getElementById('modalBody');
+
+        function startGame() {
+            playSound('click');
+            currentQuestionIdx = 0;
+            score = 0;
+            updateScoreUI();
+
+            titleScreen.classList.add('hidden');
+            victoryScreen.classList.add('hidden');
+            gameScreen.classList.add('hidden');
+            quizScreen.classList.remove('hidden');
+
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            isAnswerLocked = false;
+            const qData = quizData[currentQuestionIdx];
+
+            // Update Progress Bar & Counts
+            const totalQ = quizData.length;
+            const progressPercent = ((currentQuestionIdx) / totalQ) * 100;
+            progressBar.style.width = `${progressPercent}%`;
+
+            const currentLevelQ = (currentQuestionIdx % 3) + 1;
+            levelBadge.textContent = `Level ${qData.level} / 5 🌟`;
+            questionNum.textContent = `Q ${currentLevelQ} of 3`;
+
+            // Display question
+            qEmoji.textContent = qData.emoji;
+            questionText.textContent = qData.question;
+
+            // Display Options
+            optionsContainer.innerHTML = '';
+            qData.options.forEach((opt, idx) => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn w-full bg-white border-2 border-indigo-200 hover:border-indigo-400 text-slate-800 font-bold text-lg sm:text-xl py-3 px-5 rounded-2xl text-left flex items-center justify-between group';
+                btn.onclick = () => selectAnswer(idx);
+                
+                btn.innerHTML = `
+                    <span>${opt}</span>
+                    <span class="text-2xl group-hover:scale-125 transition-transform">✨</span>
+                `;
+                optionsContainer.appendChild(btn);
+            });
+        }
+
+        function selectAnswer(selectedIdx) {
+            if (isAnswerLocked) return;
+            isAnswerLocked = true;
+
+            const qData = quizData[currentQuestionIdx];
+            const isCorrect = selectedIdx === qData.answer;
+
+            if (isCorrect) {
+                score++;
+                updateScoreUI();
+                playSound('correct');
+                triggerConfetti();
+
+                modalIcon.textContent = "🎉🌟";
+                modalTitle.className = "text-2xl sm:text-3xl font-black text-emerald-600";
+                modalTitle.textContent = "SUPER JOB!";
+                modalBody.textContent = "That's completely right! You are a brilliant rock star!";
+            } else {
+                playSound('wrong');
+                modalIcon.textContent = "⭐🌱";
+                modalTitle.className = "text-2xl sm:text-3xl font-black text-amber-600";
+                modalTitle.textContent = "GOOD TRY!";
+                modalBody.innerHTML = `The correct answer is: <br><strong class="text-indigo-600 text-xl font-bold">${qData.options[qData.answer]}</strong><br><span class="text-xs text-slate-500 mt-1 block">${qData.hint}</span>`;
+            }
+
+            feedbackModal.classList.remove('hidden');
+        }
+
+        function closeModal() {
+            playSound('click');
+            feedbackModal.classList.add('hidden');
+
+            // Check if level finished (every 3 questions)
+            const currentLevelQ = (currentQuestionIdx % 3) + 1;
+
+            if (currentLevelQ === 3) {
+                // Level completed -> Launch Car Dodger Mini Game!
+                startMiniGame();
+            } else {
+                currentQuestionIdx++;
+                if (currentQuestionIdx < quizData.length) {
+                    loadQuestion();
+                } else {
+                    showVictoryScreen();
+                }
+            }
+        }
+
+        function updateScoreUI() {
+            scoreText.textContent = `Score: ${score}`;
+        }
+
+        let gameInterval = null;
+        let timerInterval = null;
+        let gameTimeLeft = 15;
+        let carX = 0;
+        let obstacles = [];
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        function startMiniGame() {
+            quizScreen.classList.add('hidden');
+            gameScreen.classList.remove('hidden');
+
+            // Set canvas resolution
+            canvas.width = 320;
+            canvas.height = 400;
+
+            carX = canvas.width / 2 - 20;
+            obstacles = [];
+            gameTimeLeft = 15;
+            document.getElementById('gameTimer').textContent = `${gameTimeLeft}s`;
+
+            // Clear any old intervals
+            clearInterval(gameInterval);
+            clearInterval(timerInterval);
+
+            // Game Timer
+            timerInterval = setInterval(() => {
+                gameTimeLeft--;
+                document.getElementById('gameTimer').textContent = `${gameTimeLeft}s`;
+
+                if (gameTimeLeft <= 0) {
+                    endMiniGame();
+                }
+            }, 1000);
+
+            // Main Game Loop
+            gameInterval = setInterval(updateGame, 1000 / 30);
+        }
+
+        function updateGame() {
+            // Spawn obstacles
+            if (Math.random() < 0.1) {
+                const types = [
+                    { emoji: "🪨", size: 30 },
+                    { emoji: "🕳️", size: 32 },
+                    { emoji: "🚧", size: 28 }
+                ];
+                const obsType = types[Math.floor(Math.random() * types.length)];
+                obstacles.push({
+                    x: Math.random() * (canvas.width - 40),
+                    y: -40,
+                    speed: 4 + Math.random() * 3,
+                    ...obsType
+                });
+            }
+
+            // Move obstacles
+            obstacles.forEach(obs => {
+                obs.y += obs.speed;
+            });
+
+            // Filter off-screen obstacles
+            obstacles = obstacles.filter(obs => obs.y < canvas.height + 50);
+
+            // Check Collisions (Gentle - car nudges back on hit)
+            const carBox = { x: carX + 5, y: canvas.height - 70, width: 30, height: 50 };
+            obstacles.forEach(obs => {
+                if (
+                    carBox.x < obs.x + obs.size &&
+                    carBox.x + carBox.width > obs.x &&
+                    carBox.y < obs.y + obs.size &&
+                    carBox.y + carBox.height > obs.y
+                ) {
+                    // Slight hit effect - play gentle tone
+                    playSound('wrong');
+                    obs.y = canvas.height + 100; // Remove obstacle
+                }
+            });
+
+            // Render Graphics
+            drawGame();
+        }
+
+        function drawGame() {
+            // Road background
+            ctx.fillStyle = "#334155";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Road Lines
+            ctx.strokeStyle = "#cbd5e1";
+            ctx.lineWidth = 4;
+            ctx.setLineDash([20, 20]);
+            ctx.beginPath();
+            ctx.moveTo(canvas.width / 2, 0);
+            ctx.lineTo(canvas.width / 2, canvas.height);
+            ctx.stroke();
+            ctx.setLineDash([]);
+
+            // Draw Obstacles
+            ctx.font = "28px sans-serif";
+            obstacles.forEach(obs => {
+                ctx.fillText(obs.emoji, obs.x, obs.y);
+            });
+
+            // Draw Rainbow Car
+            ctx.font = "38px sans-serif";
+            ctx.fillText("🚗", carX, canvas.height - 25);
+        }
+
+        function moveCar(dir) {
+            playSound('click');
+            const step = 35;
+            if (dir === 'left') {
+                carX = Math.max(10, carX - step);
+            } else if (dir === 'right') {
+                carX = Math.min(canvas.width - 50, carX + step);
+            }
+        }
+
+        // Controls
+        document.getElementById('leftBtn').addEventListener('click', () => moveCar('left'));
+        document.getElementById('rightBtn').addEventListener('click', () => moveCar('right'));
+
+        window.addEventListener('keydown', (e) => {
+            if (gameScreen.classList.contains('hidden')) return;
+            if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') {
+                moveCar('left');
+            } else if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') {
+                moveCar('right');
+            }
+        });
+
+        function endMiniGame() {
+            clearInterval(gameInterval);
+            clearInterval(timerInterval);
+
+            playSound('win');
+            triggerConfetti();
+
+            modalIcon.textContent = "🚗💨✨";
+            modalTitle.className = "text-2xl sm:text-3xl font-black text-purple-600";
+            modalTitle.textContent = "GREAT DRIVING!";
+            
+            const levelFinished = Math.floor(currentQuestionIdx / 3) + 1;
+            modalBody.textContent = `You finished the Level ${levelFinished} Mini-Game! Ready for the next level?`;
+
+            currentQuestionIdx++;
+
+            if (currentQuestionIdx >= quizData.length) {
+                gameScreen.classList.add('hidden');
+                showVictoryScreen();
+            } else {
+                gameScreen.classList.add('hidden');
+                quizScreen.classList.remove('hidden');
+                loadQuestion();
+            }
+        }
+
+        function showVictoryScreen() {
+            playSound('win');
+            triggerConfetti();
+
+            quizScreen.classList.add('hidden');
+            gameScreen.classList.add('hidden');
+            victoryScreen.classList.remove('hidden');
+
+            document.getElementById('finalScoreText').textContent = `${score} / 15 Stars!`;
+        }
+
+        function restartGame() {
+            startGame();
+        }
+
+        // Simple kid-friendly Confetti generator
+        function triggerConfetti() {
+            const container = document.getElementById('confettiContainer');
+            const colors = ['#ff4757', '#ffa502', '#2ed573', '#1e90ff', '#3742fa', '#ed49a3'];
+
+            for (let i = 0; i < 30; i++) {
+                const p = document.createElement('div');
+                p.className = 'confetti-piece';
+                p.style.left = `${Math.random() * 100}vw`;
+                p.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                p.style.animationDuration = `${1.5 + Math.random() * 2}s`;
+                p.style.borderRadius = Math.random() > 0.5 ? '50%' : '2px';
+                
+                container.appendChild(p);
+
+                setTimeout(() => p.remove(), 3500);
+            }
+        }
+    </script>
+</body>
+</html>

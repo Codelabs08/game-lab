@@ -1,0 +1,877 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Z Glitch Area</title>
+    <!-- Tailwind CSS for modern styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts for playful typography -->
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Outfit:wght@500;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Fredoka', cursive, sans-serif;
+            background: linear-gradient(135deg, #052e16 0%, #14532d 40%, #064e3b 100%);
+            color: #ecfdf5;
+            user-select: none;
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+
+        .heading-font {
+            font-family: 'Outfit', sans-serif;
+        }
+
+        /* Jungle background visual embellishments */
+        .jungle-bg-decor {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            opacity: 0.15;
+            background-image: radial-gradient(#22c55e 2px, transparent 2px), radial-gradient(#eab308 2px, transparent 2px);
+            background-size: 40px 40px;
+            background-position: 0 0, 20px 20px;
+        }
+
+        /* Glassmorphism panel styling */
+        .glass-panel {
+            background: rgba(6, 78, 59, 0.75);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 3px solid rgba(52, 211, 153, 0.4);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4), inset 0 2px 4px rgba(255, 255, 255, 0.2);
+        }
+
+        /* Tactile bouncy buttons */
+        .btn-bouncy {
+            transition: all 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 6px 0 rgba(0, 0, 0, 0.3);
+        }
+
+        .btn-bouncy:hover {
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 10px 0 rgba(0, 0, 0, 0.25);
+        }
+
+        .btn-bouncy:active {
+            transform: translateY(3px) scale(0.98);
+            box-shadow: 0 2px 0 rgba(0, 0, 0, 0.4);
+        }
+
+        /* Custom pulsing glowing effects */
+        @keyframes pulseGlow {
+            0%, 100% { filter: drop-shadow(0 0 10px rgba(250, 204, 21, 0.6)); }
+            50% { filter: drop-shadow(0 0 22px rgba(250, 204, 21, 0.9)); }
+        }
+
+        .glow-gold {
+            animation: pulseGlow 2.5s infinite;
+        }
+
+        /* Floating cartoon background emojis */
+        .floating-animal {
+            position: absolute;
+            animation: floatAnim 6s ease-in-out infinite;
+            filter: drop-shadow(0 8px 8px rgba(0,0,0,0.3));
+        }
+
+        @keyframes floatAnim {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-15px) rotate(5deg); }
+        }
+
+        /* Particle Canvas style overlay */
+        #fxCanvas, #miniGameCanvas {
+            touch-action: none;
+        }
+
+        /* Glitch text effect for special title styling */
+        .glitch-text {
+            text-shadow: 3px 3px 0px #15803d, -2px -2px 0px #eab308;
+        }
+    </style>
+</head>
+<body class="flex flex-col min-h-screen items-center justify-center p-3 md:p-6 relative">
+
+    <!-- Background Decor -->
+    <div class="jungle-bg-decor"></div>
+    
+    <!-- Floating Jungle Animals Decorative Layer -->
+    <div class="fixed inset-0 pointer-events-none z-0 overflow-hidden hidden sm:block">
+        <span class="floating-animal text-5xl md:text-6xl top-10 left-10" style="animation-delay: 0s;">🐒</span>
+        <span class="floating-animal text-5xl md:text-6xl top-12 right-12" style="animation-delay: 1.5s;">🦜</span>
+        <span class="floating-animal text-5xl md:text-6xl bottom-12 left-12" style="animation-delay: 3s;">🐯</span>
+        <span class="floating-animal text-5xl md:text-6xl bottom-10 right-10" style="animation-delay: 4.5s;">🦥</span>
+    </div>
+
+    <!-- FX Canvas for Confetti & Particles -->
+    <canvas id="fxCanvas" class="fixed inset-0 pointer-events-none z-50 w-full h-full"></canvas>
+
+    <!-- Main Outer Container -->
+    <main class="w-full max-w-4xl z-10 my-auto">
+
+        <!-- HEADER / NAVIGATION BAR -->
+        <header class="glass-panel rounded-3xl p-4 mb-4 flex flex-wrap items-center justify-between gap-3 text-center sm:text-left">
+            <div class="flex items-center gap-3">
+                <span class="text-4xl glow-gold">🌴</span>
+                <div>
+                    <h1 class="heading-font text-2xl sm:text-3xl font-extrabold text-amber-300 tracking-wide glitch-text">Z Glitch Area</h1>
+                    <p class="text-emerald-200 text-xs sm:text-sm font-semibold">Year 3 Times Tables Safari</p>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-4 bg-emerald-950/60 px-4 py-2 rounded-2xl border border-emerald-500/30">
+                <div class="text-center">
+                    <span class="text-xs uppercase font-bold text-emerald-400 block">Jungle Score</span>
+                    <span id="scoreDisplay" class="text-xl sm:text-2xl font-black text-yellow-300">0</span>
+                </div>
+                <div class="h-8 w-px bg-emerald-800"></div>
+                <div class="text-center">
+                    <span class="text-xs uppercase font-bold text-emerald-400 block">Stars</span>
+                    <span id="starDisplay" class="text-xl sm:text-2xl font-black text-amber-400">⭐ 0</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- SCREEN 1: WELCOME SCREEN -->
+        <section id="welcomeScreen" class="glass-panel rounded-3xl p-6 md:p-10 text-center space-y-6">
+            <div class="inline-block bg-amber-400/20 p-4 rounded-full mb-2">
+                <span class="text-6xl md:text-7xl">🦁</span>
+            </div>
+            <h2 class="heading-font text-3xl md:text-4xl font-extrabold text-amber-300">
+                Ready for the Math Jungle?
+            </h2>
+            <p class="text-base md:text-lg text-emerald-100 max-w-2xl mx-auto leading-relaxed">
+                Help Explorer Hero solve 15 friendly times tables challenges across 5 levels. Earn space stars and play the <strong class="text-yellow-300">Asteroid Shooter Mini-Game</strong> after every level!
+            </p>
+
+            <!-- Level overview badges -->
+            <div class="grid grid-cols-2 sm:grid-cols-5 gap-2 max-w-2xl mx-auto pt-2">
+                <div class="bg-emerald-900/60 border border-emerald-500/30 p-2 rounded-xl text-xs font-bold text-emerald-300">
+                    Lvl 1: 2x, 5x, 10x
+                </div>
+                <div class="bg-emerald-900/60 border border-emerald-500/30 p-2 rounded-xl text-xs font-bold text-emerald-300">
+                    Lvl 2: 3x, 4x
+                </div>
+                <div class="bg-emerald-900/60 border border-emerald-500/30 p-2 rounded-xl text-xs font-bold text-emerald-300">
+                    Lvl 3: 6x, 7x
+                </div>
+                <div class="bg-emerald-900/60 border border-emerald-500/30 p-2 rounded-xl text-xs font-bold text-emerald-300">
+                    Lvl 4: 8x, 9x
+                </div>
+                <div class="bg-emerald-900/60 border border-emerald-500/30 p-2 rounded-xl text-xs font-bold text-emerald-300 col-span-2 sm:col-span-1">
+                    Lvl 5: Mystery Glitch!
+                </div>
+            </div>
+
+            <div class="pt-4">
+                <button id="startBtn" class="btn-bouncy bg-gradient-to-r from-amber-400 via-orange-500 to-yellow-500 hover:from-amber-300 hover:to-yellow-400 text-emerald-950 font-black text-2xl py-4 px-10 rounded-2xl border-2 border-yellow-200 uppercase tracking-wide cursor-pointer">
+                    🚀 Start Safari Adventure!
+                </button>
+            </div>
+        </section>
+
+        <!-- SCREEN 2: QUIZ SCREEN -->
+        <section id="quizScreen" class="glass-panel rounded-3xl p-5 md:p-8 space-y-6 hidden">
+            <!-- Progress Header -->
+            <div class="space-y-2">
+                <div class="flex justify-between items-center text-sm font-bold text-emerald-200">
+                    <span id="levelBadge" class="bg-amber-500/30 border border-amber-400/40 text-amber-300 px-3 py-1 rounded-xl">
+                        Level 1: Friendly Starts
+                    </span>
+                    <span id="questionCounter" class="text-emerald-300">Question 1 of 3</span>
+                </div>
+                <!-- Progress Bar -->
+                <div class="w-full bg-emerald-950/80 rounded-full h-4 p-0.5 border border-emerald-600/40">
+                    <div id="progressBar" class="bg-gradient-to-r from-emerald-400 to-yellow-400 h-full rounded-full transition-all duration-500" style="width: 6.6%;"></div>
+                </div>
+            </div>
+
+            <!-- Question Card -->
+            <div class="bg-emerald-950/50 border-2 border-emerald-400/30 rounded-2xl p-6 text-center space-y-3 relative overflow-hidden">
+                <div class="absolute -right-4 -bottom-4 text-7xl opacity-10 select-none">🌴</div>
+                <span class="text-xs uppercase font-extrabold tracking-widest text-emerald-400 block">Multiply to unlock next step</span>
+                <h3 id="questionText" class="heading-font text-4xl md:text-6xl font-black text-yellow-300 tracking-wider my-2">
+                    2 × 5 = ?
+                </h3>
+                <p id="questionHint" class="text-xs md:text-sm text-emerald-200 font-medium italic min-h-[1.5rem]">
+                    Think of 2 groups of 5!
+                </p>
+            </div>
+
+            <!-- Multiple Choice Answer Grid -->
+            <div id="optionsGrid" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <!-- Answer Buttons rendered dynamically -->
+            </div>
+
+            <!-- Feedback Alert Banner -->
+            <div id="feedbackBox" class="p-4 rounded-2xl hidden transition-all duration-300 text-center font-bold text-base md:text-lg">
+                <!-- Feedback message populates here -->
+            </div>
+        </section>
+
+        <!-- SCREEN 3: ASTEROID SHOOTER MINI-GAME -->
+        <section id="miniGameScreen" class="glass-panel rounded-3xl p-4 md:p-6 text-center space-y-4 hidden">
+            <div class="flex justify-between items-center bg-emerald-950/70 p-3 rounded-2xl border border-emerald-500/30">
+                <div class="text-left">
+                    <h3 class="heading-font text-lg md:text-xl font-bold text-amber-300">🚀 Bonus Reward: Asteroid Shooter</h3>
+                    <p class="text-xs text-emerald-300">Shoot friendly colorful asteroids for extra points!</p>
+                </div>
+                <div class="text-right">
+                    <span class="text-xs text-emerald-400 font-bold block">Target</span>
+                    <span id="asteroidsLeft" class="text-xl md:text-2xl font-black text-yellow-300">10 Left</span>
+                </div>
+            </div>
+
+            <!-- Game Canvas Container -->
+            <div class="relative w-full aspect-[16/9] max-h-[400px] bg-slate-950 rounded-2xl overflow-hidden border-2 border-emerald-400/40">
+                <canvas id="miniGameCanvas" class="w-full h-full block"></canvas>
+                <!-- Onscreen Controls Overlay for Touch Devices -->
+                <div class="absolute bottom-2 left-2 right-2 flex justify-between gap-2 pointer-events-none md:hidden">
+                    <div class="flex gap-2 pointer-events-auto">
+                        <button id="touchLeft" class="bg-emerald-800/80 active:bg-emerald-600 text-white font-bold p-3 rounded-xl border border-emerald-400 text-xl">◀</button>
+                        <button id="touchRight" class="bg-emerald-800/80 active:bg-emerald-600 text-white font-bold p-3 rounded-xl border border-emerald-400 text-xl">▶</button>
+                    </div>
+                    <button id="touchShoot" class="bg-amber-500/90 active:bg-amber-400 text-emerald-950 font-black px-6 py-3 rounded-xl border border-yellow-200 text-lg pointer-events-auto">🚀 FIRE</button>
+                </div>
+            </div>
+
+            <p class="text-xs text-emerald-200 hidden md:block">
+                🎮 Controls: Use <strong>Left / Right Arrow Keys</strong> or <strong>A / D</strong> to move, <strong>Spacebar</strong> to shoot! Mouse drag or touch also works!
+            </p>
+
+            <button id="nextLevelBtn" class="hidden btn-bouncy w-full bg-gradient-to-r from-emerald-400 to-teal-400 hover:from-emerald-300 hover:to-teal-300 text-emerald-950 font-black text-xl py-3 px-6 rounded-2xl border-2 border-emerald-200 uppercase cursor-pointer">
+                🌟 Continue Jungle Safari!
+            </button>
+        </section>
+
+        <!-- SCREEN 4: FINAL VICTORY SCREEN -->
+        <section id="victoryScreen" class="glass-panel rounded-3xl p-6 md:p-10 text-center space-y-6 hidden">
+            <div class="relative inline-block">
+                <span class="text-7xl md:text-8xl glow-gold block">🏆</span>
+                <span class="absolute -top-2 -right-2 text-4xl">✨</span>
+            </div>
+            
+            <h2 class="heading-font text-3xl md:text-5xl font-black text-amber-300 glitch-text">
+                Safari Champion!
+            </h2>
+            <p class="text-lg text-emerald-100 max-w-lg mx-auto">
+                Amazing work! You completed all 15 Year 3 Times Tables questions and mastered the Z Glitch Area!
+            </p>
+
+            <!-- Final Stats Box -->
+            <div class="bg-emerald-950/70 border-2 border-amber-400/40 rounded-2xl p-6 max-w-md mx-auto grid grid-cols-2 gap-4">
+                <div class="p-3 bg-emerald-900/50 rounded-xl">
+                    <span class="text-xs uppercase text-emerald-400 font-bold block">Final Score</span>
+                    <span id="finalScore" class="text-3xl font-black text-yellow-300">0</span>
+                </div>
+                <div class="p-3 bg-emerald-900/50 rounded-xl">
+                    <span class="text-xs uppercase text-emerald-400 font-bold block">Rating</span>
+                    <span id="finalStars" class="text-3xl font-black text-amber-400">⭐⭐⭐⭐⭐</span>
+                </div>
+            </div>
+
+            <div class="pt-2">
+                <button id="restartBtn" class="btn-bouncy bg-gradient-to-r from-amber-400 via-orange-500 to-yellow-500 text-emerald-950 font-black text-2xl py-4 px-10 rounded-2xl border-2 border-yellow-200 uppercase tracking-wide cursor-pointer">
+                    🔄 Play Safari Again!
+                </button>
+            </div>
+        </section>
+
+    </main>
+
+    <script>
+        /* SOUND SYNTHESIZER (Web Audio API) - Safe, browser-compatible & responsive sound effects */
+        const AudioFX = {
+            ctx: null,
+            init() {
+                if (!this.ctx) {
+                    this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+                }
+            },
+            playClick() {
+                this.init();
+                if (!this.ctx) return;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(400, this.ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(800, this.ctx.currentTime + 0.08);
+                gain.gain.setValueAtTime(0.15, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.08);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.08);
+            },
+            playCorrect() {
+                this.init();
+                if (!this.ctx) return;
+                const now = this.ctx.currentTime;
+                [523.25, 659.25, 783.99, 1046.50].forEach((freq, idx) => {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(freq, now + idx * 0.08);
+                    gain.gain.setValueAtTime(0.2, now + idx * 0.08);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.08 + 0.25);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start(now + idx * 0.08);
+                    osc.stop(now + idx * 0.08 + 0.25);
+                });
+            },
+            playWrong() {
+                this.init();
+                if (!this.ctx) return;
+                const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(260, now);
+                osc.frequency.linearRampToValueAtTime(200, now + 0.2);
+                gain.gain.setValueAtTime(0.15, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(now);
+                osc.stop(now + 0.2);
+            },
+            playLaser() {
+                this.init();
+                if (!this.ctx) return;
+                const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(800, now);
+                osc.frequency.exponentialRampToValueAtTime(150, now + 0.12);
+                gain.gain.setValueAtTime(0.1, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.12);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(now);
+                osc.stop(now + 0.12);
+            },
+            playPop() {
+                this.init();
+                if (!this.ctx) return;
+                const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(300, now);
+                osc.frequency.exponentialRampToValueAtTime(900, now + 0.08);
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.08);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(now);
+                osc.stop(now + 0.08);
+            }
+        };
+
+        /* QUESTION DATASET (15 Questions: 5 Levels x 3 Questions) */
+        const QUESTION_BANK = [
+            // Level 1: 2x, 5x, 10x tables
+            {
+                level: 1,
+                levelTitle: "Level 1: Friendly Starts (2x, 5x, 10x)",
+                num1: 2, num2: 5, answer: 10,
+                hint: "Think of 2 groups of 5! (5 + 5 = 10)"
+            },
+            {
+                level: 1,
+                levelTitle: "Level 1: Friendly Starts (2x, 5x, 10x)",
+                num1: 5, num2: 4, answer: 20,
+                hint: "Count up by 5s four times: 5, 10, 15, 20!"
+            },
+            {
+                level: 1,
+                levelTitle: "Level 1: Friendly Starts (2x, 5x, 10x)",
+                num1: 10, num2: 3, answer: 30,
+                hint: "10 times 3 is 3 tens! Just add a zero to 3!"
+            },
+
+            // Level 2: 3x, 4x tables
+            {
+                level: 2,
+                levelTitle: "Level 2: Jungle Jumps (3x, 4x)",
+                num1: 3, num2: 4, answer: 12,
+                hint: "3 groups of 4 is like 4 + 4 + 4!"
+            },
+            {
+                level: 2,
+                levelTitle: "Level 2: Jungle Jumps (3x, 4x)",
+                num1: 4, num2: 6, answer: 24,
+                hint: "Double 6 is 12, then double it again!"
+            },
+            {
+                level: 2,
+                levelTitle: "Level 2: Jungle Jumps (3x, 4x)",
+                num1: 3, num2: 7, answer: 21,
+                hint: "Count by 3s seven times: 3, 6, 9, 12, 15, 18, 21!"
+            },
+
+            // Level 3: 6x, 7x tables
+            {
+                level: 3,
+                levelTitle: "Level 3: Wild Vines (6x, 7x)",
+                num1: 6, num2: 3, answer: 18,
+                hint: "6 groups of 3! Think: 5 x 3 is 15, plus one more 3 is 18!"
+            },
+            {
+                level: 3,
+                levelTitle: "Level 3: Wild Vines (6x, 7x)",
+                num1: 7, num2: 2, answer: 14,
+                hint: "Double 7! 7 + 7 = 14!"
+            },
+            {
+                level: 3,
+                levelTitle: "Level 3: Wild Vines (6x, 7x)",
+                num1: 6, num2: 5, answer: 30,
+                hint: "Counting 5 six times gives 30!"
+            },
+
+            // Level 4: 8x, 9x tables
+            {
+                level: 4,
+                levelTitle: "Level 4: Canopy Climb (8x, 9x)",
+                num1: 8, num2: 2, answer: 16,
+                hint: "Double 8! 8 + 8 = 16!"
+            },
+            {
+                level: 4,
+                levelTitle: "Level 4: Canopy Climb (8x, 9x)",
+                num1: 9, num2: 3, answer: 27,
+                hint: "10 x 3 is 30. Take away 3 to get 27!"
+            },
+            {
+                level: 4,
+                levelTitle: "Level 4: Canopy Climb (8x, 9x)",
+                num1: 8, num2: 4, answer: 32,
+                hint: "8 + 8 + 8 + 8 = 32!"
+            },
+
+            // Level 5: Mixed Challenge with Mystery Glitch
+            {
+                level: 5,
+                levelTitle: "Level 5: Z Glitch Mystery Master!",
+                num1: 9, num2: 5, answer: 45,
+                hint: "5 times 9 is 45! Half of 10 x 9!"
+            },
+            {
+                level: 5,
+                levelTitle: "Level 5: Z Glitch Mystery Master!",
+                num1: 7, num2: 4, answer: 28,
+                hint: "7 + 7 is 14. Double 14 is 28!"
+            },
+            {
+                level: 5,
+                levelTitle: "Level 5: Z Glitch Mystery Master!",
+                num1: 8, num2: 5, answer: 40,
+                hint: "8 times 5 is 40! Ends in zero!"
+            }
+        ];
+
+        /* GAME STATE VARIABLES */
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let stars = 0;
+        let attemptsCount = 0;
+
+        /* DOM ELEMENTS */
+        const welcomeScreen = document.getElementById('welcomeScreen');
+        const quizScreen = document.getElementById('quizScreen');
+        const miniGameScreen = document.getElementById('miniGameScreen');
+        const victoryScreen = document.getElementById('victoryScreen');
+
+        const scoreDisplay = document.getElementById('scoreDisplay');
+        const starDisplay = document.getElementById('starDisplay');
+        const levelBadge = document.getElementById('levelBadge');
+        const questionCounter = document.getElementById('questionCounter');
+        const progressBar = document.getElementById('progressBar');
+        const questionText = document.getElementById('questionText');
+        const questionHint = document.getElementById('questionHint');
+        const optionsGrid = document.getElementById('optionsGrid');
+        const feedbackBox = document.getElementById('feedbackBox');
+
+        /* EVENT LISTENERS */
+        document.getElementById('startBtn').addEventListener('click', startQuiz);
+        document.getElementById('restartBtn').addEventListener('click', restartGame);
+
+        function startQuiz() {
+            AudioFX.playClick();
+            welcomeScreen.classList.add('hidden');
+            victoryScreen.classList.add('hidden');
+            quizScreen.classList.remove('hidden');
+            currentQuestionIndex = 0;
+            score = 0;
+            stars = 0;
+            updateStats();
+            loadQuestion();
+        }
+
+        function updateStats() {
+            scoreDisplay.textContent = score;
+            starDisplay.textContent = `⭐ ${stars}`;
+        }
+
+        function loadQuestion() {
+            attemptsCount = 0;
+            feedbackBox.classList.add('hidden');
+            const q = QUESTION_BANK[currentQuestionIndex];
+
+            levelBadge.textContent = q.levelTitle;
+            questionCounter.textContent = `Question ${(currentQuestionIndex % 3) + 1} of 3`;
+            progressBar.style.width = `${((currentQuestionIndex + 1) / QUESTION_BANK.length) * 100}%`;
+            
+            questionText.textContent = `${q.num1} × ${q.num2} = ?`;
+            questionHint.textContent = `💡 Hint: ${q.hint}`;
+
+            // Generate 4 multiple choice options
+            optionsGrid.innerHTML = '';
+            const options = generateOptions(q.answer);
+
+            options.forEach(opt => {
+                const btn = document.createElement('button');
+                btn.className = 'btn-bouncy bg-emerald-900/90 hover:bg-emerald-800 border-2 border-emerald-400/50 text-yellow-300 font-extrabold text-2xl md:text-3xl py-4 rounded-2xl shadow-lg cursor-pointer transition-colors';
+                btn.textContent = opt;
+                btn.addEventListener('click', () => handleAnswer(opt, q.answer, btn));
+                optionsGrid.appendChild(btn);
+            });
+        }
+
+        function generateOptions(correct) {
+            const set = new Set([correct]);
+            while (set.size < 4) {
+                let offset = (Math.floor(Math.random() * 5) + 1) * (Math.random() < 0.5 ? 1 : -1);
+                let fakeVal = correct + offset;
+                if (fakeVal > 0 && fakeVal !== correct) {
+                    set.add(fakeVal);
+                }
+            }
+            return Array.from(set).sort(() => Math.random() - 0.5);
+        }
+
+        function handleAnswer(selected, correct, buttonEl) {
+            if (selected === correct) {
+                AudioFX.playCorrect();
+                spawnConfetti();
+
+                // Calculate bonus for first try
+                const pointsGained = attemptsCount === 0 ? 100 : 50;
+                score += pointsGained;
+                stars += 1;
+                updateStats();
+
+                feedbackBox.className = 'p-4 rounded-2xl bg-emerald-800/90 border-2 border-emerald-300 text-yellow-200 text-center font-bold text-lg animate-bounce';
+                feedbackBox.innerHTML = `🌟 Super Job! ${selected} is Correct! (+${pointsGained} pts)`;
+                feedbackBox.classList.remove('hidden');
+
+                // Disable option buttons briefly
+                Array.from(optionsGrid.children).forEach(b => b.disabled = true);
+
+                setTimeout(() => {
+                    currentQuestionIndex++;
+                    // Check if level ended (every 3 questions)
+                    if (currentQuestionIndex % 3 === 0) {
+                        launchRewardMiniGame();
+                    } else if (currentQuestionIndex < QUESTION_BANK.length) {
+                        loadQuestion();
+                    } else {
+                        showVictoryScreen();
+                    }
+                }, 1400);
+
+            } else {
+                AudioFX.playWrong();
+                attemptsCount++;
+                buttonEl.classList.add('opacity-40', 'line-through');
+                buttonEl.disabled = true;
+
+                feedbackBox.className = 'p-4 rounded-2xl bg-amber-900/90 border-2 border-amber-400 text-amber-200 text-center font-bold text-base';
+                feedbackBox.innerHTML = `🌱 Almost! Try again! Remember: ${QUESTION_BANK[currentQuestionIndex].hint}`;
+                feedbackBox.classList.remove('hidden');
+            }
+        }
+
+        /* REWARD MINI-GAME CODE (Asteroid Shooter) */
+        let miniGameActive = false;
+        let asteroidsRemaining = 10;
+        let miniGameScore = 0;
+        let ship = { x: 0, y: 0, width: 40, height: 40, speed: 7 };
+        let bullets = [];
+        let asteroids = [];
+        let gameParticles = [];
+        let keys = {};
+
+        const canvas = document.getElementById('miniGameCanvas');
+        const ctx = canvas.getContext('2d');
+        const asteroidsLeftEl = document.getElementById('asteroidsLeft');
+        const nextLevelBtn = document.getElementById('nextLevelBtn');
+
+        function resizeCanvas() {
+            canvas.width = canvas.clientWidth;
+            canvas.height = canvas.clientHeight;
+        }
+
+        function launchRewardMiniGame() {
+            quizScreen.classList.add('hidden');
+            miniGameScreen.classList.remove('hidden');
+            nextLevelBtn.classList.add('hidden');
+            resizeCanvas();
+
+            asteroidsRemaining = 10;
+            miniGameScore = 0;
+            asteroidsLeftEl.textContent = `${asteroidsRemaining} Left`;
+
+            ship.x = canvas.width / 2 - 20;
+            ship.y = canvas.height - 50;
+            bullets = [];
+            asteroids = [];
+            gameParticles = [];
+
+            // Spawn initial friendly asteroids
+            for (let i = 0; i < 5; i++) {
+                spawnAsteroid();
+            }
+
+            miniGameActive = true;
+            requestAnimationFrame(miniGameLoop);
+        }
+
+        function spawnAsteroid() {
+            const colors = ['#facc15', '#38bdf8', '#a855f7', '#f43f5e', '#34d399'];
+            asteroids.push({
+                x: Math.random() * (canvas.width - 40) + 20,
+                y: Math.random() * -200 - 30,
+                radius: Math.random() * 12 + 16,
+                speedY: Math.random() * 1.2 + 0.8,
+                speedX: (Math.random() - 0.5) * 1,
+                color: colors[Math.floor(Math.random() * colors.length)],
+                symbol: ['⭐', '💎', '🎨', '🚀', '🌟'][Math.floor(Math.random() * 5)]
+            });
+        }
+
+        window.addEventListener('keydown', e => {
+            keys[e.key] = true;
+            if (e.key === ' ' && miniGameActive) {
+                fireBullet();
+            }
+        });
+        window.addEventListener('keyup', e => keys[e.key] = false);
+
+        // Touch control handlers
+        document.getElementById('touchLeft').addEventListener('touchstart', (e) => { e.preventDefault(); keys['ArrowLeft'] = true; });
+        document.getElementById('touchLeft').addEventListener('touchend', (e) => { e.preventDefault(); keys['ArrowLeft'] = false; });
+        document.getElementById('touchRight').addEventListener('touchstart', (e) => { e.preventDefault(); keys['ArrowRight'] = true; });
+        document.getElementById('touchRight').addEventListener('touchend', (e) => { e.preventDefault(); keys['ArrowRight'] = false; });
+        document.getElementById('touchShoot').addEventListener('touchstart', (e) => { e.preventDefault(); fireBullet(); });
+
+        // Canvas drag control for ship
+        let isDragging = false;
+        canvas.addEventListener('pointerdown', e => { isDragging = true; updateShipPointer(e); });
+        canvas.addEventListener('pointermove', e => { if(isDragging) updateShipPointer(e); });
+        canvas.addEventListener('pointerup', () => isDragging = false);
+
+        function updateShipPointer(e) {
+            const rect = canvas.getBoundingClientRect();
+            ship.x = (e.clientX - rect.left) - ship.width / 2;
+        }
+
+        function fireBullet() {
+            AudioFX.playLaser();
+            bullets.push({
+                x: ship.x + ship.width / 2 - 3,
+                y: ship.y,
+                width: 6,
+                height: 14,
+                speed: 9
+            });
+        }
+
+        function miniGameLoop() {
+            if (!miniGameActive) return;
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Draw starfield background
+            ctx.fillStyle = '#0f172a';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Update Ship movement
+            if ((keys['ArrowLeft'] || keys['a']) && ship.x > 0) ship.x -= ship.speed;
+            if ((keys['ArrowRight'] || keys['d']) && ship.x < canvas.width - ship.width) ship.x += ship.speed;
+
+            // Draw Ship (Explorer Probe)
+            ctx.font = '32px serif';
+            ctx.fillText('🚀', ship.x, ship.y + 30);
+
+            // Update & Draw Bullets
+            ctx.fillStyle = '#facc15';
+            bullets.forEach((b, i) => {
+                b.y -= b.speed;
+                ctx.fillRect(b.x, b.y, b.width, b.height);
+                if (b.y < -20) bullets.splice(i, 1);
+            });
+
+            // Update & Draw Asteroids / Space Gems
+            asteroids.forEach((ast, aIdx) => {
+                ast.y += ast.speedY;
+                ast.x += ast.speedX;
+
+                if (ast.y > canvas.height + 30) {
+                    ast.y = -30;
+                    ast.x = Math.random() * (canvas.width - 40) + 20;
+                }
+
+                // Render friendly emoji asteroid
+                ctx.font = `${ast.radius * 1.8}px serif`;
+                ctx.fillText(ast.symbol, ast.x - ast.radius, ast.y + ast.radius / 2);
+
+                // Collision detection with bullets
+                bullets.forEach((b, bIdx) => {
+                    const dist = Math.hypot(b.x - ast.x, b.y - ast.y);
+                    if (dist < ast.radius + 10) {
+                        AudioFX.playPop();
+                        createSparkles(ast.x, ast.y, ast.color);
+
+                        bullets.splice(bIdx, 1);
+                        asteroids.splice(aIdx, 1);
+                        asteroidsRemaining--;
+                        miniGameScore += 20;
+                        score += 20;
+                        updateStats();
+
+                        asteroidsLeftEl.textContent = `${Math.max(0, asteroidsRemaining)} Left`;
+
+                        if (asteroidsRemaining > 0) {
+                            spawnAsteroid();
+                        }
+                    }
+                });
+            });
+
+            // Update & Draw Sparkle Particles
+            gameParticles.forEach((p, pIdx) => {
+                p.x += p.vx;
+                p.y += p.vy;
+                p.alpha -= 0.02;
+                ctx.globalAlpha = Math.max(0, p.alpha);
+                ctx.fillStyle = p.color;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.globalAlpha = 1.0;
+                if (p.alpha <= 0) gameParticles.splice(pIdx, 1);
+            });
+
+            // Check Win Condition
+            if (asteroidsRemaining <= 0) {
+                miniGameActive = false;
+                spawnConfetti();
+                nextLevelBtn.classList.remove('hidden');
+            } else {
+                requestAnimationFrame(miniGameLoop);
+            }
+        }
+
+        function createSparkles(x, y, color) {
+            for (let i = 0; i < 12; i++) {
+                gameParticles.push({
+                    x: x, y: y,
+                    vx: (Math.random() - 0.5) * 6,
+                    vy: (Math.random() - 0.5) * 6,
+                    size: Math.random() * 4 + 2,
+                    color: color,
+                    alpha: 1.0
+                });
+            }
+        }
+
+        nextLevelBtn.addEventListener('click', () => {
+            AudioFX.playClick();
+            miniGameScreen.classList.add('hidden');
+            if (currentQuestionIndex < QUESTION_BANK.length) {
+                quizScreen.classList.remove('hidden');
+                loadQuestion();
+            } else {
+                showVictoryScreen();
+            }
+        });
+
+        function showVictoryScreen() {
+            AudioFX.playCorrect();
+            spawnConfetti();
+            quizScreen.classList.add('hidden');
+            miniGameScreen.classList.add('hidden');
+            victoryScreen.classList.remove('hidden');
+
+            document.getElementById('finalScore').textContent = score;
+            document.getElementById('finalStars').textContent = '⭐'.repeat(Math.min(5, Math.ceil(stars / 3)));
+        }
+
+        function restartGame() {
+            AudioFX.playClick();
+            startQuiz();
+        }
+
+        /* GLOBAL CONFETTI SYSTEM */
+        const fxCanvas = document.getElementById('fxCanvas');
+        const fxCtx = fxCanvas.getContext('2d');
+        let confettiParticles = [];
+
+        function resizeFxCanvas() {
+            fxCanvas.width = window.innerWidth;
+            fxCanvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeFxCanvas);
+        resizeFxCanvas();
+
+        function spawnConfetti() {
+            const colors = ['#facc15', '#4ade80', '#60a5fa', '#f43f5e', '#a855f7'];
+            for (let i = 0; i < 60; i++) {
+                confettiParticles.push({
+                    x: fxCanvas.width / 2,
+                    y: fxCanvas.height / 2,
+                    vx: (Math.random() - 0.5) * 14,
+                    vy: (Math.random() - 0.8) * 12,
+                    size: Math.random() * 8 + 6,
+                    color: colors[Math.floor(Math.random() * colors.length)],
+                    rotation: Math.random() * 360,
+                    rotSpeed: (Math.random() - 0.5) * 10,
+                    alpha: 1.0
+                });
+            }
+        }
+
+        function animateFx() {
+            fxCtx.clearRect(0, 0, fxCanvas.width, fxCanvas.height);
+            confettiParticles.forEach((p, i) => {
+                p.x += p.vx;
+                p.y += p.vy;
+                p.vy += 0.25; // gravity
+                p.rotation += p.rotSpeed;
+                p.alpha -= 0.015;
+
+                fxCtx.save();
+                fxCtx.globalAlpha = Math.max(0, p.alpha);
+                fxCtx.translate(p.x, p.y);
+                fxCtx.rotate((p.rotation * Math.PI) / 180);
+                fxCtx.fillStyle = p.color;
+                fxCtx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size);
+                fxCtx.restore();
+
+                if (p.alpha <= 0) confettiParticles.splice(i, 1);
+            });
+            requestAnimationFrame(animateFx);
+        }
+        animateFx();
+    </script>
+</body>
+</html>

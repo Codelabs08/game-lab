@@ -1,0 +1,873 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Boss Game Cosmic Maths</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Font: Fredoka for Fun, Kid-Friendly Text -->
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        * {
+            font-family: 'Fredoka', cursive, sans-serif;
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: manipulation;
+        }
+
+        body {
+            background-color: #0b0d1b;
+            color: #ffffff;
+            overflow-x: hidden;
+        }
+
+        /* Animated Starfield Background */
+        .stars-bg {
+            background: radial-gradient(ellipse at bottom, #1b2735 0%, #090a0f 100%);
+        }
+
+        /* Pulsing Glow Animations */
+        @keyframes pulseGlow {
+            0%, 100% { box-shadow: 0 0 15px rgba(59, 130, 246, 0.6), 0 0 30px rgba(147, 51, 234, 0.4); }
+            50% { box-shadow: 0 0 25px rgba(59, 130, 246, 0.9), 0 0 50px rgba(147, 51, 234, 0.7); }
+        }
+
+        .glow-box {
+            animation: pulseGlow 3s infinite ease-in-out;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-12px) rotate(3deg); }
+        }
+
+        .floating {
+            animation: float 4s ease-in-out infinite;
+        }
+
+        /* Custom Wobble Animation for Wrong Answer */
+        @keyframes wobble {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-10px); }
+            40%, 80% { transform: translateX(10px); }
+        }
+
+        .wobble {
+            animation: wobble 0.5s ease-in-out;
+        }
+
+        /* Confetti / Particle Canvas Overlay */
+        #fxCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            z-index: 50;
+        }
+
+        /* Glassmorphism Panels */
+        .glass-panel {
+            background: rgba(18, 24, 54, 0.85);
+            backdrop-filter: blur(12px);
+            border: 2px solid rgba(255, 255, 255, 0.15);
+        }
+
+        /* Bright Glowing Text */
+        .neon-text-cyan {
+            text-shadow: 0 0 10px rgba(6, 182, 212, 0.8), 0 0 20px rgba(6, 182, 212, 0.5);
+        }
+        .neon-text-gold {
+            text-shadow: 0 0 10px rgba(234, 179, 8, 0.8), 0 0 20px rgba(234, 179, 8, 0.5);
+        }
+    </style>
+</head>
+<body class="stars-bg min-h-screen flex flex-col items-center justify-center p-2 md:p-4 text-white relative">
+
+    <!-- Particle Overlay Canvas -->
+    <canvas id="fxCanvas"></canvas>
+
+    <!-- Top Navigation Header -->
+    <header class="w-full max-w-4xl flex items-center justify-between p-3 mb-2 glass-panel rounded-2xl z-10 shadow-lg">
+        <div class="flex items-center gap-3">
+            <div class="bg-gradient-to-r from-pink-500 to-purple-600 p-2.5 rounded-xl shadow-md floating">
+                <i class="fa-solid font-bold text-2xl text-yellow-300 fa-rocket"></i>
+            </div>
+            <div>
+                <h1 class="text-xl md:text-2xl font-bold tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-pink-400 to-yellow-300">Boss Game Cosmic Maths</h1>
+                <p class="text-xs text-cyan-200">Year 3 Cosmic Math Mission</p>
+            </div>
+        </div>
+
+        <!-- Audio Mute / Unmute Toggle Button -->
+        <button id="audioToggleBtn" onclick="toggleAudio()" class="bg-slate-800 hover:bg-slate-700 text-yellow-300 px-4 py-2 rounded-xl border border-yellow-400/40 flex items-center gap-2 transition duration-200 shadow-md active:scale-95">
+            <i id="audioIcon" class="fa-solid fa-volume-high text-lg"></i>
+            <span id="audioText" class="text-sm font-semibold hidden sm:inline">Sound ON</span>
+        </button>
+    </header>
+
+    <!-- Main Container -->
+    <main class="w-full max-w-4xl flex-1 flex flex-col justify-center items-center relative z-10 my-auto">
+
+        <!-- ================= 1. WELCOME SCREEN ================= -->
+        <section id="welcomeScreen" class="w-full glass-panel rounded-3xl p-6 md:p-10 text-center flex flex-col items-center space-y-6 glow-box">
+            <div class="relative">
+                <div class="text-7xl md:text-8xl floating my-2">🚀</div>
+                <div class="absolute -top-2 -right-4 text-4xl animate-bounce">⭐</div>
+            </div>
+
+            <div class="space-y-2 max-w-lg">
+                <h2 class="text-3xl md:text-5xl font-extrabold text-cyan-300 neon-text-cyan">
+                    Ready For Blast Off?
+                </h2>
+                <p class="text-slate-200 text-base md:text-lg">
+                    Help Captain Hero defeat space bosses using your awesome <span class="text-yellow-300 font-bold">Year 3 Times Tables</span> power!
+                </p>
+            </div>
+
+            <div class="bg-indigo-950/60 p-4 rounded-2xl border border-indigo-500/30 w-full max-w-md text-left space-y-2">
+                <div class="flex items-center gap-3 text-cyan-300 font-semibold text-sm md:text-base">
+                    <i class="fa-solid fa-check-circle text-emerald-400"></i>
+                    <span>5 Epic Space Levels</span>
+                </div>
+                <div class="flex items-center gap-3 text-cyan-300 font-semibold text-sm md:text-base">
+                    <i class="fa-solid fa-check-circle text-emerald-400"></i>
+                    <span>15 Fun Multiplication Questions</span>
+                </div>
+                <div class="flex items-center gap-3 text-cyan-300 font-semibold text-sm md:text-base">
+                    <i class="fa-solid fa-check-circle text-emerald-400"></i>
+                    <span>Catch Falling Stars Bonus Arcade Game!</span>
+                </div>
+            </div>
+
+            <button onclick="startGame()" class="w-full max-w-md bg-gradient-to-r from-emerald-400 via-teal-500 to-cyan-500 hover:from-emerald-300 hover:to-cyan-400 text-slate-950 font-extrabold text-2xl py-4 rounded-2xl shadow-xl transform transition hover:scale-105 active:scale-95 border-b-4 border-emerald-700">
+                START MISSION <i class="fa-solid fa-play ml-2"></i>
+            </button>
+        </section>
+
+        <!-- ================= 2. QUIZ SCREEN ================= -->
+        <section id="quizScreen" class="w-full glass-panel rounded-3xl p-4 md:p-8 hidden flex flex-col space-y-6 shadow-2xl">
+            <!-- Level & Score Stats Bar -->
+            <div class="flex flex-wrap items-center justify-between gap-2 border-b border-indigo-500/30 pb-4">
+                <div class="flex items-center gap-2">
+                    <span id="levelBadge" class="bg-gradient-to-r from-purple-600 to-indigo-600 text-yellow-300 font-bold text-sm md:text-base px-3 py-1.5 rounded-xl border border-yellow-400/30 shadow">
+                        Level 1: Moon Patrol
+                    </span>
+                </div>
+                <div class="flex items-center gap-4">
+                    <div class="flex items-center gap-1.5 bg-slate-900/80 px-3 py-1.5 rounded-xl border border-slate-700">
+                        <i class="fa-solid fa-star text-yellow-400 text-lg"></i>
+                        <span id="scoreText" class="font-bold text-lg md:text-xl text-yellow-300">0</span>
+                    </div>
+                    <div class="flex items-center gap-1.5 bg-slate-900/80 px-3 py-1.5 rounded-xl border border-slate-700">
+                        <span id="qNumText" class="font-bold text-cyan-300 text-sm md:text-base">Q 1/3</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Visual Progress Bar -->
+            <div class="w-full bg-slate-900 rounded-full h-3.5 p-0.5 border border-slate-700">
+                <div id="progressBar" class="bg-gradient-to-r from-cyan-400 to-emerald-400 h-2.5 rounded-full transition-all duration-500" style="width: 20%"></div>
+            </div>
+
+            <!-- Question Box -->
+            <div id="questionContainer" class="bg-gradient-to-br from-indigo-950/80 to-purple-950/80 p-6 md:p-8 rounded-2xl border-2 border-indigo-400/40 text-center shadow-inner relative overflow-hidden">
+                <p id="storyPrompt" class="text-cyan-300 text-base md:text-lg mb-2 font-medium">Loading alien question...</p>
+                <h2 id="mathEquation" class="text-3xl md:text-5xl font-black text-yellow-300 tracking-wider neon-text-gold my-2">
+                    3 × 4 = ?
+                </h2>
+            </div>
+
+            <!-- Interactive Answer Buttons Grid -->
+            <div id="answersGrid" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <!-- Answer buttons dynamically generated -->
+            </div>
+
+            <!-- Feedback Message Banner -->
+            <div id="feedbackBox" class="min-h-[50px] flex items-center justify-center p-3 rounded-xl text-center font-bold text-lg hidden transition duration-300">
+            </div>
+        </section>
+
+        <!-- ================= 3. LEVEL COMPLETE MODAL ================= -->
+        <section id="levelModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+            <div class="glass-panel max-w-md w-full rounded-3xl p-6 md:p-8 text-center space-y-6 border-2 border-yellow-400/50 glow-box">
+                <div class="text-6xl floating">🏆</div>
+                <h2 id="levelCompleteTitle" class="text-3xl font-extrabold text-yellow-300 neon-text-gold">
+                    LEVEL COMPLETE!
+                </h2>
+                <p id="levelCompleteMsg" class="text-slate-200 text-base">
+                    Fantastic job Commander! You cleared this space zone.
+                </p>
+                <div class="bg-indigo-900/50 p-4 rounded-2xl border border-indigo-500/30 flex justify-around">
+                    <div>
+                        <p class="text-xs text-slate-400">Total Stars</p>
+                        <p id="modalStars" class="text-2xl font-bold text-yellow-300">0</p>
+                    </div>
+                    <div>
+                        <p class="text-xs text-slate-400">Accuracy</p>
+                        <p id="modalAccuracy" class="text-2xl font-bold text-emerald-400">100%</p>
+                    </div>
+                </div>
+                <button onclick="nextLevel()" class="w-full bg-gradient-to-r from-yellow-400 via-amber-500 to-orange-500 hover:from-yellow-300 hover:to-orange-400 text-slate-950 font-extrabold text-xl py-3.5 rounded-2xl shadow-lg border-b-4 border-amber-700 transition active:scale-95">
+                    LAUNCH NEXT LEVEL 🚀
+                </button>
+            </div>
+        </section>
+
+        <!-- ================= 4. REWARD GAME SCREEN ================= -->
+        <section id="rewardGameScreen" class="w-full glass-panel rounded-3xl p-4 md:p-6 hidden flex flex-col items-center space-y-4">
+            <!-- Game HUD -->
+            <div class="w-full flex items-center justify-between bg-slate-900/90 px-4 py-2.5 rounded-2xl border border-slate-700">
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-star text-yellow-400 text-xl"></i>
+                    <span id="rewardScore" class="text-xl font-extrabold text-yellow-300">Stars: 0</span>
+                </div>
+                <div class="text-center">
+                    <span class="text-xs text-cyan-300 block">REWARD MINI-GAME</span>
+                    <span class="text-sm font-bold text-slate-300">Catch The Stars!</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-clock text-cyan-400 text-xl"></i>
+                    <span id="rewardTimer" class="text-xl font-extrabold text-cyan-300">30s</span>
+                </div>
+            </div>
+
+            <!-- Arcade Canvas -->
+            <div class="relative w-full overflow-hidden rounded-2xl border-2 border-cyan-500/50 shadow-2xl bg-slate-950">
+                <canvas id="starGameCanvas" class="w-full h-[360px] md:h-[420px] block cursor-pointer"></canvas>
+                <!-- On-Screen Controls Overlay for Touch Mobile -->
+                <div class="absolute bottom-2 left-0 right-0 flex justify-between px-4 pointer-events-none md:hidden">
+                    <div class="text-xs text-slate-400 bg-slate-900/80 px-2 py-1 rounded">Drag or Tap to Move Basket</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= 5. GAME OVER / FINAL WIN SCREEN ================= -->
+        <section id="finalWinScreen" class="w-full glass-panel rounded-3xl p-6 md:p-10 hidden text-center flex flex-col items-center space-y-6 border-2 border-yellow-400">
+            <div class="text-7xl md:text-8xl animate-bounce">👑</div>
+            <div class="space-y-2">
+                <h2 class="text-4xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 via-pink-400 to-cyan-300 neon-text-gold">
+                    COSMIC CHAMPION!
+                </h2>
+                <p class="text-slate-200 text-lg">You beat Hero Boss and completed the space mission!</p>
+            </div>
+
+            <div class="bg-indigo-950/80 p-6 rounded-2xl border border-indigo-500/40 w-full max-w-md space-y-3">
+                <div class="flex justify-between items-center text-lg">
+                    <span class="text-slate-300">Quiz Stars Earned:</span>
+                    <span id="finalQuizStars" class="font-bold text-yellow-300 text-xl">15/15</span>
+                </div>
+                <div class="flex justify-between items-center text-lg">
+                    <span class="text-slate-300">Catch Game Stars:</span>
+                    <span id="finalCatchStars" class="font-bold text-yellow-300 text-xl">0</span>
+                </div>
+                <div class="border-t border-indigo-800 pt-2 flex justify-between items-center text-xl font-bold">
+                    <span class="text-cyan-300">High Score:</span>
+                    <span id="highScoreText" class="text-yellow-400">0</span>
+                </div>
+            </div>
+
+            <div class="flex flex-col sm:flex-row gap-4 w-full max-w-md">
+                <button onclick="startRewardGame()" class="flex-1 bg-gradient-to-r from-cyan-400 to-blue-500 hover:from-cyan-300 hover:to-blue-400 text-slate-950 font-bold py-3.5 rounded-2xl shadow-lg border-b-4 border-blue-700 transition active:scale-95">
+                    Replay Star Game 🌟
+                </button>
+                <button onclick="resetWholeGame()" class="flex-1 bg-gradient-to-r from-emerald-400 to-teal-500 hover:from-emerald-300 hover:to-teal-400 text-slate-950 font-bold py-3.5 rounded-2xl shadow-lg border-b-4 border-teal-700 transition active:scale-95">
+                    Play Full Game 🚀
+                </button>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="mt-4 text-xs text-slate-400 text-center z-10">
+        Hero Boss Game &bull; Safe & Encouraging Year 3 Math Adventure
+    </footer>
+
+    <!-- ================= JAVASCRIPT GAME LOGIC ================= -->
+    <script>
+        /* -------------------------------------------------------------
+         * WEB AUDIO SYNTHESIZER (No external audio files required!)
+         * ------------------------------------------------------------- */
+        let audioCtx = null;
+        let isMuted = false;
+
+        function initAudio() {
+            if (!audioCtx) {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                audioCtx = new AudioContext();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }
+
+        function toggleAudio() {
+            isMuted = !isMuted;
+            const icon = document.getElementById('audioIcon');
+            const text = document.getElementById('audioText');
+            if (isMuted) {
+                icon.className = "fa-solid fa-volume-xmark text-lg text-slate-400";
+                text.innerText = "Sound OFF";
+            } else {
+                icon.className = "fa-solid fa-volume-high text-lg text-yellow-300";
+                text.innerText = "Sound ON";
+                playChimeSound();
+            }
+        }
+
+        // Correct Answer Sound (Happy High Chime)
+        function playChimeSound() {
+            if (isMuted) return;
+            initAudio();
+            const now = audioCtx.currentTime;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(523.25, now); // C5
+            osc.frequency.exponentialRampToValueAtTime(880, now + 0.15); // A5
+
+            gain.gain.setValueAtTime(0.2, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            osc.start(now);
+            osc.stop(now + 0.3);
+        }
+
+        // Wrong Answer Sound (Gentle Soft Wobble Tone)
+        function playWrongSound() {
+            if (isMuted) return;
+            initAudio();
+            const now = audioCtx.currentTime;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(220, now); // A3
+            osc.frequency.exponentialRampToValueAtTime(164.81, now + 0.25); // E3
+
+            gain.gain.setValueAtTime(0.2, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            osc.start(now);
+            osc.stop(now + 0.3);
+        }
+
+        // Level Up Fanfare
+        function playFanfareSound() {
+            if (isMuted) return;
+            initAudio();
+            const notes = [440, 554.37, 659.25, 880]; // A4, C#5, E5, A5
+            notes.forEach((freq, idx) => {
+                const now = audioCtx.currentTime + idx * 0.1;
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(freq, now);
+
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
+
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+
+                osc.start(now);
+                osc.stop(now + 0.25);
+            });
+        }
+
+        // Star Catch Sound Effect
+        function playCatchSound() {
+            if (isMuted) return;
+            initAudio();
+            const now = audioCtx.currentTime;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(800, now);
+            osc.frequency.exponentialRampToValueAtTime(1200, now + 0.08);
+
+            gain.gain.setValueAtTime(0.15, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
+
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            osc.start(now);
+            osc.stop(now + 0.1);
+        }
+
+        /* -------------------------------------------------------------
+         * YEAR 3 TIMES TABLES QUESTION BANK (15 Questions Across 5 Levels)
+         * ------------------------------------------------------------- */
+        const levelsData = [
+            {
+                name: "Level 1: Moon Patrol",
+                questions: [
+                    { prompt: "3 alien rockets have 2 space boosters each. How many boosters altogether?", num1: 3, num2: 2, answer: 6, options: [4, 6, 8, 5] },
+                    { prompt: "Moon rover travels 5 miles each hour. How far does it go in 3 hours?", num1: 5, num2: 3, answer: 15, options: [10, 12, 15, 20] },
+                    { prompt: "There are 4 space stations with 4 astronauts in each. How many astronauts total?", num1: 4, num2: 4, answer: 16, options: [12, 14, 16, 18] }
+                ]
+            },
+            {
+                name: "Level 2: Planet Hop",
+                questions: [
+                    { prompt: "Captain Hero finds 3 glowing crystal crates. Each crate has 8 crystals. How many crystals in total?", num1: 3, num2: 8, answer: 24, options: [21, 24, 27, 30] },
+                    { prompt: "5 cosmic probes collect 5 space samples each. How many samples altogether?", num1: 5, num2: 5, answer: 25, options: [20, 25, 30, 15] },
+                    { prompt: "4 alien creatures each have 3 glowing eyes. How many eyes in total?", num1: 4, num2: 3, answer: 12, options: [9, 12, 15, 16] }
+                ]
+            },
+            {
+                name: "Level 3: Asteroid Belt",
+                questions: [
+                    { prompt: "8 asteroids each have 4 shiny gold rocks. How many gold rocks altogether?", num1: 8, num2: 4, answer: 32, options: [28, 32, 36, 40] },
+                    { prompt: "10 space pods each carry 3 laser shields. How many laser shields total?", num1: 10, num2: 3, answer: 30, options: [20, 25, 30, 35] },
+                    { prompt: "3 flying saucers shoot 3 friendly beams each. How many beams in total?", num1: 3, num2: 3, answer: 9, options: [6, 9, 12, 15] }
+                ]
+            },
+            {
+                name: "Level 4: Galaxy Explorer",
+                questions: [
+                    { prompt: "4 starships fire 5 propulsion pulses each. How many pulses altogether?", num1: 4, num2: 5, answer: 20, options: [15, 18, 20, 24] },
+                    { prompt: "8 space bots have 3 solar panels each. How many solar panels in total?", num1: 8, num2: 3, answer: 24, options: [21, 24, 28, 32] },
+                    { prompt: "5 friendly aliens collect 8 space coins each. How many space coins total?", num1: 5, num2: 8, answer: 40, options: [35, 40, 45, 50] }
+                ]
+            },
+            {
+                name: "Level 5: Cosmic Boss Battle",
+                questions: [
+                    { prompt: "Boss Hero summons 8 mini drones with 8 energy shields each. How many shields total?", num1: 8, num2: 8, answer: 64, options: [56, 60, 64, 72] },
+                    { prompt: "4 giant cosmic lasers hit 10 power targets each. How many targets hit?", num1: 4, num2: 10, answer: 40, options: [30, 35, 40, 50] },
+                    { prompt: "Final Blast! 3 super stars shine with 10 mega-lumens each. Total power?", num1: 3, num2: 10, answer: 30, options: [20, 25, 30, 33] }
+                ]
+            }
+        ];
+
+        /* Encouraging Positive Messages */
+        const encouragingMsgs = [
+            "Super Star! You nailed it! ⭐",
+            "Awesome Math Power! 🚀",
+            "Spot On, Commander! 🪐",
+            "Out of this World! 🌟",
+            "Brilliant Thinking! 💎"
+        ];
+
+        /* Game State Variables */
+        let currentLevel = 0;
+        let currentQuestionIdx = 0;
+        let totalScore = 0;
+        let isAnsweringLocked = false;
+
+        /* DOM Elements Reference */
+        const welcomeScreen = document.getElementById('welcomeScreen');
+        const quizScreen = document.getElementById('quizScreen');
+        const levelModal = document.getElementById('levelModal');
+        const rewardGameScreen = document.getElementById('rewardGameScreen');
+        const finalWinScreen = document.getElementById('finalWinScreen');
+
+        /* -------------------------------------------------------------
+         * GAME FLOW FUNCTIONS
+         * ------------------------------------------------------------- */
+        function startGame() {
+            initAudio();
+            currentLevel = 0;
+            currentQuestionIdx = 0;
+            totalScore = 0;
+
+            welcomeScreen.classList.add('hidden');
+            quizScreen.classList.remove('hidden');
+
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            isAnsweringLocked = false;
+            const levelObj = levelsData[currentLevel];
+            const qObj = levelObj.questions[currentQuestionIdx];
+
+            // Update Header Stats
+            document.getElementById('levelBadge').innerText = levelObj.name;
+            document.getElementById('scoreText').innerText = totalScore;
+            document.getElementById('qNumText').innerText = `Q ${currentQuestionIdx + 1}/3`;
+
+            // Progress Bar Update
+            const totalQNum = (currentLevel * 3) + (currentQuestionIdx + 1);
+            const progressPercent = (totalQNum / 15) * 100;
+            document.getElementById('progressBar').style.width = `${progressPercent}%`;
+
+            // Update Question Box
+            document.getElementById('storyPrompt').innerText = qObj.prompt;
+            document.getElementById('mathEquation').innerText = `${qObj.num1} × ${qObj.num2} = ?`;
+
+            // Clear Feedback Message
+            const feedbackBox = document.getElementById('feedbackBox');
+            feedbackBox.classList.add('hidden');
+            feedbackBox.className = "min-h-[50px] flex items-center justify-center p-3 rounded-xl text-center font-bold text-lg hidden transition duration-300";
+
+            // Render Answer Buttons
+            const answersGrid = document.getElementById('answersGrid');
+            answersGrid.innerHTML = '';
+
+            // Shuffle Answer Options
+            const shuffledOptions = [...qObj.options].sort(() => Math.random() - 0.5);
+
+            shuffledOptions.forEach(option => {
+                const btn = document.createElement('button');
+                btn.className = "w-full bg-indigo-950/90 hover:bg-indigo-800 text-cyan-200 hover:text-white font-extrabold text-2xl md:text-3xl py-4 rounded-2xl border-2 border-indigo-500/50 shadow-lg transform transition duration-200 hover:scale-102 active:scale-95 flex items-center justify-center gap-2";
+                btn.innerHTML = `<span>${option}</span>`;
+                btn.onclick = () => handleAnswer(option, qObj.answer, btn);
+                answersGrid.appendChild(btn);
+            });
+        }
+
+        function handleAnswer(selectedOpt, correctOpt, clickedBtn) {
+            if (isAnsweringLocked) return;
+            isAnsweringLocked = true;
+
+            const feedbackBox = document.getElementById('feedbackBox');
+            feedbackBox.classList.remove('hidden');
+
+            if (selectedOpt === correctOpt) {
+                // Correct Answer Logic
+                totalScore += 1;
+                document.getElementById('scoreText').innerText = totalScore;
+
+                clickedBtn.className = "w-full bg-emerald-500 text-slate-950 font-extrabold text-2xl md:text-3xl py-4 rounded-2xl border-2 border-emerald-300 shadow-xl scale-105 transition duration-200";
+                
+                feedbackBox.className = "min-h-[50px] flex items-center justify-center p-3 rounded-xl text-center font-bold text-lg bg-emerald-500/20 text-emerald-300 border border-emerald-500/50";
+                const randomMsg = encouragingMsgs[Math.floor(Math.random() * encouragingMsgs.length)];
+                feedbackBox.innerText = randomMsg;
+
+                playChimeSound();
+                triggerConfetti(clickedBtn);
+
+            } else {
+                // Wrong Answer Logic (Kid-friendly, no stress)
+                clickedBtn.className = "w-full bg-rose-600/80 text-white font-extrabold text-2xl md:text-3xl py-4 rounded-2xl border-2 border-rose-400 wobble transition duration-200";
+
+                feedbackBox.className = "min-h-[50px] flex items-center justify-center p-3 rounded-xl text-center font-bold text-lg bg-amber-500/20 text-amber-300 border border-amber-500/50";
+                feedbackBox.innerText = `Good try! The correct answer is ${correctOpt}. Keep going! 👍`;
+
+                playWrongSound();
+
+                // Highlight correct button gently
+                const allButtons = document.querySelectorAll('#answersGrid button');
+                allButtons.forEach(btn => {
+                    if (btn.innerText.trim() == correctOpt) {
+                        btn.classList.add('border-emerald-400', 'bg-emerald-950/60');
+                    }
+                });
+            }
+
+            // Wait 1.8s then proceed
+            setTimeout(() => {
+                currentQuestionIdx++;
+                if (currentQuestionIdx < 3) {
+                    loadQuestion();
+                } else {
+                    // Level Finished
+                    showLevelModal();
+                }
+            }, 1800);
+        }
+
+        /* -------------------------------------------------------------
+         * LEVEL COMPLETE MODAL LOGIC
+         * ------------------------------------------------------------- */
+        function showLevelModal() {
+            playFanfareSound();
+            document.getElementById('modalStars').innerText = `${totalScore} / ${(currentLevel + 1) * 3}`;
+            const accuracy = Math.round((totalScore / ((currentLevel + 1) * 3)) * 100);
+            document.getElementById('modalAccuracy').innerText = `${accuracy}%`;
+
+            if (currentLevel < 4) {
+                document.getElementById('levelCompleteTitle').innerText = `LEVEL ${currentLevel + 1} CLEARED!`;
+                document.getElementById('levelCompleteMsg').innerText = `Great math skills! Ready for the next space zone?`;
+            } else {
+                document.getElementById('levelCompleteTitle').innerText = `HERO BOSS DEFEATED! 🎉`;
+                document.getElementById('levelCompleteMsg').innerText = `You finished all 5 levels! Time for your reward game!`;
+            }
+
+            levelModal.classList.remove('hidden');
+        }
+
+        function nextLevel() {
+            levelModal.classList.add('hidden');
+            currentLevel++;
+            currentQuestionIdx = 0;
+
+            if (currentLevel < 5) {
+                loadQuestion();
+            } else {
+                // All 5 levels completed -> Launch Reward Arcade Game
+                startRewardGame();
+            }
+        }
+
+        /* -------------------------------------------------------------
+         * REWARD MINI-GAME: "Catch the Falling Stars" (Canvas Arcade)
+         * ------------------------------------------------------------- */
+        let rewardCanvas, ctx;
+        let basket = { x: 0, y: 0, width: 80, height: 20, speed: 8 };
+        let fallingItems = [];
+        let rewardScore = 0;
+        let rewardTimer = 30;
+        let rewardInterval = null;
+        let animFrameId = null;
+
+        function startRewardGame() {
+            quizScreen.classList.add('hidden');
+            finalWinScreen.classList.add('hidden');
+            rewardGameScreen.classList.remove('hidden');
+
+            rewardCanvas = document.getElementById('starGameCanvas');
+            ctx = rewardCanvas.getContext('2d');
+
+            // Responsive Canvas Sizing
+            rewardCanvas.width = rewardCanvas.parentElement.clientWidth;
+            rewardCanvas.height = rewardCanvas.parentElement.clientHeight;
+
+            basket.x = rewardCanvas.width / 2 - basket.width / 2;
+            basket.y = rewardCanvas.height - 35;
+
+            fallingItems = [];
+            rewardScore = 0;
+            rewardTimer = 30;
+
+            document.getElementById('rewardScore').innerText = `Stars: 0`;
+            document.getElementById('rewardTimer').innerText = `30s`;
+
+            // Event Listeners for Paddle Control
+            setupControls();
+
+            // Start Timer Countdown
+            clearInterval(rewardInterval);
+            rewardInterval = setInterval(() => {
+                rewardTimer--;
+                document.getElementById('rewardTimer').innerText = `${rewardTimer}s`;
+                if (rewardTimer <= 0) {
+                    endRewardGame();
+                }
+            }, 1000);
+
+            // Game Loop
+            cancelAnimationFrame(animFrameId);
+            gameLoop();
+        }
+
+        function setupControls() {
+            // Mouse Drag Control
+            rewardCanvas.addEventListener('mousemove', (e) => {
+                const rect = rewardCanvas.getBoundingClientRect();
+                const mouseX = e.clientX - rect.left;
+                basket.x = mouseX - basket.width / 2;
+            });
+
+            // Touch Drag Control
+            rewardCanvas.addEventListener('touchmove', (e) => {
+                if (e.touches.length > 0) {
+                    const rect = rewardCanvas.getBoundingClientRect();
+                    const touchX = e.touches[0].clientX - rect.left;
+                    basket.x = touchX - basket.width / 2;
+                }
+            }, { passive: true });
+
+            // Keyboard Arrow Controls
+            window.addEventListener('keydown', (e) => {
+                if (e.key === 'ArrowLeft') basket.x -= 25;
+                if (e.key === 'ArrowRight') basket.x += 25;
+            });
+        }
+
+        function spawnFallingItem() {
+            if (Math.random() < 0.05) { // Spawn frequency
+                const types = ['star', 'star', 'gem', 'superStar'];
+                const selectedType = types[Math.floor(Math.random() * types.length)];
+                fallingItems.push({
+                    x: Math.random() * (rewardCanvas.width - 30) + 15,
+                    y: -20,
+                    speed: Math.random() * 2 + 2.5,
+                    type: selectedType,
+                    size: selectedType === 'superStar' ? 24 : 18
+                });
+            }
+        }
+
+        function gameLoop() {
+            // Keep basket inside canvas boundaries
+            if (basket.x < 0) basket.x = 0;
+            if (basket.x + basket.width > rewardCanvas.width) basket.x = rewardCanvas.width - basket.width;
+
+            // Clear Screen
+            ctx.fillStyle = '#0a0d1a';
+            ctx.fillRect(0, 0, rewardCanvas.width, rewardCanvas.height);
+
+            // Draw Background Twinkling Stars inside Canvas
+            for (let i = 0; i < 15; i++) {
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+                ctx.fillRect(
+                    (i * 47) % rewardCanvas.width,
+                    (i * 31) % rewardCanvas.height,
+                    2, 2
+                );
+            }
+
+            // Spawn & Update Items
+            spawnFallingItem();
+
+            for (let i = fallingItems.length - 1; i >= 0; i--) {
+                let item = fallingItems[i];
+                item.y += item.speed;
+
+                // Draw Item
+                ctx.save();
+                ctx.font = `${item.size}px sans-serif`;
+                ctx.textAlign = "center";
+                if (item.type === 'star') ctx.fillText("⭐", item.x, item.y);
+                else if (item.type === 'gem') ctx.fillText("💎", item.x, item.y);
+                else if (item.type === 'superStar') ctx.fillText("🌟", item.x, item.y);
+                ctx.restore();
+
+                // Collision Detection with Shuttle Basket
+                if (
+                    item.y >= basket.y - 10 &&
+                    item.y <= basket.y + basket.height &&
+                    item.x >= basket.x - 10 &&
+                    item.x <= basket.x + basket.width + 10
+                ) {
+                    // Caught!
+                    if (item.type === 'star') rewardScore += 1;
+                    else if (item.type === 'gem') rewardScore += 2;
+                    else if (item.type === 'superStar') rewardScore += 3;
+
+                    document.getElementById('rewardScore').innerText = `Stars: ${rewardScore}`;
+                    playCatchSound();
+                    fallingItems.splice(i, 1);
+                    continue;
+                }
+
+                // Remove off-screen items
+                if (item.y > rewardCanvas.height + 20) {
+                    fallingItems.splice(i, 1);
+                }
+            }
+
+            // Draw Basket / Shuttle
+            ctx.fillStyle = '#06b6d4';
+            ctx.beginPath();
+            ctx.roundRect(basket.x, basket.y, basket.width, basket.height, 10);
+            ctx.fill();
+
+            // Glow details on basket
+            ctx.fillStyle = '#facc15';
+            ctx.beginPath();
+            ctx.arc(basket.x + basket.width / 2, basket.y + basket.height / 2, 6, 0, Math.PI * 2);
+            ctx.fill();
+
+            if (rewardTimer > 0) {
+                animFrameId = requestAnimationFrame(gameLoop);
+            }
+        }
+
+        function endRewardGame() {
+            clearInterval(rewardInterval);
+            cancelAnimationFrame(animFrameId);
+
+            rewardGameScreen.classList.add('hidden');
+            finalWinScreen.classList.remove('hidden');
+
+            // Update High Score Persistence
+            document.getElementById('finalQuizStars').innerText = `${totalScore} / 15`;
+            document.getElementById('finalCatchStars').innerText = rewardScore;
+
+            const totalGrandScore = totalScore + rewardScore;
+            const previousHigh = parseInt(localStorage.getItem('parvBossHighScore') || '0');
+
+            if (totalGrandScore > previousHigh) {
+                localStorage.setItem('parvBossHighScore', totalGrandScore);
+                document.getElementById('highScoreText').innerText = `${totalGrandScore} (NEW BEST!)`;
+            } else {
+                document.getElementById('highScoreText').innerText = previousHigh;
+            }
+
+            playFanfareSound();
+        }
+
+        function resetWholeGame() {
+            finalWinScreen.classList.add('hidden');
+            startGame();
+        }
+
+        /* -------------------------------------------------------------
+         * CONFETTI / SPARKLE PARTICLE EFFECTS
+         * ------------------------------------------------------------- */
+        const fxCanvas = document.getElementById('fxCanvas');
+        const fxCtx = fxCanvas.getContext('2d');
+        let particles = [];
+
+        function resizeFxCanvas() {
+            fxCanvas.width = window.innerWidth;
+            fxCanvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeFxCanvas);
+        resizeFxCanvas();
+
+        function triggerConfetti(targetElem) {
+            const rect = targetElem.getBoundingClientRect();
+            const centerX = rect.left + rect.width / 2;
+            const centerY = rect.top + rect.height / 2;
+
+            const colors = ['#facc15', '#38bdf8', '#4ade80', '#f472b6', '#c084fc'];
+
+            for (let i = 0; i < 30; i++) {
+                particles.push({
+                    x: centerX,
+                    y: centerY,
+                    vx: (Math.random() - 0.5) * 10,
+                    vy: (Math.random() - 0.5) * 10 - 3,
+                    color: colors[Math.floor(Math.random() * colors.length)],
+                    size: Math.random() * 6 + 4,
+                    life: 1
+                });
+            }
+        }
+
+        function animateFx() {
+            fxCtx.clearRect(0, 0, fxCanvas.width, fxCanvas.height);
+
+            for (let i = particles.length - 1; i >= 0; i--) {
+                let p = particles[i];
+                p.x += p.vx;
+                p.y += p.vy;
+                p.life -= 0.02;
+
+                fxCtx.globalAlpha = Math.max(0, p.life);
+                fxCtx.fillStyle = p.color;
+                fxCtx.beginPath();
+                fxCtx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                fxCtx.fill();
+
+                if (p.life <= 0) {
+                    particles.splice(i, 1);
+                }
+            }
+            requestAnimationFrame(animateFx);
+        }
+        animateFx();
+    </script>
+</body>
+</html>
