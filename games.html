@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>DHA's Arcade</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏆</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@600;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <!-- ADS: paste your AdSense <script> here later -->
+</head>
+<body>
+  <aside class="side side-l" aria-hidden="true"></aside>
+  <aside class="side side-r" aria-hidden="true"></aside>
+  <div class="page">
+  <header class="hero">
+    <p class="navlink"><a href="index.html">← Home &amp; how to make a game</a></p>
+    <div class="brand"><a class="brand-logo" href="index.html" title="Dubai Heights Academy"><img src="assets/dha-logo.png" alt="Dubai Heights Academy"></a><h1 id="site-title">DHA's Arcade</h1></div>
+    <p id="site-tagline"></p>
+    <div class="houses" aria-label="School houses">
+      <img src="assets/houses/falcons.png" alt="Red Falcons" title="Red Falcons">
+      <img src="assets/houses/gazelles.png" alt="Green Gazelles" title="Green Gazelles">
+      <img src="assets/houses/scorpions.png" alt="Black Scorpions" title="Black Scorpions">
+      <img src="assets/houses/wolves.png" alt="White Wolves" title="White Wolves">
+    </div>
+    <div class="house-bar" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+  </header>
+
+  <div class="controls">
+    <div class="controls-inner">
+      <div class="chips" id="chips" role="toolbar" aria-label="Subjects"></div>
+      <input class="search" id="search" type="search" placeholder="🔍 Find a game…" aria-label="Search games">
+    </div>
+  </div>
+
+  <main id="main"></main>
+  <footer id="footer"></footer>
+
+  <script src="app.js"></script>
+  </div>
+</body>
+</html>

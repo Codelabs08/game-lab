@@ -3,21 +3,20 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>DHA's Arcade</title>
+  <title>DHA's Arcade – Games made by our Year 3 classes</title>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏆</text></svg>">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@600;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
-  <!-- ADS: paste your AdSense <script> here later -->
 </head>
 <body>
   <aside class="side side-l" aria-hidden="true"></aside>
   <aside class="side side-r" aria-hidden="true"></aside>
   <div class="page">
   <header class="hero">
-    <h1 id="site-title">DHA's Arcade</h1>
-    <p id="site-tagline"></p>
+    <div class="brand"><a class="brand-logo" href="index.html" title="Dubai Heights Academy"><img src="assets/dha-logo.png" alt="Dubai Heights Academy"></a><h1>DHA's Arcade</h1></div>
+    <p>Games made by our Year 3 classes, with a little help from AI</p>
     <div class="houses" aria-label="School houses">
       <img src="assets/houses/falcons.png" alt="Red Falcons" title="Red Falcons">
       <img src="assets/houses/gazelles.png" alt="Green Gazelles" title="Green Gazelles">
@@ -27,17 +26,53 @@
     <div class="house-bar" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
   </header>
 
-  <div class="controls">
-    <div class="controls-inner">
-      <div class="chips" id="chips" role="toolbar" aria-label="Subjects"></div>
-      <input class="search" id="search" type="search" placeholder="🔍 Find a game…" aria-label="Search games">
-    </div>
-  </div>
+  <main class="land">
+    <section class="card-l">
+      <h2>What we did</h2>
+      <p>Our Year 3 classes (Purple, Yellow, Aqua and Green) each designed their own learning games, from maths and times tables to spelling and science quizzes. They planned their ideas with a safe, school-approved AI helper, then used that plan to build a working game they can play in the browser.</p>
+      <p>Every game on this site was made by a student. Come and play them!</p>
+      <p><a class="btn big" href="games.html">🎮 Play the games</a></p>
+    </section>
 
-  <main id="main"></main>
-  <footer id="footer"></footer>
+    <section class="card-l">
+      <h2>Make your own game</h2>
+      <p>Want to make one too? It takes three steps. Younger students should do this with a grown-up.</p>
+      <ol class="steps">
+        <li>
+          <h3>Chat with the AI helper</h3>
+          <p>Open our school AI space and tell it about your game: what subject, what it looks like, what happens when you win. It will help you build a game plan.</p>
+          <p><a class="btn" href="https://student.schoolai.com/join?code=5K67-WF3L" target="_blank" rel="noopener">Open the school AI helper ↗</a></p>
+          <p class="note">Join code: <b>5K67-WF3L</b></p>
+        </li>
+        <li>
+          <h3>Copy your prompt</h3>
+          <p>When the helper gives you your finished prompt, select all of it and copy it (<kbd>Ctrl</kbd>+<kbd>C</kbd>, or <kbd>⌘</kbd>+<kbd>C</kbd> on a Mac).</p>
+        </li>
+        <li>
+          <h3>Paste it into Gemini and play</h3>
+          <p>Go to <a href="https://gemini.google.com" target="_blank" rel="noopener">gemini.google.com</a> with a parent or guardian, paste the prompt into the chat box and send it. If it asks, say you want a <b>single HTML file game</b>.</p>
+          <p>Try your game in the preview. If something is wrong, tell Gemini what to change ("make the buttons bigger", "add a score") and keep going until you love it. This is just for you to enjoy at home!</p>
+        </li>
+      </ol>
+    </section>
 
-  <script src="app.js"></script>
+    <section class="card-l poster">
+      <h2>Use AI the 4D way</h2>
+      <p>At DHA we use AI to think further, not to think less. Keep the 4 D's in mind whenever you make something with AI. Tap the poster to see it bigger.</p>
+      <a href="assets/4d-poster.jpg" target="_blank" rel="noopener"><img src="assets/4d-poster.jpg" alt="DHA's 4D Approach to AI: Decide, Describe, Double-Check, Do the Right Thing" loading="lazy"></a>
+    </section>
+
+    <section class="card-l tips">
+      <h2>Tips for great games</h2>
+      <ul>
+        <li>Keep it focused: one subject and one clear goal.</li>
+        <li>Ask for big buttons, bright colours and a score.</li>
+        <li>Test it a few times, then ask Gemini to fix anything odd (that is the Double-Check D).</li>
+        <li>Never share personal details (full name, school email, address) in a game or chat.</li>
+      </ul>
+    </section>
+  </main>
+  <footer><p>DHA's Arcade · student-made games</p></footer>
   </div>
 </body>
 </html>
